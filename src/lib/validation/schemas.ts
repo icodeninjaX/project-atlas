@@ -1,10 +1,13 @@
 import { z } from "zod";
 
-const optionalText = z
-  .string()
-  .trim()
-  .transform((value) => value || undefined)
-  .optional();
+const optionalText = z.preprocess(
+  (value) => value ?? undefined,
+  z
+    .string()
+    .trim()
+    .transform((value) => value || undefined)
+    .optional(),
+);
 
 export const accountSchema = z.object({
   name: z.string().trim().min(1, "Account name is required").max(120),

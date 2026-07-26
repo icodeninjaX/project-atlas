@@ -71,6 +71,18 @@ describe("shared validation schemas", () => {
     expect(result.description).toBeUndefined();
   });
 
+  it("normalizes a missing FormData task description to undefined", () => {
+    const result = taskSchema.parse({
+      title: "Apply for a job",
+      description: null,
+      status: "planned",
+      priority: "high",
+      scheduledFor: "2026-07-26",
+    });
+
+    expect(result.description).toBeUndefined();
+  });
+
   it("keeps onboarding balances as integer centavos", () => {
     const result = onboardingSchema.safeParse({
       displayName: "Atlas user",
