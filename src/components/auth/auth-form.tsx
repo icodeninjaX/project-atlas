@@ -19,7 +19,7 @@ export function AuthForm({
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} aria-busy={pending} className="space-y-4">
       <div className="space-y-1.5">
         <label htmlFor="email" className="text-sm font-medium">
           Email
@@ -42,7 +42,11 @@ export function AuthForm({
             id="password"
             name="password"
             type="password"
-            autoComplete="current-password"
+            autoComplete={
+              submitLabel === "Create account"
+                ? "new-password"
+                : "current-password"
+            }
             minLength={8}
             required
             placeholder="At least 8 characters"
@@ -62,7 +66,7 @@ export function AuthForm({
         </p>
       )}
       <Button className="w-full" type="submit" disabled={pending}>
-        {pending ? "Working…" : submitLabel}
+        {pending ? `${submitLabel}…` : submitLabel}
       </Button>
     </form>
   );

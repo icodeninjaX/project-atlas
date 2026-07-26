@@ -61,6 +61,48 @@ export async function createAccountAction(
   return { success: true, message: "Account added." };
 }
 
+export async function updateAccountAction(
+  _state: MoneyActionState,
+  formData: FormData,
+): Promise<MoneyActionState> {
+  const id = String(formData.get("accountId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) {
+    return { success: false, message: "The account could not be found." };
+  }
+
+  const auth = await authenticatedClient();
+  if (!auth) return { success: false, message: "Your session is unavailable." };
+
+  const result = accountSchema.safeParse({
+    name: formData.get("name"),
+    accountType: formData.get("accountType"),
+    institution: formData.get("institution"),
+    openingBalanceCentavos: 0,
+  });
+  if (!result.success) {
+    return {
+      success: false,
+      message: result.error.issues[0]?.message ?? "Check the account.",
+    };
+  }
+
+  const { error } = await auth.supabase
+    .from("financial_accounts")
+    .update({
+      name: result.data.name,
+      account_type: result.data.accountType,
+      institution: result.data.institution ?? null,
+    })
+    .eq("id", id)
+    .eq("user_id", auth.user.id);
+  if (error)
+    return { success: false, message: "The account could not be updated." };
+
+  revalidatePath("/money/accounts");
+  revalidatePath("/dashboard");
+  return { success: true, message: "Account updated." };
+}
+
 export async function archiveAccountAction(formData: FormData) {
   const id = String(formData.get("accountId") ?? "");
   const archived = formData.get("archived") === "true";
@@ -124,6 +166,46 @@ export async function createTransactionAction(
   revalidatePath("/money/accounts");
   revalidatePath("/dashboard");
   return { success: true, message: "Transaction recorded." };
+}
+
+export async function createTransferAction(
+  _state: MoneyActionState,
+  formData: FormData,
+): Promise<MoneyActionState> {
+  const auth = await authenticatedClient();
+  if (!auth) return { success: false, message: "Your session is unavailable." };
+  const source = String(formData.get("sourceAccountId") ?? "");
+  const destination = String(formData.get("destinationAccountId") ?? "");
+  if (
+    !/^[0-9a-f-]{36}$/i.test(source) ||
+    !/^[0-9a-f-]{36}$/i.test(destination) ||
+    source === destination
+  ) {
+    return { success: false, message: "Choose two different accounts." };
+  }
+  let amountCentavos: number;
+  try {
+    amountCentavos = pesoInputToCentavos(String(formData.get("amount") ?? ""));
+  } catch {
+    return { success: false, message: "Enter a valid positive amount." };
+  }
+  const transferDate = String(formData.get("transferDate") ?? "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(transferDate))
+    return { success: false, message: "Choose a transfer date." };
+  const { error } = await auth.supabase.from("account_transfers").insert({
+    user_id: auth.user.id,
+    source_account_id: source,
+    destination_account_id: destination,
+    amount_centavos: amountCentavos,
+    transfer_date: transferDate,
+    description: String(formData.get("description") ?? "").trim() || null,
+  });
+  if (error)
+    return { success: false, message: "The transfer could not be saved." };
+  revalidatePath("/money/accounts");
+  revalidatePath("/money/transactions");
+  revalidatePath("/dashboard");
+  return { success: true, message: "Transfer recorded." };
 }
 
 export async function deleteTransactionAction(formData: FormData) {

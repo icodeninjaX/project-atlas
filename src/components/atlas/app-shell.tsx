@@ -1,3 +1,5 @@
+"use client";
+
 import {
   BriefcaseBusiness,
   CircleDollarSign,
@@ -5,13 +7,17 @@ import {
   Gauge,
   Goal,
   Landmark,
+  Menu,
   Search,
   Settings,
   WalletCards,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { AtlasMark } from "./atlas-mark";
+import { cn } from "@/lib/utils";
 
 const navigation = [
   { href: "/dashboard", label: "Today", icon: Gauge },
@@ -23,7 +29,36 @@ const navigation = [
   { href: "/reviews", label: "Reviews", icon: CircleDollarSign },
 ] as const;
 
+const mobileMoreNavigation = [
+  { href: "/career", label: "Career", icon: BriefcaseBusiness },
+  { href: "/reviews", label: "Reviews", icon: CircleDollarSign },
+  { href: "/search", label: "Search", icon: Search },
+  { href: "/settings", label: "Settings", icon: Settings },
+] as const;
+
 export function AppShell({ children }: { children: ReactNode }) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (href === "/money/accounts") {
+      return pathname?.startsWith("/money/") === true;
+    }
+
+    return pathname === href || pathname?.startsWith(`${href}/`) === true;
+  };
+
+  useEffect(() => {
+    if (!moreOpen) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMoreOpen(false);
+    };
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [moreOpen]);
+
   return (
     <div className="bg-background text-foreground min-h-dvh">
       <a
@@ -50,9 +85,19 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={href}
               href={href}
-              className="group text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              aria-current={isActive(href) ? "page" : undefined}
+              className={cn(
+                "group text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                isActive(href) &&
+                  "bg-primary/10 text-primary hover:bg-primary/15",
+              )}
             >
-              <Icon className="text-muted-foreground group-hover:text-primary size-[18px]" />
+              <Icon
+                className={cn(
+                  "text-muted-foreground group-hover:text-primary size-[18px]",
+                  isActive(href) && "text-primary",
+                )}
+              />
               {label}
             </Link>
           ))}
@@ -60,7 +105,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="border-border border-t p-3">
           <Link
             href="/search"
-            className="text-muted-foreground hover:bg-muted hover:text-foreground flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm"
+            aria-current={isActive("/search") ? "page" : undefined}
+            className={cn(
+              "text-muted-foreground hover:bg-muted hover:text-foreground flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm",
+              isActive("/search") &&
+                "bg-primary/10 text-primary hover:bg-primary/15",
+            )}
           >
             <Search className="size-[18px]" />
             Search
@@ -70,7 +120,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
           <Link
             href="/settings"
-            className="text-muted-foreground hover:bg-muted hover:text-foreground flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm"
+            aria-current={isActive("/settings") ? "page" : undefined}
+            className={cn(
+              "text-muted-foreground hover:bg-muted hover:text-foreground flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm",
+              isActive("/settings") &&
+                "bg-primary/10 text-primary hover:bg-primary/15",
+            )}
           >
             <Settings className="size-[18px]" />
             Settings
@@ -88,12 +143,56 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link
             key={href}
             href={href}
-            className="text-muted-foreground focus-visible:ring-ring flex min-h-12 min-w-14 flex-col items-center justify-center gap-1 rounded-lg text-[10px] font-medium focus-visible:ring-2 focus-visible:outline-none"
+            aria-current={isActive(href) ? "page" : undefined}
+            className={cn(
+              "text-muted-foreground focus-visible:ring-ring flex min-h-12 min-w-14 flex-col items-center justify-center gap-1 rounded-lg text-[10px] font-medium focus-visible:ring-2 focus-visible:outline-none",
+              isActive(href) && "text-primary",
+            )}
           >
             <Icon className="size-[18px]" />
             {label}
           </Link>
         ))}
+        <div className="relative flex min-w-14 justify-center">
+          {moreOpen && (
+            <div
+              id="mobile-more-menu"
+              role="menu"
+              aria-label="More navigation"
+              className="border-border bg-popover text-popover-foreground absolute right-0 bottom-14 min-w-44 rounded-xl border p-1 shadow-lg"
+            >
+              {mobileMoreNavigation.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  role="menuitem"
+                  onClick={() => setMoreOpen(false)}
+                  aria-current={isActive(href) ? "page" : undefined}
+                  className={cn(
+                    "hover:bg-muted focus-visible:ring-ring flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm focus-visible:ring-2 focus-visible:outline-none",
+                    isActive(href) &&
+                      "bg-primary/10 text-primary hover:bg-primary/15",
+                  )}
+                >
+                  <Icon className="size-[18px]" />
+                  {label}
+                </Link>
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            aria-expanded={moreOpen}
+            aria-haspopup="menu"
+            aria-controls="mobile-more-menu"
+            aria-label="More navigation"
+            onClick={() => setMoreOpen((open) => !open)}
+            className="text-muted-foreground focus-visible:ring-ring flex min-h-12 min-w-14 flex-col items-center justify-center gap-1 rounded-lg text-[10px] font-medium focus-visible:ring-2 focus-visible:outline-none"
+          >
+            <Menu className="size-[18px]" />
+            More
+          </button>
+        </div>
       </nav>
     </div>
   );

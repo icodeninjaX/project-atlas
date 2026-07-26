@@ -63,9 +63,24 @@ export async function signUpAction(
   });
 
   if (error) {
+    if (error.code === "user_already_exists") {
+      return {
+        success: false,
+        message:
+          "An account with this email may already exist. Try signing in instead.",
+      };
+    }
+
+    if (error.code === "signup_disabled") {
+      return {
+        success: false,
+        message: "New account creation is temporarily unavailable.",
+      };
+    }
+
     return {
       success: false,
-      message: "Your account could not be created. Try again.",
+      message: "We could not create your account right now. Try again shortly.",
     };
   }
 

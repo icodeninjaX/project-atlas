@@ -6,13 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   createAccountAction,
+  updateAccountAction,
   type MoneyActionState,
 } from "@/lib/money/actions";
 
 const initial: MoneyActionState = { success: false, message: "" };
 
-export function AccountForm() {
-  const [state, action, pending] = useActionState(createAccountAction, initial);
+export function AccountForm({
+  account,
+}: {
+  account?: {
+    id: string;
+    name: string;
+    account_type: string;
+    institution: string | null;
+  };
+}) {
+  const submitAction = account ? updateAccountAction : createAccountAction;
+  const [state, action, pending] = useActionState(submitAction, initial);
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (!state.message) return;
@@ -27,16 +38,18 @@ export function AccountForm() {
       action={action}
       className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-2 lg:grid-cols-[1fr_160px_1fr_160px_auto]"
     >
+      {account && <input type="hidden" name="accountId" value={account.id} />}
       <Input
         name="name"
         required
         maxLength={120}
+        defaultValue={account?.name}
         placeholder="Account name"
         aria-label="Account name"
       />
       <select
         name="accountType"
-        defaultValue="cash"
+        defaultValue={account?.account_type ?? "cash"}
         aria-label="Account type"
         className="border-border bg-background min-h-11 rounded-xl border px-3 text-sm"
       >
@@ -50,18 +63,27 @@ export function AccountForm() {
       <Input
         name="institution"
         maxLength={120}
+        defaultValue={account?.institution ?? ""}
         placeholder="Institution (optional)"
         aria-label="Institution"
       />
-      <Input
-        name="openingBalance"
-        inputMode="decimal"
-        defaultValue="0.00"
-        required
-        aria-label="Opening balance in pesos"
-      />
+      {!account && (
+        <Input
+          name="openingBalance"
+          inputMode="decimal"
+          defaultValue="0.00"
+          required
+          aria-label="Opening balance in pesos"
+        />
+      )}
       <Button type="submit" disabled={pending}>
-        {pending ? "Adding…" : "Add account"}
+        {pending
+          ? account
+            ? "Saving…"
+            : "Adding…"
+          : account
+            ? "Save changes"
+            : "Add account"}
       </Button>
     </form>
   );

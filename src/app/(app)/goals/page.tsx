@@ -1,5 +1,6 @@
 import { Goal } from "lucide-react";
 import { GoalForm } from "@/components/goals/goal-form";
+import { MilestoneList } from "@/components/goals/milestone-list";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,23 @@ export default async function GoalsPage() {
         .order("target_date", { nullsFirst: false })
     : { data: [] };
   const goals = data ?? [];
+  const { data: milestoneData } =
+    supabase && goals.length
+      ? await supabase
+          .from("goal_milestones")
+          .select("id,goal_id,title,target_date,completed_at")
+          .in(
+            "goal_id",
+            goals.map((goal) => goal.id),
+          )
+          .order("sort_order")
+      : { data: [] };
+  const milestonesByGoal = new Map<string, typeof milestoneData>();
+  for (const milestone of milestoneData ?? []) {
+    const items = milestonesByGoal.get(milestone.goal_id) ?? [];
+    items.push(milestone);
+    milestonesByGoal.set(milestone.goal_id, items);
+  }
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
       <PageHeading
@@ -106,6 +124,10 @@ export default async function GoalsPage() {
                     Save progress
                   </Button>
                 </form>
+                <MilestoneList
+                  goalId={goal.id}
+                  milestones={milestonesByGoal.get(goal.id) ?? []}
+                />
               </CardContent>
             </Card>
           ))

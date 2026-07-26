@@ -1,6 +1,7 @@
 import { Check, Clock3, Inbox, RotateCcw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { QuickTaskForm } from "@/components/tasks/quick-task-form";
+import { TaskEditForm } from "@/components/tasks/task-edit-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { manilaDateLabel } from "@/lib/dates/dates";
@@ -162,6 +163,12 @@ export default async function TasksPage({
                         : ""}
                     </p>
                   )}
+                  <details className="mt-3">
+                    <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-[11px]">
+                      Edit task
+                    </summary>
+                    <TaskEditForm task={task} />
+                  </details>
                 </div>
                 <form action={deleteTaskAction}>
                   <input type="hidden" name="taskId" value={task.id} />

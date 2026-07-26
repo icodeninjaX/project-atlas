@@ -52,6 +52,41 @@ export async function createTaskAction(
   return { success: true, message: "Task added." };
 }
 
+export async function updateTaskAction(formData: FormData) {
+  const id = String(formData.get("taskId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  const result = taskSchema.safeParse({
+    title: formData.get("title"),
+    description: formData.get("description"),
+    status: formData.get("status") || "inbox",
+    priority: formData.get("priority") || "medium",
+    scheduledFor: formData.get("scheduledFor") || undefined,
+    estimatedMinutes: formData.get("estimatedMinutes")
+      ? Number(formData.get("estimatedMinutes"))
+      : undefined,
+  });
+  if (!result.success) return;
+  const supabase = await createClient();
+  if (!supabase) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase
+    .from("tasks")
+    .update({
+      title: result.data.title,
+      description: result.data.description ?? null,
+      priority: result.data.priority,
+      scheduled_for: result.data.scheduledFor ?? null,
+      estimated_minutes: result.data.estimatedMinutes ?? null,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
+}
+
 export async function setTaskStatusAction(formData: FormData) {
   const taskId = String(formData.get("taskId") ?? "");
   const status = String(formData.get("status") ?? "");

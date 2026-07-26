@@ -73,3 +73,45 @@ export async function updateGoalProgressAction(formData: FormData) {
   revalidatePath("/goals");
   revalidatePath("/dashboard");
 }
+
+export async function createMilestoneAction(formData: FormData) {
+  const goalId = String(formData.get("goalId") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  const targetDate = String(formData.get("targetDate") ?? "").trim();
+  if (!/^[0-9a-f-]{36}$/i.test(goalId) || !title || title.length > 160) return;
+  const supabase = await createClient();
+  if (!supabase) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from("goal_milestones").insert({
+    user_id: user.id,
+    goal_id: goalId,
+    title,
+    target_date: /^\d{4}-\d{2}-\d{2}$/.test(targetDate) ? targetDate : null,
+  });
+  revalidatePath("/goals");
+  revalidatePath("/dashboard");
+}
+
+export async function toggleMilestoneAction(formData: FormData) {
+  const id = String(formData.get("milestoneId") ?? "");
+  const completed = formData.get("completed") === "true";
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  const supabase = await createClient();
+  if (!supabase) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase
+    .from("goal_milestones")
+    .update({
+      completed_at: completed ? new Date().toISOString() : null,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  revalidatePath("/goals");
+  revalidatePath("/dashboard");
+}

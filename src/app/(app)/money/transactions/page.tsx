@@ -1,6 +1,7 @@
 import { ReceiptText, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { TransactionForm } from "@/components/money/transaction-form";
+import { TransferForm } from "@/components/money/transfer-form";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -90,6 +91,10 @@ export default async function TransactionsPage() {
           today={todayInManila()}
         />
       </div>
+      <TransferForm
+        accounts={accountsResult.data ?? []}
+        today={todayInManila()}
+      />
       <div className="border-border bg-card mt-6 overflow-hidden rounded-2xl border">
         {transactions.length === 0 ? (
           <div className="grid min-h-60 place-items-center text-center">
