@@ -48,7 +48,7 @@ export function QuickTaskForm() {
       action={action}
       className="border-border bg-card rounded-2xl border p-4 sm:p-5"
     >
-      <div className="grid gap-3 lg:grid-cols-[1fr_150px_130px_auto]">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_150px_130px_130px_auto]">
         <div>
           <label
             htmlFor="quick-task-title"
@@ -93,7 +93,28 @@ export function QuickTaskForm() {
             <option value="critical">Critical</option>
           </select>
         </div>
-        <Button type="submit" disabled={pending} className="self-end">
+        <div>
+          <label
+            htmlFor="quick-task-estimated-minutes"
+            className="text-muted-foreground mb-1.5 block text-xs font-medium"
+          >
+            Estimated minutes
+          </label>
+          <Input
+            id="quick-task-estimated-minutes"
+            name="estimatedMinutes"
+            type="number"
+            inputMode="numeric"
+            min="1"
+            max="1440"
+            placeholder="30"
+          />
+        </div>
+        <Button
+          type="submit"
+          disabled={pending}
+          className="self-end md:col-span-2 xl:col-span-1"
+        >
           {pending ? "Adding…" : "Add task"}
         </Button>
       </div>

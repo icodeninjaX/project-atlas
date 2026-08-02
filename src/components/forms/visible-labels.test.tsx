@@ -24,6 +24,12 @@ describe("primary create forms", () => {
     expectVisibleLabel("Task title");
     expectVisibleLabel("Scheduled date");
     expectVisibleLabel("Priority");
+    expectVisibleLabel("Estimated minutes");
+
+    expect(screen.getByLabelText("Estimated minutes")).toHaveAttribute(
+      "name",
+      "estimatedMinutes",
+    );
   });
 
   it("uses visible labels for account details", () => {
