@@ -43,3 +43,13 @@ export function mondayWeekStart(value: string | Date): string {
     "yyyy-MM-dd",
   );
 }
+
+export function resolveCalendarMonth(
+  requested: unknown,
+  fallback: string,
+): string {
+  return typeof requested === "string" &&
+    /^\d{4}-(0[1-9]|1[0-2])$/.test(requested)
+    ? requested
+    : fallback;
+}

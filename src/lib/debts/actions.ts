@@ -76,6 +76,74 @@ export async function createDebtAction(
   return { success: true, message: "Debt added." };
 }
 
+export async function updateDebtAction(
+  _state: DebtActionState,
+  formData: FormData,
+): Promise<DebtActionState> {
+  const id = String(formData.get("debtId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id))
+    return { success: false, message: "The debt could not be found." };
+  const session = await auth();
+  if (!session)
+    return { success: false, message: "Your session is unavailable." };
+  let originalBalanceCentavos: number;
+  let currentBalanceCentavos: number;
+  let minimumPaymentCentavos: number;
+  try {
+    originalBalanceCentavos = pesoInputToCentavos(
+      String(formData.get("originalBalance") ?? ""),
+    );
+    currentBalanceCentavos = pesoInputToCentavos(
+      String(formData.get("currentBalance") ?? ""),
+    );
+    minimumPaymentCentavos = pesoInputToCentavos(
+      String(formData.get("minimumPayment") || "0"),
+    );
+  } catch {
+    return { success: false, message: "Enter valid peso balances." };
+  }
+  const result = debtSchema.safeParse({
+    creditorName: formData.get("creditorName"),
+    debtType: formData.get("debtType"),
+    originalBalanceCentavos,
+    interestRatePercent: Number(formData.get("interestRatePercent") || 0),
+    minimumPaymentCentavos,
+    dueDay: formData.get("dueDay") ? Number(formData.get("dueDay")) : undefined,
+    nextDueDate: formData.get("nextDueDate") || undefined,
+    status: formData.get("status") || "active",
+    priority: Number(formData.get("priority") || 1),
+    notes: formData.get("notes"),
+  });
+  if (!result.success)
+    return {
+      success: false,
+      message: result.error.issues[0]?.message ?? "Check the debt.",
+    };
+  const { error } = await session.supabase
+    .from("debts")
+    .update({
+      creditor_name: result.data.creditorName,
+      debt_type: result.data.debtType,
+      original_balance_centavos: result.data.originalBalanceCentavos,
+      current_balance_centavos: currentBalanceCentavos,
+      interest_rate_percent: result.data.interestRatePercent,
+      minimum_payment_centavos: result.data.minimumPaymentCentavos,
+      due_day: result.data.dueDay ?? null,
+      next_due_date: result.data.nextDueDate ?? null,
+      status: result.data.status,
+      priority: result.data.priority,
+      notes: result.data.notes ?? null,
+    })
+    .eq("id", id)
+    .eq("user_id", session.user.id);
+  if (error)
+    return { success: false, message: "The debt could not be updated." };
+  revalidatePath("/debts");
+  revalidatePath(`/debts/${id}`);
+  revalidatePath("/dashboard");
+  return { success: true, message: "Debt updated." };
+}
+
 export async function recordDebtPaymentAction(
   _state: DebtActionState,
   formData: FormData,

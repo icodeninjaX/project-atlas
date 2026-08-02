@@ -29,58 +29,75 @@ export function ApplicationForm() {
       action={action}
       className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-2 lg:grid-cols-4"
     >
-      <Input
-        name="companyName"
-        required
-        maxLength={160}
-        placeholder="Company"
-        aria-label="Company name"
-      />
-      <Input
-        name="roleTitle"
-        required
-        maxLength={160}
-        placeholder="Role title"
-        aria-label="Role title"
-      />
-      <select
-        name="stage"
-        defaultValue="interested"
-        aria-label="Application stage"
-        className="border-border bg-background min-h-11 rounded-xl border px-3 text-sm"
-      >
-        <option value="interested">Interested</option>
-        <option value="preparing">Preparing</option>
-        <option value="applied">Applied</option>
-        <option value="assessment">Assessment</option>
-        <option value="interview">Interview</option>
-        <option value="final_interview">Final interview</option>
-        <option value="offer">Offer</option>
-      </select>
-      <select
-        name="workSetup"
-        defaultValue="unspecified"
-        aria-label="Work setup"
-        className="border-border bg-background min-h-11 rounded-xl border px-3 text-sm"
-      >
-        <option value="unspecified">Setup unspecified</option>
-        <option value="remote">Remote</option>
-        <option value="hybrid">Hybrid</option>
-        <option value="onsite">Onsite</option>
-      </select>
-      <select
-        name="employmentType"
-        defaultValue="full_time"
-        aria-label="Employment type"
-        className="border-border bg-background min-h-11 rounded-xl border px-3 text-sm"
-      >
-        <option value="full_time">Full time</option>
-        <option value="part_time">Part time</option>
-        <option value="contract">Contract</option>
-        <option value="freelance">Freelance</option>
-        <option value="internship">Internship</option>
-        <option value="unspecified">Unspecified</option>
-      </select>
+      <label className="text-muted-foreground text-xs">
+        Company name
+        <Input
+          name="companyName"
+          required
+          maxLength={160}
+          placeholder="e.g. Acme Philippines"
+          aria-label="Company name"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Role title
+        <Input
+          name="roleTitle"
+          required
+          maxLength={160}
+          placeholder="e.g. Frontend developer"
+          aria-label="Role title"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Application stage
+        <select
+          name="stage"
+          defaultValue="interested"
+          aria-label="Application stage"
+          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+        >
+          <option value="interested">Interested</option>
+          <option value="preparing">Preparing</option>
+          <option value="applied">Applied</option>
+          <option value="assessment">Assessment</option>
+          <option value="interview">Interview</option>
+          <option value="final_interview">Final interview</option>
+          <option value="offer">Offer</option>
+        </select>
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Work setup
+        <select
+          name="workSetup"
+          defaultValue="unspecified"
+          aria-label="Work setup"
+          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+        >
+          <option value="unspecified">Setup unspecified</option>
+          <option value="remote">Remote</option>
+          <option value="hybrid">Hybrid</option>
+          <option value="onsite">Onsite</option>
+        </select>
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Employment type
+        <select
+          name="employmentType"
+          defaultValue="full_time"
+          aria-label="Employment type"
+          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+        >
+          <option value="full_time">Full time</option>
+          <option value="part_time">Part time</option>
+          <option value="contract">Contract</option>
+          <option value="freelance">Freelance</option>
+          <option value="internship">Internship</option>
+          <option value="unspecified">Unspecified</option>
+        </select>
+      </label>
       <Input
         name="location"
         maxLength={120}
@@ -114,11 +131,29 @@ export function ApplicationForm() {
         aria-label="Maximum salary in pesos"
       />
       <Input
+        name="contactName"
+        maxLength={160}
+        placeholder="Contact name"
+        aria-label="Contact name"
+      />
+      <Input
+        name="contactEmail"
+        type="email"
+        placeholder="Contact email"
+        aria-label="Contact email"
+      />
+      <Input
         name="resumeVersion"
         maxLength={80}
         placeholder="Resume version"
         aria-label="Resume version"
-        className="lg:col-span-3"
+      />
+      <textarea
+        name="notes"
+        maxLength={4000}
+        placeholder="Notes"
+        aria-label="Application notes"
+        className="border-border bg-background min-h-11 w-full rounded-xl border px-3 py-2 text-sm outline-none sm:col-span-2 lg:col-span-3"
       />
       <Button type="submit" disabled={pending}>
         {pending ? "Adding…" : "Add application"}

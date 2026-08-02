@@ -3,6 +3,7 @@ import { BudgetForm } from "@/components/money/budget-form";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { resolveCalendarMonth } from "@/lib/dates/dates";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,8 +23,7 @@ export default async function BudgetPage({
   searchParams: Promise<{ month?: string }>;
 }) {
   const requested = (await searchParams).month;
-  const month =
-    requested && /^\d{4}-\d{2}$/.test(requested) ? requested : currentMonth();
+  const month = resolveCalendarMonth(requested, currentMonth());
   const monthStart = `${month}-01`;
   const nextMonthDate = new Date(`${monthStart}T00:00:00Z`);
   nextMonthDate.setUTCMonth(nextMonthDate.getUTCMonth() + 1);

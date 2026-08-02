@@ -37,27 +37,39 @@ export function PaymentForm({
       className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-[1fr_170px_1fr_auto]"
     >
       <input type="hidden" name="debtId" value={debtId} />
-      <Input
-        name="amount"
-        required
-        inputMode="decimal"
-        placeholder="Payment amount"
-        aria-label="Payment amount in pesos"
-      />
-      <Input
-        name="paymentDate"
-        type="date"
-        defaultValue={today}
-        required
-        aria-label="Payment date"
-      />
-      <Input
-        name="notes"
-        maxLength={300}
-        placeholder="Note (optional)"
-        aria-label="Payment note"
-      />
-      <Button type="submit" disabled={pending}>
+      <label className="text-muted-foreground text-xs">
+        Payment amount (PHP)
+        <Input
+          name="amount"
+          required
+          inputMode="decimal"
+          placeholder="0.00"
+          aria-label="Payment amount in pesos"
+          className="mt-1.5 font-mono"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Payment date
+        <Input
+          name="paymentDate"
+          type="date"
+          defaultValue={today}
+          required
+          aria-label="Payment date"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Payment note
+        <Input
+          name="notes"
+          maxLength={300}
+          placeholder="Optional reference or context"
+          aria-label="Payment note"
+          className="mt-1.5"
+        />
+      </label>
+      <Button type="submit" disabled={pending} className="self-end">
         {pending ? "Recording…" : "Record payment"}
       </Button>
     </form>

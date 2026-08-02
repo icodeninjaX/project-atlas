@@ -82,6 +82,12 @@ export default async function GoalsPage() {
                     {goal.progress_percent}%
                   </span>
                 </div>
+                <details className="mt-4">
+                  <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-xs">
+                    Edit goal
+                  </summary>
+                  <GoalForm goal={goal} />
+                </details>
                 <div
                   className="bg-muted mt-5 h-2 overflow-hidden rounded-full"
                   role="progressbar"

@@ -50,7 +50,10 @@ export function QuickTaskForm() {
     >
       <div className="grid gap-3 lg:grid-cols-[1fr_150px_130px_auto]">
         <div>
-          <label htmlFor="quick-task-title" className="sr-only">
+          <label
+            htmlFor="quick-task-title"
+            className="text-muted-foreground mb-1.5 block text-xs font-medium"
+          >
             Task title
           </label>
           <Input
@@ -63,13 +66,19 @@ export function QuickTaskForm() {
           />
         </div>
         <div>
-          <label htmlFor="quick-task-date" className="sr-only">
+          <label
+            htmlFor="quick-task-date"
+            className="text-muted-foreground mb-1.5 block text-xs font-medium"
+          >
             Scheduled date
           </label>
           <Input id="quick-task-date" name="scheduledFor" type="date" />
         </div>
         <div>
-          <label htmlFor="quick-task-priority" className="sr-only">
+          <label
+            htmlFor="quick-task-priority"
+            className="text-muted-foreground mb-1.5 block text-xs font-medium"
+          >
             Priority
           </label>
           <select
@@ -84,7 +93,7 @@ export function QuickTaskForm() {
             <option value="critical">Critical</option>
           </select>
         </div>
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} className="self-end">
           {pending ? "Adding…" : "Add task"}
         </Button>
       </div>

@@ -18,17 +18,39 @@ type SearchResult = {
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    type?: string;
+    status?: string;
+    from?: string;
+    to?: string;
+  }>;
 }) {
-  const query = String((await searchParams).q ?? "")
+  const params = await searchParams;
+  const query = String(params.q ?? "")
     .trim()
     .slice(0, 100);
+  const entityType = params.type ?? "all";
+  const status = params.status ?? "all";
+  const fromDate = /^\d{4}-\d{2}-\d{2}$/.test(params.from ?? "")
+    ? params.from
+    : undefined;
+  const toDate = /^\d{4}-\d{2}-\d{2}$/.test(params.to ?? "")
+    ? params.to
+    : undefined;
   let results: SearchResult[] = [];
 
   if (query.length >= 2) {
     const supabase = await createClient();
     const { data } = supabase
-      ? await supabase.rpc("search_atlas", { p_query: query, p_limit: 60 })
+      ? await supabase.rpc("search_atlas", {
+          p_query: query,
+          p_limit: 60,
+          p_entity_type: entityType,
+          p_status: status,
+          p_from_date: fromDate,
+          p_to_date: toDate,
+        })
       : { data: null };
     results = (data ?? []) as SearchResult[];
   }
@@ -52,7 +74,13 @@ export default async function SearchPage({
         recognize.
       </p>
       <div className="mt-7">
-        <SearchInput defaultValue={query} />
+        <SearchInput
+          defaultValue={query}
+          entityType={entityType}
+          status={status}
+          fromDate={fromDate ?? ""}
+          toDate={toDate ?? ""}
+        />
       </div>
 
       <div className="mt-8">

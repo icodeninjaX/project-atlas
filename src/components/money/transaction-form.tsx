@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   createTransactionAction,
+  updateTransactionAction,
   type MoneyActionState,
 } from "@/lib/money/actions";
 
@@ -15,16 +16,29 @@ export function TransactionForm({
   accounts,
   categories,
   today,
+  transaction,
 }: {
   accounts: Array<{ id: string; name: string }>;
   categories: Array<{ id: string; name: string; category_type: string }>;
   today: string;
+  transaction?: {
+    id: string;
+    account_id: string;
+    category_id: string;
+    transaction_type: "expense" | "income";
+    amount_centavos: number;
+    transaction_date: string;
+    merchant_or_source: string | null;
+    description: string | null;
+  };
 }) {
-  const [state, action, pending] = useActionState(
-    createTransactionAction,
-    initial,
+  const submitAction = transaction
+    ? updateTransactionAction
+    : createTransactionAction;
+  const [state, action, pending] = useActionState(submitAction, initial);
+  const [type, setType] = useState<"expense" | "income">(
+    transaction?.transaction_type ?? "expense",
   );
-  const [type, setType] = useState<"expense" | "income">("expense");
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (!state.message) return;
@@ -39,74 +53,119 @@ export function TransactionForm({
       action={action}
       className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-2 xl:grid-cols-4"
     >
-      <select
-        name="type"
-        value={type}
-        onChange={(event) =>
-          setType(event.target.value as "expense" | "income")
-        }
-        aria-label="Transaction type"
-        className="border-border bg-background min-h-11 rounded-xl border px-3 text-sm"
-      >
-        <option value="expense">Expense</option>
-        <option value="income">Income</option>
-      </select>
-      <select
-        name="accountId"
-        required
-        aria-label="Account"
-        className="border-border bg-background min-h-11 rounded-xl border px-3 text-sm"
-      >
-        <option value="">Choose account</option>
-        {accounts.map((account) => (
-          <option key={account.id} value={account.id}>
-            {account.name}
-          </option>
-        ))}
-      </select>
-      <select
-        name="categoryId"
-        required
-        aria-label="Category"
-        className="border-border bg-background min-h-11 rounded-xl border px-3 text-sm"
-      >
-        <option value="">Choose category</option>
-        {categories
-          .filter((category) => category.category_type === type)
-          .map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
+      {transaction && (
+        <input type="hidden" name="transactionId" value={transaction.id} />
+      )}
+      <label className="text-muted-foreground text-xs">
+        Transaction type
+        <select
+          name="type"
+          value={type}
+          onChange={(event) =>
+            setType(event.target.value as "expense" | "income")
+          }
+          aria-label="Transaction type"
+          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+        >
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Account
+        <select
+          name="accountId"
+          required
+          defaultValue={transaction?.account_id ?? ""}
+          aria-label="Account"
+          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+        >
+          <option value="">Choose account</option>
+          {accounts.map((account) => (
+            <option key={account.id} value={account.id}>
+              {account.name}
             </option>
           ))}
-      </select>
-      <Input
-        name="amount"
-        inputMode="decimal"
-        required
-        placeholder="0.00"
-        aria-label="Amount in pesos"
-      />
-      <Input
-        name="transactionDate"
-        type="date"
-        defaultValue={today}
-        required
-        aria-label="Transaction date"
-      />
-      <Input
-        name="merchantOrSource"
-        maxLength={160}
-        placeholder="Merchant or source"
-        aria-label="Merchant or source"
-      />
-      <Input
-        name="description"
-        maxLength={300}
-        placeholder="Description (optional)"
-        aria-label="Description"
-      />
-      <Button type="submit" disabled={pending || accounts.length === 0}>
-        {pending ? "Recording…" : "Record transaction"}
+        </select>
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Category
+        <select
+          name="categoryId"
+          required
+          defaultValue={transaction?.category_id ?? ""}
+          aria-label="Category"
+          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+        >
+          <option value="">Choose category</option>
+          {categories
+            .filter((category) => category.category_type === type)
+            .map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+        </select>
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Amount (PHP)
+        <Input
+          name="amount"
+          inputMode="decimal"
+          required
+          placeholder="0.00"
+          defaultValue={
+            transaction
+              ? (Number(transaction.amount_centavos) / 100).toFixed(2)
+              : undefined
+          }
+          aria-label="Amount in pesos"
+          className="mt-1.5 font-mono"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Transaction date
+        <Input
+          name="transactionDate"
+          type="date"
+          defaultValue={transaction?.transaction_date ?? today}
+          required
+          aria-label="Transaction date"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Merchant or source
+        <Input
+          name="merchantOrSource"
+          maxLength={160}
+          defaultValue={transaction?.merchant_or_source ?? ""}
+          placeholder="e.g. Grocery or payroll"
+          aria-label="Merchant or source"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Description
+        <Input
+          name="description"
+          maxLength={300}
+          defaultValue={transaction?.description ?? ""}
+          placeholder="Optional context"
+          aria-label="Description"
+          className="mt-1.5"
+        />
+      </label>
+      <Button
+        type="submit"
+        disabled={pending || accounts.length === 0}
+        className="self-end"
+      >
+        {pending
+          ? "Saving…"
+          : transaction
+            ? "Save changes"
+            : "Record transaction"}
       </Button>
     </form>
   );

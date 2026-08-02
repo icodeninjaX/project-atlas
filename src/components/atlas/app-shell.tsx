@@ -12,7 +12,7 @@ import {
   Settings,
   WalletCards,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -38,6 +38,7 @@ const mobileMoreNavigation = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const moreNavigationRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -55,8 +56,21 @@ export function AppShell({ children }: { children: ReactNode }) {
       if (event.key === "Escape") setMoreOpen(false);
     };
 
+    const closeOnPointerAway = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !moreNavigationRef.current?.contains(event.target)
+      ) {
+        setMoreOpen(false);
+      }
+    };
+
     document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
+    document.addEventListener("pointerdown", closeOnPointerAway);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("pointerdown", closeOnPointerAway);
+    };
   }, [moreOpen]);
 
   return (
@@ -153,7 +167,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             {label}
           </Link>
         ))}
-        <div className="relative flex min-w-14 justify-center">
+        <div
+          ref={moreNavigationRef}
+          className="relative flex min-w-14 justify-center"
+        >
           {moreOpen && (
             <div
               id="mobile-more-menu"

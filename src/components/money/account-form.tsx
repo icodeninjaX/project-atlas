@@ -39,44 +39,59 @@ export function AccountForm({
       className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-2 lg:grid-cols-[1fr_160px_1fr_160px_auto]"
     >
       {account && <input type="hidden" name="accountId" value={account.id} />}
-      <Input
-        name="name"
-        required
-        maxLength={120}
-        defaultValue={account?.name}
-        placeholder="Account name"
-        aria-label="Account name"
-      />
-      <select
-        name="accountType"
-        defaultValue={account?.account_type ?? "cash"}
-        aria-label="Account type"
-        className="border-border bg-background min-h-11 rounded-xl border px-3 text-sm"
-      >
-        <option value="cash">Cash</option>
-        <option value="bank">Bank</option>
-        <option value="e_wallet">E-wallet</option>
-        <option value="savings">Savings</option>
-        <option value="investment">Investment</option>
-        <option value="other">Other</option>
-      </select>
-      <Input
-        name="institution"
-        maxLength={120}
-        defaultValue={account?.institution ?? ""}
-        placeholder="Institution (optional)"
-        aria-label="Institution"
-      />
-      {!account && (
+      <label className="text-muted-foreground text-xs">
+        Account name
         <Input
-          name="openingBalance"
-          inputMode="decimal"
-          defaultValue="0.00"
+          name="name"
           required
-          aria-label="Opening balance in pesos"
+          maxLength={120}
+          defaultValue={account?.name}
+          placeholder="e.g. Maya wallet"
+          aria-label="Account name"
+          className="mt-1.5"
         />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Account type
+        <select
+          name="accountType"
+          defaultValue={account?.account_type ?? "cash"}
+          aria-label="Account type"
+          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+        >
+          <option value="cash">Cash</option>
+          <option value="bank">Bank</option>
+          <option value="e_wallet">E-wallet</option>
+          <option value="savings">Savings</option>
+          <option value="investment">Investment</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Institution
+        <Input
+          name="institution"
+          maxLength={120}
+          defaultValue={account?.institution ?? ""}
+          placeholder="Optional bank or provider"
+          aria-label="Institution"
+          className="mt-1.5"
+        />
+      </label>
+      {!account && (
+        <label className="text-muted-foreground text-xs">
+          Opening balance (PHP)
+          <Input
+            name="openingBalance"
+            inputMode="decimal"
+            defaultValue="0.00"
+            required
+            aria-label="Opening balance in pesos"
+            className="mt-1.5 font-mono"
+          />
+        </label>
       )}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending} className="self-end">
         {pending
           ? account
             ? "Saving…"

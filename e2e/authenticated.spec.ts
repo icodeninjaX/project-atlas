@@ -73,6 +73,13 @@ test.describe("authenticated Atlas workflows", () => {
     await page.getByLabel("Role title").fill("Full-stack Developer");
     await page.getByRole("button", { name: "Add application" }).click();
     await expect(page.getByText(company)).toBeVisible();
+    await page.getByText("Edit application").first().click();
+    await page
+      .getByLabel(`Edit ${company} role title`)
+      .fill("Senior Developer");
+    await page.getByLabel(`Edit ${company} notes`).fill("Updated from E2E.");
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(page.getByText("Senior Developer")).toBeVisible();
 
     await page.goto("/reviews");
     await page

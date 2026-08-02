@@ -1,0 +1,84 @@
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+import { ApplicationForm } from "@/components/career/application-form";
+import { PaymentForm } from "@/components/debts/payment-form";
+import { AccountForm } from "@/components/money/account-form";
+import { TransactionForm } from "@/components/money/transaction-form";
+import { QuickTaskForm } from "@/components/tasks/quick-task-form";
+
+afterEach(cleanup);
+
+function expectVisibleLabel(name: string) {
+  const control = screen.getByLabelText(name);
+  const label =
+    control.closest("label") ??
+    (control.id ? document.querySelector(`label[for="${control.id}"]`) : null);
+  expect(label).not.toBeNull();
+  expect(label).not.toHaveClass("sr-only");
+}
+
+describe("primary create forms", () => {
+  it("keeps quick-task labels visible after values are entered", () => {
+    render(<QuickTaskForm />);
+
+    expectVisibleLabel("Task title");
+    expectVisibleLabel("Scheduled date");
+    expectVisibleLabel("Priority");
+  });
+
+  it("uses visible labels for account details", () => {
+    render(<AccountForm />);
+
+    expectVisibleLabel("Account name");
+    expectVisibleLabel("Account type");
+    expectVisibleLabel("Institution");
+    expectVisibleLabel("Opening balance in pesos");
+  });
+
+  it("uses visible labels for transaction details", () => {
+    render(
+      <TransactionForm
+        accounts={[
+          { id: "1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb", name: "Cash" },
+        ]}
+        categories={[
+          {
+            id: "2d334d84-4e32-46fa-bbdb-05ce7dc0dfbb",
+            name: "Food",
+            category_type: "expense",
+          },
+        ]}
+        today="2026-08-02"
+      />,
+    );
+
+    expectVisibleLabel("Transaction type");
+    expectVisibleLabel("Account");
+    expectVisibleLabel("Category");
+    expectVisibleLabel("Amount in pesos");
+    expectVisibleLabel("Transaction date");
+  });
+
+  it("uses visible labels when recording a debt payment", () => {
+    render(
+      <PaymentForm
+        debtId="3d334d84-4e32-46fa-bbdb-05ce7dc0dfbb"
+        today="2026-08-02"
+      />,
+    );
+
+    expectVisibleLabel("Payment amount in pesos");
+    expectVisibleLabel("Payment date");
+    expectVisibleLabel("Payment note");
+  });
+
+  it("uses visible labels for the essential career fields", () => {
+    render(<ApplicationForm />);
+
+    expectVisibleLabel("Company name");
+    expectVisibleLabel("Role title");
+    expectVisibleLabel("Application stage");
+    expectVisibleLabel("Work setup");
+    expectVisibleLabel("Employment type");
+  });
+});

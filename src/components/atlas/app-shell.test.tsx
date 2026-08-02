@@ -76,4 +76,21 @@ describe("AppShell", () => {
     ).not.toBeInTheDocument();
     expect(button).toHaveAttribute("aria-expanded", "false");
   });
+
+  it("closes the mobile More menu when the user points outside it", () => {
+    render(
+      <AppShell>
+        <h1>Today</h1>
+      </AppShell>,
+    );
+
+    const button = screen.getByRole("button", { name: "More navigation" });
+    fireEvent.click(button);
+    fireEvent.pointerDown(screen.getByRole("heading", { name: "Today" }));
+
+    expect(
+      screen.queryByRole("menu", { name: "More navigation" }),
+    ).not.toBeInTheDocument();
+    expect(button).toHaveAttribute("aria-expanded", "false");
+  });
 });

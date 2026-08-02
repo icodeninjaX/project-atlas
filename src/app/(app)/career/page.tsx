@@ -1,6 +1,8 @@
+import { Fragment } from "react";
 import { BriefcaseBusiness, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { ApplicationForm } from "@/components/career/application-form";
+import { ApplicationEditForm } from "@/components/career/application-edit-form";
 import { StageSelect } from "@/components/career/stage-select";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
@@ -28,13 +30,19 @@ type Application = {
   company_name: string;
   role_title: string;
   job_url: string | null;
+  location: string | null;
   work_setup: string;
+  employment_type: string;
   stage: string;
   salary_min_centavos: number | null;
   salary_max_centavos: number | null;
   next_action: string | null;
   next_action_at: string | null;
   applied_at: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  resume_version: string | null;
+  notes: string | null;
   is_follow_up_overdue: boolean;
 };
 
@@ -54,7 +62,7 @@ export default async function CareerPage({
         supabase
           .from("career_application_overview")
           .select(
-            "id,company_name,role_title,job_url,work_setup,stage,salary_min_centavos,salary_max_centavos,next_action,next_action_at,applied_at,is_follow_up_overdue",
+            "id,company_name,role_title,job_url,location,work_setup,employment_type,stage,salary_min_centavos,salary_max_centavos,next_action,next_action_at,applied_at,contact_name,contact_email,resume_version,notes,is_follow_up_overdue",
           )
           .order("updated_at", { ascending: false }),
         supabase
@@ -171,64 +179,74 @@ export default async function CareerPage({
               {applications.map((application) => {
                 const overdue = application.is_follow_up_overdue;
                 return (
-                  <tr
-                    key={application.id}
-                    className="border-border border-b last:border-0"
-                  >
-                    <td className="p-4">
-                      <p className="font-semibold">
-                        {application.company_name}
-                      </p>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        {application.role_title} · {application.work_setup}
-                      </p>
-                    </td>
-                    <td className="p-4">
-                      <StageSelect
-                        applicationId={application.id}
-                        companyName={application.company_name}
-                        stage={application.stage}
-                      />
-                    </td>
-                    <td className="p-4">
-                      <p>{application.next_action ?? "No action set"}</p>
-                      {application.next_action_at && (
-                        <p
-                          className={`mt-1 text-xs ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
-                        >
-                          {overdue ? "Follow-up overdue · " : ""}
-                          {new Date(
-                            application.next_action_at,
-                          ).toLocaleDateString("en-PH", {
-                            timeZone: "Asia/Manila",
-                          })}
+                  <Fragment key={application.id}>
+                    <tr
+                      key={application.id}
+                      className="border-border border-b last:border-0"
+                    >
+                      <td className="p-4">
+                        <p className="font-semibold">
+                          {application.company_name}
                         </p>
-                      )}
-                    </td>
-                    <td className="p-4 font-mono text-xs">
-                      {application.salary_min_centavos != null
-                        ? formatCentavos(application.salary_min_centavos)
-                        : "—"}
-                      {application.salary_max_centavos != null
-                        ? ` – ${formatCentavos(application.salary_max_centavos)}`
-                        : ""}
-                    </td>
-                    <td className="p-4">
-                      {application.job_url ? (
-                        <a
-                          href={application.job_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          aria-label={`Open job link for ${application.company_name}`}
-                          className="text-primary"
-                        >
-                          <ExternalLink className="size-4" />
-                        </a>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                  </tr>
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          {application.role_title} · {application.work_setup}
+                        </p>
+                      </td>
+                      <td className="p-4">
+                        <StageSelect
+                          applicationId={application.id}
+                          companyName={application.company_name}
+                          stage={application.stage}
+                        />
+                      </td>
+                      <td className="p-4">
+                        <p>{application.next_action ?? "No action set"}</p>
+                        {application.next_action_at && (
+                          <p
+                            className={`mt-1 text-xs ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
+                          >
+                            {overdue ? "Follow-up overdue · " : ""}
+                            {new Date(
+                              application.next_action_at,
+                            ).toLocaleDateString("en-PH", {
+                              timeZone: "Asia/Manila",
+                            })}
+                          </p>
+                        )}
+                      </td>
+                      <td className="p-4 font-mono text-xs">
+                        {application.salary_min_centavos != null
+                          ? formatCentavos(application.salary_min_centavos)
+                          : "—"}
+                        {application.salary_max_centavos != null
+                          ? ` – ${formatCentavos(application.salary_max_centavos)}`
+                          : ""}
+                      </td>
+                      <td className="p-4">
+                        {application.job_url ? (
+                          <a
+                            href={application.job_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`Open job link for ${application.company_name}`}
+                            className="text-primary"
+                          >
+                            <ExternalLink className="size-4" />
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                    </tr>
+                    <tr
+                      key={`${application.id}-edit`}
+                      className="border-border border-b last:border-0"
+                    >
+                      <td colSpan={5} className="px-4 pb-4">
+                        <ApplicationEditForm application={application} />
+                      </td>
+                    </tr>
+                  </Fragment>
                 );
               })}
             </tbody>
@@ -275,6 +293,7 @@ export default async function CareerPage({
                             stage={application.stage}
                           />
                         </div>
+                        <ApplicationEditForm application={application} />
                       </CardContent>
                     </Card>
                   ))}

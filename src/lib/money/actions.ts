@@ -168,6 +168,63 @@ export async function createTransactionAction(
   return { success: true, message: "Transaction recorded." };
 }
 
+export async function updateTransactionAction(
+  _state: MoneyActionState,
+  formData: FormData,
+): Promise<MoneyActionState> {
+  const id = String(formData.get("transactionId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) {
+    return { success: false, message: "The transaction could not be found." };
+  }
+
+  const auth = await authenticatedClient();
+  if (!auth) return { success: false, message: "Your session is unavailable." };
+
+  let amountCentavos: number;
+  try {
+    amountCentavos = pesoInputToCentavos(String(formData.get("amount") ?? ""));
+  } catch {
+    return { success: false, message: "Enter a valid positive amount." };
+  }
+
+  const result = transactionSchema.safeParse({
+    accountId: formData.get("accountId"),
+    categoryId: formData.get("categoryId"),
+    type: formData.get("type"),
+    amountCentavos,
+    transactionDate: formData.get("transactionDate"),
+    merchantOrSource: formData.get("merchantOrSource"),
+    description: formData.get("description"),
+  });
+  if (!result.success) {
+    return {
+      success: false,
+      message: result.error.issues[0]?.message ?? "Check the transaction.",
+    };
+  }
+
+  const { error } = await auth.supabase
+    .from("transactions")
+    .update({
+      account_id: result.data.accountId,
+      category_id: result.data.categoryId,
+      transaction_type: result.data.type,
+      amount_centavos: result.data.amountCentavos,
+      transaction_date: result.data.transactionDate,
+      merchant_or_source: result.data.merchantOrSource ?? null,
+      description: result.data.description ?? null,
+    })
+    .eq("id", id)
+    .eq("user_id", auth.user.id);
+  if (error)
+    return { success: false, message: "The transaction could not be updated." };
+
+  revalidatePath("/money/transactions");
+  revalidatePath("/money/accounts");
+  revalidatePath("/dashboard");
+  return { success: true, message: "Transaction updated." };
+}
+
 export async function createTransferAction(
   _state: MoneyActionState,
   formData: FormData,

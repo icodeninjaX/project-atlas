@@ -145,6 +145,8 @@ export const jobApplicationSchema = z
     appliedAt: z.iso.datetime().optional(),
     nextAction: optionalText,
     nextActionAt: z.iso.datetime().optional(),
+    contactName: optionalText,
+    contactEmail: z.email().optional(),
     resumeVersion: optionalText,
     notes: optionalText,
   })

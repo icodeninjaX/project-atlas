@@ -26,7 +26,7 @@ export default async function DebtsPage({
     ? await supabase
         .from("debts")
         .select(
-          "id,creditor_name,debt_type,current_balance_centavos,interest_rate_percent,minimum_payment_centavos,next_due_date,status,priority",
+          "id,creditor_name,debt_type,original_balance_centavos,current_balance_centavos,interest_rate_percent,minimum_payment_centavos,due_day,next_due_date,status,priority,notes",
         )
         .order("priority")
     : { data: [] };
@@ -110,10 +110,9 @@ export default async function DebtsPage({
           </div>
         ) : (
           active.map((debt, index) => (
-            <Link
+            <div
               key={debt.id}
-              href={`/debts/${debt.id}` as Route}
-              className="border-border bg-card hover:bg-muted focus-visible:ring-ring flex items-center gap-4 rounded-2xl border p-4 focus-visible:ring-2 focus-visible:outline-none"
+              className="border-border bg-card rounded-2xl border p-4"
             >
               <span className="bg-primary/10 text-primary grid size-8 shrink-0 place-items-center rounded-lg font-mono text-xs font-semibold">
                 {index + 1}
@@ -132,7 +131,19 @@ export default async function DebtsPage({
                 {formatCentavos(Number(debt.current_balance_centavos))}
               </p>
               <ArrowRight className="text-muted-foreground size-4" />
-            </Link>
+              <details className="mt-3 border-t pt-3">
+                <summary className="text-muted-foreground cursor-pointer text-xs">
+                  Edit debt
+                </summary>
+                <DebtForm debt={debt} />
+              </details>
+              <Link
+                href={`/debts/${debt.id}` as Route}
+                className="text-primary mt-3 inline-flex text-xs"
+              >
+                Open debt details
+              </Link>
+            </div>
           ))
         )}
       </div>

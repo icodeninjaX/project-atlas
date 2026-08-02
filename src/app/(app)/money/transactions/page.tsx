@@ -1,4 +1,4 @@
-import { ReceiptText, Trash2 } from "lucide-react";
+import { Pencil, ReceiptText, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { TransactionForm } from "@/components/money/transaction-form";
 import { TransferForm } from "@/components/money/transfer-form";
@@ -36,7 +36,7 @@ export default async function TransactionsPage() {
         supabase
           .from("transactions")
           .select(
-            "id,transaction_type,amount_centavos,transaction_date,merchant_or_source,description,financial_accounts(name),transaction_categories(name)",
+            "id,account_id,category_id,transaction_type,amount_centavos,transaction_date,merchant_or_source,description,financial_accounts(name),transaction_categories(name)",
           )
           .order("transaction_date", { ascending: false })
           .limit(100),
@@ -139,6 +139,20 @@ export default async function TransactionsPage() {
                   {transaction.transaction_type === "income" ? "+" : "−"}
                   {formatCentavos(Number(transaction.amount_centavos))}
                 </p>
+                <details className="relative">
+                  <summary className="text-muted-foreground hover:bg-muted grid size-10 cursor-pointer list-none place-items-center rounded-xl [&::-webkit-details-marker]:hidden">
+                    <Pencil className="size-4" />
+                    <span className="sr-only">Edit transaction</span>
+                  </summary>
+                  <div className="border-border bg-card absolute right-0 z-10 mt-2 w-[min(90vw,720px)] rounded-2xl border p-3 shadow-xl">
+                    <TransactionForm
+                      accounts={accountsResult.data ?? []}
+                      categories={categoriesResult.data ?? []}
+                      today={todayInManila()}
+                      transaction={transaction}
+                    />
+                  </div>
+                </details>
                 <form action={deleteTransactionAction}>
                   <input
                     type="hidden"
