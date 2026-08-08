@@ -1,7 +1,9 @@
 "use server";
 
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { getAppUrl } from "@/lib/env";
+import { safeRedirectPath } from "@/lib/auth/redirects";
 import { createClient } from "@/lib/supabase/server";
 import { authSchema } from "@/lib/validation/schemas";
 
@@ -37,7 +39,11 @@ export async function signInAction(
     return { success: false, message: "Email or password is incorrect." };
   }
 
-  redirect("/dashboard");
+  const destination = safeRedirectPath(
+    String(formData.get("next") ?? ""),
+    "/dashboard",
+  );
+  redirect(destination as Route);
 }
 
 export async function signUpAction(

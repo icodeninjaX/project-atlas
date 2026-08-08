@@ -2,10 +2,17 @@ import Link from "next/link";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthForm } from "@/components/auth/auth-form";
 import { signInAction } from "@/lib/auth/actions";
+import { safeRedirectPath } from "@/lib/auth/redirects";
 
 export const metadata = { title: "Log in" };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const next = safeRedirectPath((await searchParams).next, "/dashboard");
+
   return (
     <AuthCard
       eyebrow="Welcome back"
@@ -23,7 +30,11 @@ export default function LoginPage() {
         </>
       }
     >
-      <AuthForm action={signInAction} submitLabel="Log in" />
+      <AuthForm
+        action={signInAction}
+        submitLabel="Log in"
+        hiddenFields={{ next }}
+      />
       <Link
         href="/forgot-password"
         className="text-muted-foreground hover:text-foreground mt-4 block text-center text-xs"

@@ -41,6 +41,15 @@ npx playwright install chromium
 npm run test:e2e -- --project=chromium
 ```
 
+In CI or a fresh Linux environment, install the browser and its operating-system
+dependencies deterministically before running the suite:
+
+```bash
+npx playwright install --with-deps chromium
+```
+
+Cache Playwright's browser directory when the CI provider supports it.
+
 Authenticated tests require a dedicated migrated and seeded test project:
 
 ```text
