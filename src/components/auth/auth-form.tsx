@@ -11,15 +11,20 @@ export function AuthForm({
   action,
   submitLabel,
   includePassword = true,
+  hiddenFields,
 }: {
   action: AuthAction;
   submitLabel: string;
   includePassword?: boolean;
+  hiddenFields?: Record<string, string>;
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
     <form action={formAction} aria-busy={pending} className="space-y-4">
+      {Object.entries(hiddenFields ?? {}).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
       <div className="space-y-1.5">
         <label htmlFor="email" className="text-sm font-medium">
           Email
