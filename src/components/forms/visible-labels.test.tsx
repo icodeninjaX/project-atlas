@@ -4,6 +4,7 @@ import { ApplicationForm } from "@/components/career/application-form";
 import { PaymentForm } from "@/components/debts/payment-form";
 import { AccountForm } from "@/components/money/account-form";
 import { TransactionForm } from "@/components/money/transaction-form";
+import { TransferForm } from "@/components/money/transfer-form";
 import { QuickTaskForm } from "@/components/tasks/quick-task-form";
 
 afterEach(cleanup);
@@ -63,6 +64,30 @@ describe("primary create forms", () => {
     expectVisibleLabel("Category");
     expectVisibleLabel("Amount in pesos");
     expectVisibleLabel("Transaction date");
+  });
+
+  it("uses visible labels for transfer details", () => {
+    render(
+      <TransferForm
+        accounts={[
+          { id: "1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb", name: "Cash" },
+          {
+            id: "2d334d84-4e32-46fa-bbdb-05ce7dc0dfbb",
+            name: "Savings",
+          },
+        ]}
+        today="2026-08-02"
+      />,
+    );
+
+    expectVisibleLabel("Source account");
+    expectVisibleLabel("Destination account");
+    expectVisibleLabel("Transfer amount in pesos");
+    expectVisibleLabel("Transfer date");
+    expectVisibleLabel("Transfer description");
+    expect(
+      screen.getByRole("button", { name: "Record transfer" }),
+    ).toBeEnabled();
   });
 
   it("uses visible labels when recording a debt payment", () => {

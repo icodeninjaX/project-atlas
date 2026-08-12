@@ -1,7 +1,6 @@
 import { Pencil, ReceiptText, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { TransactionForm } from "@/components/money/transaction-form";
-import { TransferForm } from "@/components/money/transfer-form";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,9 +60,14 @@ export default async function TransactionsPage() {
         title="Money movement"
         description="Income and expenses change balances. Transfers stay separate and never inflate either total."
         actions={
-          <Button asChild variant="secondary">
-            <Link href="/money/accounts">Accounts</Link>
-          </Button>
+          <>
+            <Button asChild variant="secondary">
+              <Link href="/money/accounts">Accounts</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/money/transfers">Record transfer</Link>
+            </Button>
+          </>
         }
       />
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -91,10 +95,6 @@ export default async function TransactionsPage() {
           today={todayInManila()}
         />
       </div>
-      <TransferForm
-        accounts={accountsResult.data ?? []}
-        today={todayInManila()}
-      />
       <div className="border-border bg-card mt-6 overflow-hidden rounded-2xl border">
         {transactions.length === 0 ? (
           <div className="grid min-h-60 place-items-center text-center">

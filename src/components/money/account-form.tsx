@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   createAccountAction,
   updateAccountAction,
@@ -36,10 +37,15 @@ export function AccountForm({
     <form
       ref={form}
       action={action}
-      className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-2 lg:grid-cols-[1fr_160px_1fr_160px_auto]"
+      className={cn(
+        "border-border grid min-w-0 gap-4 rounded-2xl border p-4",
+        account
+          ? "bg-background/50 grid-cols-1 @[20rem]:grid-cols-2"
+          : "bg-card sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_160px_minmax(0,1fr)_160px_auto]",
+      )}
     >
       {account && <input type="hidden" name="accountId" value={account.id} />}
-      <label className="text-muted-foreground text-xs">
+      <label className="text-muted-foreground min-w-0 text-xs">
         Account name
         <Input
           name="name"
@@ -51,13 +57,13 @@ export function AccountForm({
           className="mt-1.5"
         />
       </label>
-      <label className="text-muted-foreground text-xs">
+      <label className="text-muted-foreground min-w-0 text-xs">
         Account type
         <select
           name="accountType"
           defaultValue={account?.account_type ?? "cash"}
           aria-label="Account type"
-          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+          className="border-border bg-background focus-visible:border-ring focus-visible:ring-ring/25 mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
         >
           <option value="cash">Cash</option>
           <option value="bank">Bank</option>
@@ -67,7 +73,12 @@ export function AccountForm({
           <option value="other">Other</option>
         </select>
       </label>
-      <label className="text-muted-foreground text-xs">
+      <label
+        className={cn(
+          "text-muted-foreground min-w-0 text-xs",
+          account && "@[20rem]:col-span-2",
+        )}
+      >
         Institution
         <Input
           name="institution"
@@ -79,7 +90,7 @@ export function AccountForm({
         />
       </label>
       {!account && (
-        <label className="text-muted-foreground text-xs">
+        <label className="text-muted-foreground min-w-0 text-xs">
           Opening balance (PHP)
           <Input
             name="openingBalance"
@@ -91,7 +102,11 @@ export function AccountForm({
           />
         </label>
       )}
-      <Button type="submit" disabled={pending} className="self-end">
+      <Button
+        type="submit"
+        disabled={pending}
+        className={cn("self-end", account && "w-full @[20rem]:col-span-2")}
+      >
         {pending
           ? account
             ? "Saving…"

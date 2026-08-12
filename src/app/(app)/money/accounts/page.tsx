@@ -107,7 +107,7 @@ export default async function AccountsPage() {
                     </Button>
                   </form>
                 </div>
-                <details className="border-border mt-4 border-t pt-3">
+                <details className="border-border @container mt-4 border-t pt-3">
                   <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-xs font-medium">
                     Edit account details
                   </summary>

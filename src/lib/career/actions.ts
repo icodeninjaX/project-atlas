@@ -153,25 +153,35 @@ export async function updateApplicationAction(
   return { success: true, message: "Application updated." };
 }
 
-export async function updateApplicationStageAction(formData: FormData) {
-  const id = String(formData.get("applicationId") ?? "");
-  const stage = String(formData.get("stage") ?? "");
-  if (
-    !/^[0-9a-f-]{36}$/i.test(id) ||
-    !applicationStages.includes(stage as (typeof applicationStages)[number])
-  )
-    return;
+export async function updateApplicationStageAction(
+  id: string,
+  stage: string,
+): Promise<CareerActionState> {
+  if (!/^[0-9a-f-]{36}$/i.test(id))
+    return { success: false, message: "The application could not be found." };
+  if (!applicationStages.includes(stage as (typeof applicationStages)[number]))
+    return { success: false, message: "Choose a valid application stage." };
+
   const supabase = await createClient();
-  if (!supabase) return;
+  if (!supabase)
+    return { success: false, message: "Supabase is not configured." };
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
-  await supabase
+  if (!user) return { success: false, message: "Your session expired." };
+
+  const { error } = await supabase
     .from("job_applications")
     .update({ stage })
     .eq("id", id)
     .eq("user_id", user.id);
+  if (error)
+    return {
+      success: false,
+      message: "The application stage could not be updated.",
+    };
+
   revalidatePath("/career");
   revalidatePath("/dashboard");
+  return { success: true, message: "Application stage updated." };
 }
