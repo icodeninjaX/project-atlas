@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { saveWeeklyReviewAction } from "@/lib/reviews/actions";
+import { useOfflineSync } from "@/components/offline/offline-mutation";
 
 type ReviewFields = {
   wins: string;
@@ -42,6 +42,7 @@ export function ReviewForm({
   });
   const [intent, setIntent] = useState<"draft" | "submit">("draft");
   const [pending, startTransition] = useTransition();
+  const { submit } = useOfflineSync();
 
   const onSubmit = handleSubmit((values) => {
     const data = new FormData();
@@ -51,10 +52,7 @@ export function ReviewForm({
       data.set(key, value ?? ""),
     );
     startTransition(async () => {
-      const result = await saveWeeklyReviewAction(
-        { success: false, message: "" },
-        data,
-      );
+      const result = await submit("review.save", data);
       if (result.success) toast.success(result.message);
       else toast.error(result.message);
     });

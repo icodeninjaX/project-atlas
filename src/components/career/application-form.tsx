@@ -1,19 +1,24 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  createApplicationAction,
-  type CareerActionState,
-} from "@/lib/career/actions";
+import type { CareerActionState } from "@/lib/career/actions";
+import { useOfflineActionState } from "@/components/offline/offline-mutation";
+import { cn } from "@/lib/utils";
 
 const initial: CareerActionState = { success: false, message: "" };
 
-export function ApplicationForm() {
-  const [state, action, pending] = useActionState(
-    createApplicationAction,
+export function ApplicationForm({
+  className,
+  onSuccess,
+}: {
+  className?: string;
+  onSuccess?: () => void;
+} = {}) {
+  const [state, action, pending] = useOfflineActionState(
+    "application.create",
     initial,
   );
   const form = useRef<HTMLFormElement>(null);
@@ -21,13 +26,19 @@ export function ApplicationForm() {
     if (!state.message) return;
     if (state.success) toast.success(state.message);
     else toast.error(state.message);
-    if (state.success) form.current?.reset();
-  }, [state]);
+    if (state.success) {
+      form.current?.reset();
+      onSuccess?.();
+    }
+  }, [onSuccess, state]);
   return (
     <form
       ref={form}
       action={action}
-      className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-2 lg:grid-cols-4"
+      className={cn(
+        "border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-2 lg:grid-cols-4",
+        className,
+      )}
     >
       <label className="text-muted-foreground text-xs">
         Company name

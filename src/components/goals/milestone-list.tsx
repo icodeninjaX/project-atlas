@@ -1,9 +1,6 @@
 import { Check, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  createMilestoneAction,
-  toggleMilestoneAction,
-} from "@/lib/goals/actions";
+import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 
 type Milestone = {
   id: string;
@@ -26,9 +23,9 @@ export function MilestoneList({
       </p>
       <div className="mt-2 space-y-2">
         {milestones.map((milestone) => (
-          <form
+          <OfflineMutationForm
             key={milestone.id}
-            action={toggleMilestoneAction}
+            mutation="milestone.toggle"
             className="flex items-center gap-2"
           >
             <input type="hidden" name="milestoneId" value={milestone.id} />
@@ -59,11 +56,11 @@ export function MilestoneList({
                 {milestone.target_date}
               </time>
             )}
-          </form>
+          </OfflineMutationForm>
         ))}
       </div>
-      <form
-        action={createMilestoneAction}
+      <OfflineMutationForm
+        mutation="milestone.create"
         className="mt-3 flex flex-wrap gap-2"
       >
         <input type="hidden" name="goalId" value={goalId} />
@@ -84,7 +81,7 @@ export function MilestoneList({
         <Button type="submit" size="sm" variant="secondary">
           Add
         </Button>
-      </form>
+      </OfflineMutationForm>
     </div>
   );
 }

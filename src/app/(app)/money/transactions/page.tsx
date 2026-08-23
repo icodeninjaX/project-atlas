@@ -4,7 +4,7 @@ import { TransactionForm } from "@/components/money/transaction-form";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { deleteTransactionAction } from "@/lib/money/actions";
+import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 
@@ -153,7 +153,7 @@ export default async function TransactionsPage() {
                     />
                   </div>
                 </details>
-                <form action={deleteTransactionAction}>
+                <OfflineMutationForm mutation="transaction.delete">
                   <input
                     type="hidden"
                     name="transactionId"
@@ -167,7 +167,7 @@ export default async function TransactionsPage() {
                   >
                     <Trash2 className="text-muted-foreground size-4" />
                   </Button>
-                </form>
+                </OfflineMutationForm>
               </div>
             );
           })

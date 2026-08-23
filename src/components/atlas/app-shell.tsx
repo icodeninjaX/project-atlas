@@ -146,12 +146,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         </div>
       </aside>
-      <main id="main-content" className="min-h-dvh pb-20 lg:ml-64 lg:pb-0">
+      <main
+        id="main-content"
+        className="min-h-dvh pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:ml-64 lg:pb-0"
+      >
         {children}
       </main>
       <nav
         aria-label="Primary navigation"
-        className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 flex h-17 items-center justify-around border-t px-2 backdrop-blur lg:hidden"
+        className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 grid h-[calc(4.25rem+env(safe-area-inset-bottom))] grid-cols-6 items-start border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
       >
         {navigation.slice(0, 5).map(({ href, label, icon: Icon }) => (
           <Link
@@ -159,7 +162,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             href={href}
             aria-current={isActive(href) ? "page" : undefined}
             className={cn(
-              "text-muted-foreground focus-visible:ring-ring flex min-h-12 min-w-14 flex-col items-center justify-center gap-1 rounded-lg text-[10px] font-medium focus-visible:ring-2 focus-visible:outline-none",
+              "text-muted-foreground focus-visible:ring-ring flex h-17 min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-0.5 text-[9px] font-medium focus-visible:ring-2 focus-visible:outline-none sm:text-[10px]",
               isActive(href) && "text-primary",
             )}
           >
@@ -169,14 +172,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         ))}
         <div
           ref={moreNavigationRef}
-          className="relative flex min-w-14 justify-center"
+          className="relative flex min-w-0 justify-center"
         >
           {moreOpen && (
             <div
               id="mobile-more-menu"
               role="menu"
               aria-label="More navigation"
-              className="border-border bg-popover text-popover-foreground absolute right-0 bottom-14 min-w-44 rounded-xl border p-1 shadow-lg"
+              className="border-border bg-popover text-popover-foreground absolute right-0 bottom-18 min-w-44 rounded-xl border p-1 shadow-lg"
             >
               {mobileMoreNavigation.map(({ href, label, icon: Icon }) => (
                 <Link
@@ -204,7 +207,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-controls="mobile-more-menu"
             aria-label="More navigation"
             onClick={() => setMoreOpen((open) => !open)}
-            className="text-muted-foreground focus-visible:ring-ring flex min-h-12 min-w-14 flex-col items-center justify-center gap-1 rounded-lg text-[10px] font-medium focus-visible:ring-2 focus-visible:outline-none"
+            className="text-muted-foreground focus-visible:ring-ring flex h-17 w-full min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-0.5 text-[9px] font-medium focus-visible:ring-2 focus-visible:outline-none sm:text-[10px]"
           >
             <Menu className="size-[18px]" />
             More

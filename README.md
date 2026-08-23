@@ -15,6 +15,7 @@ Project Atlas is a private, Philippines-first life-management application for se
 - career table and Kanban views, stage history, overdue follow-ups, and conversion guards
 - weekly factual summaries, guided reflections, drafts, submission, and score trends
 - owner-scoped global search and activity history schema
+- installable PWA with user-scoped offline page caches and automatic mutation replay
 - dark-first responsive shell with light mode, focus states, reduced motion, loading, empty, and error states
 
 ## Stack

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { pesoInputToCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 import { jobApplicationSchema } from "@/lib/validation/schemas";
+import { offlineEntityId } from "@/lib/offline/server";
 
 export type CareerActionState = { success: boolean; message: string };
 
@@ -102,6 +103,7 @@ export async function createApplicationAction(
     };
   const value = result.data;
   const { error } = await supabase.from("job_applications").insert({
+    ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
     user_id: user.id,
     ...applicationRecord(value),
   });

@@ -1,16 +1,17 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createTaskAction, type TaskActionState } from "@/lib/tasks/actions";
+import type { TaskActionState } from "@/lib/tasks/actions";
+import { useOfflineActionState } from "@/components/offline/offline-mutation";
 
 const initialState: TaskActionState = { success: false, message: "" };
 
 export function QuickTaskForm() {
-  const [state, action, pending] = useActionState(
-    createTaskAction,
+  const [state, action, pending] = useOfflineActionState(
+    "task.create",
     initialState,
   );
   const formRef = useRef<HTMLFormElement>(null);
@@ -46,9 +47,9 @@ export function QuickTaskForm() {
     <form
       ref={formRef}
       action={action}
-      className="border-border bg-card rounded-2xl border p-4 sm:p-5"
+      className="border-border bg-card rounded-2xl border p-3.5 shadow-sm sm:p-5 sm:shadow-none"
     >
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_150px_130px_130px_auto]">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(210px,1fr)_145px_125px_125px_130px_auto]">
         <div>
           <label
             htmlFor="quick-task-title"
@@ -73,6 +74,15 @@ export function QuickTaskForm() {
             Scheduled date
           </label>
           <Input id="quick-task-date" name="scheduledFor" type="date" />
+        </div>
+        <div>
+          <label
+            htmlFor="quick-task-time"
+            className="text-muted-foreground mb-1.5 block text-xs font-medium"
+          >
+            Exact time
+          </label>
+          <Input id="quick-task-time" name="scheduledTime" type="time" />
         </div>
         <div>
           <label
@@ -113,13 +123,14 @@ export function QuickTaskForm() {
         <Button
           type="submit"
           disabled={pending}
-          className="self-end md:col-span-2 xl:col-span-1"
+          className="min-h-12 self-end md:col-span-2 xl:col-span-1 xl:min-h-10"
         >
           {pending ? "Adding…" : "Add task"}
         </Button>
       </div>
       <p className="text-muted-foreground mt-2 font-mono text-[10px]">
-        Press N from any quiet area to focus quick capture.
+        Press N from any quiet area to focus quick capture. Exact times use
+        Asia/Manila.
       </p>
     </form>
   );

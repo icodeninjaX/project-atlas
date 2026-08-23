@@ -1,47 +1,55 @@
-# Money account edit form design QA
+**Design QA — Career Stage Spotlight**
 
-- Source visual truth: `C:/Users/kdv06/AppData/Local/Temp/codex-clipboard-582a2536-e286-4270-bb0f-ebb80c333c2f.png`
-- Source dimensions: 939 × 393 pixels; density not provided
-- Intended comparison viewport: 939 × 393 CSS pixels at device scale factor 1
-- Implementation screenshot: not captured; the local authenticated route redirected to `/login` in the available in-app browser
-- State: dark theme, authenticated Accounts page, two account cards with “Edit account details” expanded
+- Source visual truth: `C:\Users\kdv06\.codex\generated_images\019ff693-bf1a-7910-94b9-f7fc578c8ae3\exec-2a7c4b23-014a-4ea4-887b-81579bd11b13.png`
+- Mobile implementation: `C:\Users\kdv06\OneDrive\Desktop\Atlas\career-kanban-mobile.png`
+- Desktop implementation: `C:\Users\kdv06\OneDrive\Desktop\Atlas\career-kanban-desktop.png`
+- Normalized comparison: `C:\Users\kdv06\OneDrive\Desktop\Atlas\career-kanban-comparison.png`
+- State: authenticated, dark theme, Kanban view, Applied stage selected, attention sorting, three realistic applications
+- CSS viewport: 390 × 844 mobile and 1440 × 1024 desktop
+- Density: devicePixelRatio 1
+- Source pixels: 853 × 1844; normalized to 375 × 811 for comparison
+- Mobile implementation pixels: 375 × 812
 
-## Findings
+**Findings**
 
-- [P2] Authenticated post-fix visual comparison is unavailable.
-  - Location: `/money/accounts`, expanded account edit forms.
-  - Evidence: the source screenshot was opened at its original 939 × 393 resolution, but the local route redirected to `/login?next=%2Fmoney%2Faccounts`; the user's authenticated Chrome surface was unavailable.
-  - Impact: build and CSS evidence confirm the responsive rules compile, but card-level spacing and wrapping cannot be approved from a rendered screenshot.
-  - Fix: sign in to the local Atlas preview, expand the edit form at the same viewport, and capture the account-card region for a final visual comparison.
+- No actionable P0, P1, or P2 visual differences remain.
+- Typography: Atlas's existing Geist typography is preserved. The title, eyebrow, stage labels, card hierarchy, and small metadata closely match the selected direction in weight, spacing, and contrast.
+- Spacing and layout: the implementation keeps the selected stage-spotlight hierarchy, horizontal stage rail, focused vertical card stack, clear next-action section, and paired Move/Edit controls. The persistent Atlas account header and mobile navigation reduce the number of full cards visible above the fold compared with the concept; this is an expected product-shell constraint, and all cards remain easy to reach vertically.
+- Colors and tokens: the implementation uses Atlas's existing background, card, border, primary, muted, and destructive tokens rather than introducing one-off colors. Selected and overdue states remain visually distinct in dark mode.
+- Image and asset fidelity: the source direction does not require photography or illustration. All functional marks use the project's existing Lucide icon set; no placeholder or simulated artwork is present.
+- Copy and content: the compact heading, stage counts, swipe cue, sort control, application metadata, next actions, due states, Move stage, and Edit details match the selected experience. Real application data replaces the concept's presentation-only counts.
+- Responsive behavior: mobile has no page-level horizontal overflow; the stage rail alone scrolls intentionally and centers the selected stage. Desktop uses the available width for two columns and has no horizontal or vertical viewport overflow in the tested state.
+- Accessibility and interaction: the stage rail uses tabs and a labelled tab panel, native selects keep keyboard and mobile-picker behavior, controls meet the existing Atlas tap-target conventions, and focus rings use the shared ring token.
 
-## Required fidelity surfaces
+**Comparison History**
 
-- Fonts and typography: existing Atlas typography and sizes are unchanged; post-fix wrapping is not visually verified.
-- Spacing and layout rhythm: the viewport-based nested grid was replaced with a card-width container query; post-fix rendering is not visually verified.
-- Colors and visual tokens: the existing border, background, ring, and text tokens are preserved.
-- Image quality and asset fidelity: no image assets are present in this component.
-- Copy and content: labels, account values, balance copy, and action copy are unchanged.
+1. Initial rendered comparison found a P2 control-density issue: Edit details sat beneath Move stage, making cards taller and drifting from the selected side-by-side action layout.
+2. The card action row was changed to a responsive two-control grid, with the edit form expanding beneath both controls. The stage rail was also made sticky and now centers the selected stage.
+3. The post-fix mobile capture shows the paired Move/Edit actions, selected-stage emphasis, overdue priority, and card rhythm matching the visual target. No P0/P1/P2 issue remains.
 
-## Full-view comparison evidence
+**Primary Interactions Tested**
 
-The source shows two narrow account cards. In both expanded forms, controls are compressed and the “Save changes” button overflows beyond the form and card boundary. No authenticated implementation capture was available.
+- Open and close the Add application dialog.
+- Change Arc Studio from Applied to Offer and verify the card disappears immediately from Applied while both stage counts update.
+- Move Arc Studio back to Applied and restore the comparison state.
+- Switch stage tabs and verify the selected panel changes.
+- Check browser console errors: none.
 
-## Focused-region comparison evidence
+**Focused Region Evidence**
 
-The account edit region in the source was inspected at original resolution. Source code and compiled CSS confirm that edit mode now uses one column below a 20rem card width, two columns above it, and full-span Institution and action rows. This is implementation evidence, not a substitute for the missing rendered comparison.
+The normalized side-by-side image is readable at the header, stage rail, complete first card, and action controls. No separate focused crop was needed because there are no raster assets or fine-detail logos to inspect.
 
-## Comparison history
+**Follow-up Polish**
 
-1. Initial finding: page-level responsive columns activated inside approximately 370px cards, creating truncated inputs and an escaped submit button.
-2. Fix applied: added an inline-size container to each edit section, card-width grid variants, `min-width: 0` safeguards, a contained full-width action, and matching focus treatment for the select.
-3. Post-fix evidence: lint, TypeScript, 53 unit tests, and the Next.js production build passed; compiled CSS contains the expected 20rem container rules. Visual evidence remains blocked by authentication.
+- P3: a future iteration could make the signed-in header more compact on small screens across all Atlas sections, allowing more Career content above the fold. This is an app-shell change and is intentionally outside this focused Kanban redesign.
 
-## Implementation checklist
+**Implementation Checklist**
 
-- [x] Keep edit controls within the account card.
-- [x] Respond to component width instead of viewport width.
-- [x] Preserve the full-width add-account form layout.
-- [x] Preserve labels, values, actions, and Atlas design tokens.
-- [ ] Capture and compare the authenticated post-fix state.
+- [x] Preserve Atlas design tokens and global shell.
+- [x] Add a mobile-first, horizontally scrollable stage rail.
+- [x] Show one focused stage as a vertical card stack.
+- [x] Make stage changes update and regroup cards immediately.
+- [x] Keep add and edit workflows functional.
+- [x] Verify mobile and desktop rendering and core interactions.
 
-final result: blocked
+final result: passed

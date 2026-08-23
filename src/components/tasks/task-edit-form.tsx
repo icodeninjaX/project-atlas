@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { updateTaskAction } from "@/lib/tasks/actions";
+import { taskTimeInputValue } from "@/lib/tasks/task-time";
+import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 
 export function TaskEditForm({
   task,
@@ -11,14 +12,15 @@ export function TaskEditForm({
     description: string | null;
     priority: string;
     scheduled_for: string | null;
+    scheduled_time: string | null;
     estimated_minutes: number | null;
     status: string;
   };
 }) {
   return (
-    <form
-      action={updateTaskAction}
-      className="border-border mt-3 grid gap-3 border-t pt-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_160px_140px_auto]"
+    <OfflineMutationForm
+      mutation="task.update"
+      className="border-border mt-3 grid gap-3 border-t pt-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_160px_140px_140px_auto]"
     >
       <input type="hidden" name="taskId" value={task.id} />
       <input type="hidden" name="status" value={task.status} />
@@ -38,6 +40,15 @@ export function TaskEditForm({
           name="scheduledFor"
           type="date"
           defaultValue={task.scheduled_for ?? ""}
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Exact time
+        <Input
+          name="scheduledTime"
+          type="time"
+          defaultValue={taskTimeInputValue(task.scheduled_time)}
           className="mt-1.5"
         />
       </label>
@@ -78,6 +89,6 @@ export function TaskEditForm({
       <Button type="submit" variant="secondary" className="self-end">
         Save
       </Button>
-    </form>
+    </OfflineMutationForm>
   );
 }

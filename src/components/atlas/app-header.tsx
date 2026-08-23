@@ -1,8 +1,10 @@
-import { LogOut, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "./theme-toggle";
 import { Button } from "@/components/ui/button";
-import { signOutAction } from "@/lib/auth/actions";
+import { InstallAppButton } from "@/components/offline/install-app-button";
+import { SignOutButton } from "@/components/offline/sign-out-button";
+import { SyncStatus } from "@/components/offline/sync-status";
 
 export function AppHeader({ displayName }: { displayName?: string | null }) {
   return (
@@ -14,6 +16,8 @@ export function AppHeader({ displayName }: { displayName?: string | null }) {
         </p>
       </div>
       <div className="flex items-center gap-1">
+        <SyncStatus />
+        <InstallAppButton />
         <Button asChild variant="ghost" size="icon">
           <Link href="/search" aria-label="Search">
             <Search className="size-4" />
@@ -26,16 +30,7 @@ export function AppHeader({ displayName }: { displayName?: string | null }) {
             Quick task
           </Link>
         </Button>
-        <form action={signOutAction}>
-          <Button
-            type="submit"
-            variant="ghost"
-            size="icon"
-            aria-label="Log out"
-          >
-            <LogOut className="size-4" />
-          </Button>
-        </form>
+        <SignOutButton />
       </div>
     </header>
   );

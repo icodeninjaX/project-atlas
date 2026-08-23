@@ -1,14 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  createGoalAction,
-  updateGoalAction,
-  type GoalActionState,
-} from "@/lib/goals/actions";
+import type { GoalActionState } from "@/lib/goals/actions";
+import { useOfflineActionState } from "@/components/offline/offline-mutation";
 
 const initial: GoalActionState = { success: false, message: "" };
 
@@ -26,8 +23,10 @@ export function GoalForm({
     success_definition: string | null;
   };
 }) {
-  const submitAction = goal ? updateGoalAction : createGoalAction;
-  const [state, action, pending] = useActionState(submitAction, initial);
+  const [state, action, pending] = useOfflineActionState(
+    goal ? "goal.update" : "goal.create",
+    initial,
+  );
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (!state.message) return;

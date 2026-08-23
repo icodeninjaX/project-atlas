@@ -1,8 +1,12 @@
 import { Fragment } from "react";
 import { BriefcaseBusiness, ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { ApplicationForm } from "@/components/career/application-form";
+import { ApplicationCreateDialog } from "@/components/career/application-create-dialog";
 import { ApplicationEditForm } from "@/components/career/application-edit-form";
+import {
+  CareerKanban,
+  type CareerApplication,
+} from "@/components/career/career-kanban";
 import { StageSelect } from "@/components/career/stage-select";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
@@ -11,40 +15,6 @@ import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Career" };
-
-const stages = [
-  "interested",
-  "preparing",
-  "applied",
-  "assessment",
-  "interview",
-  "final_interview",
-  "offer",
-  "rejected",
-  "withdrawn",
-  "accepted",
-] as const;
-
-type Application = {
-  id: string;
-  company_name: string;
-  role_title: string;
-  job_url: string | null;
-  location: string | null;
-  work_setup: string;
-  employment_type: string;
-  stage: string;
-  salary_min_centavos: number | null;
-  salary_max_centavos: number | null;
-  next_action: string | null;
-  next_action_at: string | null;
-  applied_at: string | null;
-  contact_name: string | null;
-  contact_email: string | null;
-  resume_version: string | null;
-  notes: string | null;
-  is_follow_up_overdue: boolean;
-};
 
 function rate(numerator: number, denominator: number) {
   return denominator ? `${Math.round((numerator / denominator) * 100)}%` : null;
@@ -70,7 +40,7 @@ export default async function CareerPage({
           .select("job_application_id,event_type"),
       ])
     : [{ data: [] }, { data: [] }];
-  const applications = (applicationsResult.data ?? []) as Application[];
+  const applications = (applicationsResult.data ?? []) as CareerApplication[];
   const events = eventsResult.data ?? [];
   const reached = (types: string[]) =>
     new Set(
@@ -113,29 +83,36 @@ export default async function CareerPage({
   return (
     <div className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8">
       <PageHeading
-        eyebrow="Opportunity pipeline"
+        eyebrow={view === "kanban" ? "Stage spotlight" : "Opportunity pipeline"}
         title="Career"
-        description="Keep every application tied to a stage, a date, and one clear next action."
+        description={
+          view === "kanban"
+            ? "Your applications, their momentum, and the next move at a glance."
+            : "Keep every application tied to a stage, a date, and one clear next action."
+        }
         actions={
-          <>
-            <Button
-              asChild
-              variant={view === "table" ? "default" : "secondary"}
-              size="sm"
-            >
-              <Link href="/career?view=table">Table</Link>
-            </Button>
-            <Button
-              asChild
-              variant={view === "kanban" ? "default" : "secondary"}
-              size="sm"
-            >
-              <Link href="/career?view=kanban">Kanban</Link>
-            </Button>
-          </>
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <div className="border-border bg-card flex rounded-xl border p-1">
+              <Button
+                asChild
+                variant={view === "table" ? "default" : "ghost"}
+                size="sm"
+              >
+                <Link href="/career?view=table">Table</Link>
+              </Button>
+              <Button
+                asChild
+                variant={view === "kanban" ? "default" : "ghost"}
+                size="sm"
+              >
+                <Link href="/career?view=kanban">Kanban</Link>
+              </Button>
+            </div>
+            <ApplicationCreateDialog />
+          </div>
         }
       />
-      {conversions.length > 0 && (
+      {view === "table" && conversions.length > 0 && (
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {conversions.map(([label, value]) => (
             <Card key={label}>
@@ -147,11 +124,7 @@ export default async function CareerPage({
           ))}
         </div>
       )}
-      <div className="mt-6">
-        <ApplicationForm />
-      </div>
-
-      {applications.length === 0 ? (
+      {view === "table" && applications.length === 0 ? (
         <div className="border-border mt-6 grid min-h-60 place-items-center rounded-2xl border border-dashed text-center">
           <div>
             <BriefcaseBusiness className="text-primary mx-auto size-6" />
@@ -253,55 +226,10 @@ export default async function CareerPage({
           </table>
         </div>
       ) : (
-        <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
-          {stages.slice(0, 7).map((stage) => {
-            const items = applications.filter(
-              (application) => application.stage === stage,
-            );
-            return (
-              <section
-                key={stage}
-                className="w-72 shrink-0"
-                aria-labelledby={`stage-${stage}`}
-              >
-                <h2
-                  id={`stage-${stage}`}
-                  className="text-muted-foreground mb-3 flex items-center justify-between text-xs font-semibold capitalize"
-                >
-                  {stage.replaceAll("_", " ")}
-                  <span className="font-mono">{items.length}</span>
-                </h2>
-                <div className="space-y-2">
-                  {items.map((application) => (
-                    <Card key={application.id}>
-                      <CardContent>
-                        <p className="text-sm font-semibold">
-                          {application.company_name}
-                        </p>
-                        <p className="text-muted-foreground mt-1 text-xs">
-                          {application.role_title}
-                        </p>
-                        {application.next_action && (
-                          <p className="border-border mt-4 border-t pt-3 text-xs">
-                            {application.next_action}
-                          </p>
-                        )}
-                        <div className="mt-3">
-                          <StageSelect
-                            applicationId={application.id}
-                            companyName={application.company_name}
-                            stage={application.stage}
-                          />
-                        </div>
-                        <ApplicationEditForm application={application} />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+        <CareerKanban
+          applications={applications}
+          nowIso={new Date().toISOString()}
+        />
       )}
     </div>
   );

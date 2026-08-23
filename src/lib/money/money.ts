@@ -30,6 +30,15 @@ export function pesoInputToCentavos(value: string): number {
   return centavos;
 }
 
+export function signedPesoInputToCentavos(value: string): number {
+  const normalized = value.replaceAll(",", "").trim();
+  const negative = normalized.startsWith("-");
+  const unsigned = negative ? normalized.slice(1) : normalized;
+  const centavos = pesoInputToCentavos(unsigned);
+
+  return negative ? -centavos : centavos;
+}
+
 export function centavosToPesoInput(centavos: number): string {
   if (!Number.isSafeInteger(centavos)) {
     throw new Error("Money must be represented as integer centavos");

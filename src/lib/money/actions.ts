@@ -1,9 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { pesoInputToCentavos } from "./money";
+import { pesoInputToCentavos, signedPesoInputToCentavos } from "./money";
 import { createClient } from "@/lib/supabase/server";
-import { accountSchema, transactionSchema } from "@/lib/validation/schemas";
+import {
+  accountSchema,
+  balanceAdjustmentSchema,
+  transactionSchema,
+} from "@/lib/validation/schemas";
+import { offlineEntityId } from "@/lib/offline/server";
 
 export type MoneyActionState = { success: boolean; message: string };
 
@@ -47,6 +52,7 @@ export async function createAccountAction(
   }
 
   const { error } = await auth.supabase.from("financial_accounts").insert({
+    ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
     user_id: auth.user.id,
     name: result.data.name,
     account_type: result.data.accountType,
@@ -103,20 +109,121 @@ export async function updateAccountAction(
   return { success: true, message: "Account updated." };
 }
 
-export async function archiveAccountAction(formData: FormData) {
+export async function adjustAccountBalanceAction(
+  _state: MoneyActionState,
+  formData: FormData,
+): Promise<MoneyActionState> {
+  let targetBalanceCentavos: number;
+  try {
+    targetBalanceCentavos = signedPesoInputToCentavos(
+      String(formData.get("targetBalance") ?? ""),
+    );
+  } catch {
+    return { success: false, message: "Enter a valid current balance." };
+  }
+
+  const result = balanceAdjustmentSchema.safeParse({
+    accountId: formData.get("accountId"),
+    targetBalanceCentavos,
+    adjustmentDate: formData.get("adjustmentDate"),
+    note: formData.get("note"),
+  });
+  if (!result.success) {
+    return {
+      success: false,
+      message: result.error.issues[0]?.message ?? "Check the adjustment.",
+    };
+  }
+
+  const auth = await authenticatedClient();
+  if (!auth) return { success: false, message: "Your session is unavailable." };
+
+  const { data, error } = await auth.supabase.rpc("adjust_account_balance", {
+    p_account_id: result.data.accountId,
+    p_target_balance_centavos: result.data.targetBalanceCentavos,
+    p_adjustment_date: result.data.adjustmentDate,
+    p_note: result.data.note ?? null,
+  });
+  if (error)
+    return { success: false, message: "The balance could not be adjusted." };
+
+  revalidatePath("/money/accounts");
+  revalidatePath("/dashboard");
+  return data
+    ? { success: true, message: "Current balance adjusted." }
+    : { success: true, message: "The balance already matches." };
+}
+
+export async function archiveAccountAction(
+  formData: FormData,
+): Promise<MoneyActionState> {
   const id = String(formData.get("accountId") ?? "");
   const archived = formData.get("archived") === "true";
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  if (!/^[0-9a-f-]{36}$/i.test(id))
+    return { success: false, message: "The account could not be found." };
   const auth = await authenticatedClient();
-  if (!auth) return;
+  if (!auth) return { success: false, message: "Your session is unavailable." };
 
-  await auth.supabase
+  const { error } = await auth.supabase
     .from("financial_accounts")
     .update({ is_archived: archived })
     .eq("id", id)
     .eq("user_id", auth.user.id);
+  if (error)
+    return { success: false, message: "The account status could not be updated." };
   revalidatePath("/money/accounts");
+  revalidatePath("/money/accounts/archived");
   revalidatePath("/dashboard");
+  return {
+    success: true,
+    message: archived ? "Account archived." : "Account restored.",
+  };
+}
+
+export async function deleteArchivedAccountAction(
+  _state: MoneyActionState,
+  formData: FormData,
+): Promise<MoneyActionState> {
+  const id = String(formData.get("accountId") ?? "");
+  const confirmationName = String(formData.get("confirmationName") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id))
+    return { success: false, message: "The account could not be found." };
+  if (!confirmationName)
+    return { success: false, message: "Type the account name to confirm." };
+
+  const auth = await authenticatedClient();
+  if (!auth) return { success: false, message: "Your session is unavailable." };
+
+  const { data, error } = await auth.supabase.rpc(
+    "delete_archived_financial_account",
+    {
+      p_account_id: id,
+      p_confirmation_name: confirmationName,
+    },
+  );
+  if (error)
+    return { success: false, message: "The account could not be deleted." };
+
+  if (data === "has_history")
+    return {
+      success: false,
+      message:
+        "This account has financial history and must stay archived to preserve your records.",
+    };
+  if (data === "confirmation_mismatch")
+    return { success: false, message: "The account name does not match." };
+  if (data === "not_archived")
+    return {
+      success: false,
+      message: "Archive the account before deleting it.",
+    };
+  if (data !== "deleted")
+    return { success: false, message: "The account could not be found." };
+
+  revalidatePath("/money/accounts");
+  revalidatePath("/money/accounts/archived");
+  revalidatePath("/dashboard");
+  return { success: true, message: "Archived account permanently deleted." };
 }
 
 export async function createTransactionAction(
@@ -150,6 +257,7 @@ export async function createTransactionAction(
   }
 
   const { error } = await auth.supabase.from("transactions").insert({
+    ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
     user_id: auth.user.id,
     account_id: result.data.accountId,
     category_id: result.data.categoryId,
@@ -250,6 +358,7 @@ export async function createTransferAction(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(transferDate))
     return { success: false, message: "Choose a transfer date." };
   const { error } = await auth.supabase.from("account_transfers").insert({
+    ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
     user_id: auth.user.id,
     source_account_id: source,
     destination_account_id: destination,
@@ -265,18 +374,24 @@ export async function createTransferAction(
   return { success: true, message: "Transfer recorded." };
 }
 
-export async function deleteTransactionAction(formData: FormData) {
+export async function deleteTransactionAction(
+  formData: FormData,
+): Promise<MoneyActionState> {
   const id = String(formData.get("transactionId") ?? "");
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  if (!/^[0-9a-f-]{36}$/i.test(id))
+    return { success: false, message: "The transaction could not be found." };
   const auth = await authenticatedClient();
-  if (!auth) return;
+  if (!auth) return { success: false, message: "Your session is unavailable." };
 
-  await auth.supabase
+  const { error } = await auth.supabase
     .from("transactions")
     .delete()
     .eq("id", id)
     .eq("user_id", auth.user.id);
+  if (error)
+    return { success: false, message: "The transaction could not be deleted." };
   revalidatePath("/money/transactions");
   revalidatePath("/money/accounts");
   revalidatePath("/dashboard");
+  return { success: true, message: "Transaction deleted." };
 }

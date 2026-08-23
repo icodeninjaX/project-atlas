@@ -83,6 +83,30 @@ describe("shared validation schemas", () => {
     expect(result.description).toBeUndefined();
   });
 
+  it("accepts an exact task time when a scheduled date is present", () => {
+    const result = taskSchema.safeParse({
+      title: "Deep work",
+      status: "planned",
+      priority: "high",
+      scheduledFor: "2026-08-14",
+      scheduledTime: "09:30",
+      estimatedMinutes: 50,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("requires a scheduled date when an exact task time is present", () => {
+    const result = taskSchema.safeParse({
+      title: "Deep work",
+      status: "planned",
+      priority: "high",
+      scheduledTime: "09:30",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it("keeps onboarding balances as integer centavos", () => {
     const result = onboardingSchema.safeParse({
       displayName: "Atlas user",

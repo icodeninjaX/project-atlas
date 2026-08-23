@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/atlas/app-header";
 import { AppShell } from "@/components/atlas/app-shell";
+import { OfflineProvider } from "@/components/offline/offline-provider";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AuthenticatedLayout({
@@ -23,9 +24,11 @@ export default async function AuthenticatedLayout({
     .maybeSingle();
 
   return (
-    <AppShell>
-      <AppHeader displayName={profile?.display_name ?? user.email} />
-      {children}
-    </AppShell>
+    <OfflineProvider userId={user.id}>
+      <AppShell>
+        <AppHeader displayName={profile?.display_name ?? user.email} />
+        {children}
+      </AppShell>
+    </OfflineProvider>
   );
 }

@@ -33,11 +33,13 @@ describe("StageSelect", () => {
       message: "Application stage updated.",
     });
     const user = userEvent.setup();
+    const onStageChange = vi.fn();
     render(
       <StageSelect
         applicationId="60000000-0000-4000-8000-000000000001"
         companyName="Northstar Labs"
         stage="interview"
+        onStageChange={onStageChange}
       />,
     );
 
@@ -57,6 +59,7 @@ describe("StageSelect", () => {
     expect(mocks.successToast).toHaveBeenCalledWith(
       "Application stage updated.",
     );
+    expect(onStageChange).toHaveBeenCalledWith("offer");
   });
 
   it("rolls back the selection when the database update fails", async () => {

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { pesoInputToCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 import { debtPaymentSchema, debtSchema } from "@/lib/validation/schemas";
+import { offlineEntityId } from "@/lib/offline/server";
 
 export type DebtActionState = { success: boolean; message: string };
 
@@ -56,6 +57,7 @@ export async function createDebtAction(
     };
 
   const { error } = await session.supabase.from("debts").insert({
+    ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
     user_id: session.user.id,
     creditor_name: result.data.creditorName,
     debt_type: result.data.debtType,
@@ -171,6 +173,7 @@ export async function recordDebtPaymentAction(
     };
 
   const { error } = await session.supabase.from("debt_payments").insert({
+    ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
     user_id: session.user.id,
     debt_id: result.data.debtId,
     amount_centavos: result.data.amountCentavos,
@@ -193,19 +196,25 @@ export async function recordDebtPaymentAction(
   };
 }
 
-export async function deleteDebtPaymentAction(formData: FormData) {
+export async function deleteDebtPaymentAction(
+  formData: FormData,
+): Promise<DebtActionState> {
   const paymentId = String(formData.get("paymentId") ?? "");
   const debtId = String(formData.get("debtId") ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(paymentId) || !/^[0-9a-f-]{36}$/i.test(debtId))
-    return;
+    return { success: false, message: "The payment could not be found." };
   const session = await auth();
-  if (!session) return;
-  await session.supabase
+  if (!session)
+    return { success: false, message: "Your session is unavailable." };
+  const { error } = await session.supabase
     .from("debt_payments")
     .delete()
     .eq("id", paymentId)
     .eq("user_id", session.user.id);
+  if (error)
+    return { success: false, message: "The payment could not be deleted." };
   revalidatePath("/debts");
   revalidatePath(`/debts/${debtId}`);
   revalidatePath("/dashboard");
+  return { success: true, message: "Payment deleted." };
 }

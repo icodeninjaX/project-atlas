@@ -66,6 +66,55 @@ test.describe("authenticated Atlas workflows", () => {
     await expect(page.getByText(title)).toBeVisible();
   });
 
+  test("separates unfinished tasks from prior days into Overdue", async ({
+    page,
+  }) => {
+    const title = `E2E overdue task ${Date.now()}`;
+    const yesterday = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Manila",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(Date.now() - 24 * 60 * 60 * 1000));
+
+    await page.goto("/tasks?view=today");
+    await page.getByLabel("Task title").fill(title);
+    await page.getByLabel("Scheduled date").fill(yesterday);
+    await page.getByRole("button", { name: "Add task" }).click();
+
+    await expect(page.getByText("Task added.")).toBeVisible();
+    await expect(page.getByText(title)).toHaveCount(0);
+
+    await page.goto("/tasks?view=overdue");
+    await expect(page.getByText(title)).toBeVisible();
+    await expect(page.getByText(`Overdue · ${yesterday}`)).toBeVisible();
+  });
+
+  test("schedules an exact time and opens Focus mode", async ({ page }) => {
+    const title = `E2E focus task ${Date.now()}`;
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Manila",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    await page.goto("/tasks?view=today");
+    await page.getByLabel("Task title").fill(title);
+    await page.getByLabel("Scheduled date").fill(today);
+    await page.getByLabel("Exact time").fill("09:30");
+    await page.getByLabel("Estimated minutes").fill("25");
+    await page.getByRole("button", { name: "Add task" }).click();
+
+    await expect(page.getByText(title)).toBeVisible();
+    await expect(page.getByText(/at 9:30 AM · 25 min/)).toBeVisible();
+
+    await page.getByRole("button", { name: `Focus on ${title}` }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByRole("timer")).toHaveText("25:00");
+    await expect(page.getByText("25-minute focus session")).toBeVisible();
+  });
+
   test("adds a job application and saves a weekly review", async ({ page }) => {
     const company = `E2E Company ${Date.now()}`;
     await page.goto("/career");

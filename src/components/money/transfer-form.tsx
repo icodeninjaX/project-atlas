@@ -1,13 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  createTransferAction,
-  type MoneyActionState,
-} from "@/lib/money/actions";
+import type { MoneyActionState } from "@/lib/money/actions";
+import { useOfflineActionState } from "@/components/offline/offline-mutation";
 
 const initialState: MoneyActionState = {
   success: false,
@@ -21,8 +19,8 @@ export function TransferForm({
   accounts: Array<{ id: string; name: string }>;
   today: string;
 }) {
-  const [state, action, pending] = useActionState(
-    createTransferAction,
+  const [state, action, pending] = useOfflineActionState(
+    "transfer.create",
     initialState,
   );
   const form = useRef<HTMLFormElement>(null);

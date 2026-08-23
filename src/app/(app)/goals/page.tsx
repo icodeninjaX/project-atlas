@@ -4,7 +4,7 @@ import { MilestoneList } from "@/components/goals/milestone-list";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { updateGoalProgressAction } from "@/lib/goals/actions";
+import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Goals" };
@@ -101,8 +101,8 @@ export default async function GoalsPage() {
                     style={{ width: `${goal.progress_percent}%` }}
                   />
                 </div>
-                <form
-                  action={updateGoalProgressAction}
+                <OfflineMutationForm
+                  mutation="goal.updateProgress"
                   className="mt-5 flex flex-wrap gap-2"
                 >
                   <input type="hidden" name="goalId" value={goal.id} />
@@ -129,7 +129,7 @@ export default async function GoalsPage() {
                   <Button type="submit" size="sm" variant="secondary">
                     Save progress
                   </Button>
-                </form>
+                </OfflineMutationForm>
                 <MilestoneList
                   goalId={goal.id}
                   milestones={milestonesByGoal.get(goal.id) ?? []}

@@ -23,18 +23,43 @@ export const accountSchema = z.object({
   openingBalanceCentavos: z.number().int(),
 });
 
-export const taskSchema = z.object({
-  title: z.string().trim().min(1, "Title is required").max(160),
-  description: optionalText,
-  status: z
-    .enum(["inbox", "planned", "in_progress", "completed", "cancelled"])
-    .default("inbox"),
-  priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
-  dueAt: z.iso.datetime().optional(),
-  scheduledFor: z.iso.date().optional(),
-  estimatedMinutes: z.number().int().positive().max(1_440).optional(),
-  relatedGoalId: z.uuid().optional(),
+export const balanceAdjustmentSchema = z.object({
+  accountId: z.uuid(),
+  targetBalanceCentavos: z
+    .number()
+    .int()
+    .min(Number.MIN_SAFE_INTEGER)
+    .max(Number.MAX_SAFE_INTEGER),
+  adjustmentDate: z.iso.date(),
+  note: optionalText.pipe(z.string().max(300).optional()),
 });
+
+export const taskSchema = z
+  .object({
+    title: z.string().trim().min(1, "Title is required").max(160),
+    description: optionalText,
+    status: z
+      .enum(["inbox", "planned", "in_progress", "completed", "cancelled"])
+      .default("inbox"),
+    priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+    dueAt: z.iso.datetime().optional(),
+    scheduledFor: z.iso.date().optional(),
+    scheduledTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a valid scheduled time")
+      .optional(),
+    estimatedMinutes: z.number().int().positive().max(1_440).optional(),
+    relatedGoalId: z.uuid().optional(),
+  })
+  .superRefine((task, context) => {
+    if (task.scheduledTime && !task.scheduledFor) {
+      context.addIssue({
+        code: "custom",
+        path: ["scheduledFor"],
+        message: "Choose a scheduled date when adding a time",
+      });
+    }
+  });
 
 export const transactionSchema = z.object({
   accountId: z.uuid(),

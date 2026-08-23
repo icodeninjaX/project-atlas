@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { ApplicationForm } from "@/components/career/application-form";
 import { PaymentForm } from "@/components/debts/payment-form";
 import { AccountForm } from "@/components/money/account-form";
+import { BalanceAdjustmentForm } from "@/components/money/balance-adjustment-form";
 import { TransactionForm } from "@/components/money/transaction-form";
 import { TransferForm } from "@/components/money/transfer-form";
 import { QuickTaskForm } from "@/components/tasks/quick-task-form";
@@ -24,12 +25,17 @@ describe("primary create forms", () => {
 
     expectVisibleLabel("Task title");
     expectVisibleLabel("Scheduled date");
+    expectVisibleLabel("Exact time");
     expectVisibleLabel("Priority");
     expectVisibleLabel("Estimated minutes");
 
     expect(screen.getByLabelText("Estimated minutes")).toHaveAttribute(
       "name",
       "estimatedMinutes",
+    );
+    expect(screen.getByLabelText("Exact time")).toHaveAttribute(
+      "name",
+      "scheduledTime",
     );
   });
 
@@ -40,6 +46,21 @@ describe("primary create forms", () => {
     expectVisibleLabel("Account type");
     expectVisibleLabel("Institution");
     expectVisibleLabel("Opening balance in pesos");
+  });
+
+  it("uses visible labels when adjusting an account balance", () => {
+    render(
+      <BalanceAdjustmentForm
+        accountId="1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb"
+        accountName="GCash"
+        currentBalanceCentavos={70_100}
+        today="2026-08-13"
+      />,
+    );
+
+    expectVisibleLabel("New current balance for GCash in pesos");
+    expectVisibleLabel("Balance adjustment date for GCash");
+    expectVisibleLabel("Balance adjustment note for GCash");
   });
 
   it("uses visible labels for transaction details", () => {

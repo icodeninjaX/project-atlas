@@ -1,14 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  createTransactionAction,
-  updateTransactionAction,
-  type MoneyActionState,
-} from "@/lib/money/actions";
+import type { MoneyActionState } from "@/lib/money/actions";
+import { useOfflineActionState } from "@/components/offline/offline-mutation";
 
 const initial: MoneyActionState = { success: false, message: "" };
 
@@ -32,10 +29,10 @@ export function TransactionForm({
     description: string | null;
   };
 }) {
-  const submitAction = transaction
-    ? updateTransactionAction
-    : createTransactionAction;
-  const [state, action, pending] = useActionState(submitAction, initial);
+  const [state, action, pending] = useOfflineActionState(
+    transaction ? "transaction.update" : "transaction.create",
+    initial,
+  );
   const [type, setType] = useState<"expense" | "income">(
     transaction?.transaction_type ?? "expense",
   );

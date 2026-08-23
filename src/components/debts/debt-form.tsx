@@ -1,14 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  createDebtAction,
-  updateDebtAction,
-  type DebtActionState,
-} from "@/lib/debts/actions";
+import type { DebtActionState } from "@/lib/debts/actions";
+import { useOfflineActionState } from "@/components/offline/offline-mutation";
 
 const initial: DebtActionState = { success: false, message: "" };
 
@@ -30,8 +27,10 @@ export function DebtForm({
     notes: string | null;
   };
 }) {
-  const submitAction = debt ? updateDebtAction : createDebtAction;
-  const [state, action, pending] = useActionState(submitAction, initial);
+  const [state, action, pending] = useOfflineActionState(
+    debt ? "debt.update" : "debt.create",
+    initial,
+  );
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (!state.message) return;

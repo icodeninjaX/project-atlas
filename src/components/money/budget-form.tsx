@@ -1,14 +1,12 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  saveBudgetAction,
-  type BudgetActionState,
-} from "@/lib/budgets/actions";
+import type { BudgetActionState } from "@/lib/budgets/actions";
 import { centavosToPesoInput } from "@/lib/money/money";
+import { useOfflineActionState } from "@/components/offline/offline-mutation";
 
 const initial: BudgetActionState = { success: false, message: "" };
 
@@ -23,7 +21,10 @@ export function BudgetForm({
   categories: Array<{ id: string; name: string }>;
   planned: Record<string, number>;
 }) {
-  const [state, action, pending] = useActionState(saveBudgetAction, initial);
+  const [state, action, pending] = useOfflineActionState(
+    "budget.save",
+    initial,
+  );
   useEffect(() => {
     if (!state.message) return;
     if (state.success) toast.success(state.message);

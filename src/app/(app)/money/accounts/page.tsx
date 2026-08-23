@@ -1,14 +1,25 @@
-import { Archive, ArchiveRestore, WalletCards } from "lucide-react";
+import { Archive, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { AccountForm } from "@/components/money/account-form";
+import {
+  AccountCard,
+  type AccountSummary,
+} from "@/components/money/account-card";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { archiveAccountAction } from "@/lib/money/actions";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Accounts" };
+
+function todayInManila() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
 
 export default async function AccountsPage() {
   const supabase = await createClient();
@@ -18,16 +29,14 @@ export default async function AccountsPage() {
         .select(
           "id,name,account_type,institution,current_balance_centavos,is_archived",
         )
-        .order("is_archived")
+        .eq("is_archived", false)
         .order("name")
     : { data: [] };
-  const accounts = data ?? [];
-  const total = accounts
-    .filter((account) => !account.is_archived)
-    .reduce(
-      (sum, account) => sum + Number(account.current_balance_centavos),
-      0,
-    );
+  const accounts = (data ?? []) as AccountSummary[];
+  const total = accounts.reduce(
+    (sum, account) => sum + Number(account.current_balance_centavos),
+    0,
+  );
 
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
@@ -42,6 +51,12 @@ export default async function AccountsPage() {
             </Button>
             <Button asChild variant="secondary">
               <Link href="/money/budget">Budget</Link>
+            </Button>
+            <Button asChild variant="secondary">
+              <Link href="/money/accounts/archived">
+                <Archive className="size-4" aria-hidden="true" />
+                Archived
+              </Link>
             </Button>
           </>
         }
@@ -73,56 +88,11 @@ export default async function AccountsPage() {
           </div>
         ) : (
           accounts.map((account) => (
-            <Card
+            <AccountCard
               key={account.id}
-              className={account.is_archived ? "opacity-60" : ""}
-            >
-              <CardContent>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">{account.name}</p>
-                    <p className="text-muted-foreground mt-1 text-xs capitalize">
-                      {String(account.account_type).replaceAll("_", " ")}
-                      {account.institution ? ` · ${account.institution}` : ""}
-                    </p>
-                  </div>
-                  <form action={archiveAccountAction}>
-                    <input type="hidden" name="accountId" value={account.id} />
-                    <input
-                      type="hidden"
-                      name="archived"
-                      value={account.is_archived ? "false" : "true"}
-                    />
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`${account.is_archived ? "Restore" : "Archive"} ${account.name}`}
-                    >
-                      {account.is_archived ? (
-                        <ArchiveRestore className="size-4" />
-                      ) : (
-                        <Archive className="size-4" />
-                      )}
-                    </Button>
-                  </form>
-                </div>
-                <details className="border-border @container mt-4 border-t pt-3">
-                  <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-xs font-medium">
-                    Edit account details
-                  </summary>
-                  <div className="mt-3">
-                    <AccountForm account={account} />
-                  </div>
-                </details>
-                <p className="mt-6 font-mono text-2xl font-semibold">
-                  {formatCentavos(Number(account.current_balance_centavos))}
-                </p>
-                <p className="text-muted-foreground mt-1 text-[11px]">
-                  {account.is_archived ? "Archived" : "Current derived balance"}
-                </p>
-              </CardContent>
-            </Card>
+              account={account}
+              today={todayInManila()}
+            />
           ))
         )}
       </div>

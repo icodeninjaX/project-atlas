@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { PaymentForm } from "@/components/debts/payment-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { deleteDebtPaymentAction } from "@/lib/debts/actions";
+import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { projectDebtPayoff } from "@/lib/debts/debt";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
@@ -128,7 +128,7 @@ export default async function DebtDetailPage({
                     {payment.notes ? ` · ${payment.notes}` : ""}
                   </p>
                 </div>
-                <form action={deleteDebtPaymentAction}>
+                <OfflineMutationForm mutation="debtPayment.delete">
                   <input type="hidden" name="paymentId" value={payment.id} />
                   <input type="hidden" name="debtId" value={debt.id} />
                   <Button
@@ -139,7 +139,7 @@ export default async function DebtDetailPage({
                   >
                     <Trash2 className="text-muted-foreground size-4" />
                   </Button>
-                </form>
+                </OfflineMutationForm>
               </div>
             ))
           )}

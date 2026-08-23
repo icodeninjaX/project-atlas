@@ -2,16 +2,19 @@ import { Check, Clock3, Inbox, RotateCcw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { QuickTaskForm } from "@/components/tasks/quick-task-form";
 import { TaskEditForm } from "@/components/tasks/task-edit-form";
+import { TaskFocusMode } from "@/components/tasks/task-focus-mode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { manilaDateLabel } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
-import { deleteTaskAction, setTaskStatusAction } from "@/lib/tasks/actions";
+import { formatTaskTime } from "@/lib/tasks/task-time";
 
 export const metadata = { title: "Tasks" };
 
 const views = [
   { value: "today", label: "Today" },
+  { value: "overdue", label: "Overdue" },
   { value: "upcoming", label: "Upcoming" },
   { value: "inbox", label: "Inbox" },
   { value: "completed", label: "Completed" },
@@ -41,6 +44,7 @@ export default async function TasksPage({
     status: string;
     priority: string;
     scheduled_for: string | null;
+    scheduled_time: string | null;
     due_at: string | null;
     estimated_minutes: number | null;
   }> = [];
@@ -49,23 +53,44 @@ export default async function TasksPage({
     let query = supabase
       .from("tasks")
       .select(
-        "id,title,description,status,priority,scheduled_for,due_at,estimated_minutes",
-      )
-      .order("created_at", { ascending: false })
-      .limit(100);
+        "id,title,description,status,priority,scheduled_for,scheduled_time,due_at,estimated_minutes",
+      );
 
     if (selected === "today")
-      query = query.eq("scheduled_for", today).neq("status", "completed");
+      query = query
+        .eq("scheduled_for", today)
+        .neq("status", "completed")
+        .neq("status", "cancelled");
+    if (selected === "overdue")
+      query = query
+        .lt("scheduled_for", today)
+        .neq("status", "completed")
+        .neq("status", "cancelled");
     if (selected === "upcoming")
-      query = query.gt("scheduled_for", today).neq("status", "completed");
+      query = query
+        .gt("scheduled_for", today)
+        .neq("status", "completed")
+        .neq("status", "cancelled");
     if (selected === "inbox") query = query.eq("status", "inbox");
     if (selected === "completed") query = query.eq("status", "completed");
+    if (["today", "overdue", "upcoming"].includes(selected)) {
+      query = query
+        .order("scheduled_for", {
+          ascending: selected !== "overdue",
+          nullsFirst: false,
+        })
+        .order("scheduled_time", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: false });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
+    query = query.limit(100);
     const { data } = await query;
     tasks = data ?? [];
   }
 
   return (
-    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
+    <div className="mx-auto max-w-[1200px] px-3 py-4 sm:p-6 lg:p-8">
       <p className="text-primary font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
         {manilaDateLabel(new Date())}
       </p>
@@ -74,22 +99,22 @@ export default async function TasksPage({
         Capture quickly. Keep today small enough to finish.
       </p>
 
-      <div className="mt-7">
+      <div className="mt-6 sm:mt-7">
         <QuickTaskForm />
       </div>
 
       <nav
         aria-label="Task views"
-        className="border-border mt-6 flex gap-1 overflow-x-auto border-b"
+        className="border-border bg-muted/60 mt-5 flex [scrollbar-width:none] gap-1 overflow-x-auto rounded-2xl border p-1 sm:mt-6 [&::-webkit-scrollbar]:hidden"
       >
         {views.map((view) => (
           <Link
             key={view.value}
             href={`/tasks?view=${view.value}`}
-            className={`border-b-2 px-4 py-3 text-sm font-medium ${
+            className={`min-h-11 shrink-0 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
               selected === view.value
-                ? "border-primary text-foreground"
-                : "text-muted-foreground hover:text-foreground border-transparent"
+                ? "border-border bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-card/60 hover:text-foreground border-transparent"
             }`}
           >
             {view.label}
@@ -111,79 +136,116 @@ export default async function TasksPage({
             </div>
           </div>
         ) : (
-          tasks.map((task) => (
-            <Card key={task.id}>
-              <CardContent className="flex items-start gap-3 p-4">
-                <form action={setTaskStatusAction}>
-                  <input type="hidden" name="taskId" value={task.id} />
-                  <input
-                    type="hidden"
-                    name="status"
-                    value={task.status === "completed" ? "inbox" : "completed"}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    type="submit"
-                    aria-label={
-                      task.status === "completed"
-                        ? `Reopen ${task.title}`
-                        : `Complete ${task.title}`
-                    }
-                  >
-                    {task.status === "completed" ? (
-                      <RotateCcw className="size-4" />
-                    ) : (
-                      <Check className="size-4" />
-                    )}
-                  </Button>
-                </form>
-                <div className="min-w-0 flex-1 pt-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p
-                      className={`text-sm font-semibold ${task.status === "completed" ? "text-muted-foreground line-through" : ""}`}
+          tasks.map((task) => {
+            const overdue =
+              selected === "overdue" &&
+              task.scheduled_for !== null &&
+              task.scheduled_for < today;
+
+            return (
+              <Card key={task.id}>
+                <CardContent className="flex items-start gap-2 p-3 sm:gap-3 sm:p-4">
+                  <OfflineMutationForm mutation="task.setStatus">
+                    <input type="hidden" name="taskId" value={task.id} />
+                    <input
+                      type="hidden"
+                      name="status"
+                      value={
+                        task.status === "completed" ? "inbox" : "completed"
+                      }
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="submit"
+                      className="size-11 sm:size-10"
+                      aria-label={
+                        task.status === "completed"
+                          ? `Reopen ${task.title}`
+                          : `Complete ${task.title}`
+                      }
                     >
-                      {task.title}
-                    </p>
-                    <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] capitalize">
-                      {task.priority}
-                    </span>
+                      {task.status === "completed" ? (
+                        <RotateCcw className="size-4" />
+                      ) : (
+                        <Check className="size-4" />
+                      )}
+                    </Button>
+                  </OfflineMutationForm>
+                  <div className="min-w-0 flex-1 pt-1.5 sm:pt-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p
+                        className={`text-sm font-semibold ${task.status === "completed" ? "text-muted-foreground line-through" : ""}`}
+                      >
+                        {task.title}
+                      </p>
+                      <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] capitalize">
+                        {task.priority}
+                      </span>
+                    </div>
+                    {task.description && (
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {task.description}
+                      </p>
+                    )}
+                    {(task.scheduled_for || task.estimated_minutes) && (
+                      <p
+                        className={`mt-2 flex items-center gap-1.5 font-mono text-[10px] ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
+                      >
+                        <Clock3 className="size-3" />
+                        {overdue ? "Overdue · " : ""}
+                        {task.scheduled_for ?? "Unscheduled"}
+                        {task.scheduled_time
+                          ? ` at ${formatTaskTime(task.scheduled_time)}`
+                          : ""}
+                        {task.estimated_minutes
+                          ? ` · ${task.estimated_minutes} min`
+                          : ""}
+                      </p>
+                    )}
+                    {task.status !== "completed" &&
+                      task.status !== "cancelled" && (
+                        <div className="mt-3">
+                          <TaskFocusMode
+                            taskId={task.id}
+                            title={task.title}
+                            description={task.description}
+                            estimatedMinutes={task.estimated_minutes}
+                            scheduledLabel={
+                              task.scheduled_for
+                                ? `${task.scheduled_for}${
+                                    task.scheduled_time
+                                      ? ` at ${formatTaskTime(task.scheduled_time)}`
+                                      : ""
+                                  }`
+                                : null
+                            }
+                          />
+                        </div>
+                      )}
+                    <details className="mt-3">
+                      <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-[11px]">
+                        Edit task
+                      </summary>
+                      <TaskEditForm task={task} />
+                    </details>
                   </div>
-                  {task.description && (
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {task.description}
-                    </p>
-                  )}
-                  {(task.scheduled_for || task.estimated_minutes) && (
-                    <p className="text-muted-foreground mt-2 flex items-center gap-1.5 font-mono text-[10px]">
-                      <Clock3 className="size-3" />
-                      {task.scheduled_for ?? "Unscheduled"}
-                      {task.estimated_minutes
-                        ? ` · ${task.estimated_minutes} min`
-                        : ""}
-                    </p>
-                  )}
-                  <details className="mt-3">
-                    <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-[11px]">
-                      Edit task
-                    </summary>
-                    <TaskEditForm task={task} />
-                  </details>
-                </div>
-                <form action={deleteTaskAction}>
-                  <input type="hidden" name="taskId" value={task.id} />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    type="submit"
-                    aria-label={`Delete ${task.title}`}
-                  >
-                    <Trash2 className="text-muted-foreground size-4" />
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          ))
+                  <OfflineMutationForm mutation="task.delete">
+                    <input type="hidden" name="taskId" value={task.id} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="submit"
+                      className="size-11 sm:size-10"
+                      aria-label={`Delete ${task.title}`}
+                    >
+                      <Trash2 className="text-muted-foreground size-4" />
+                    </Button>
+                  </OfflineMutationForm>
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
     </div>

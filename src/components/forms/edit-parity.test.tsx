@@ -17,6 +17,7 @@ describe("edit form parity", () => {
           description: "Include the latest case study",
           priority: "high",
           scheduled_for: "2026-08-04",
+          scheduled_time: "14:30:00",
           estimated_minutes: 45,
           status: "planned",
         }}
@@ -30,6 +31,7 @@ describe("edit form parity", () => {
       "Include the latest case study",
     );
     expect(screen.getByLabelText("Scheduled date")).toHaveValue("2026-08-04");
+    expect(screen.getByLabelText("Exact time")).toHaveValue("14:30");
     expect(screen.getByLabelText("Estimated minutes")).toHaveValue(45);
     expect(screen.getByLabelText("Priority")).toHaveValue("high");
   });

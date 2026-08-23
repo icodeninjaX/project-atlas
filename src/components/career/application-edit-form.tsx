@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { Pencil } from "lucide-react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  updateApplicationAction,
-  type CareerActionState,
-} from "@/lib/career/actions";
+import type { CareerActionState } from "@/lib/career/actions";
+import { useOfflineActionState } from "@/components/offline/offline-mutation";
+import { cn } from "@/lib/utils";
 
 const initial: CareerActionState = { success: false, message: "" };
 
@@ -23,6 +23,7 @@ function dateValue(value: string | null) {
 
 export function ApplicationEditForm({
   application,
+  compact = false,
 }: {
   application: {
     id: string;
@@ -43,9 +44,10 @@ export function ApplicationEditForm({
     salary_min_centavos: number | null;
     salary_max_centavos: number | null;
   };
+  compact?: boolean;
 }) {
-  const [state, action, pending] = useActionState(
-    updateApplicationAction,
+  const [state, action, pending] = useOfflineActionState(
+    "application.update",
     initial,
   );
 
@@ -56,13 +58,24 @@ export function ApplicationEditForm({
   }, [state]);
 
   return (
-    <details className="mt-3">
-      <summary className="text-primary cursor-pointer text-xs font-semibold">
-        Edit application
+    <details className={compact ? "contents" : "mt-3"}>
+      <summary
+        className={cn(
+          "cursor-pointer text-xs font-semibold",
+          compact
+            ? "border-border bg-secondary text-secondary-foreground hover:bg-muted flex min-h-11 list-none items-center justify-center gap-2 rounded-xl border px-3 transition-colors [&::-webkit-details-marker]:hidden"
+            : "text-primary",
+        )}
+      >
+        {compact ? <Pencil className="size-3.5" /> : null}
+        {compact ? "Edit details" : "Edit application"}
       </summary>
       <form
         action={action}
-        className="border-border bg-background mt-3 grid gap-3 rounded-xl border p-3 sm:grid-cols-2 lg:grid-cols-4"
+        className={cn(
+          "border-border bg-background mt-3 grid gap-3 rounded-xl border p-3 sm:grid-cols-2",
+          compact ? "col-span-2 xl:grid-cols-3" : "lg:grid-cols-4",
+        )}
       >
         <input type="hidden" name="applicationId" value={application.id} />
         <Input
