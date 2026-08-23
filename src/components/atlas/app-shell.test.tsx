@@ -43,6 +43,7 @@ describe("AppShell", () => {
     fireEvent.click(screen.getByRole("button", { name: "More navigation" }));
 
     const sheet = screen.getByRole("dialog", { name: "More destinations" });
+    expect(sheet).toHaveClass("bg-card");
     expect(
       within(sheet).getByRole("link", { name: "Career" }),
     ).toBeInTheDocument();
@@ -55,6 +56,11 @@ describe("AppShell", () => {
     expect(
       within(sheet).getByRole("link", { name: "Settings" }),
     ).toBeInTheDocument();
+    expect(
+      within(sheet)
+        .getAllByRole("link")
+        .every((link) => link.classList.contains("bg-background")),
+    ).toBe(true);
   });
 
   it("closes the mobile More sheet with Escape", () => {

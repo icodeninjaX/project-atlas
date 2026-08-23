@@ -53,6 +53,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     return pathname === href || pathname?.startsWith(`${href}/`) === true;
   };
 
+  const moreDestinationActive = mobileMoreNavigation.some(({ href }) =>
+    isActive(href),
+  );
+
   useEffect(() => {
     if (!moreOpen) return;
 
@@ -193,7 +197,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav
         aria-label="Primary navigation"
         className={cn(
-          "border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 h-[calc(4.75rem+env(safe-area-inset-bottom))] grid-cols-6 items-start border-t px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgb(0_0_0/0.06)] backdrop-blur lg:hidden",
+          "border-border bg-background fixed inset-x-0 bottom-0 z-40 h-[calc(4.75rem+env(safe-area-inset-bottom))] grid-cols-6 items-start border-t px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgb(0_0_0/0.08)] lg:hidden",
           keyboardOpen ? "hidden" : "grid",
         )}
       >
@@ -228,16 +232,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-label="More navigation"
             onClick={() => setMoreOpen((open) => !open)}
             className={cn(
-              "text-muted-foreground focus-visible:ring-ring flex min-h-[4.5rem] w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[10px] font-medium focus-visible:ring-2 focus-visible:outline-none min-[360px]:text-[11px]",
-              mobileMoreNavigation.some(({ href }) => isActive(href)) &&
-                "text-primary",
+              "text-muted-foreground focus-visible:ring-ring flex min-h-[4.5rem] w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[10px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none min-[360px]:text-[11px]",
+              (moreOpen || moreDestinationActive) && "text-primary",
             )}
           >
             <span
               className={cn(
-                "grid size-8 place-items-center rounded-xl transition-colors",
-                mobileMoreNavigation.some(({ href }) => isActive(href)) &&
-                  "bg-primary/10",
+                "grid size-8 place-items-center rounded-xl border border-transparent transition-colors",
+                (moreOpen || moreDestinationActive) &&
+                  "border-primary bg-primary text-primary-foreground shadow-sm",
               )}
             >
               <Menu className="size-5" />
@@ -263,20 +266,25 @@ export function AppShell({ children }: { children: ReactNode }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="mobile-more-title"
-            className="border-border bg-popover text-popover-foreground absolute inset-x-0 bottom-0 rounded-t-[1.75rem] border-t px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl"
+            className="border-border bg-card text-card-foreground absolute inset-x-0 bottom-0 rounded-t-[1.75rem] border-t px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl"
           >
             <div className="bg-border mx-auto mb-3 h-1 w-10 rounded-full" />
             <div className="flex min-h-11 items-center justify-between">
-              <div>
-                <p
-                  id="mobile-more-title"
-                  className="text-base font-semibold tracking-tight"
-                >
-                  More destinations
-                </p>
-                <p className="text-muted-foreground mt-0.5 text-xs">
-                  Jump to the rest of your Atlas workspace.
-                </p>
+              <div className="flex items-center gap-3">
+                <span className="bg-primary text-primary-foreground grid size-10 shrink-0 place-items-center rounded-xl shadow-sm">
+                  <Menu className="size-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <p
+                    id="mobile-more-title"
+                    className="text-base font-semibold tracking-tight"
+                  >
+                    More destinations
+                  </p>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
+                    Jump to the rest of your Atlas workspace.
+                  </p>
+                </div>
               </div>
               <button
                 ref={closeButtonRef}
@@ -302,12 +310,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={() => setMoreOpen(false)}
                   aria-current={isActive(href) ? "page" : undefined}
                   className={cn(
-                    "border-border bg-background/55 hover:bg-muted focus-visible:ring-ring flex min-h-14 items-center gap-3 rounded-xl border px-3 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none",
+                    "border-border bg-background hover:border-primary hover:bg-secondary focus-visible:ring-ring flex min-h-16 items-center gap-3 rounded-xl border px-3 text-sm font-medium shadow-sm transition-colors focus-visible:ring-2 focus-visible:outline-none",
                     isActive(href) &&
-                      "border-primary/30 bg-primary/10 text-primary",
+                      "border-primary bg-primary text-primary-foreground hover:bg-primary",
                   )}
                 >
-                  <span className="bg-muted grid size-9 shrink-0 place-items-center rounded-lg">
+                  <span
+                    className={cn(
+                      "bg-secondary text-secondary-foreground grid size-10 shrink-0 place-items-center rounded-xl",
+                      isActive(href) && "bg-primary-foreground text-primary",
+                    )}
+                  >
                     <Icon className="size-[18px]" />
                   </span>
                   {label}
