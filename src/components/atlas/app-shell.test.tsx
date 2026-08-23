@@ -8,11 +8,17 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppShell } from "./app-shell";
 
+const mocks = vi.hoisted(() => ({ push: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/money/transactions",
+  useRouter: () => ({ push: mocks.push }),
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("AppShell", () => {
   it("provides labelled primary navigation and the Atlas identity", () => {
@@ -100,5 +106,36 @@ describe("AppShell", () => {
       screen.queryByRole("dialog", { name: "More destinations" }),
     ).not.toBeInTheDocument();
     expect(button).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("opens task capture and search from quiet areas", () => {
+    render(
+      <AppShell>
+        <h1>Today</h1>
+      </AppShell>,
+    );
+
+    fireEvent.keyDown(window, { key: "n" });
+    fireEvent.keyDown(window, { key: "/" });
+
+    expect(mocks.push).toHaveBeenNthCalledWith(1, "/tasks?create=true");
+    expect(mocks.push).toHaveBeenNthCalledWith(2, "/search");
+  });
+
+  it("does not trigger single-key shortcuts while typing", () => {
+    render(
+      <AppShell>
+        <label>
+          Notes
+          <input />
+        </label>
+      </AppShell>,
+    );
+
+    const input = screen.getByRole("textbox", { name: "Notes" });
+    fireEvent.keyDown(input, { key: "n" });
+    fireEvent.keyDown(input, { key: "/" });
+
+    expect(mocks.push).not.toHaveBeenCalled();
   });
 });

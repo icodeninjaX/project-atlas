@@ -1,5 +1,24 @@
 export type DebtStrategy = "snowball" | "avalanche" | "priority";
 
+const debtStrategies = new Set<DebtStrategy>([
+  "snowball",
+  "avalanche",
+  "priority",
+]);
+
+export function resolveDebtStrategy(
+  requested: string | undefined,
+  saved: string | undefined,
+): DebtStrategy {
+  if (debtStrategies.has(requested as DebtStrategy)) {
+    return requested as DebtStrategy;
+  }
+  if (debtStrategies.has(saved as DebtStrategy)) {
+    return saved as DebtStrategy;
+  }
+  return "avalanche";
+}
+
 export type DebtForStrategy = {
   id: string;
   balanceCentavos: number;

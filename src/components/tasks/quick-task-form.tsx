@@ -9,7 +9,13 @@ import { useOfflineActionState } from "@/components/offline/offline-mutation";
 
 const initialState: TaskActionState = { success: false, message: "" };
 
-export function QuickTaskForm() {
+export function QuickTaskForm({
+  defaultPriority = "medium",
+  defaultEstimatedMinutes = null,
+}: {
+  defaultPriority?: string;
+  defaultEstimatedMinutes?: number | null;
+}) {
   const [state, action, pending] = useOfflineActionState(
     "task.create",
     initialState,
@@ -94,7 +100,7 @@ export function QuickTaskForm() {
           <select
             id="quick-task-priority"
             name="priority"
-            defaultValue="medium"
+            defaultValue={defaultPriority}
             className="border-border bg-background focus-visible:ring-ring min-h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
           >
             <option value="low">Low</option>
@@ -118,6 +124,7 @@ export function QuickTaskForm() {
             min="1"
             max="1440"
             placeholder="30"
+            defaultValue={defaultEstimatedMinutes ?? ""}
           />
         </div>
         <Button

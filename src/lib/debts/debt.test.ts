@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { orderDebts, projectDebtPayoff, recalculateDebtBalance } from "./debt";
+import {
+  orderDebts,
+  projectDebtPayoff,
+  recalculateDebtBalance,
+  resolveDebtStrategy,
+} from "./debt";
 
 const debts = [
   { id: "a", balanceCentavos: 100_000, interestRatePercent: 5, priority: 2 },
@@ -40,6 +45,12 @@ describe("debt calculations", () => {
       "a",
       "b",
     ]);
+  });
+
+  it("uses the saved strategy unless the route explicitly overrides it", () => {
+    expect(resolveDebtStrategy(undefined, "snowball")).toBe("snowball");
+    expect(resolveDebtStrategy("priority", "snowball")).toBe("priority");
+    expect(resolveDebtStrategy("unknown", "unknown")).toBe("avalanche");
   });
 
   it("projects payoff using monthly compounding and a fixed payment", () => {

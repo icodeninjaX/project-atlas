@@ -4,6 +4,7 @@ import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { GoalForm } from "@/components/goals/goal-form";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip";
 
 type Goal = {
   id: string;
@@ -26,19 +27,20 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
         <span className="border-border text-muted-foreground rounded-full border px-2 py-1 text-[10px] capitalize">
           {goal.area}
         </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={`-mr-1 size-8 min-h-8 rounded-lg sm:size-8 ${editorOpen ? "bg-muted text-foreground" : ""}`}
-          aria-label={`Edit ${goal.title}`}
-          aria-expanded={editorOpen}
-          aria-controls={editorId}
-          title="Edit goal"
-          onClick={() => setEditorOpen((open) => !open)}
-        >
-          <Pencil aria-hidden="true" className="size-3.5" />
-        </Button>
+        <TooltipHint label="Edit goal" side="left">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={`-mr-1 size-8 min-h-8 rounded-lg sm:size-8 ${editorOpen ? "bg-muted text-foreground" : ""}`}
+            aria-label={`Edit ${goal.title}`}
+            aria-expanded={editorOpen}
+            aria-controls={editorId}
+            onClick={() => setEditorOpen((open) => !open)}
+          >
+            <Pencil aria-hidden="true" className="size-3.5" />
+          </Button>
+        </TooltipHint>
       </div>
       <h2 className="mt-3 text-base font-semibold">{goal.title}</h2>
       {goal.success_definition ? (

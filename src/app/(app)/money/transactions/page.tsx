@@ -4,7 +4,9 @@ import { TransactionForm } from "@/components/money/transaction-form";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { TooltipHint } from "@/components/ui/tooltip";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
+import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,7 +23,12 @@ function todayInManila() {
 
 export default async function TransactionsPage() {
   const supabase = await createClient();
-  const [accountsResult, categoriesResult, transactionsResult] = supabase
+  const [
+    accountsResult,
+    categoriesResult,
+    transactionsResult,
+    preferencesResult,
+  ] = supabase
     ? await Promise.all([
         supabase
           .from("financial_accounts")
@@ -39,8 +46,12 @@ export default async function TransactionsPage() {
           )
           .order("transaction_date", { ascending: false })
           .limit(100),
+        supabase
+          .from("user_preferences")
+          .select("default_account_id")
+          .maybeSingle(),
       ])
-    : [{ data: [] }, { data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }, { data: null }];
   const transactions = transactionsResult.data ?? [];
   const monthPrefix = todayInManila().slice(0, 7);
   const monthRows = transactions.filter((transaction) =>
@@ -75,7 +86,7 @@ export default async function TransactionsPage() {
           <CardContent>
             <p className="text-muted-foreground text-xs">Income this month</p>
             <p className="text-primary mt-3 font-mono text-2xl font-semibold">
-              {formatCentavos(income)}
+              <SensitiveValue>{formatCentavos(income)}</SensitiveValue>
             </p>
           </CardContent>
         </Card>
@@ -83,7 +94,7 @@ export default async function TransactionsPage() {
           <CardContent>
             <p className="text-muted-foreground text-xs">Expenses this month</p>
             <p className="mt-3 font-mono text-2xl font-semibold">
-              {formatCentavos(expenses)}
+              <SensitiveValue>{formatCentavos(expenses)}</SensitiveValue>
             </p>
           </CardContent>
         </Card>
@@ -93,6 +104,7 @@ export default async function TransactionsPage() {
           accounts={accountsResult.data ?? []}
           categories={categoriesResult.data ?? []}
           today={todayInManila()}
+          defaultAccountId={preferencesResult.data?.default_account_id}
         />
       </div>
       <div className="border-border bg-card mt-6 overflow-hidden rounded-2xl border">
@@ -136,19 +148,26 @@ export default async function TransactionsPage() {
                 <p
                   className={`font-mono text-sm font-semibold ${transaction.transaction_type === "income" ? "text-primary" : ""}`}
                 >
-                  {transaction.transaction_type === "income" ? "+" : "−"}
-                  {formatCentavos(Number(transaction.amount_centavos))}
+                  <SensitiveValue>
+                    {transaction.transaction_type === "income" ? "+" : "−"}
+                    {formatCentavos(Number(transaction.amount_centavos))}
+                  </SensitiveValue>
                 </p>
                 <details className="relative">
-                  <summary className="text-muted-foreground hover:bg-muted grid size-10 cursor-pointer list-none place-items-center rounded-xl [&::-webkit-details-marker]:hidden">
-                    <Pencil className="size-4" />
-                    <span className="sr-only">Edit transaction</span>
-                  </summary>
+                  <TooltipHint label="Edit transaction">
+                    <summary className="text-muted-foreground hover:bg-muted grid size-10 cursor-pointer list-none place-items-center rounded-xl [&::-webkit-details-marker]:hidden">
+                      <Pencil className="size-4" />
+                      <span className="sr-only">Edit transaction</span>
+                    </summary>
+                  </TooltipHint>
                   <div className="border-border bg-card absolute right-0 z-10 mt-2 w-[min(90vw,720px)] rounded-2xl border p-3 shadow-xl">
                     <TransactionForm
                       accounts={accountsResult.data ?? []}
                       categories={categoriesResult.data ?? []}
                       today={todayInManila()}
+                      defaultAccountId={
+                        preferencesResult.data?.default_account_id
+                      }
                       transaction={transaction}
                     />
                   </div>
@@ -159,14 +178,16 @@ export default async function TransactionsPage() {
                     name="transactionId"
                     value={transaction.id}
                   />
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Delete transaction"
-                  >
-                    <Trash2 className="text-muted-foreground size-4" />
-                  </Button>
+                  <TooltipHint label="Delete transaction">
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Delete transaction"
+                    >
+                      <Trash2 className="text-muted-foreground size-4" />
+                    </Button>
+                  </TooltipHint>
                 </OfflineMutationForm>
               </div>
             );

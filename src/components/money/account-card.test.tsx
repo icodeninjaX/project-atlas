@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderWithProviders as render } from "@/test/render";
 import { AccountCard, type AccountSummary } from "./account-card";
 
 vi.mock("@/lib/money/actions", () => ({

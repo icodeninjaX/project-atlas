@@ -16,11 +16,14 @@ export function useOfflineSync() {
       online: true,
       pending: 0,
       blocked: 0,
+      lastSyncedAt: null,
       submit: async () => ({
         success: false,
         message: "Offline sync is unavailable outside the signed-in app.",
       }),
       retry: async () => undefined,
+      syncNow: async () => undefined,
+      clearPrivateCache: async () => undefined,
     }
   );
 }

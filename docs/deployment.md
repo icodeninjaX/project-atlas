@@ -21,8 +21,13 @@
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `NEXT_PUBLIC_APP_URL`
-4. Keep `SUPABASE_SERVICE_ROLE_KEY` and `OPENAI_API_KEY` unset until a reviewed server-only feature requires them.
-5. Deploy after CI succeeds.
+   - `SUPABASE_SERVICE_ROLE_KEY` for authenticated account deletion and reminder delivery
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` for browser push
+   - `CRON_SECRET` for Vercel Cron authentication
+4. Generate the VAPID pair with `npx web-push generate-vapid-keys`. Use a monitored `mailto:` address or HTTPS origin for `VAPID_SUBJECT`.
+5. Generate a high-entropy `CRON_SECRET`; Vercel sends it as the bearer token for `/api/cron/reminders`.
+6. Keep `OPENAI_API_KEY` unset until a reviewed server-only feature requires it.
+7. Deploy after CI succeeds. `vercel.json` schedules the actionable digest once daily at 00:00 UTC / 08:00 Asia/Manila, which is compatible with Vercel Hobby cron limits.
 
 ## PWA and offline sync
 
@@ -43,6 +48,10 @@
 - `/manifest.webmanifest`, `/sw.js`, and all manifest icons return `200`
 - a previously visited page reloads offline and an uncached route shows the offline fallback
 - a queued test mutation syncs exactly once after reconnecting
+- current-device, other-device, and global sign-out controls affect the intended sessions
+- an MFA-enabled account is redirected through `/mfa` before private pages and APIs
+- a push-enabled account receives at most one actionable daily digest; invalid subscriptions are removed
+- account deletion rejects the wrong password or confirmation phrase and is unavailable without the service role
 - primary mobile and desktop workflows remain keyboard accessible
 
 ## Rollback

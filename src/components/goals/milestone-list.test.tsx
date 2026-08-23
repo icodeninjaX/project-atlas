@@ -1,5 +1,6 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+import { renderWithProviders as render } from "@/test/render";
 import { MilestoneList } from "./milestone-list";
 
 afterEach(cleanup);

@@ -11,7 +11,10 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const next = safeRedirectPath((await searchParams).next, "/dashboard");
+  const requestedNext = (await searchParams).next;
+  const next = requestedNext
+    ? safeRedirectPath(requestedNext, "/dashboard")
+    : null;
 
   return (
     <AuthCard
@@ -33,7 +36,7 @@ export default async function LoginPage({
       <AuthForm
         action={signInAction}
         submitLabel="Log in"
-        hiddenFields={{ next }}
+        hiddenFields={next ? { next } : undefined}
       />
       <Link
         href="/forgot-password"

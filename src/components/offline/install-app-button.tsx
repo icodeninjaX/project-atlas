@@ -4,6 +4,7 @@ import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip";
 
 type InstallPromptEvent = Event & {
   prompt(): Promise<void>;
@@ -45,27 +46,28 @@ export function InstallAppButton() {
   if (installed || (!prompt && !isIOS)) return null;
 
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      aria-label="Install Project Atlas"
-      title="Install Project Atlas"
-      onClick={async () => {
-        if (prompt) {
-          await prompt.prompt();
-          const choice = await prompt.userChoice;
-          if (choice.outcome === "accepted") setInstalled(true);
-          setPrompt(null);
-          return;
-        }
-        toast.info(
-          "In Safari, tap Share, then choose Add to Home Screen to install Atlas.",
-          { duration: 7000 },
-        );
-      }}
-    >
-      <Download className="size-4" />
-    </Button>
+    <TooltipHint label="Install Project Atlas">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label="Install Project Atlas"
+        onClick={async () => {
+          if (prompt) {
+            await prompt.prompt();
+            const choice = await prompt.userChoice;
+            if (choice.outcome === "accepted") setInstalled(true);
+            setPrompt(null);
+            return;
+          }
+          toast.info(
+            "In Safari, tap Share, then choose Add to Home Screen to install Atlas.",
+            { duration: 7000 },
+          );
+        }}
+      >
+        <Download className="size-4" />
+      </Button>
+    </TooltipHint>
   );
 }

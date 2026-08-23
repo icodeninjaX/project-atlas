@@ -39,9 +39,16 @@ export async function signInAction(
     return { success: false, message: "Email or password is incorrect." };
   }
 
+  const requestedDestination = String(formData.get("next") ?? "");
+  const { data: preferences } = requestedDestination
+    ? { data: null }
+    : await supabase
+        .from("user_preferences")
+        .select("home_route")
+        .maybeSingle();
   const destination = safeRedirectPath(
-    String(formData.get("next") ?? ""),
-    "/dashboard",
+    requestedDestination,
+    preferences?.home_route ?? "/dashboard",
   );
   redirect(destination as Route);
 }
@@ -154,6 +161,33 @@ export async function resetPasswordAction(
 
 export async function signOutAction() {
   const supabase = await createClient();
-  if (supabase) await supabase.auth.signOut();
+  if (supabase) await supabase.auth.signOut({ scope: "local" });
+  redirect("/login");
+}
+
+export async function signOutOtherSessionsAction(
+  _state: AuthState,
+): Promise<AuthState> {
+  void _state;
+  const supabase = await createClient();
+  if (!supabase) return configurationError;
+
+  const { error } = await supabase.auth.signOut({ scope: "others" });
+  if (error) {
+    return {
+      success: false,
+      message: "Other sessions could not be signed out. Try again.",
+    };
+  }
+
+  return {
+    success: true,
+    message: "Other sessions were signed out. This device stayed connected.",
+  };
+}
+
+export async function signOutEverywhereAction() {
+  const supabase = await createClient();
+  if (supabase) await supabase.auth.signOut({ scope: "global" });
   redirect("/login");
 }

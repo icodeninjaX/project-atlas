@@ -1,11 +1,6 @@
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-} from "@testing-library/react";
+import { act, cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderWithProviders as render } from "@/test/render";
 import { TaskFocusMode } from "./task-focus-mode";
 
 vi.mock("@/lib/tasks/actions", () => ({

@@ -6,6 +6,7 @@ import {
   type AccountSummary,
 } from "@/components/money/account-card";
 import { PageHeading } from "@/components/shared/page-heading";
+import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Button } from "@/components/ui/button";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
@@ -66,7 +67,7 @@ export default async function AccountsPage() {
           Total available across active accounts
         </p>
         <p className="mt-2 font-mono text-3xl font-semibold">
-          {formatCentavos(total)}
+          <SensitiveValue>{formatCentavos(total)}</SensitiveValue>
         </p>
       </div>
       <div className="mt-4">

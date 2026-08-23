@@ -14,8 +14,11 @@ Project Atlas is a private, Philippines-first life-management application for se
 - goals with manual progress
 - career table and Kanban views, stage history, overdue follow-ups, and conversion guards
 - weekly factual summaries, guided reflections, drafts, submission, and score trends
-- owner-scoped global search and activity history schema
+- owner-scoped global search plus filterable, paginated activity history and export
 - installable PWA with user-scoped offline page caches and automatic mutation replay
+- device privacy mode, sync/storage controls, quick-capture defaults, and scoped session controls
+- password/email changes, authenticated account deletion, and TOTP authenticator MFA
+- opt-in daily web-push reminders with quiet hours and idempotent Vercel cron delivery
 - dark-first responsive shell with light mode, focus states, reduced motion, loading, empty, and error states
 
 ## Stack
@@ -44,9 +47,15 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 OPENAI_API_KEY=
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:you@example.com
+CRON_SECRET=
 ```
 
-The service-role and OpenAI keys are server-only and unused by the MVP runtime.
+The service-role key enables authenticated account deletion and the reminder
+delivery worker. The VAPID private key and cron secret are server-only. The
+OpenAI key remains optional and unused by the current runtime.
 
 ## Supabase setup
 
@@ -111,8 +120,9 @@ Screenshots will be added after a migrated Supabase test project is connected an
 
 ## Known limitations
 
-- The SQL migration and pgTAP suite are not executed in this workspace because no Supabase CLI, PostgreSQL client, or test project was available.
-- Permanent account deletion is intentionally disabled until a secure administrative endpoint is deployed.
-- Full edit dialogs, goal milestone management, transfer entry, advanced transaction filters, and an activity-history screen remain incomplete.
+- The newest SQL migration and pgTAP suite were not executed locally because Docker Desktop was unavailable; apply them to a disposable Supabase branch before production.
+- Account deletion remains visibly disabled when `SUPABASE_SERVICE_ROLE_KEY` is absent.
+- Browser reminders remain visibly disabled until VAPID and cron secrets are configured.
+- Full edit dialogs, goal milestone management, transfer entry, and advanced transaction filters remain incomplete.
 - Authenticated Playwright workflows require dedicated test credentials and skip without them.
 - Automated axe accessibility checks are not yet configured.

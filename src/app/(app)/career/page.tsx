@@ -9,6 +9,7 @@ import {
 } from "@/components/career/career-kanban";
 import { StageSelect } from "@/components/career/stage-select";
 import { PageHeading } from "@/components/shared/page-heading";
+import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCentavos } from "@/lib/money/money";
@@ -80,12 +81,14 @@ function ApplicationCards({
                     Salary range
                   </p>
                   <p className="mt-1 font-mono text-sm break-words">
-                    {application.salary_min_centavos != null
-                      ? formatCentavos(application.salary_min_centavos)
-                      : "—"}
-                    {application.salary_max_centavos != null
-                      ? ` – ${formatCentavos(application.salary_max_centavos)}`
-                      : ""}
+                    <SensitiveValue>
+                      {application.salary_min_centavos != null
+                        ? formatCentavos(application.salary_min_centavos)
+                        : "—"}
+                      {application.salary_max_centavos != null
+                        ? ` – ${formatCentavos(application.salary_max_centavos)}`
+                        : ""}
+                    </SensitiveValue>
                   </p>
                 </div>
               </div>
@@ -307,12 +310,14 @@ export default async function CareerPage({
                           )}
                         </td>
                         <td className="p-4 font-mono text-xs">
-                          {application.salary_min_centavos != null
-                            ? formatCentavos(application.salary_min_centavos)
-                            : "—"}
-                          {application.salary_max_centavos != null
-                            ? ` – ${formatCentavos(application.salary_max_centavos)}`
-                            : ""}
+                          <SensitiveValue>
+                            {application.salary_min_centavos != null
+                              ? formatCentavos(application.salary_min_centavos)
+                              : "—"}
+                            {application.salary_max_centavos != null
+                              ? ` – ${formatCentavos(application.salary_max_centavos)}`
+                              : ""}
+                          </SensitiveValue>
                         </td>
                         <td className="p-4">
                           {application.job_url ? (

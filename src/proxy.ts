@@ -15,7 +15,7 @@ const protectedPagePrefixes = [
   "/tasks",
 ];
 
-const protectedApiPrefixes = ["/api/export"];
+const protectedApiPrefixes = ["/api/export", "/api/offline-sync"];
 
 function matchesRoutePrefix(pathname: string, prefixes: string[]) {
   return prefixes.some(
@@ -74,6 +74,22 @@ export async function proxy(request: NextRequest) {
       `${request.nextUrl.pathname}${request.nextUrl.search}`,
     );
     return NextResponse.redirect(login);
+  }
+
+  if (user && (isProtectedPage || isProtectedApi)) {
+    const { data: assurance } =
+      await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (assurance?.nextLevel === "aal2" && assurance.currentLevel !== "aal2") {
+      if (isProtectedApi) {
+        return NextResponse.json({ error: "MFA required" }, { status: 403 });
+      }
+      const challenge = new URL("/mfa", request.url);
+      challenge.searchParams.set(
+        "next",
+        `${request.nextUrl.pathname}${request.nextUrl.search}`,
+      );
+      return NextResponse.redirect(challenge);
+    }
   }
 
   if (user && ["/login", "/signup"].includes(request.nextUrl.pathname)) {

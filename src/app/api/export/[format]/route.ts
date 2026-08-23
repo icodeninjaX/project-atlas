@@ -86,6 +86,15 @@ const csvEntities = {
     "created_at",
     "updated_at",
   ],
+  activity_log: [
+    "id",
+    "action",
+    "entity_type",
+    "entity_id",
+    "metadata",
+    "created_at",
+    "updated_at",
+  ],
 } as const;
 
 const jsonTables = [

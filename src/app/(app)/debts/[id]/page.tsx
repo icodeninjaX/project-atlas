@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { PaymentForm } from "@/components/debts/payment-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { TooltipHint } from "@/components/ui/tooltip";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
+import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { projectDebtPayoff } from "@/lib/debts/debt";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
@@ -65,7 +67,9 @@ export default async function DebtDetailPage({
           </p>
         </div>
         <p className="font-mono text-4xl font-semibold">
-          {formatCentavos(Number(debt.current_balance_centavos))}
+          <SensitiveValue>
+            {formatCentavos(Number(debt.current_balance_centavos))}
+          </SensitiveValue>
         </p>
       </div>
       <div className="mt-8 grid gap-3 sm:grid-cols-3">
@@ -73,7 +77,9 @@ export default async function DebtDetailPage({
           <CardContent>
             <p className="text-muted-foreground text-xs">Original balance</p>
             <p className="mt-3 font-mono text-xl font-semibold">
-              {formatCentavos(Number(debt.original_balance_centavos))}
+              <SensitiveValue>
+                {formatCentavos(Number(debt.original_balance_centavos))}
+              </SensitiveValue>
             </p>
           </CardContent>
         </Card>
@@ -81,7 +87,9 @@ export default async function DebtDetailPage({
           <CardContent>
             <p className="text-muted-foreground text-xs">Minimum payment</p>
             <p className="mt-3 font-mono text-xl font-semibold">
-              {formatCentavos(Number(debt.minimum_payment_centavos))}
+              <SensitiveValue>
+                {formatCentavos(Number(debt.minimum_payment_centavos))}
+              </SensitiveValue>
             </p>
           </CardContent>
         </Card>
@@ -99,7 +107,11 @@ export default async function DebtDetailPage({
       <div className="border-border bg-muted/35 text-muted-foreground mt-4 rounded-2xl border p-4 text-xs leading-5">
         Projection assumes no additional borrowing, an unchanged interest rate,
         monthly compounding, and the entered minimum payment every month.
-        Estimated interest: {formatCentavos(projection.totalInterestCentavos)}.
+        Estimated interest:{" "}
+        <SensitiveValue>
+          {formatCentavos(projection.totalInterestCentavos)}
+        </SensitiveValue>
+        .
       </div>
       {debt.status !== "paid" && (
         <div className="mt-6">
@@ -121,7 +133,9 @@ export default async function DebtDetailPage({
               >
                 <div className="min-w-0 flex-1">
                   <p className="font-mono text-sm font-semibold">
-                    {formatCentavos(Number(payment.amount_centavos))}
+                    <SensitiveValue>
+                      {formatCentavos(Number(payment.amount_centavos))}
+                    </SensitiveValue>
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">
                     {payment.payment_date}
@@ -131,14 +145,16 @@ export default async function DebtDetailPage({
                 <OfflineMutationForm mutation="debtPayment.delete">
                   <input type="hidden" name="paymentId" value={payment.id} />
                   <input type="hidden" name="debtId" value={debt.id} />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    type="submit"
-                    aria-label="Delete payment"
-                  >
-                    <Trash2 className="text-muted-foreground size-4" />
-                  </Button>
+                  <TooltipHint label="Delete payment">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="submit"
+                      aria-label="Delete payment"
+                    >
+                      <Trash2 className="text-muted-foreground size-4" />
+                    </Button>
+                  </TooltipHint>
                 </OfflineMutationForm>
               </div>
             ))

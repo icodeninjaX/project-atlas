@@ -3,8 +3,10 @@ import type { Route } from "next";
 import Link from "next/link";
 import { DebtForm } from "@/components/debts/debt-form";
 import { PageHeading } from "@/components/shared/page-heading";
+import { TooltipHint } from "@/components/ui/tooltip";
+import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Card, CardContent } from "@/components/ui/card";
-import { orderDebts, type DebtStrategy } from "@/lib/debts/debt";
+import { orderDebts, resolveDebtStrategy } from "@/lib/debts/debt";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,21 +18,21 @@ export default async function DebtsPage({
   searchParams: Promise<{ strategy?: string }>;
 }) {
   const requested = (await searchParams).strategy;
-  const strategy: DebtStrategy = ["snowball", "avalanche", "priority"].includes(
-    requested ?? "",
-  )
-    ? (requested as DebtStrategy)
-    : "avalanche";
   const supabase = await createClient();
-  const { data } = supabase
-    ? await supabase
-        .from("debts")
-        .select(
-          "id,creditor_name,debt_type,original_balance_centavos,current_balance_centavos,interest_rate_percent,minimum_payment_centavos,due_day,next_due_date,status,priority,notes",
-        )
-        .order("priority")
-    : { data: [] };
-  const debts = data ?? [];
+  const [debtsResult, preferencesResult] = supabase
+    ? await Promise.all([
+        supabase
+          .from("debts")
+          .select(
+            "id,creditor_name,debt_type,original_balance_centavos,current_balance_centavos,interest_rate_percent,minimum_payment_centavos,due_day,next_due_date,status,priority,notes",
+          )
+          .order("priority"),
+        supabase.from("user_preferences").select("debt_strategy").maybeSingle(),
+      ])
+    : [{ data: [] }, { data: null }];
+  const savedStrategy = preferencesResult.data?.debt_strategy;
+  const strategy = resolveDebtStrategy(requested, savedStrategy);
+  const debts = debtsResult.data ?? [];
   const active = debts.filter((debt) => debt.status !== "paid");
   const ordered = orderDebts(
     active.map((debt) => ({
@@ -63,7 +65,7 @@ export default async function DebtsPage({
           <CardContent>
             <p className="text-muted-foreground text-xs">Total remaining</p>
             <p className="mt-3 font-mono text-3xl font-semibold">
-              {formatCentavos(total)}
+              <SensitiveValue>{formatCentavos(total)}</SensitiveValue>
             </p>
           </CardContent>
         </Card>
@@ -71,7 +73,7 @@ export default async function DebtsPage({
           <CardContent>
             <p className="text-muted-foreground text-xs">Minimum payments</p>
             <p className="mt-3 font-mono text-3xl font-semibold">
-              {formatCentavos(minimums)}
+              <SensitiveValue>{formatCentavos(minimums)}</SensitiveValue>
             </p>
           </CardContent>
         </Card>
@@ -130,15 +132,22 @@ export default async function DebtsPage({
                   {debt.next_due_date ? ` · due ${debt.next_due_date}` : ""}
                 </p>
               </div>
-              <Link
-                href={`/debts/${debt.id}` as Route}
-                aria-label={`Open ${debt.creditor_name} debt details`}
-                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-11 place-items-center rounded-xl focus-visible:ring-2 focus-visible:outline-none"
+              <TooltipHint
+                label={`Open ${debt.creditor_name} details`}
+                side="left"
               >
-                <ArrowRight className="size-4" />
-              </Link>
+                <Link
+                  href={`/debts/${debt.id}` as Route}
+                  aria-label={`Open ${debt.creditor_name} debt details`}
+                  className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-11 place-items-center rounded-xl focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  <ArrowRight className="size-4" />
+                </Link>
+              </TooltipHint>
               <p className="col-start-2 col-end-4 mt-2 font-mono text-base font-semibold break-words">
-                {formatCentavos(Number(debt.current_balance_centavos))}
+                <SensitiveValue>
+                  {formatCentavos(Number(debt.current_balance_centavos))}
+                </SensitiveValue>
               </p>
               <details className="border-border col-span-full mt-3 border-t pt-3">
                 <summary className="text-muted-foreground cursor-pointer text-xs">

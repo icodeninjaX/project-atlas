@@ -7,6 +7,7 @@ import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { TaskEditForm } from "@/components/tasks/task-edit-form";
 import { TaskFocusMode } from "@/components/tasks/task-focus-mode";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip";
 
 type Task = {
   id: string;
@@ -109,20 +110,22 @@ export function TaskActionsMenu({
       }}
     >
       <div ref={menuRef} className="relative shrink-0 sm:hidden">
-        <Button
-          ref={menuButtonRef}
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={`Open actions for ${task.title}`}
-          aria-expanded={menuOpen}
-          aria-haspopup="menu"
-          aria-controls={menuId}
-          onClick={() => setMenuOpen((open) => !open)}
-          className="-mt-2 -mr-2 size-10 sm:size-10"
-        >
-          <MoreHorizontal className="size-5" aria-hidden="true" />
-        </Button>
+        <TooltipHint label="Task actions" side="left">
+          <Button
+            ref={menuButtonRef}
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={`Open actions for ${task.title}`}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            aria-controls={menuId}
+            onClick={() => setMenuOpen((open) => !open)}
+            className="-mt-2 -mr-2 size-10 sm:size-10"
+          >
+            <MoreHorizontal className="size-5" aria-hidden="true" />
+          </Button>
+        </TooltipHint>
 
         <div
           id={menuId}

@@ -3,6 +3,7 @@
 import { Check, ChevronDown, Circle, Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 
 type Milestone = {
@@ -92,18 +93,26 @@ export function MilestoneList({
                     name="completed"
                     value={milestone.completed_at ? "false" : "true"}
                   />
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`${milestone.completed_at ? "Reopen" : "Complete"} milestone ${milestone.title}`}
+                  <TooltipHint
+                    label={
+                      milestone.completed_at
+                        ? "Reopen milestone"
+                        : "Complete milestone"
+                    }
                   >
-                    {milestone.completed_at ? (
-                      <Check className="text-primary size-4" />
-                    ) : (
-                      <Circle className="size-4" />
-                    )}
-                  </Button>
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`${milestone.completed_at ? "Reopen" : "Complete"} milestone ${milestone.title}`}
+                    >
+                      {milestone.completed_at ? (
+                        <Check className="text-primary size-4" />
+                      ) : (
+                        <Circle className="size-4" />
+                      )}
+                    </Button>
+                  </TooltipHint>
                   <span
                     className={`min-w-0 flex-1 text-xs ${milestone.completed_at ? "text-muted-foreground line-through" : ""}`}
                   >

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/atlas/theme-provider";
 import { PwaRegistration } from "@/components/offline/pwa-registration";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 const geist = Geist({
@@ -62,9 +63,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <PwaRegistration />
-          {children}
-          <Toaster richColors position="top-right" />
+          <TooltipProvider delayDuration={350} skipDelayDuration={100}>
+            <PwaRegistration />
+            {children}
+            <Toaster richColors position="top-right" />
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -20,6 +20,7 @@ import {
   useState,
 } from "react";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 
 type WakeLockHandle = {
@@ -298,19 +299,22 @@ function FocusTimer({
               {wakeLockActive ? " · screen awake" : ""}
             </div>
             <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={toggleFullscreen}
-                aria-label={
-                  fullscreen ? "Exit full screen" : "Enter full screen"
-                }
-                title="Use native full screen when supported"
-                className="hidden size-11 text-blue-100 hover:bg-white/10 hover:text-white sm:inline-flex sm:size-10"
+              <TooltipHint
+                label={fullscreen ? "Exit full screen" : "Enter full screen"}
               >
-                <Expand className="size-4" />
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleFullscreen}
+                  aria-label={
+                    fullscreen ? "Exit full screen" : "Enter full screen"
+                  }
+                  className="hidden size-11 text-blue-100 hover:bg-white/10 hover:text-white sm:inline-flex sm:size-10"
+                >
+                  <Expand className="size-4" />
+                </Button>
+              </TooltipHint>
               <Dialog.Close asChild>
                 <Button
                   type="button"

@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { AtlasMark } from "./atlas-mark";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const moreSheetRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (href: string) => {
     if (href === "/money/accounts") {
@@ -56,6 +57,34 @@ export function AppShell({ children }: { children: ReactNode }) {
   const moreDestinationActive = mobileMoreNavigation.some(({ href }) =>
     isActive(href),
   );
+
+  useEffect(() => {
+    const openGlobalDestination = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        event.defaultPrevented ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      if (event.key === "/" && pathname !== "/search") {
+        event.preventDefault();
+        router.push("/search");
+      }
+      if (event.key.toLowerCase() === "n" && !pathname?.startsWith("/tasks")) {
+        event.preventDefault();
+        router.push("/tasks?create=true");
+      }
+    };
+
+    window.addEventListener("keydown", openGlobalDestination);
+    return () => window.removeEventListener("keydown", openGlobalDestination);
+  }, [pathname, router]);
 
   useEffect(() => {
     if (!moreOpen) return;

@@ -4,6 +4,7 @@ import {
   type ReviewArchiveItem,
 } from "@/components/reviews/review-workspace";
 import { PageHeading } from "@/components/shared/page-heading";
+import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { mondayWeekStart } from "@/lib/dates/dates";
 import { formatCentavos } from "@/lib/money/money";
@@ -137,7 +138,11 @@ export default async function ReviewsPage() {
                         {label}
                       </p>
                       <p className="mt-3 font-mono text-xl font-semibold tabular-nums">
-                        {value}
+                        {label === "Spending" || label === "Debt payments" ? (
+                          <SensitiveValue>{value}</SensitiveValue>
+                        ) : (
+                          value
+                        )}
                       </p>
                     </CardContent>
                   </Card>

@@ -3,7 +3,9 @@ import { AccountForm } from "@/components/money/account-form";
 import { BalanceAdjustmentForm } from "@/components/money/balance-adjustment-form";
 import { DeleteArchivedAccountForm } from "@/components/money/delete-archived-account-form";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
+import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { formatCentavos } from "@/lib/money/money";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -40,14 +42,16 @@ export function AccountCard({
             <OfflineMutationForm mutation="account.archive">
               <input type="hidden" name="accountId" value={account.id} />
               <input type="hidden" name="archived" value="true" />
-              <Button
-                type="submit"
-                variant="ghost"
-                size="icon"
-                aria-label={`Archive ${account.name}`}
-              >
-                <Archive className="size-4" aria-hidden="true" />
-              </Button>
+              <TooltipHint label={`Archive ${account.name}`} side="left">
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Archive ${account.name}`}
+                >
+                  <Archive className="size-4" aria-hidden="true" />
+                </Button>
+              </TooltipHint>
             </OfflineMutationForm>
           )}
         </div>
@@ -64,7 +68,7 @@ export function AccountCard({
         )}
 
         <p className="mt-6 font-mono text-2xl font-semibold">
-          {formatCentavos(balanceCentavos)}
+          <SensitiveValue>{formatCentavos(balanceCentavos)}</SensitiveValue>
         </p>
         <p className="text-muted-foreground mt-1 text-[11px]">
           {account.is_archived

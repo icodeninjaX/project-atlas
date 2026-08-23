@@ -1,11 +1,6 @@
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+import { renderWithProviders as render } from "@/test/render";
 import { TaskActionsMenu } from "./task-actions-menu";
 
 const task = {

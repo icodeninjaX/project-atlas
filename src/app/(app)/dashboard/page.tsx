@@ -12,6 +12,8 @@ import type { Route } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TooltipHint } from "@/components/ui/tooltip";
+import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { manilaDateLabel } from "@/lib/dates/dates";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
@@ -244,14 +246,16 @@ export default async function DashboardPage() {
                         {priority.reason}
                       </p>
                     </div>
-                    <Button asChild variant="ghost" size="icon">
-                      <Link
-                        href={priority.href as Route}
-                        aria-label={`Open ${priority.title}`}
-                      >
-                        <ArrowRight className="size-4" />
-                      </Link>
-                    </Button>
+                    <TooltipHint label={`Open ${priority.title}`} side="left">
+                      <Button asChild variant="ghost" size="icon">
+                        <Link
+                          href={priority.href as Route}
+                          aria-label={`Open ${priority.title}`}
+                        >
+                          <ArrowRight className="size-4" />
+                        </Link>
+                      </Button>
+                    </TooltipHint>
                   </li>
                 ))}
               </ol>
@@ -316,10 +320,15 @@ export default async function DashboardPage() {
                     {metric.label}
                   </p>
                   <p className="mt-2 font-mono text-xl font-semibold tracking-tight break-words sm:mt-3 sm:text-2xl">
-                    {metric.value}
+                    <SensitiveValue>{metric.value}</SensitiveValue>
                   </p>
                   <p className="text-muted-foreground mt-1.5 text-[11px] leading-4">
-                    {metric.note}
+                    {metric.label === "Expenses this month" &&
+                    dashboard.financial.remaining_budget_centavos != null ? (
+                      <SensitiveValue>{metric.note}</SensitiveValue>
+                    ) : (
+                      metric.note
+                    )}
                   </p>
                 </div>
               ))}

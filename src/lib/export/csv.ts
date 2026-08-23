@@ -1,10 +1,10 @@
-type CsvValue = string | number | boolean | null | undefined;
+type CsvValue = unknown;
 type CsvRecord = Record<string, CsvValue>;
 
 function safeCell(value: CsvValue): string {
   if (value == null) return "";
 
-  let text = String(value);
+  let text = typeof value === "object" ? JSON.stringify(value) : String(value);
   if (/^[=+\-@]/.test(text)) text = `'${text}`;
 
   if (/[",\r\n]/.test(text)) {

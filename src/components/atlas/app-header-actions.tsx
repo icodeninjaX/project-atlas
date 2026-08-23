@@ -7,7 +7,9 @@ import { useEffect, useRef, useState } from "react";
 import { InstallAppButton } from "@/components/offline/install-app-button";
 import { SignOutButton } from "@/components/offline/sign-out-button";
 import { SyncStatus } from "@/components/offline/sync-status";
+import { PrivacyToggle } from "@/components/privacy/privacy-toggle";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip";
 import { ThemeToggle } from "./theme-toggle";
 
 export function AppHeaderActions() {
@@ -49,26 +51,30 @@ export function AppHeaderActions() {
         <SyncStatus />
       </div>
       <InstallAppButton />
-      <Button asChild variant="ghost" size="icon">
-        <Link href="/search" aria-label="Search">
-          <Search className="size-4" />
-        </Link>
-      </Button>
+      <TooltipHint label="Search Atlas">
+        <Button asChild variant="ghost" size="icon">
+          <Link href="/search" aria-label="Search Atlas">
+            <Search className="size-4" />
+          </Link>
+        </Button>
+      </TooltipHint>
 
       <div ref={menuRef} className="relative lg:hidden">
-        <Button
-          ref={menuButtonRef}
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="Open account controls"
-          aria-expanded={menuOpen}
-          aria-haspopup="dialog"
-          aria-controls="mobile-account-menu"
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          <MoreHorizontal className="size-5" />
-        </Button>
+        <TooltipHint label="Account controls">
+          <Button
+            ref={menuButtonRef}
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Open account controls"
+            aria-expanded={menuOpen}
+            aria-haspopup="dialog"
+            aria-controls="mobile-account-menu"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <MoreHorizontal className="size-5" />
+          </Button>
+        </TooltipHint>
         {menuOpen && (
           <div
             id="mobile-account-menu"
@@ -95,12 +101,14 @@ export function AppHeaderActions() {
               )}
               {resolvedTheme === "dark" ? "Use light theme" : "Use dark theme"}
             </Button>
+            <PrivacyToggle showLabel />
             <SignOutButton showLabel />
           </div>
         )}
       </div>
 
       <div className="hidden items-center gap-0.5 lg:flex">
+        <PrivacyToggle />
         <ThemeToggle />
         <Button asChild size="sm" className="ml-1">
           <Link href="/tasks?create=true">

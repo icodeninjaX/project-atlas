@@ -1,0 +1,30 @@
+import { cleanup, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it } from "vitest";
+import { renderWithProviders as render } from "@/test/render";
+import { TooltipHint } from "./tooltip";
+
+afterEach(cleanup);
+
+describe("TooltipHint", () => {
+  it("shows its hint on keyboard focus without replacing the control label", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TooltipHint label="Search Atlas">
+        <button type="button" aria-label="Search Atlas">
+          Search icon
+        </button>
+      </TooltipHint>,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Search Atlas" });
+    await user.tab();
+
+    expect(trigger).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Search Atlas",
+    );
+    expect(trigger).toHaveAccessibleName("Search Atlas");
+  });
+});

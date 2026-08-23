@@ -4,17 +4,50 @@ import { LogOut } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
-import { signOutAction } from "@/lib/auth/actions";
+import { signOutAction, signOutEverywhereAction } from "@/lib/auth/actions";
 
-export function SignOutButton({ showLabel = false }: { showLabel?: boolean }) {
+export function SignOutButton({
+  showLabel = false,
+  scope = "local",
+}: {
+  showLabel?: boolean;
+  scope?: "local" | "global";
+}) {
   const [pending, setPending] = useState(false);
   const { pending: unsynced, blocked, retry } = useOfflineSync();
+  const button = (
+    <Button
+      type="submit"
+      variant="ghost"
+      size={showLabel ? "default" : "icon"}
+      disabled={pending}
+      aria-label={scope === "global" ? "Log out everywhere" : "Log out"}
+      className={showLabel ? "w-full justify-start" : undefined}
+    >
+      <LogOut className="size-4" />
+      {showLabel &&
+        (pending
+          ? "Logging out…"
+          : scope === "global"
+            ? "Log out everywhere"
+            : "Log out this device")}
+    </Button>
+  );
 
   return (
     <form
       className={showLabel ? "w-full" : undefined}
       action={async () => {
+        if (
+          scope === "global" &&
+          !window.confirm(
+            "Log out every device? You will need to sign in again on each one.",
+          )
+        ) {
+          return;
+        }
         if (!navigator.onLine) {
           toast.error("Connect to the internet before logging out.");
           return;
@@ -27,27 +60,24 @@ export function SignOutButton({ showLabel = false }: { showLabel?: boolean }) {
           return;
         }
         setPending(true);
-        if ("serviceWorker" in navigator) {
+        if (
+          "serviceWorker" in navigator &&
+          process.env.NODE_ENV === "production"
+        ) {
           await navigator.serviceWorker.ready
             .then((registration) =>
               registration.active?.postMessage({ type: "CLEAR_PRIVATE_DATA" }),
             )
             .catch(() => undefined);
         }
-        await signOutAction();
+        if (scope === "global") {
+          await signOutEverywhereAction();
+        } else {
+          await signOutAction();
+        }
       }}
     >
-      <Button
-        type="submit"
-        variant="ghost"
-        size={showLabel ? "default" : "icon"}
-        disabled={pending}
-        aria-label="Log out"
-        className={showLabel ? "w-full justify-start" : undefined}
-      >
-        <LogOut className="size-4" />
-        {showLabel && (pending ? "Logging out…" : "Log out")}
-      </Button>
+      {showLabel ? button : <TooltipHint label="Log out">{button}</TooltipHint>}
     </form>
   );
 }

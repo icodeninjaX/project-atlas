@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BudgetForm } from "@/components/money/budget-form";
 import { PageHeading } from "@/components/shared/page-heading";
+import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { resolveCalendarMonth } from "@/lib/dates/dates";
@@ -98,7 +99,7 @@ export default async function BudgetPage({
           <CardContent>
             <p className="text-muted-foreground text-xs">Planned expenses</p>
             <p className="mt-3 font-mono text-2xl font-semibold">
-              {formatCentavos(plannedTotal)}
+              <SensitiveValue>{formatCentavos(plannedTotal)}</SensitiveValue>
             </p>
           </CardContent>
         </Card>
@@ -106,7 +107,7 @@ export default async function BudgetPage({
           <CardContent>
             <p className="text-muted-foreground text-xs">Actual expenses</p>
             <p className="mt-3 font-mono text-2xl font-semibold">
-              {formatCentavos(actualTotal)}
+              <SensitiveValue>{formatCentavos(actualTotal)}</SensitiveValue>
             </p>
           </CardContent>
         </Card>
@@ -116,7 +117,9 @@ export default async function BudgetPage({
             <p
               className={`mt-3 font-mono text-2xl font-semibold ${plannedTotal - actualTotal < 0 ? "text-destructive" : "text-primary"}`}
             >
-              {formatCentavos(plannedTotal - actualTotal)}
+              <SensitiveValue>
+                {formatCentavos(plannedTotal - actualTotal)}
+              </SensitiveValue>
             </p>
             <p className="text-muted-foreground mt-1 text-[10px]">
               {plannedTotal - actualTotal < 0
@@ -155,12 +158,14 @@ export default async function BudgetPage({
                   >
                     <p className="text-sm font-semibold">{category.name}</p>
                     <p className="text-muted-foreground font-mono text-xs">
-                      Plan {formatCentavos(plan)}
+                      Plan{" "}
+                      <SensitiveValue>{formatCentavos(plan)}</SensitiveValue>
                     </p>
                     <p
                       className={`font-mono text-xs ${over ? "text-destructive font-semibold" : ""}`}
                     >
-                      Actual {formatCentavos(spent)}
+                      Actual{" "}
+                      <SensitiveValue>{formatCentavos(spent)}</SensitiveValue>
                       {over ? " · over" : ""}
                     </p>
                   </div>

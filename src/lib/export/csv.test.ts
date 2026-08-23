@@ -16,4 +16,15 @@ describe("CSV export", () => {
   it("uses stable columns for an empty export", () => {
     expect(createCsv([], ["title", "status"])).toBe("title,status");
   });
+
+  it("serializes activity metadata as JSON instead of a generic object label", () => {
+    expect(
+      createCsv(
+        [{ metadata: { from: "applied", to: "interview" } }],
+        ["metadata"],
+      ),
+    ).toBe(
+      'metadata\r\n"{\"\"from\"\":\"\"applied\"\",\"\"to\"\":\"\"interview\"\"}"',
+    );
+  });
 });

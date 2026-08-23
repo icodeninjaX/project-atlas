@@ -249,6 +249,11 @@ async function clearPrivateData() {
   await setActiveUser(null);
 }
 
+async function clearPrivateCache() {
+  const userId = await getActiveUser();
+  if (userId) await caches.delete(`${PRIVATE_CACHE_PREFIX}${userId}`);
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CORE_CACHE).then(async (cache) => {
@@ -311,6 +316,48 @@ self.addEventListener("sync", (event) => {
     event.waitUntil(syncPendingMutations());
 });
 
+self.addEventListener("push", (event) => {
+  const fallback = {
+    title: "Project Atlas",
+    body: "You have an Atlas reminder.",
+    url: "/dashboard",
+  };
+  let payload = fallback;
+  try {
+    payload = { ...fallback, ...(event.data?.json() || {}) };
+  } catch {
+    payload = fallback;
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: "/icons/192.png",
+      badge: "/icons/192.png",
+      tag: "atlas-daily-digest",
+      data: { url: payload.url },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const destination = new URL(
+    event.notification.data?.url || "/dashboard",
+    self.location.origin,
+  ).href;
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((windows) => {
+        const existing = windows.find(
+          (windowClient) => windowClient.url === destination,
+        );
+        if (existing) return existing.focus();
+        return clients.openWindow(destination);
+      }),
+  );
+});
+
 self.addEventListener("message", (event) => {
   const data = event.data || {};
   if (data.type === "SET_USER") {
@@ -328,5 +375,11 @@ self.addEventListener("message", (event) => {
     event.waitUntil(syncPendingMutations());
   } else if (data.type === "CLEAR_PRIVATE_DATA") {
     event.waitUntil(clearPrivateData());
+  } else if (data.type === "CLEAR_PRIVATE_CACHE") {
+    event.waitUntil(
+      clearPrivateCache().then(() =>
+        event.ports[0]?.postMessage({ type: "PRIVATE_CACHE_CLEARED" }),
+      ),
+    );
   }
 });

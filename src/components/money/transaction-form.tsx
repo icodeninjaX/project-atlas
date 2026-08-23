@@ -13,11 +13,13 @@ export function TransactionForm({
   accounts,
   categories,
   today,
+  defaultAccountId,
   transaction,
 }: {
   accounts: Array<{ id: string; name: string }>;
   categories: Array<{ id: string; name: string; category_type: string }>;
   today: string;
+  defaultAccountId?: string | null;
   transaction?: {
     id: string;
     account_id: string;
@@ -73,7 +75,7 @@ export function TransactionForm({
         <select
           name="accountId"
           required
-          defaultValue={transaction?.account_id ?? ""}
+          defaultValue={transaction?.account_id ?? defaultAccountId ?? ""}
           aria-label="Account"
           className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
         >
