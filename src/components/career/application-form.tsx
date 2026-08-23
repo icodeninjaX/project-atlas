@@ -109,64 +109,140 @@ export function ApplicationForm({
           <option value="unspecified">Unspecified</option>
         </select>
       </label>
-      <Input
-        name="location"
-        maxLength={120}
-        placeholder="Location"
-        aria-label="Location"
-      />
-      <Input
-        name="jobUrl"
-        type="url"
-        placeholder="Job link"
-        aria-label="Job link"
-      />
-      <Input name="appliedAt" type="date" aria-label="Applied date" />
-      <Input
-        name="nextAction"
-        maxLength={200}
-        placeholder="Next action"
-        aria-label="Next action"
-      />
-      <Input name="nextActionAt" type="date" aria-label="Next action date" />
-      <Input
-        name="salaryMin"
-        inputMode="decimal"
-        placeholder="Salary min PHP"
-        aria-label="Minimum salary in pesos"
-      />
-      <Input
-        name="salaryMax"
-        inputMode="decimal"
-        placeholder="Salary max PHP"
-        aria-label="Maximum salary in pesos"
-      />
-      <Input
-        name="contactName"
-        maxLength={160}
-        placeholder="Contact name"
-        aria-label="Contact name"
-      />
-      <Input
-        name="contactEmail"
-        type="email"
-        placeholder="Contact email"
-        aria-label="Contact email"
-      />
-      <Input
-        name="resumeVersion"
-        maxLength={80}
-        placeholder="Resume version"
-        aria-label="Resume version"
-      />
-      <textarea
-        name="notes"
-        maxLength={4000}
-        placeholder="Notes"
-        aria-label="Application notes"
-        className="border-border bg-background min-h-11 w-full rounded-xl border px-3 py-2 text-sm outline-none sm:col-span-2 lg:col-span-3"
-      />
-      <Button type="submit" disabled={pending}>
+      <label className="text-muted-foreground text-xs">
+        Location
+        <Input
+          name="location"
+          maxLength={120}
+          placeholder="e.g. Makati or Remote"
+          aria-label="Location"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Job posting link
+        <Input
+          name="jobUrl"
+          type="url"
+          placeholder="https://…"
+          aria-label="Job posting link"
+          className="mt-1.5"
+        />
+      </label>
+      <div>
+        <label
+          htmlFor="new-application-applied-at"
+          className="text-muted-foreground text-xs"
+        >
+          Date applied
+        </label>
+        <Input
+          id="new-application-applied-at"
+          name="appliedAt"
+          type="date"
+          aria-describedby="new-application-applied-at-help"
+          className="mt-1.5"
+        />
+        <p
+          id="new-application-applied-at-help"
+          className="text-muted-foreground mt-1.5 text-[11px] leading-snug"
+        >
+          When you submitted the application. Leave blank if you have not
+          applied yet.
+        </p>
+      </div>
+      <label className="text-muted-foreground text-xs">
+        Next action
+        <Input
+          name="nextAction"
+          maxLength={200}
+          placeholder="e.g. Follow up with recruiter"
+          aria-label="Next action"
+          className="mt-1.5"
+        />
+      </label>
+      <div>
+        <label
+          htmlFor="new-application-next-action-at"
+          className="text-muted-foreground text-xs"
+        >
+          Next action due date
+        </label>
+        <Input
+          id="new-application-next-action-at"
+          name="nextActionAt"
+          type="date"
+          aria-describedby="new-application-next-action-at-help"
+          className="mt-1.5"
+        />
+        <p
+          id="new-application-next-action-at-help"
+          className="text-muted-foreground mt-1.5 text-[11px] leading-snug"
+        >
+          When you plan to complete the next action.
+        </p>
+      </div>
+      <label className="text-muted-foreground text-xs">
+        Minimum salary (PHP)
+        <Input
+          name="salaryMin"
+          inputMode="decimal"
+          placeholder="e.g. 50000"
+          aria-label="Minimum salary in pesos"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Maximum salary (PHP)
+        <Input
+          name="salaryMax"
+          inputMode="decimal"
+          placeholder="e.g. 70000"
+          aria-label="Maximum salary in pesos"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Contact name
+        <Input
+          name="contactName"
+          maxLength={160}
+          placeholder="e.g. Recruiter or hiring manager"
+          aria-label="Contact name"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Contact email
+        <Input
+          name="contactEmail"
+          type="email"
+          placeholder="name@company.com"
+          aria-label="Contact email"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Resume version
+        <Input
+          name="resumeVersion"
+          maxLength={80}
+          placeholder="e.g. Frontend v2"
+          aria-label="Resume version"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs sm:col-span-2 lg:col-span-3">
+        Notes
+        <textarea
+          name="notes"
+          maxLength={4000}
+          placeholder="Add useful details about the role or company"
+          aria-label="Application notes"
+          className="border-border bg-background mt-1.5 min-h-20 w-full rounded-xl border px-3 py-2 text-sm outline-none"
+        />
+      </label>
+      <Button type="submit" disabled={pending} className="self-end">
         {pending ? "Adding…" : "Add application"}
       </Button>
     </form>

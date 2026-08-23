@@ -132,5 +132,23 @@ describe("primary create forms", () => {
     expectVisibleLabel("Application stage");
     expectVisibleLabel("Work setup");
     expectVisibleLabel("Employment type");
+    expectVisibleLabel("Location");
+    expectVisibleLabel("Job posting link");
+    expectVisibleLabel("Date applied");
+    expectVisibleLabel("Next action");
+    expectVisibleLabel("Next action due date");
+    expectVisibleLabel("Minimum salary in pesos");
+    expectVisibleLabel("Maximum salary in pesos");
+    expectVisibleLabel("Contact name");
+    expectVisibleLabel("Contact email");
+    expectVisibleLabel("Resume version");
+    expectVisibleLabel("Application notes");
+
+    expect(screen.getByLabelText("Date applied")).toHaveAccessibleDescription(
+      "When you submitted the application. Leave blank if you have not applied yet.",
+    );
+    expect(
+      screen.getByLabelText("Next action due date"),
+    ).toHaveAccessibleDescription("When you plan to complete the next action.");
   });
 });

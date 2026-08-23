@@ -24,10 +24,11 @@ export function ApplicationCreateDialog() {
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="text-xl font-semibold tracking-[-0.025em]">
-                Add an opportunity
+                Add a job application
               </Dialog.Title>
               <Dialog.Description className="text-muted-foreground mt-1 text-sm">
-                Capture the role now, then keep its next move visible.
+                Enter the role details, application date, and your next planned
+                action.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>

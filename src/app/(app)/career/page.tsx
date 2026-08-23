@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { BriefcaseBusiness, ExternalLink } from "lucide-react";
+import { BriefcaseBusiness, ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { ApplicationCreateDialog } from "@/components/career/application-create-dialog";
 import { ApplicationEditForm } from "@/components/career/application-edit-form";
@@ -179,6 +179,26 @@ export default async function CareerPage({
   ].filter((metric): metric is [string, string] => metric[1] !== null);
   return (
     <div className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8">
+      <nav aria-label="Breadcrumb" className="mb-4">
+        <ol className="text-muted-foreground flex min-h-11 items-center gap-1 text-sm">
+          <li>
+            <Link
+              href="/dashboard"
+              className="hover:text-foreground focus-visible:ring-ring -ml-3 inline-flex min-h-11 items-center rounded-xl px-3 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            >
+              Dashboard
+            </Link>
+          </li>
+          <li aria-hidden="true">
+            <ChevronRight className="size-4" />
+          </li>
+          <li>
+            <span aria-current="page" className="text-foreground px-2">
+              Career
+            </span>
+          </li>
+        </ol>
+      </nav>
       <PageHeading
         eyebrow={view === "kanban" ? "Stage spotlight" : "Opportunity pipeline"}
         title="Career"
