@@ -32,6 +32,9 @@ type TaskFocusModeProps = {
   description: string | null;
   estimatedMinutes: number | null;
   scheduledLabel: string | null;
+  triggerPresentation?: "button" | "menu";
+  onTrigger?: () => void;
+  onCloseAutoFocus?: () => void;
 };
 
 function formatCountdown(totalSeconds: number) {
@@ -50,15 +53,24 @@ function formatCountdown(totalSeconds: number) {
     .join(":");
 }
 
-function UnavailableFocusButton() {
+function UnavailableFocusButton({
+  triggerPresentation = "button",
+}: Pick<TaskFocusModeProps, "triggerPresentation">) {
+  const menuItem = triggerPresentation === "menu";
+
   return (
     <Button
       type="button"
-      variant="secondary"
+      variant={menuItem ? "ghost" : "secondary"}
       size="sm"
       disabled
+      role={menuItem ? "menuitem" : undefined}
       title="Add estimated minutes to use Focus mode"
-      className="min-h-11 sm:min-h-9"
+      className={
+        menuItem
+          ? "w-full justify-start text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-white"
+          : "min-h-11 sm:min-h-9"
+      }
     >
       <TimerReset className="size-3.5" />
       Set focus minutes
@@ -72,6 +84,9 @@ function FocusTimer({
   description,
   estimatedMinutes,
   scheduledLabel,
+  triggerPresentation = "button",
+  onTrigger,
+  onCloseAutoFocus,
 }: Omit<TaskFocusModeProps, "estimatedMinutes"> & {
   estimatedMinutes: number;
 }) {
@@ -84,6 +99,7 @@ function FocusTimer({
   const deadlineRef = useRef<number | null>(null);
   const wakeLockRef = useRef<WakeLockHandle | null>(null);
   const gradientId = useId().replaceAll(":", "");
+  const menuItem = triggerPresentation === "menu";
   const finished = remainingSeconds === 0;
   const progress = remainingSeconds / totalSeconds;
   const circumference = 2 * Math.PI * 108;
@@ -236,10 +252,16 @@ function FocusTimer({
       <Dialog.Trigger asChild>
         <Button
           type="button"
-          variant="secondary"
+          variant={menuItem ? "ghost" : "secondary"}
           size="sm"
+          role={menuItem ? "menuitem" : undefined}
+          onClick={onTrigger}
           aria-label={`Focus on ${title}`}
-          className="min-h-11 sm:min-h-9"
+          className={
+            menuItem
+              ? "w-full justify-start text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-white"
+              : "min-h-11 sm:min-h-9"
+          }
         >
           <Flame className="size-3.5" />
           Focus
@@ -247,7 +269,14 @@ function FocusTimer({
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-[#020611]/90 backdrop-blur-xl" />
-        <Dialog.Content className="fixed inset-0 z-50 flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#07101f] text-white outline-none sm:inset-5 sm:h-auto sm:rounded-[2rem] sm:border sm:border-white/10 sm:shadow-2xl">
+        <Dialog.Content
+          onCloseAutoFocus={(event) => {
+            if (!onCloseAutoFocus) return;
+            event.preventDefault();
+            onCloseAutoFocus();
+          }}
+          className="fixed inset-0 z-50 flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#07101f] text-white outline-none sm:inset-5 sm:h-auto sm:rounded-[2rem] sm:border sm:border-white/10 sm:shadow-2xl"
+        >
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -426,6 +455,9 @@ function FocusTimer({
 }
 
 export function TaskFocusMode(props: TaskFocusModeProps) {
-  if (!props.estimatedMinutes) return <UnavailableFocusButton />;
+  if (!props.estimatedMinutes)
+    return (
+      <UnavailableFocusButton triggerPresentation={props.triggerPresentation} />
+    );
   return <FocusTimer {...props} estimatedMinutes={props.estimatedMinutes} />;
 }

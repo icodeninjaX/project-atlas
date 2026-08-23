@@ -1,6 +1,7 @@
 import { Check, Clock3, Inbox, RotateCcw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { QuickTaskForm } from "@/components/tasks/quick-task-form";
+import { TaskActionsMenu } from "@/components/tasks/task-actions-menu";
 import { TaskEditForm } from "@/components/tasks/task-edit-form";
 import { TaskFocusMode } from "@/components/tasks/task-focus-mode";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { manilaDateLabel } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
+import { getTaskPriorityBadgeClass } from "@/lib/tasks/priority";
 import { formatTaskTime } from "@/lib/tasks/task-time";
 
 export const metadata = { title: "Tasks" };
@@ -141,11 +143,26 @@ export default async function TasksPage({
               selected === "overdue" &&
               task.scheduled_for !== null &&
               task.scheduled_for < today;
+            const scheduledLabel = task.scheduled_for
+              ? `${task.scheduled_for}${
+                  task.scheduled_time
+                    ? ` at ${formatTaskTime(task.scheduled_time)}`
+                    : ""
+                }`
+              : null;
+            const mobileScheduleLabel = task.scheduled_for
+              ? `${overdue ? "Overdue · " : ""}${task.scheduled_for}`
+              : task.estimated_minutes
+                ? `${task.estimated_minutes} min`
+                : null;
 
             return (
               <Card key={task.id}>
                 <CardContent className="flex items-start gap-2 p-3 sm:gap-3 sm:p-4">
-                  <OfflineMutationForm mutation="task.setStatus">
+                  <OfflineMutationForm
+                    mutation="task.setStatus"
+                    className="hidden sm:block"
+                  >
                     <input type="hidden" name="taskId" value={task.id} />
                     <input
                       type="hidden"
@@ -173,15 +190,71 @@ export default async function TasksPage({
                     </Button>
                   </OfflineMutationForm>
                   <div className="min-w-0 flex-1 pt-1.5 sm:pt-1.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p
-                        className={`text-sm font-semibold ${task.status === "completed" ? "text-muted-foreground line-through" : ""}`}
+                    <div className="flex items-start gap-2">
+                      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                        <p
+                          className={`min-w-0 text-sm font-semibold break-words ${task.status === "completed" ? "text-muted-foreground line-through" : ""}`}
+                        >
+                          {task.title}
+                        </p>
+                        <span
+                          className={`${getTaskPriorityBadgeClass(task.priority)} hidden shrink-0 rounded-full border px-2 py-0.5 text-[10px] capitalize sm:inline-flex`}
+                        >
+                          {task.priority}
+                        </span>
+                      </div>
+                      <div className="flex shrink-0 items-start gap-0.5 sm:hidden">
+                        <OfflineMutationForm mutation="task.setStatus">
+                          <input type="hidden" name="taskId" value={task.id} />
+                          <input
+                            type="hidden"
+                            name="status"
+                            value={
+                              task.status === "completed"
+                                ? "inbox"
+                                : "completed"
+                            }
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            type="submit"
+                            className="-mt-2 size-10"
+                            aria-label={
+                              task.status === "completed"
+                                ? `Reopen ${task.title}`
+                                : `Complete ${task.title}`
+                            }
+                          >
+                            {task.status === "completed" ? (
+                              <RotateCcw className="size-4" />
+                            ) : (
+                              <Check className="size-4" />
+                            )}
+                          </Button>
+                        </OfflineMutationForm>
+                        <TaskActionsMenu
+                          task={task}
+                          scheduledLabel={scheduledLabel}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-1.5 flex min-w-0 items-center justify-between gap-2 sm:hidden">
+                      <span
+                        className={`${getTaskPriorityBadgeClass(task.priority)} shrink-0 rounded-full border px-2 py-0.5 text-[10px] capitalize`}
                       >
-                        {task.title}
-                      </p>
-                      <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] capitalize">
                         {task.priority}
                       </span>
+                      {mobileScheduleLabel && (
+                        <p
+                          className={`ml-auto flex min-w-0 items-center justify-end gap-1 font-mono text-[10px] whitespace-nowrap ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
+                        >
+                          <Clock3 className="size-3 shrink-0" />
+                          <span className="truncate">
+                            {mobileScheduleLabel}
+                          </span>
+                        </p>
+                      )}
                     </div>
                     {task.description && (
                       <p className="text-muted-foreground mt-1 text-xs">
@@ -190,7 +263,7 @@ export default async function TasksPage({
                     )}
                     {(task.scheduled_for || task.estimated_minutes) && (
                       <p
-                        className={`mt-2 flex items-center gap-1.5 font-mono text-[10px] ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
+                        className={`mt-2 hidden items-center gap-1.5 font-mono text-[10px] sm:flex ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
                       >
                         <Clock3 className="size-3" />
                         {overdue ? "Overdue · " : ""}
@@ -205,32 +278,27 @@ export default async function TasksPage({
                     )}
                     {task.status !== "completed" &&
                       task.status !== "cancelled" && (
-                        <div className="mt-3">
+                        <div className="mt-3 hidden sm:block">
                           <TaskFocusMode
                             taskId={task.id}
                             title={task.title}
                             description={task.description}
                             estimatedMinutes={task.estimated_minutes}
-                            scheduledLabel={
-                              task.scheduled_for
-                                ? `${task.scheduled_for}${
-                                    task.scheduled_time
-                                      ? ` at ${formatTaskTime(task.scheduled_time)}`
-                                      : ""
-                                  }`
-                                : null
-                            }
+                            scheduledLabel={scheduledLabel}
                           />
                         </div>
                       )}
-                    <details className="mt-3">
+                    <details className="mt-3 hidden sm:block">
                       <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-[11px]">
                         Edit task
                       </summary>
                       <TaskEditForm task={task} />
                     </details>
                   </div>
-                  <OfflineMutationForm mutation="task.delete">
+                  <OfflineMutationForm
+                    mutation="task.delete"
+                    className="hidden sm:block"
+                  >
                     <input type="hidden" name="taskId" value={task.id} />
                     <Button
                       variant="ghost"
