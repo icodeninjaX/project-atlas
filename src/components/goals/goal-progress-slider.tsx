@@ -1,8 +1,10 @@
 "use client";
 
+import { SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useOfflineActionState } from "@/components/offline/offline-mutation";
+import { Button } from "@/components/ui/button";
 import type { OfflineActionState } from "@/lib/offline/types";
 
 const initialActionState: OfflineActionState = {
@@ -33,34 +35,85 @@ export function GoalProgressSlider({
   status: string;
 }) {
   const [progress, setProgress] = useState(progressPercent);
+  const [adjusting, setAdjusting] = useState(false);
   const [state, action, pending] = useOfflineActionState(
     "goal.updateProgress",
     initialActionState,
   );
   const form = useRef<HTMLFormElement>(null);
-  const lastCommittedProgress = useRef(progressPercent);
+  const savedProgress = useRef(progressPercent);
+  const lastSubmittedProgress = useRef(progressPercent);
 
   useEffect(() => {
     if (!state.message) return;
-    if (state.success) toast.success(state.message);
-    else {
-      lastCommittedProgress.current = -1;
+    if (state.success) {
+      savedProgress.current = lastSubmittedProgress.current;
+      toast.success(`Progress updated to ${lastSubmittedProgress.current}%.`);
+    } else {
+      lastSubmittedProgress.current = savedProgress.current;
       toast.error(state.message);
     }
   }, [state]);
 
   function commitProgress(nextProgress: number) {
-    if (pending || nextProgress === lastCommittedProgress.current) return;
-    lastCommittedProgress.current = nextProgress;
+    if (
+      !adjusting ||
+      pending ||
+      nextProgress === lastSubmittedProgress.current
+    ) {
+      return;
+    }
+    lastSubmittedProgress.current = nextProgress;
+    setAdjusting(false);
     form.current?.requestSubmit();
+  }
+
+  function toggleAdjustment() {
+    if (adjusting) setProgress(savedProgress.current);
+    setAdjusting((open) => !open);
   }
 
   return (
     <form ref={form} action={action} className="mt-5">
       <input type="hidden" name="goalId" value={goalId} />
       <input type="hidden" name="status" value={status} />
+      <div className="mb-2 flex min-h-8 items-center justify-between gap-3">
+        <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+          Progress
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 min-h-8 rounded-lg px-2 text-[11px]"
+          disabled={pending}
+          aria-label={
+            pending
+              ? `Saving progress for ${goalTitle}`
+              : adjusting
+                ? `Cancel progress adjustment for ${goalTitle}`
+                : `Adjust progress for ${goalTitle}`
+          }
+          aria-pressed={adjusting}
+          onClick={toggleAdjustment}
+        >
+          {pending ? (
+            "Saving…"
+          ) : adjusting ? (
+            <>
+              <X aria-hidden="true" className="size-3.5" />
+              Cancel
+            </>
+          ) : (
+            <>
+              <SlidersHorizontal aria-hidden="true" className="size-3.5" />
+              Adjust
+            </>
+          )}
+        </Button>
+      </div>
       <label
-        className={`bg-muted focus-within:ring-ring focus-within:ring-offset-background relative block h-10 overflow-hidden rounded-xl shadow-inner transition focus-within:ring-2 focus-within:ring-offset-2 ${pending ? "cursor-wait opacity-80" : "cursor-ew-resize"}`}
+        className={`bg-muted focus-within:ring-ring focus-within:ring-offset-background relative block h-10 overflow-hidden rounded-xl shadow-inner transition focus-within:ring-2 focus-within:ring-offset-2 ${pending ? "cursor-wait opacity-80" : adjusting ? "ring-primary/25 cursor-ew-resize ring-1" : "cursor-default"}`}
       >
         <span className="sr-only">Progress for {goalTitle}</span>
         <span
@@ -86,16 +139,20 @@ export function GoalProgressSlider({
           max="100"
           step="1"
           value={progress}
-          disabled={pending}
+          disabled={!adjusting || pending}
           aria-label={`Progress for ${goalTitle}`}
           aria-valuetext={`${progress}% complete`}
-          title="Drag or use the arrow keys to update progress"
-          className="absolute inset-0 z-20 h-full w-full cursor-ew-resize opacity-0 disabled:cursor-wait"
+          title={
+            adjusting
+              ? "Drag horizontally or use the arrow keys to update progress"
+              : "Choose Adjust before changing progress"
+          }
+          className="absolute inset-0 z-20 h-full w-full cursor-ew-resize touch-pan-y opacity-0 disabled:cursor-default"
           onChange={(event) => setProgress(Number(event.currentTarget.value))}
           onPointerUp={(event) =>
             commitProgress(Number(event.currentTarget.value))
           }
-          onBlur={(event) => commitProgress(Number(event.currentTarget.value))}
+          onPointerCancel={() => setProgress(savedProgress.current)}
           onKeyUp={(event) => {
             if (progressKeys.has(event.key)) {
               commitProgress(Number(event.currentTarget.value));

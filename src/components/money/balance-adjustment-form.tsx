@@ -43,7 +43,7 @@ export function BalanceAdjustmentForm({
         a correction, so income and expense reports stay accurate.
       </p>
       <label className="text-muted-foreground min-w-0 text-xs">
-        New current balance (PHP)
+        New Balance (PHP)
         <Input
           key={currentBalanceCentavos}
           name="targetBalance"
