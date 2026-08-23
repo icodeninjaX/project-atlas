@@ -26,7 +26,11 @@ export function PageHeading({
           {description}
         </p>
       </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex w-full flex-col gap-2 min-[380px]:flex-row min-[380px]:flex-wrap sm:w-auto [&>*]:w-full min-[380px]:[&>*]:w-auto min-[380px]:[&>*]:grow min-[380px]:[&>*]:basis-[calc(50%-0.25rem)] sm:[&>*]:grow-0 sm:[&>*]:basis-auto">
+          {actions}
+        </div>
+      )}
     </div>
   );
 }

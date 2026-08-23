@@ -33,7 +33,7 @@ describe("AppShell", () => {
     ).toBe(true);
   });
 
-  it("keeps secondary destinations reachable from the mobile More menu", () => {
+  it("keeps secondary destinations reachable from the mobile More sheet", () => {
     render(
       <AppShell>
         <h1>Today</h1>
@@ -42,22 +42,22 @@ describe("AppShell", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "More navigation" }));
 
-    const menu = screen.getByRole("menu", { name: "More navigation" });
+    const sheet = screen.getByRole("dialog", { name: "More destinations" });
     expect(
-      within(menu).getByRole("menuitem", { name: "Career" }),
+      within(sheet).getByRole("link", { name: "Career" }),
     ).toBeInTheDocument();
     expect(
-      within(menu).getByRole("menuitem", { name: "Reviews" }),
+      within(sheet).getByRole("link", { name: "Reviews" }),
     ).toBeInTheDocument();
     expect(
-      within(menu).getByRole("menuitem", { name: "Search" }),
+      within(sheet).getByRole("link", { name: "Search" }),
     ).toBeInTheDocument();
     expect(
-      within(menu).getByRole("menuitem", { name: "Settings" }),
+      within(sheet).getByRole("link", { name: "Settings" }),
     ).toBeInTheDocument();
   });
 
-  it("closes the mobile More menu with Escape", () => {
+  it("closes the mobile More sheet with Escape", () => {
     render(
       <AppShell>
         <h1>Today</h1>
@@ -67,17 +67,17 @@ describe("AppShell", () => {
     const button = screen.getByRole("button", { name: "More navigation" });
     fireEvent.click(button);
     expect(
-      screen.getByRole("menu", { name: "More navigation" }),
+      screen.getByRole("dialog", { name: "More destinations" }),
     ).toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(
-      screen.queryByRole("menu", { name: "More navigation" }),
+      screen.queryByRole("dialog", { name: "More destinations" }),
     ).not.toBeInTheDocument();
     expect(button).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("closes the mobile More menu when the user points outside it", () => {
+  it("closes the mobile More sheet from its backdrop", () => {
     render(
       <AppShell>
         <h1>Today</h1>
@@ -86,10 +86,12 @@ describe("AppShell", () => {
 
     const button = screen.getByRole("button", { name: "More navigation" });
     fireEvent.click(button);
-    fireEvent.pointerDown(screen.getByRole("heading", { name: "Today" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Dismiss more navigation" }),
+    );
 
     expect(
-      screen.queryByRole("menu", { name: "More navigation" }),
+      screen.queryByRole("dialog", { name: "More destinations" }),
     ).not.toBeInTheDocument();
     expect(button).toHaveAttribute("aria-expanded", "false");
   });

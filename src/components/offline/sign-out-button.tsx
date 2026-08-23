@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { signOutAction } from "@/lib/auth/actions";
 
-export function SignOutButton() {
+export function SignOutButton({ showLabel = false }: { showLabel?: boolean }) {
   const [pending, setPending] = useState(false);
   const { pending: unsynced, blocked, retry } = useOfflineSync();
 
   return (
     <form
+      className={showLabel ? "w-full" : undefined}
       action={async () => {
         if (!navigator.onLine) {
           toast.error("Connect to the internet before logging out.");
@@ -39,11 +40,13 @@ export function SignOutButton() {
       <Button
         type="submit"
         variant="ghost"
-        size="icon"
+        size={showLabel ? "default" : "icon"}
         disabled={pending}
         aria-label="Log out"
+        className={showLabel ? "w-full justify-start" : undefined}
       >
         <LogOut className="size-4" />
+        {showLabel && (pending ? "Logging out…" : "Log out")}
       </Button>
     </form>
   );

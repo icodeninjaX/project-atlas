@@ -27,6 +27,7 @@ supabase/.branches/
 .agents/
 .mcp.json
 skills-lock.json
+.superdesign/tmp/
 
 # Logs
 *.log

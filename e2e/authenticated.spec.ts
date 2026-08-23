@@ -122,7 +122,10 @@ test.describe("authenticated Atlas workflows", () => {
     await page.getByLabel("Role title").fill("Full-stack Developer");
     await page.getByRole("button", { name: "Add application" }).click();
     await expect(page.getByText(company)).toBeVisible();
-    await page.getByText("Edit application").first().click();
+    await page
+      .getByText(/Edit (application|details)/)
+      .first()
+      .click();
     await page
       .getByLabel(`Edit ${company} role title`)
       .fill("Senior Developer");
@@ -148,5 +151,24 @@ test.describe("authenticated Atlas workflows", () => {
     ).toBeVisible();
     await expect(page.getByText("Available balance")).toBeVisible();
     await expect(page.getByText("Today’s priorities")).toBeVisible();
+  });
+
+  test("mobile shell fits and exposes every destination", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto("/dashboard");
+
+    const dimensions = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+
+    await page.getByRole("button", { name: "More navigation" }).click();
+    const sheet = page.getByRole("dialog", { name: "More destinations" });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.getByRole("link", { name: "Career" })).toBeVisible();
+    await expect(sheet.getByRole("link", { name: "Reviews" })).toBeVisible();
+    await expect(sheet.getByRole("link", { name: "Search" })).toBeVisible();
+    await expect(sheet.getByRole("link", { name: "Settings" })).toBeVisible();
   });
 });

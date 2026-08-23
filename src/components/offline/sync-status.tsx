@@ -4,7 +4,7 @@ import { Cloud, CloudAlert, RefreshCw, WifiOff } from "lucide-react";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 
-export function SyncStatus() {
+export function SyncStatus({ showLabel = false }: { showLabel?: boolean }) {
   const { online, pending, blocked, retry } = useOfflineSync();
 
   if (blocked > 0) {
@@ -18,7 +18,7 @@ export function SyncStatus() {
         className="text-destructive px-2"
       >
         <CloudAlert className="size-4" />
-        <span className="hidden md:inline">
+        <span className={showLabel ? "inline" : "hidden md:inline"}>
           {blocked} sync issue{blocked === 1 ? "" : "s"}
         </span>
       </Button>
@@ -33,7 +33,7 @@ export function SyncStatus() {
         title={`${pending} change${pending === 1 ? "" : "s"} waiting to sync`}
       >
         <WifiOff className="size-4" />
-        <span className="hidden md:inline">
+        <span className={showLabel ? "inline" : "hidden md:inline"}>
           Offline{pending ? ` · ${pending} pending` : ""}
         </span>
       </span>
@@ -47,7 +47,9 @@ export function SyncStatus() {
         className="text-muted-foreground flex min-h-9 items-center gap-1.5 px-2 text-xs"
       >
         <RefreshCw className="size-4 animate-spin" />
-        <span className="hidden md:inline">Syncing {pending}</span>
+        <span className={showLabel ? "inline" : "hidden md:inline"}>
+          Syncing {pending}
+        </span>
       </span>
     );
   }
@@ -55,7 +57,7 @@ export function SyncStatus() {
   return (
     <span
       role="status"
-      className="text-muted-foreground hidden min-h-9 items-center gap-1.5 px-2 text-xs xl:flex"
+      className={`text-muted-foreground min-h-9 items-center gap-1.5 px-2 text-xs ${showLabel ? "flex" : "hidden xl:flex"}`}
     >
       <Cloud className="size-4" />
       Synced

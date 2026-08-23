@@ -178,14 +178,14 @@ export default async function DashboardPage() {
               : "Add what matters and Atlas will surface the next useful move."}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="secondary" size="sm">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <Button asChild variant="secondary" size="sm" className="w-full">
             <Link href="/money/transactions?create=true">
               <CircleDollarSign className="size-4" />
               Record expense
             </Link>
           </Button>
-          <Button asChild size="sm">
+          <Button asChild size="sm" className="w-full">
             <Link href="/tasks?create=true">
               <Plus className="size-4" />
               Add task
@@ -194,7 +194,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
+      <div className="mt-6 grid gap-3 sm:mt-8 xl:grid-cols-[1.35fr_0.65fr]">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -209,7 +209,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {dashboard.priorities.length === 0 ? (
-              <div className="border-border bg-background/45 grid min-h-56 place-items-center rounded-xl border border-dashed p-6 text-center">
+              <div className="border-border bg-background/45 grid min-h-44 place-items-center rounded-xl border border-dashed p-5 text-center sm:min-h-56 sm:p-6">
                 <div className="max-w-sm">
                   <Target className="text-primary mx-auto size-6" />
                   <p className="mt-4 text-sm font-semibold">
@@ -226,7 +226,7 @@ export default async function DashboardPage() {
                 {dashboard.priorities.map((priority, index) => (
                   <li
                     key={`${priority.kind}-${priority.id}`}
-                    className="relative grid grid-cols-[22px_1fr_auto] gap-3 pb-6 last:pb-0"
+                    className="relative grid grid-cols-[18px_minmax(0,1fr)_auto] gap-2.5 pb-5 last:pb-0 sm:grid-cols-[22px_minmax(0,1fr)_auto] sm:gap-3 sm:pb-6"
                   >
                     {index < dashboard.priorities.length - 1 && (
                       <span className="bg-border absolute top-3 bottom-0 left-[6px] w-px" />
@@ -290,50 +290,79 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <section aria-labelledby="financial-snapshot" className="mt-4">
-        <h2 id="financial-snapshot" className="sr-only">
-          Financial snapshot
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {metrics.map((metric) => (
-            <Card key={metric.label}>
-              <CardContent>
-                <p className="text-muted-foreground text-xs">{metric.label}</p>
-                <p className="mt-4 font-mono text-2xl font-semibold tracking-tight">
-                  {metric.value}
-                </p>
-                <p className="text-muted-foreground mt-1.5 text-[11px]">
-                  {metric.note}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <section aria-labelledby="financial-snapshot" className="mt-3 sm:mt-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle id="financial-snapshot">Financial snapshot</CardTitle>
+            <Link
+              href="/money/accounts"
+              className="text-primary focus-visible:ring-ring rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+            >
+              View money
+            </Link>
+          </CardHeader>
+          <CardContent className="p-0 pt-4 sm:p-0 sm:pt-5">
+            <div className="border-border grid border-t sm:grid-cols-2 xl:grid-cols-4">
+              {metrics.map((metric, index) => (
+                <div
+                  key={metric.label}
+                  className={`min-w-0 p-4 sm:p-5 ${
+                    index > 0 ? "border-border border-t" : ""
+                  } ${index === 1 ? "sm:border-t-0 sm:border-l" : ""} ${
+                    index === 2 ? "xl:border-t-0 xl:border-l" : ""
+                  } ${index === 3 ? "sm:border-l xl:border-t-0" : ""}`}
+                >
+                  <p className="text-muted-foreground text-xs">
+                    {metric.label}
+                  </p>
+                  <p className="mt-2 font-mono text-xl font-semibold tracking-tight break-words sm:mt-3 sm:text-2xl">
+                    {metric.value}
+                  </p>
+                  <p className="text-muted-foreground mt-1.5 text-[11px] leading-4">
+                    {metric.note}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </section>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        {moduleSnapshots.map(({ title, icon: Icon, value, href, detail }) => (
-          <Card key={title}>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="bg-muted text-muted-foreground grid size-9 place-items-center rounded-lg">
-                  <Icon className="size-4" />
-                </div>
+      <Card className="mt-3 overflow-hidden sm:mt-4">
+        <CardHeader>
+          <CardTitle>Workspace pulse</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0 pt-4 sm:p-0 sm:pt-5">
+          <div className="border-border divide-border divide-y border-t">
+            {moduleSnapshots.map(
+              ({ title, icon: Icon, value, href, detail }) => (
                 <Link
+                  key={title}
                   href={href}
-                  className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2"
                   aria-label={`View ${title}`}
+                  className="hover:bg-muted/70 focus-visible:ring-ring grid min-h-20 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:px-5"
                 >
-                  <ArrowRight className="size-4" />
+                  <span className="bg-muted text-muted-foreground grid size-10 place-items-center rounded-xl">
+                    <Icon className="size-[18px]" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                      <span className="text-sm font-semibold">{title}</span>
+                      <span className="font-mono text-sm font-semibold">
+                        {value}
+                      </span>
+                    </span>
+                    <span className="text-muted-foreground mt-1 block truncate text-xs">
+                      {detail}
+                    </span>
+                  </span>
+                  <ArrowRight className="text-muted-foreground size-4" />
                 </Link>
-              </div>
-              <p className="mt-5 text-sm font-semibold">{title}</p>
-              <p className="mt-2 font-mono text-xl font-semibold">{value}</p>
-              <p className="text-muted-foreground mt-1 text-xs">{detail}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              ),
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

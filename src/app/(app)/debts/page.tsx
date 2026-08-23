@@ -79,17 +79,20 @@ export default async function DebtsPage({
       <div className="mt-4">
         <DebtForm />
       </div>
-      <div className="border-border mt-6 flex gap-1 overflow-x-auto border-b">
+      <nav
+        aria-label="Debt payoff strategy"
+        className="border-border mt-6 flex [scrollbar-width:none] gap-1 overflow-x-auto border-b [&::-webkit-scrollbar]:hidden"
+      >
         {(["snowball", "avalanche", "priority"] as const).map((item) => (
           <Link
             key={item}
             href={`/debts?strategy=${item}`}
-            className={`border-b-2 px-4 py-3 text-sm capitalize ${strategy === item ? "border-primary font-semibold" : "text-muted-foreground border-transparent"}`}
+            className={`min-h-11 shrink-0 border-b-2 px-4 py-3 text-sm capitalize ${strategy === item ? "border-primary font-semibold" : "text-muted-foreground border-transparent"}`}
           >
             {item === "priority" ? "My priority" : item}
           </Link>
         ))}
-      </div>
+      </nav>
       <p className="text-muted-foreground mt-3 text-xs">
         {strategy === "snowball" && "Smallest remaining balance first."}
         {strategy === "avalanche" && "Highest annual interest rate first."}
@@ -112,7 +115,7 @@ export default async function DebtsPage({
           active.map((debt, index) => (
             <div
               key={debt.id}
-              className="border-border bg-card rounded-2xl border p-4"
+              className="border-border bg-card grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 rounded-2xl border p-4"
             >
               <span className="bg-primary/10 text-primary grid size-8 shrink-0 place-items-center rounded-lg font-mono text-xs font-semibold">
                 {index + 1}
@@ -127,22 +130,22 @@ export default async function DebtsPage({
                   {debt.next_due_date ? ` · due ${debt.next_due_date}` : ""}
                 </p>
               </div>
-              <p className="font-mono text-sm font-semibold">
+              <Link
+                href={`/debts/${debt.id}` as Route}
+                aria-label={`Open ${debt.creditor_name} debt details`}
+                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-11 place-items-center rounded-xl focus-visible:ring-2 focus-visible:outline-none"
+              >
+                <ArrowRight className="size-4" />
+              </Link>
+              <p className="col-start-2 col-end-4 mt-2 font-mono text-base font-semibold break-words">
                 {formatCentavos(Number(debt.current_balance_centavos))}
               </p>
-              <ArrowRight className="text-muted-foreground size-4" />
-              <details className="mt-3 border-t pt-3">
+              <details className="border-border col-span-full mt-3 border-t pt-3">
                 <summary className="text-muted-foreground cursor-pointer text-xs">
                   Edit debt
                 </summary>
                 <DebtForm debt={debt} />
               </details>
-              <Link
-                href={`/debts/${debt.id}` as Route}
-                className="text-primary mt-3 inline-flex text-xs"
-              >
-                Open debt details
-              </Link>
             </div>
           ))
         )}

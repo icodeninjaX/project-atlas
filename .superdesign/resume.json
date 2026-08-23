@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "/dashboard": {
+      "targetKind": "existing-ui",
+      "projectId": "f9c0903b-9b0f-428c-a29a-fe058d903aa8",
+      "baselineDraftId": "5b5bd3c5-4546-48e1-b9db-408672af1c20",
+      "activeDraftId": "5b5bd3c5-4546-48e1-b9db-408672af1c20",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": [],
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "src/app/globals.css",
+        "src/components/atlas/app-shell.tsx",
+        "src/components/atlas/app-header.tsx",
+        "src/components/atlas/atlas-mark.tsx",
+        "src/components/offline/sync-status.tsx",
+        "src/components/offline/install-app-button.tsx",
+        "src/components/offline/sign-out-button.tsx",
+        "src/app/(app)/dashboard/page.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/card.tsx",
+        "src/lib/utils.ts"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "63bdd636aa97bd2d0d22a6e1b0e5ba1ea8531769e16cc2946989af7e1cec10f6",
+        "src/app/globals.css": "763c598950108783b03e36fe5e0b2a313cba53a41c8cf0ffd03d0148c20d4b4e",
+        "src/components/atlas/app-shell.tsx": "d9a2fe35a5f18010cf81606e39140404674cc5b0d2bbc9060bbe918dec6cafac",
+        "src/components/atlas/app-header.tsx": "419ee761465f882c9a21f454e25c82ef27c20c70fd2ac328f687240f75cab139",
+        "src/components/atlas/atlas-mark.tsx": "65d6514f7b7c904094e435933fe1c70438ff638e89ac2d6a14d7a95f19a55027",
+        "src/components/offline/sync-status.tsx": "892f8043c0a8cdccedf68aafa0241da71480279ee2da78fe70413a4c865371fb",
+        "src/components/offline/install-app-button.tsx": "aba5b59bc47a67603997a9e7f9950efc86a201a33777fd93d2bbc181bc287502",
+        "src/components/offline/sign-out-button.tsx": "75b8075460ea5a9300612e455a15ada71e7744583fab6b81f73dc0f658381374",
+        "src/app/(app)/dashboard/page.tsx": "6636ba765742b5af14953f77aadeae6ea877f3302f193dc6cbf313c0b5972184",
+        "src/components/ui/button.tsx": "8ad213f81f5fd8a26ce8111c4544e45d2d6fbcb5b176f90dbd2b98b994968d25",
+        "src/components/ui/card.tsx": "8faa256a8e9fb0a6b3cb5b59cf40708e7f95176be460a32495027de2708e088b",
+        "src/lib/utils.ts": "c0adf27efbfa148d5abcf99e860f8e3e6c8fc77a1f99e023c08ef4f12e6ece29"
+      },
+      "components": [
+        {
+          "name": "AppShell",
+          "id": "db39a627-d06d-4bfb-8a21-8e13c57498ce",
+          "sourcePath": "src/components/atlas/app-shell.tsx"
+        },
+        {
+          "name": "AppHeader",
+          "id": "9e3be54b-09ae-408c-88f4-a2e51cfb441b",
+          "sourcePath": "src/components/atlas/app-header.tsx"
+        }
+      ],
+      "drafts": {
+        "5b5bd3c5-4546-48e1-b9db-408672af1c20": {
+          "title": "Today · Project Atlas — Mobile Usability Redesign",
+          "visualDirection": "mobile-first consolidated dashboard preserving Atlas visual identity",
+          "currentVersion": 3
+        }
+      },
+      "updatedAt": "2026-08-23T03:10:11.9151159Z"
+    }
+  }
+}

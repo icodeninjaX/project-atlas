@@ -11,6 +11,7 @@ import {
   Search,
   Settings,
   WalletCards,
+  X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -38,7 +39,10 @@ const mobileMoreNavigation = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [moreOpen, setMoreOpen] = useState(false);
-  const moreNavigationRef = useRef<HTMLDivElement>(null);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const moreSheetRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -53,25 +57,54 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (!moreOpen) return;
 
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMoreOpen(false);
-    };
-
-    const closeOnPointerAway = (event: PointerEvent) => {
-      if (
-        event.target instanceof Node &&
-        !moreNavigationRef.current?.contains(event.target)
-      ) {
+      if (event.key === "Escape") {
         setMoreOpen(false);
+        moreButtonRef.current?.focus();
+      }
+      if (event.key !== "Tab") return;
+
+      const focusable = moreSheetRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) return;
+
+      const first = focusable.item(0);
+      const last = focusable.item(focusable.length - 1);
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
+    const previousOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    const focusFrame = window.requestAnimationFrame(() => {
+      closeButtonRef.current?.focus();
+    });
     document.addEventListener("keydown", closeOnEscape);
-    document.addEventListener("pointerdown", closeOnPointerAway);
     return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.documentElement.style.overflow = previousOverflow;
       document.removeEventListener("keydown", closeOnEscape);
-      document.removeEventListener("pointerdown", closeOnPointerAway);
     };
   }, [moreOpen]);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const updateKeyboardState = () => {
+      setKeyboardOpen(window.innerHeight - viewport.height > 160);
+    };
+
+    updateKeyboardState();
+    viewport.addEventListener("resize", updateKeyboardState);
+    return () => viewport.removeEventListener("resize", updateKeyboardState);
+  }, []);
 
   return (
     <div className="bg-background text-foreground min-h-dvh">
@@ -148,13 +181,21 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
       <main
         id="main-content"
-        className="min-h-dvh pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:ml-64 lg:pb-0"
+        className={cn(
+          "min-h-dvh lg:ml-64 lg:pb-0",
+          keyboardOpen
+            ? "pb-0"
+            : "pb-[calc(5.5rem+env(safe-area-inset-bottom))]",
+        )}
       >
         {children}
       </main>
       <nav
         aria-label="Primary navigation"
-        className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 grid h-[calc(4.25rem+env(safe-area-inset-bottom))] grid-cols-6 items-start border-t px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        className={cn(
+          "border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 h-[calc(4.75rem+env(safe-area-inset-bottom))] grid-cols-6 items-start border-t px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgb(0_0_0/0.06)] backdrop-blur lg:hidden",
+          keyboardOpen ? "hidden" : "grid",
+        )}
       >
         {navigation.slice(0, 5).map(({ href, label, icon: Icon }) => (
           <Link
@@ -162,58 +203,120 @@ export function AppShell({ children }: { children: ReactNode }) {
             href={href}
             aria-current={isActive(href) ? "page" : undefined}
             className={cn(
-              "text-muted-foreground focus-visible:ring-ring flex h-17 min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-0.5 text-[9px] font-medium focus-visible:ring-2 focus-visible:outline-none sm:text-[10px]",
+              "text-muted-foreground focus-visible:ring-ring flex min-h-[4.5rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[10px] font-medium focus-visible:ring-2 focus-visible:outline-none min-[360px]:text-[11px]",
               isActive(href) && "text-primary",
             )}
           >
-            <Icon className="size-[18px]" />
+            <span
+              className={cn(
+                "grid size-8 place-items-center rounded-xl transition-colors",
+                isActive(href) && "bg-primary/10",
+              )}
+            >
+              <Icon className="size-5" />
+            </span>
             {label}
           </Link>
         ))}
-        <div
-          ref={moreNavigationRef}
-          className="relative flex min-w-0 justify-center"
-        >
-          {moreOpen && (
-            <div
-              id="mobile-more-menu"
-              role="menu"
-              aria-label="More navigation"
-              className="border-border bg-popover text-popover-foreground absolute right-0 bottom-18 min-w-44 rounded-xl border p-1 shadow-lg"
+        <div className="flex min-w-0 justify-center">
+          <button
+            ref={moreButtonRef}
+            type="button"
+            aria-expanded={moreOpen}
+            aria-haspopup="dialog"
+            aria-controls="mobile-more-sheet"
+            aria-label="More navigation"
+            onClick={() => setMoreOpen((open) => !open)}
+            className={cn(
+              "text-muted-foreground focus-visible:ring-ring flex min-h-[4.5rem] w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[10px] font-medium focus-visible:ring-2 focus-visible:outline-none min-[360px]:text-[11px]",
+              mobileMoreNavigation.some(({ href }) => isActive(href)) &&
+                "text-primary",
+            )}
+          >
+            <span
+              className={cn(
+                "grid size-8 place-items-center rounded-xl transition-colors",
+                mobileMoreNavigation.some(({ href }) => isActive(href)) &&
+                  "bg-primary/10",
+              )}
+            >
+              <Menu className="size-5" />
+            </span>
+            More
+          </button>
+        </div>
+      </nav>
+      {moreOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label="Dismiss more navigation"
+            className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+            onClick={() => {
+              setMoreOpen(false);
+              moreButtonRef.current?.focus();
+            }}
+          />
+          <section
+            ref={moreSheetRef}
+            id="mobile-more-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-more-title"
+            className="border-border bg-popover text-popover-foreground absolute inset-x-0 bottom-0 rounded-t-[1.75rem] border-t px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl"
+          >
+            <div className="bg-border mx-auto mb-3 h-1 w-10 rounded-full" />
+            <div className="flex min-h-11 items-center justify-between">
+              <div>
+                <p
+                  id="mobile-more-title"
+                  className="text-base font-semibold tracking-tight"
+                >
+                  More destinations
+                </p>
+                <p className="text-muted-foreground mt-0.5 text-xs">
+                  Jump to the rest of your Atlas workspace.
+                </p>
+              </div>
+              <button
+                ref={closeButtonRef}
+                type="button"
+                aria-label="Close more navigation"
+                onClick={() => {
+                  setMoreOpen(false);
+                  moreButtonRef.current?.focus();
+                }}
+                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-11 place-items-center rounded-xl focus-visible:ring-2 focus-visible:outline-none"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <nav
+              aria-label="More destinations"
+              className="mt-4 grid grid-cols-2 gap-2"
             >
               {mobileMoreNavigation.map(({ href, label, icon: Icon }) => (
                 <Link
                   key={href}
                   href={href}
-                  role="menuitem"
                   onClick={() => setMoreOpen(false)}
                   aria-current={isActive(href) ? "page" : undefined}
                   className={cn(
-                    "hover:bg-muted focus-visible:ring-ring flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm focus-visible:ring-2 focus-visible:outline-none",
+                    "border-border bg-background/55 hover:bg-muted focus-visible:ring-ring flex min-h-14 items-center gap-3 rounded-xl border px-3 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none",
                     isActive(href) &&
-                      "bg-primary/10 text-primary hover:bg-primary/15",
+                      "border-primary/30 bg-primary/10 text-primary",
                   )}
                 >
-                  <Icon className="size-[18px]" />
+                  <span className="bg-muted grid size-9 shrink-0 place-items-center rounded-lg">
+                    <Icon className="size-[18px]" />
+                  </span>
                   {label}
                 </Link>
               ))}
-            </div>
-          )}
-          <button
-            type="button"
-            aria-expanded={moreOpen}
-            aria-haspopup="menu"
-            aria-controls="mobile-more-menu"
-            aria-label="More navigation"
-            onClick={() => setMoreOpen((open) => !open)}
-            className="text-muted-foreground focus-visible:ring-ring flex h-17 w-full min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-0.5 text-[9px] font-medium focus-visible:ring-2 focus-visible:outline-none sm:text-[10px]"
-          >
-            <Menu className="size-[18px]" />
-            More
-          </button>
+            </nav>
+          </section>
         </div>
-      </nav>
+      )}
     </div>
   );
 }
