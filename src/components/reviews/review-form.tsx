@@ -69,7 +69,7 @@ export function ReviewForm({
             id={name}
             {...register(name)}
             rows={3}
-            className="border-border bg-background focus-visible:ring-ring mt-2 w-full rounded-xl border p-3 text-sm outline-none focus-visible:ring-2"
+            className="border-border bg-background focus-visible:border-ring focus-visible:ring-ring/25 mt-2 w-full resize-y rounded-xl border p-3 text-sm leading-6 outline-none focus-visible:ring-2"
           />
         </div>
       ))}
@@ -97,12 +97,13 @@ export function ReviewForm({
           ),
         )}
       </fieldset>
-      <div className="flex justify-end gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
         <Button
           type="submit"
           variant="secondary"
           disabled={pending}
           onClick={() => setIntent("draft")}
+          className="w-full sm:w-auto"
         >
           Save draft
         </Button>
@@ -110,6 +111,7 @@ export function ReviewForm({
           type="submit"
           disabled={pending}
           onClick={() => setIntent("submit")}
+          className="w-full sm:w-auto"
         >
           {pending ? "Saving…" : "Submit review"}
         </Button>

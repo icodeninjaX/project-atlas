@@ -1,6 +1,8 @@
-import { BookOpenCheck } from "lucide-react";
 import { ReviewForm } from "@/components/reviews/review-form";
-import { ReviewTrend } from "@/components/reviews/review-trend";
+import {
+  ReviewWorkspace,
+  type ReviewArchiveItem,
+} from "@/components/reviews/review-workspace";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { mondayWeekStart } from "@/lib/dates/dates";
@@ -26,7 +28,7 @@ export default async function ReviewsPage() {
         supabase
           .from("weekly_reviews")
           .select(
-            "id,week_start,wins,challenges,next_week_focus,energy_score,stress_score,overall_score,completed_at",
+            "id,week_start,wins,challenges,lessons,time_wasters,money_reflection,career_reflection,next_week_focus,energy_score,stress_score,overall_score,completed_at",
           )
           .order("week_start", { ascending: false })
           .limit(12),
@@ -93,128 +95,101 @@ export default async function ReviewsPage() {
     ["Applications sent", String(applicationsResult.count ?? 0)],
     ["Goals progressed", String(goalsResult.count ?? 0)],
   ];
-  const trend = [...history].reverse().map((review) => ({
-    week: String(review.week_start).slice(5),
-    energy: review.energy_score,
-    stress: review.stress_score,
-    overall: review.overall_score,
-  }));
+  const pastReviews: ReviewArchiveItem[] = history
+    .filter((review) => review.week_start !== weekStart)
+    .map((review) => ({
+      id: review.id,
+      weekStart: review.week_start,
+      wins: review.wins,
+      challenges: review.challenges,
+      lessons: review.lessons,
+      timeWasters: review.time_wasters,
+      moneyReflection: review.money_reflection,
+      careerReflection: review.career_reflection,
+      nextWeekFocus: review.next_week_focus,
+      energyScore: review.energy_score,
+      stressScore: review.stress_score,
+      overallScore: review.overall_score,
+      completedAt: review.completed_at,
+    }));
 
   return (
-    <div className="mx-auto max-w-[1100px] p-4 sm:p-6 lg:p-8">
+    <div className="mx-auto max-w-[1180px] p-4 sm:p-6 lg:p-8">
       <PageHeading
         eyebrow="Monday–Sunday"
         title="Weekly reviews"
-        description="Facts first. Reflection second. Your words stay manual and your scores stay comparable."
+        description="A quiet place to notice your patterns, remember your progress, and choose what matters next."
       />
-      <section className="mt-8">
-        <h2 className="text-sm font-semibold">This week in facts</h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {metrics.map(([label, value]) => (
-            <Card key={label}>
-              <CardContent>
-                <p className="text-muted-foreground text-xs">{label}</p>
-                <p className="mt-3 font-mono text-xl font-semibold">{value}</p>
+      <ReviewWorkspace
+        reviews={pastReviews}
+        currentContent={
+          <div>
+            <section>
+              <h2 className="text-sm font-semibold">This week in facts</h2>
+              <div className="-mx-4 mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5 [&::-webkit-scrollbar]:hidden">
+                {metrics.map(([label, value]) => (
+                  <Card
+                    key={label}
+                    className="w-[8.75rem] min-w-[8.75rem] snap-start sm:w-auto sm:min-w-0"
+                  >
+                    <CardContent className="p-4 sm:p-5">
+                      <p className="text-muted-foreground text-xs leading-4">
+                        {label}
+                      </p>
+                      <p className="mt-3 font-mono text-xl font-semibold tabular-nums">
+                        {value}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <p className="text-muted-foreground mt-1 text-center text-[11px] sm:hidden">
+                Swipe to see all weekly facts
+              </p>
+            </section>
+
+            <Card className="mt-5">
+              <CardHeader className="p-4 pb-0 sm:p-5 sm:pb-0">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle>Week of {weekStart}</CardTitle>
+                  {current ? (
+                    <span className="border-border bg-secondary text-muted-foreground rounded-full border px-2 py-1 text-[10px] font-medium">
+                      {current.completed_at ? "Submitted" : "Draft"}
+                    </span>
+                  ) : null}
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-5">
+                <ReviewForm
+                  weekStart={weekStart}
+                  initial={
+                    current
+                      ? {
+                          wins: current.wins ?? "",
+                          challenges: current.challenges ?? "",
+                          lessons: current.lessons ?? "",
+                          timeWasters: current.time_wasters ?? "",
+                          moneyReflection: current.money_reflection ?? "",
+                          careerReflection: current.career_reflection ?? "",
+                          nextWeekFocus: current.next_week_focus ?? "",
+                          energyScore: current.energy_score
+                            ? String(current.energy_score)
+                            : "",
+                          stressScore: current.stress_score
+                            ? String(current.stress_score)
+                            : "",
+                          overallScore: current.overall_score
+                            ? String(current.overall_score)
+                            : "",
+                        }
+                      : undefined
+                  }
+                />
               </CardContent>
             </Card>
-          ))}
-        </div>
-      </section>
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>
-            Week of {weekStart}
-            {current?.completed_at ? " · submitted" : current ? " · draft" : ""}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ReviewForm
-            weekStart={weekStart}
-            initial={
-              current
-                ? {
-                    wins: current.wins ?? "",
-                    challenges: current.challenges ?? "",
-                    lessons: current.lessons ?? "",
-                    timeWasters: current.time_wasters ?? "",
-                    moneyReflection: current.money_reflection ?? "",
-                    careerReflection: current.career_reflection ?? "",
-                    nextWeekFocus: current.next_week_focus ?? "",
-                    energyScore: current.energy_score
-                      ? String(current.energy_score)
-                      : "",
-                    stressScore: current.stress_score
-                      ? String(current.stress_score)
-                      : "",
-                    overallScore: current.overall_score
-                      ? String(current.overall_score)
-                      : "",
-                  }
-                : undefined
-            }
-          />
-        </CardContent>
-      </Card>
-      {trend.length > 1 && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Score trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ReviewTrend data={trend} />
-          </CardContent>
-        </Card>
-      )}
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold">Previous reviews</h2>
-        <div className="mt-3 space-y-3">
-          {history.filter((review) => review.week_start !== weekStart)
-            .length === 0 ? (
-            <div className="border-border grid min-h-48 place-items-center rounded-2xl border border-dashed text-center">
-              <div>
-                <BookOpenCheck className="text-primary mx-auto size-6" />
-                <p className="mt-4 text-sm font-semibold">
-                  No earlier reviews yet.
-                </p>
-              </div>
-            </div>
-          ) : (
-            history
-              .filter((review) => review.week_start !== weekStart)
-              .map((review) => (
-                <Card key={review.id}>
-                  <CardContent>
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-primary font-mono text-xs">
-                          {review.week_start}
-                        </p>
-                        <p className="mt-2 text-sm font-semibold">
-                          {review.next_week_focus ||
-                            review.wins ||
-                            "Review saved"}
-                        </p>
-                        {review.challenges && (
-                          <p className="text-muted-foreground mt-2 text-xs">
-                            {review.challenges}
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="font-mono text-xl font-semibold">
-                          {review.overall_score ?? "—"}
-                        </p>
-                        <p className="text-muted-foreground text-[10px]">
-                          overall
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-          )}
-        </div>
-      </section>
+          </div>
+        }
+      />
     </div>
   );
 }

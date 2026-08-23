@@ -56,6 +56,66 @@
         }
       },
       "updatedAt": "2026-08-23T03:10:11.9151159Z"
+    },
+    "/reviews": {
+      "targetKind": "existing-ui",
+      "projectId": "f9c0903b-9b0f-428c-a29a-fe058d903aa8",
+      "baselineDraftId": "5bdcd18c-cfe5-47d5-b00d-74ec2142fb89",
+      "activeDraftId": "5bdcd18c-cfe5-47d5-b00d-74ec2142fb89",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": [],
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "src/app/globals.css",
+        "src/app/(app)/reviews/page.tsx",
+        "src/components/reviews/review-form.tsx",
+        "src/components/reviews/review-workspace.tsx",
+        "src/components/reviews/review-trend.tsx",
+        "src/components/shared/page-heading.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/ui/input.tsx",
+        "src/lib/utils.ts",
+        "src/components/atlas/app-shell.tsx",
+        "src/components/atlas/app-header.tsx",
+        "src/components/atlas/atlas-mark.tsx"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "63bdd636aa97bd2d0d22a6e1b0e5ba1ea8531769e16cc2946989af7e1cec10f6",
+        "src/app/globals.css": "763c598950108783b03e36fe5e0b2a313cba53a41c8cf0ffd03d0148c20d4b4e",
+        "src/app/(app)/reviews/page.tsx": "4a22654b95e4d38ed28dd3b96ab9335004a4a9011a1183e11ec286212c040e01",
+        "src/components/reviews/review-form.tsx": "c1217f17e4a612a8b459398c902b9907eee7e2c493d79fc9348fc04928a52bac",
+        "src/components/reviews/review-workspace.tsx": "f54ca1f62eee076cbb11608f09acd5a443fca0988d9c953b03da72c6f36560f8",
+        "src/components/reviews/review-trend.tsx": "0e47c7a9596383e579ffe43574e9ffa05cc5149005fbb4888e25e3e8657f802c",
+        "src/components/shared/page-heading.tsx": "d72dc1517f3896201f7d3a23aeda4a0e51d832f2158c47eb310ffda74e99d933",
+        "src/components/ui/button.tsx": "871f1aec418a72d7cbe03844302b2fbad01977b81e1d7088aafde90abba1982a",
+        "src/components/ui/card.tsx": "9aed5af06f3898ed177262e6371d1d3fbfe5fa635fbd8342eec23ee1d093914b",
+        "src/components/ui/input.tsx": "98649dce058ed19169e8ad0fc220b7e287b8dc41291b8ba9565b5bd161386388",
+        "src/lib/utils.ts": "c0adf27efbfa148d5abcf99e860f8e3e6c8fc77a1f99e023c08ef4f12e6ece29",
+        "src/components/atlas/app-shell.tsx": "0703c0cd47fcf4ae6cdf28fb4412470d1f26b953cb86fd43eb57f94eab648269",
+        "src/components/atlas/app-header.tsx": "968ec3de63313a90ab224f50208746694d7f6349ce32301811976ff71bfe9714",
+        "src/components/atlas/atlas-mark.tsx": "65d6514f7b7c904094e435933fe1c70438ff638e89ac2d6a14d7a95f19a55027"
+      },
+      "components": [
+        {
+          "name": "AppShell",
+          "id": "db39a627-d06d-4bfb-8a21-8e13c57498ce",
+          "sourcePath": "src/components/atlas/app-shell.tsx"
+        },
+        {
+          "name": "AppHeader",
+          "id": "9e3be54b-09ae-408c-88f4-a2e51cfb441b",
+          "sourcePath": "src/components/atlas/app-header.tsx"
+        }
+      ],
+      "drafts": {
+        "5bdcd18c-cfe5-47d5-b00d-74ec2142fb89": {
+          "title": "Reviews · Reflection archive",
+          "visualDirection": "clickable editorial reflection archive preserving Atlas visual identity",
+          "currentVersion": 2
+        }
+      },
+      "updatedAt": "2026-08-23T08:00:00.000Z"
     }
   }
 }
