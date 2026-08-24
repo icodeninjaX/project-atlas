@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 const DIALOGUE_STORAGE_KEY = "atlas-launch-dialogue";
-const LAUNCH_DURATION_MS = 2350;
+const LAUNCH_DURATION_MS = 4500;
 const LAUNCH_MEDIA_QUERY =
   "(max-width: 767px) and (prefers-reduced-motion: no-preference)";
 

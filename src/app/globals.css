@@ -102,7 +102,7 @@ body {
   background:
     radial-gradient(circle at 50% 46%, rgb(132 175 255 / 16%), transparent 34%),
     #070a0f;
-  animation: atlas-launch-dismiss 2.35s ease-in-out both;
+  animation: atlas-launch-dismiss 4.5s ease-in-out both;
 }
 
 .atlas-launch-content {
@@ -151,17 +151,17 @@ body {
 .atlas-launch-dialogue-prompt,
 .atlas-launch-dialogue-response {
   display: block;
-  animation: atlas-launch-dialogue-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: atlas-launch-dialogue-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .atlas-launch-dialogue-prompt {
   color: rgb(148 163 184 / 82%);
-  animation-delay: 0.52s;
+  animation-delay: 0.7s;
 }
 
 .atlas-launch-dialogue-response {
   font-weight: 600;
-  animation-delay: 0.82s;
+  animation-delay: 1.3s;
 }
 
 @media (max-width: 767px) {
@@ -220,7 +220,7 @@ body {
 
 @keyframes atlas-launch-dismiss {
   0%,
-  82% {
+  85% {
     visibility: visible;
     opacity: 1;
   }
