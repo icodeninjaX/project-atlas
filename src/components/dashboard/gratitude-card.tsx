@@ -4,17 +4,17 @@ import { Sunrise } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  getRandomGratitude,
-  type GratitudeReflection,
+  getRandomWisdomQuote,
+  type WisdomQuote,
 } from "@/lib/gratitude/gratitude-reflections";
 
 export const GRATITUDE_ROTATION_INTERVAL_MS = 60 * 60 * 1_000;
 
-const GRATITUDE_SESSION_KEY = "atlas-gratitude-reflection";
+const WISDOM_SESSION_KEY = "atlas-wisdom-quote-v1";
 
 function readRememberedIndex() {
   try {
-    const storedIndex = window.sessionStorage.getItem(GRATITUDE_SESSION_KEY);
+    const storedIndex = window.sessionStorage.getItem(WISDOM_SESSION_KEY);
     if (storedIndex === null) return undefined;
 
     const index = Number(storedIndex);
@@ -26,7 +26,7 @@ function readRememberedIndex() {
 
 function rememberIndex(index: number) {
   try {
-    window.sessionStorage.setItem(GRATITUDE_SESSION_KEY, String(index));
+    window.sessionStorage.setItem(WISDOM_SESSION_KEY, String(index));
   } catch {
     // The rotation still works when browser storage is unavailable.
   }
@@ -34,23 +34,23 @@ function rememberIndex(index: number) {
 
 export function GratitudeCard({
   className = "",
-  initialGratitude,
+  initialQuote,
 }: {
   className?: string;
-  initialGratitude: GratitudeReflection;
+  initialQuote: WisdomQuote;
 }) {
-  const [gratitude, setGratitude] = useState(initialGratitude);
+  const [quote, setQuote] = useState(initialQuote);
   const didResolveRefresh = useRef(false);
 
   useEffect(() => {
     if (didResolveRefresh.current) return;
     didResolveRefresh.current = true;
 
-    setGratitude((current) => {
+    setQuote((current) => {
       const rememberedIndex = readRememberedIndex();
       const next =
         rememberedIndex === current.index
-          ? getRandomGratitude(current.index)
+          ? getRandomWisdomQuote(current.index)
           : current;
 
       rememberIndex(next.index);
@@ -60,8 +60,8 @@ export function GratitudeCard({
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      setGratitude((current) => {
-        const next = getRandomGratitude(current.index);
+      setQuote((current) => {
+        const next = getRandomWisdomQuote(current.index);
         rememberIndex(next.index);
         return next;
       });
@@ -72,7 +72,7 @@ export function GratitudeCard({
 
   return (
     <Card
-      aria-label="Gratitude reminder"
+      aria-label="Daily wisdom"
       className={`relative overflow-hidden border-[#9a795f]/80 bg-[#172236] text-white ${className}`}
       style={{
         backgroundImage: 'url("/gratitude/atlas-gratitude-card-surface.webp")',
@@ -83,19 +83,20 @@ export function GratitudeCard({
       <CardContent className="relative flex h-full min-h-44 flex-col justify-between p-4 sm:min-h-52 sm:p-6 lg:min-h-56 lg:p-7">
         <div className="pr-16 sm:pr-20 lg:pr-24">
           <p className="font-mono text-[10px] font-semibold tracking-[0.2em] text-[#a9c5ff] uppercase">
-            Pause and appreciate
+            {quote.category}
           </p>
-          <p
-            aria-live="polite"
-            className="mt-3 max-w-xl font-serif text-lg leading-6 text-[#f8fafc] sm:mt-4 sm:text-2xl sm:leading-[1.45] lg:text-[1.7rem] lg:leading-[1.35]"
-          >
-            {gratitude.message}
-          </p>
+          <blockquote aria-live="polite" className="mt-3 sm:mt-4">
+            <p className="max-w-xl font-serif text-lg leading-6 text-[#f8fafc] sm:text-2xl sm:leading-[1.45] lg:text-[1.7rem] lg:leading-[1.35]">
+              “{quote.message}”
+            </p>
+            <footer className="mt-2.5 text-sm font-medium text-[#dce6f5] sm:mt-3">
+              — {quote.author}
+            </footer>
+          </blockquote>
         </div>
 
         <p className="mt-4 text-xs leading-5 text-[#aab6c8] sm:mt-5">
-          Fresh on refresh · Changes hourly · {gratitude.collectionSize}{" "}
-          reflections
+          New on refresh · Changes hourly · {quote.collectionSize} famous quotes
         </p>
 
         <Sunrise

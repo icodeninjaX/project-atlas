@@ -4,7 +4,7 @@ import {
   GratitudeCard,
   GRATITUDE_ROTATION_INTERVAL_MS,
 } from "./gratitude-card";
-import { getGratitudeReflection } from "@/lib/gratitude/gratitude-reflections";
+import { getWisdomQuote } from "@/lib/gratitude/gratitude-reflections";
 
 describe("GratitudeCard", () => {
   beforeEach(() => {
@@ -18,45 +18,40 @@ describe("GratitudeCard", () => {
     vi.useRealTimers();
   });
 
-  it("explains its refresh and hourly rotation", () => {
-    render(<GratitudeCard initialGratitude={getGratitudeReflection(0)} />);
+  it("shows the quote category, author, and rotation details", () => {
+    const initialQuote = getWisdomQuote(0);
+    render(<GratitudeCard initialQuote={initialQuote} />);
 
+    expect(screen.getByText(initialQuote.category)).toBeInTheDocument();
+    expect(screen.getByText(`— ${initialQuote.author}`)).toBeInTheDocument();
     expect(
-      screen.getByText("Fresh on refresh · Changes hourly · 365 reflections"),
+      screen.getByText("New on refresh · Changes hourly · 90 famous quotes"),
     ).toBeInTheDocument();
   });
 
-  it("changes to a different reflection after one hour", () => {
+  it("changes to a different quote after one hour", () => {
     vi.spyOn(Math, "random").mockReturnValue(0);
-    const initialGratitude = getGratitudeReflection(0);
-    render(<GratitudeCard initialGratitude={initialGratitude} />);
+    const initialQuote = getWisdomQuote(0);
+    render(<GratitudeCard initialQuote={initialQuote} />);
 
-    expect(screen.getByText(initialGratitude.message)).toBeInTheDocument();
+    expect(screen.getByText(/Gratitude is not only/)).toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(GRATITUDE_ROTATION_INTERVAL_MS);
     });
 
-    expect(
-      screen.queryByText(initialGratitude.message),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByText(getGratitudeReflection(1).message),
-    ).toBeInTheDocument();
+    expect(screen.queryByText(/Gratitude is not only/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Gratitude is the sign/)).toBeInTheDocument();
   });
 
-  it("avoids repeating the reflection remembered from the previous refresh", () => {
+  it("avoids repeating the quote remembered from the previous refresh", () => {
     vi.spyOn(Math, "random").mockReturnValue(0);
-    const initialGratitude = getGratitudeReflection(0);
-    window.sessionStorage.setItem("atlas-gratitude-reflection", "0");
+    const initialQuote = getWisdomQuote(0);
+    window.sessionStorage.setItem("atlas-wisdom-quote-v1", "0");
 
-    render(<GratitudeCard initialGratitude={initialGratitude} />);
+    render(<GratitudeCard initialQuote={initialQuote} />);
 
-    expect(
-      screen.queryByText(initialGratitude.message),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByText(getGratitudeReflection(1).message),
-    ).toBeInTheDocument();
+    expect(screen.queryByText(/Gratitude is not only/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Gratitude is the sign/)).toBeInTheDocument();
   });
 });

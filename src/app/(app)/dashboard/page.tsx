@@ -18,7 +18,7 @@ import { GratitudeCard } from "@/components/dashboard/gratitude-card";
 import { manilaDateLabel } from "@/lib/dates/dates";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
-import { getRandomGratitude } from "@/lib/gratitude/gratitude-reflections";
+import { getRandomWisdomQuote } from "@/lib/gratitude/gratitude-reflections";
 
 type DashboardData = {
   financial: {
@@ -96,7 +96,7 @@ export const metadata = { title: "Today" };
 export default async function DashboardPage() {
   const now = new Date();
   const today = manilaIsoDate(now);
-  const gratitude = getRandomGratitude();
+  const wisdomQuote = getRandomWisdomQuote();
   const monthStart = `${today.slice(0, 7)}-01`;
   const localNoon = new Date(`${today}T12:00:00+08:00`);
   const weekday = localNoon.getUTCDay();
@@ -203,7 +203,7 @@ export default async function DashboardPage() {
         </div>
 
         <GratitudeCard
-          initialGratitude={gratitude}
+          initialQuote={wisdomQuote}
           className="order-2 mt-3 lg:order-none lg:mt-0"
         />
       </div>

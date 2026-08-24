@@ -35,12 +35,12 @@
 
 No actionable P0, P1, or P2 findings remain after the second responsive pass.
 
-- Fonts and typography: the implementation preserves ATLAS Geist and mono treatments while adding a restrained system serif only for the gratitude wording. The eyebrow, message, and metadata hierarchy match the selected editorial direction; wrapping stays readable at 360, 390, and 1440 pixels.
+- Fonts and typography: the implementation preserves ATLAS Geist and mono treatments while adding a restrained system serif for the rotating quotation. The category, quotation, author, and metadata hierarchy follow the selected editorial direction; wrapping stays readable at 360, 390, and 1440 pixels.
 - Spacing and layout rhythm: desktop places the gratitude card beside the Today introduction and moves both primary actions beneath the heading, matching the source composition. Mobile orders the date, gratitude card, task-focused hero, actions, and priorities exactly as selected. Production sections below retain ATLAS’s existing accessible spacing rather than the mock’s slightly compressed rows.
 - Colors and visual tokens: the card uses the selected desaturated navy surface, muted warm edge light, soft blue eyebrow, white message, and low-contrast metadata. Contrast remains strong in the dark default theme, and the card stays intentionally dark as a focal surface in light theme.
 - Image quality and asset fidelity: the luminous card texture is a dedicated 1600 × 900 WebP raster asset generated from the selected art direction and optimized to 17 KB. The sunrise mark uses the project’s existing Lucide outline family. No CSS drawing, handcrafted SVG, emoji, or placeholder asset was introduced.
-- Copy and content: the selected gratitude wording is reproduced exactly. The implementation correctly shows August 24 as day 236 of 365 instead of the generated mock’s inaccurate 237. The production collection provides 365 deterministic wordings with no repeat across a 365-day cycle.
-- Responsiveness and accessibility: the feature is a labelled `Daily gratitude` region, remains first in the mobile content hierarchy, never creates horizontal overflow, and leaves the fixed mobile navigation visible. The message changes by Asia/Manila calendar date without client hydration or a network dependency.
+- Copy and content: the card now draws from 90 concise, attributed quotations, balanced across gratitude, motivation, and Stoicism. The implementation correctly shows August 24 as day 236 of 365 instead of the generated mock’s inaccurate 237.
+- Responsiveness and accessibility: the feature is a labelled `Daily wisdom` region, remains first in the mobile content hierarchy, never creates horizontal overflow, and leaves the fixed mobile navigation visible. The quotation changes on refresh and once per hour, avoids an immediate repeat, and has no network dependency.
 - Interaction integrity: Add task navigated to `/tasks?create=true`, browser Back returned to `/dashboard`, and no application console warnings or errors were recorded.
 
 ## Comparison history
