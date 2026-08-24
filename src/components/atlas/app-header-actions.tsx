@@ -80,7 +80,7 @@ export function AppHeaderActions() {
             id="mobile-account-menu"
             role="dialog"
             aria-label="Account controls"
-            className="border-border bg-popover text-popover-foreground absolute top-12 right-0 w-56 rounded-2xl border p-2 shadow-xl"
+            className="border-border bg-card text-card-foreground absolute top-12 right-0 z-50 w-56 rounded-2xl border p-2 shadow-xl"
           >
             <div className="border-border mb-1 border-b px-1 pb-2">
               <SyncStatus showLabel />
