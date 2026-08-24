@@ -6,6 +6,7 @@ import {
   CircleDollarSign,
   Landmark,
   Plus,
+  Sunrise,
   Target,
 } from "lucide-react";
 import type { Route } from "next";
@@ -17,6 +18,10 @@ import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { manilaDateLabel } from "@/lib/dates/dates";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
+import {
+  getDailyGratitude,
+  type DailyGratitude,
+} from "@/lib/gratitude/daily-gratitude";
 
 type DashboardData = {
   financial: {
@@ -91,9 +96,51 @@ function manilaIsoDate(date: Date): string {
 
 export const metadata = { title: "Today" };
 
+function DailyGratitudeCard({
+  className = "",
+  gratitude,
+}: {
+  className?: string;
+  gratitude: DailyGratitude;
+}) {
+  return (
+    <Card
+      aria-label="Daily gratitude"
+      className={`relative overflow-hidden border-[#9a795f]/80 bg-[#172236] text-white ${className}`}
+      style={{
+        backgroundImage: 'url("/gratitude/atlas-gratitude-card-surface.webp")',
+        backgroundPosition: "center",
+        backgroundSize: "cover",
+      }}
+    >
+      <CardContent className="relative flex h-full min-h-44 flex-col justify-between p-4 sm:min-h-52 sm:p-6 lg:min-h-56 lg:p-7">
+        <div className="pr-16 sm:pr-20 lg:pr-24">
+          <p className="font-mono text-[10px] font-semibold tracking-[0.2em] text-[#a9c5ff] uppercase">
+            Today, remember
+          </p>
+          <p className="mt-3 max-w-xl font-serif text-lg leading-6 text-[#f8fafc] sm:mt-4 sm:text-2xl sm:leading-[1.45] lg:text-[1.7rem] lg:leading-[1.35]">
+            {gratitude.message}
+          </p>
+        </div>
+
+        <p className="mt-4 text-xs text-[#aab6c8] sm:mt-5">
+          Your daily gratitude · {gratitude.dayOfYear} of {gratitude.daysInYear}
+        </p>
+
+        <Sunrise
+          aria-hidden="true"
+          className="absolute top-5 right-5 size-11 text-[#dce6f5]/85 sm:top-6 sm:right-6 sm:size-14 lg:top-1/2 lg:right-7 lg:size-16 lg:-translate-y-1/2"
+          strokeWidth={1.25}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
 export default async function DashboardPage() {
   const now = new Date();
   const today = manilaIsoDate(now);
+  const gratitude = getDailyGratitude(today);
   const monthStart = `${today.slice(0, 7)}-01`;
   const localNoon = new Date(`${today}T12:00:00+08:00`);
   const weekday = localNoon.getUTCDay();
@@ -164,12 +211,18 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+      <div className="grid gap-6 lg:grid-cols-[0.88fr_1.12fr] lg:items-stretch lg:gap-8">
+        <div className="flex min-w-0 flex-col lg:justify-center">
           <p className="text-primary font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
             {manilaDateLabel(now)}
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
+
+          <DailyGratitudeCard
+            gratitude={gratitude}
+            className="mt-3 lg:hidden"
+          />
+
+          <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:mt-6 sm:text-4xl lg:mt-3">
             {dashboard.priorities.length
               ? "Your next moves are mapped."
               : "Your route is clear."}
@@ -179,21 +232,24 @@ export default async function DashboardPage() {
               ? "ATLAS ranked these from current deadlines and commitments."
               : "Add what matters and ATLAS will surface the next useful move."}
           </p>
+
+          <div className="mt-6 grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+            <Button asChild variant="secondary" size="sm" className="w-full">
+              <Link href="/money/transactions?create=true">
+                <CircleDollarSign className="size-4" />
+                Record expense
+              </Link>
+            </Button>
+            <Button asChild size="sm" className="w-full">
+              <Link href="/tasks?create=true">
+                <Plus className="size-4" />
+                Add task
+              </Link>
+            </Button>
+          </div>
         </div>
-        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
-          <Button asChild variant="secondary" size="sm" className="w-full">
-            <Link href="/money/transactions?create=true">
-              <CircleDollarSign className="size-4" />
-              Record expense
-            </Link>
-          </Button>
-          <Button asChild size="sm" className="w-full">
-            <Link href="/tasks?create=true">
-              <Plus className="size-4" />
-              Add task
-            </Link>
-          </Button>
-        </div>
+
+        <DailyGratitudeCard gratitude={gratitude} className="hidden lg:block" />
       </div>
 
       <div className="mt-6 grid gap-3 sm:mt-8 xl:grid-cols-[1.35fr_0.65fr]">
