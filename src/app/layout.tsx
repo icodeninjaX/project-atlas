@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { BrandLaunchScreen } from "@/components/atlas/brand-launch-screen";
 import { ThemeProvider } from "@/components/atlas/theme-provider";
 import { PwaRegistration } from "@/components/offline/pwa-registration";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -44,8 +45,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#0f766e" },
-    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+    { media: "(prefers-color-scheme: light)", color: "#2867e8" },
+    { media: "(prefers-color-scheme: dark)", color: "#070a0f" },
   ],
 };
 
@@ -57,6 +58,7 @@ export default function RootLayout({
       <body
         className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}
       >
+        <BrandLaunchScreen />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

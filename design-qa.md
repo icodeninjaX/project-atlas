@@ -100,3 +100,103 @@ A separate crop was not needed: the 354 × 170 source visual is already a focuse
 - Title, priority, and overdue/date now use the mobile card’s full inner width, while desktop keeps its established completion and metadata presentation.
 
 final result: passed
+
+---
+
+# Atlas System Core brand design QA
+
+## Comparison target
+
+- Source visual truth: `C:\Dev\Atlas\public\brand\logo-concepts\atlas-logo-03-system-core.png`
+- Source pixels: 1254 × 1254 RGBA.
+- Production asset: `C:\Dev\Atlas\public\brand\atlas-system-core.png` at
+  1254 × 1254 RGBA.
+- Browser-rendered implementation:
+  - Dark desktop: `C:\Dev\Atlas\docs\brand\qa\atlas-system-core-desktop.png`
+    at 1440 × 1000 captured pixels.
+  - Light desktop: `C:\Dev\Atlas\docs\brand\qa\atlas-system-core-desktop-light.png`
+    at 1440 × 1000 captured pixels.
+  - Dark mobile: `C:\Dev\Atlas\docs\brand\qa\atlas-system-core-mobile.png`
+    at 390 × 844 captured pixels.
+  - Focused comparison: `C:\Dev\Atlas\docs\brand\qa\atlas-system-core-comparison.png`.
+- CSS viewport: 1440 × 1000 for desktop and 390 × 844 for mobile.
+- Device scale factor: 1. The focused comparison normalizes the selected
+  1254px concept to the same 36 × 36px CSS slot as the rendered header mark,
+  then enlarges both panels 6× with nearest-neighbor scaling for inspection.
+- State: public landing page, dark and light themes, desktop and mobile.
+
+## Full-view comparison evidence
+
+- The System Core symbol appears directly beside the Project Atlas name in the
+  existing 36px brand slot on both desktop and mobile without changing the
+  header height, link target, typography, or surrounding spacing.
+- The mark remains readable against both `#070a0f` dark and `#f4f7fb` light
+  surfaces. Its five modules and open center remain distinguishable at the
+  rendered size.
+- The 390px capture keeps the mark and Project Atlas name aligned and leaves the
+  existing responsive landing-page composition unchanged.
+- The installed-app icons use the same silhouette, with the mark fitted to 68%
+  of normal icons and 56% of the maskable icon so important geometry remains in
+  the maskable safe area.
+
+## Focused-region comparison evidence
+
+- `atlas-system-core-comparison.png` places the selected concept and final
+  36px browser rendering in one normalized comparison input.
+- The production normalization intentionally removes the generated tonal
+  gradient and low-alpha edge noise while preserving the selected five-part
+  silhouette, proportions, rotation, and open center.
+- The final source is loaded directly as a PNG rather than being recompressed by
+  the Next.js image optimizer; the browser reports a 1254 × 1254 natural image
+  rendered at 36 × 36 CSS pixels.
+
+## Required fidelity surfaces
+
+- Fonts and typography: Geist Sans and existing weights, sizes, line heights,
+  tracking, and Project Atlas label remain unchanged.
+- Spacing and layout rhythm: The mark stays in the existing 36 × 36 slot. Header
+  height, logo-to-name gap, navigation spacing, and responsive breakpoints are
+  unchanged.
+- Colors and visual tokens: The primary mark uses Atlas blue `#2867e8`.
+  Installed-app icons use the established dark primary `#84afff` on `#070a0f`.
+  The manifest and offline theme color now use Atlas blue instead of legacy
+  teal.
+- Image quality and asset fidelity: The exact selected raster geometry is used,
+  with a deterministic flat-color and alpha cleanup. No CSS drawing, inline
+  SVG, letterform, or placeholder shape substitutes for the source. Normal and
+  maskable PNG icons returned HTTP 200 in browser endpoint checks.
+- Copy and content: No product copy changed. The brand remains the symbol beside
+  the existing Project Atlas name; no text was embedded in the logo asset.
+
+## Interaction and accessibility verification
+
+- The brand link remains accessible as “Project Atlas” and still points to `/`.
+- The logo image is decorative (`alt=""`) inside an `aria-hidden` mark wrapper,
+  avoiding duplicate announcement beside the visible Project Atlas name.
+- The theme toggle was exercised and the logo remained visible in dark and
+  light states.
+- Manifest, production mark, and all four icon endpoints returned HTTP 200 with
+  the expected image or manifest content type.
+- Browser console errors and warnings: none.
+
+## Comparison history
+
+### Iteration 1
+
+- Finding: [P2] The initial browser implementation let the image optimizer
+  recompress the small solid-color logo, softening its edges at 36px.
+- Fix: Served the compact 12.9KB production PNG directly and converted the
+  generated alpha into a clean high-resolution silhouette before browser
+  downsampling.
+- Post-fix evidence: `atlas-system-core-desktop.png`,
+  `atlas-system-core-desktop-light.png`, and
+  `atlas-system-core-comparison.png`.
+
+### Final pass
+
+- No actionable P0, P1, or P2 findings remain.
+- The chosen mark is visually faithful, crisp at the in-app size, aligned in
+  both themes and responsive layouts, and consistent across browser and PWA
+  identity surfaces.
+
+final result: passed

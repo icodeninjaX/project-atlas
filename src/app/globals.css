@@ -92,7 +92,150 @@ body {
   mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
 }
 
+.atlas-launch-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 46%, rgb(132 175 255 / 16%), transparent 34%),
+    #070a0f;
+  animation: atlas-launch-dismiss 2.35s ease-in-out both;
+}
+
+.atlas-launch-content {
+  display: grid;
+  place-items: center;
+  gap: 1.125rem;
+}
+
+.atlas-launch-core {
+  position: relative;
+  display: grid;
+  size: 9rem;
+  place-items: center;
+  animation: atlas-launch-core 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.atlas-launch-logo {
+  position: relative;
+  z-index: 1;
+  size: 9rem;
+  object-fit: contain;
+  filter: drop-shadow(0 1.25rem 2.5rem rgb(40 103 232 / 24%));
+}
+
+.atlas-launch-pulse {
+  position: absolute;
+  inset: 22%;
+  border: 1px solid rgb(132 175 255 / 65%);
+  border-radius: 999px;
+  animation: atlas-launch-pulse 0.9s 0.16s ease-out both;
+}
+
+.atlas-launch-dialogue {
+  display: grid;
+  min-height: 3.375rem;
+  margin: 0;
+  place-items: center;
+  gap: 0.25rem;
+  color: rgb(226 232 240 / 92%);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+.atlas-launch-dialogue-prompt,
+.atlas-launch-dialogue-response {
+  display: block;
+  animation: atlas-launch-dialogue-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.atlas-launch-dialogue-prompt {
+  color: rgb(148 163 184 / 82%);
+  animation-delay: 0.52s;
+}
+
+.atlas-launch-dialogue-response {
+  font-weight: 600;
+  animation-delay: 0.82s;
+}
+
+@media (max-width: 767px) {
+  .atlas-launch-screen {
+    display: grid;
+  }
+}
+
+@keyframes atlas-launch-core {
+  0% {
+    transform: scale(0.72) rotate(-24deg);
+    opacity: 0;
+  }
+
+  42% {
+    transform: scale(1.06) rotate(3deg);
+    opacity: 1;
+  }
+
+  68%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes atlas-launch-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  38% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+}
+
+@keyframes atlas-launch-dialogue-in {
+  0% {
+    transform: translateY(0.5rem);
+    filter: blur(4px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+@keyframes atlas-launch-dismiss {
+  0%,
+  82% {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  100% {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .atlas-launch-screen {
+    display: none !important;
+  }
+
   *,
   *::before,
   *::after {
