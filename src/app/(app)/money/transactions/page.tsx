@@ -1,11 +1,12 @@
-import { Pencil, ReceiptText, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { TransactionForm } from "@/components/money/transaction-form";
+import {
+  TransactionWorkspace,
+  type TransactionHistoryItem,
+  type TransactionWorkspaceView,
+} from "@/components/money/transaction-workspace";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { TooltipHint } from "@/components/ui/tooltip";
-import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
@@ -21,7 +22,10 @@ function todayInManila() {
   }).format(new Date());
 }
 
-export default async function TransactionsPage() {
+export default async function TransactionsPage({
+  searchParams,
+}: PageProps<"/money/transactions">) {
+  const query = await searchParams;
   const supabase = await createClient();
   const [
     accountsResult,
@@ -63,6 +67,35 @@ export default async function TransactionsPage() {
   const expenses = monthRows
     .filter((transaction) => transaction.transaction_type === "expense")
     .reduce((sum, transaction) => sum + Number(transaction.amount_centavos), 0);
+  const initialView: TransactionWorkspaceView | null =
+    query.create === "true" || query.view === "record"
+      ? "record"
+      : query.view === "history" || query.highlight
+        ? "history"
+        : null;
+  const transactionHistory: TransactionHistoryItem[] = transactions.map(
+    (transaction) => {
+      const account = transaction.financial_accounts as unknown as {
+        name: string;
+      } | null;
+      const category = transaction.transaction_categories as unknown as {
+        name: string;
+      } | null;
+
+      return {
+        id: transaction.id,
+        account_id: transaction.account_id,
+        category_id: transaction.category_id,
+        transaction_type: transaction.transaction_type as "expense" | "income",
+        amount_centavos: Number(transaction.amount_centavos),
+        transaction_date: transaction.transaction_date,
+        merchant_or_source: transaction.merchant_or_source,
+        description: transaction.description,
+        account_name: account?.name ?? null,
+        category_name: category?.name ?? null,
+      };
+    },
+  );
 
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
@@ -99,101 +132,14 @@ export default async function TransactionsPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="mt-4">
-        <TransactionForm
-          accounts={accountsResult.data ?? []}
-          categories={categoriesResult.data ?? []}
-          today={todayInManila()}
-          defaultAccountId={preferencesResult.data?.default_account_id}
-        />
-      </div>
-      <div className="border-border bg-card mt-6 overflow-hidden rounded-2xl border">
-        {transactions.length === 0 ? (
-          <div className="grid min-h-60 place-items-center text-center">
-            <div>
-              <ReceiptText className="text-primary mx-auto size-6" />
-              <p className="mt-4 text-sm font-semibold">
-                No money movement recorded.
-              </p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Add an account, then record the first income or expense.
-              </p>
-            </div>
-          </div>
-        ) : (
-          transactions.map((transaction) => {
-            const account = transaction.financial_accounts as unknown as {
-              name: string;
-            } | null;
-            const category = transaction.transaction_categories as unknown as {
-              name: string;
-            } | null;
-            return (
-              <div
-                key={transaction.id}
-                className="border-border flex items-center gap-4 border-b p-4 last:border-b-0"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">
-                    {transaction.merchant_or_source ||
-                      category?.name ||
-                      "Transaction"}
-                  </p>
-                  <p className="text-muted-foreground mt-1 truncate text-xs">
-                    {transaction.transaction_date} ·{" "}
-                    {account?.name ?? "Account"} ·{" "}
-                    {category?.name ?? "Category"}
-                  </p>
-                </div>
-                <p
-                  className={`font-mono text-sm font-semibold ${transaction.transaction_type === "income" ? "text-primary" : ""}`}
-                >
-                  <SensitiveValue>
-                    {transaction.transaction_type === "income" ? "+" : "−"}
-                    {formatCentavos(Number(transaction.amount_centavos))}
-                  </SensitiveValue>
-                </p>
-                <details className="relative">
-                  <TooltipHint label="Edit transaction">
-                    <summary className="text-muted-foreground hover:bg-muted grid size-10 cursor-pointer list-none place-items-center rounded-xl [&::-webkit-details-marker]:hidden">
-                      <Pencil className="size-4" />
-                      <span className="sr-only">Edit transaction</span>
-                    </summary>
-                  </TooltipHint>
-                  <div className="border-border bg-card absolute right-0 z-10 mt-2 w-[min(90vw,720px)] rounded-2xl border p-3 shadow-xl">
-                    <TransactionForm
-                      accounts={accountsResult.data ?? []}
-                      categories={categoriesResult.data ?? []}
-                      today={todayInManila()}
-                      defaultAccountId={
-                        preferencesResult.data?.default_account_id
-                      }
-                      transaction={transaction}
-                    />
-                  </div>
-                </details>
-                <OfflineMutationForm mutation="transaction.delete">
-                  <input
-                    type="hidden"
-                    name="transactionId"
-                    value={transaction.id}
-                  />
-                  <TooltipHint label="Delete transaction">
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Delete transaction"
-                    >
-                      <Trash2 className="text-muted-foreground size-4" />
-                    </Button>
-                  </TooltipHint>
-                </OfflineMutationForm>
-              </div>
-            );
-          })
-        )}
-      </div>
+      <TransactionWorkspace
+        accounts={accountsResult.data ?? []}
+        categories={categoriesResult.data ?? []}
+        transactions={transactionHistory}
+        today={todayInManila()}
+        defaultAccountId={preferencesResult.data?.default_account_id}
+        initialView={initialView}
+      />
     </div>
   );
 }

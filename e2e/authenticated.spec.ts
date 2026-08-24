@@ -30,6 +30,7 @@ test.describe("authenticated Atlas workflows", () => {
     await expect(page.getByText(`E2E Cash ${unique}`)).toBeVisible();
 
     await page.goto("/money/transactions");
+    await page.getByRole("button", { name: "Record a transaction" }).click();
     await page
       .getByLabel("Account")
       .selectOption({ label: `E2E Cash ${unique}` });
@@ -37,6 +38,9 @@ test.describe("authenticated Atlas workflows", () => {
     await page.getByLabel("Amount in pesos").fill("125.50");
     await page.getByLabel("Merchant or source").fill(`E2E canteen ${unique}`);
     await page.getByRole("button", { name: "Record transaction" }).click();
+    await page
+      .getByRole("button", { name: "View transaction history" })
+      .click();
     await expect(page.getByText(`E2E canteen ${unique}`)).toBeVisible();
   });
 
