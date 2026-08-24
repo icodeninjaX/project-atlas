@@ -7,6 +7,7 @@ import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { TaskEditForm } from "@/components/tasks/task-edit-form";
 import { TaskFocusMode } from "@/components/tasks/task-focus-mode";
 import { Button } from "@/components/ui/button";
+import type { ScheduledTaskSlot } from "@/lib/tasks/task-time";
 
 type Task = {
   id: string;
@@ -24,9 +25,11 @@ type EditorMode = "edit" | "reminder" | null;
 export function TaskActionsMenu({
   task,
   scheduledLabel,
+  scheduledTasks = [],
 }: {
   task: Task;
   scheduledLabel: string | null;
+  scheduledTasks?: ScheduledTaskSlot[];
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editorMode, setEditorMode] = useState<EditorMode>(null);
@@ -217,7 +220,9 @@ export function TaskActionsMenu({
               </Button>
             </Dialog.Close>
           </div>
-          {editorMode && <TaskEditForm task={task} />}
+          {editorMode && (
+            <TaskEditForm task={task} scheduledTasks={scheduledTasks} />
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

@@ -1,10 +1,19 @@
+"use client";
+
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { taskTimeInputValue } from "@/lib/tasks/task-time";
+import {
+  EMPTY_SCHEDULED_TASKS,
+  taskTimeInputValue,
+  type ScheduledTaskSlot,
+} from "@/lib/tasks/task-time";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
+import { TaskTimeRecommendations } from "@/components/tasks/task-time-recommendations";
 
 export function TaskEditForm({
   task,
+  scheduledTasks = EMPTY_SCHEDULED_TASKS,
 }: {
   task: {
     id: string;
@@ -16,7 +25,17 @@ export function TaskEditForm({
     estimated_minutes: number | null;
     status: string;
   };
+  scheduledTasks?: ScheduledTaskSlot[];
 }) {
+  const [scheduledFor, setScheduledFor] = useState(task.scheduled_for ?? "");
+  const [scheduledTime, setScheduledTime] = useState(
+    taskTimeInputValue(task.scheduled_time),
+  );
+  const [estimatedMinutes, setEstimatedMinutes] = useState(
+    task.estimated_minutes?.toString() ?? "",
+  );
+  const timeRef = useRef<HTMLInputElement>(null);
+
   return (
     <OfflineMutationForm
       mutation="task.update"
@@ -39,16 +58,19 @@ export function TaskEditForm({
         <Input
           name="scheduledFor"
           type="date"
-          defaultValue={task.scheduled_for ?? ""}
+          value={scheduledFor}
+          onChange={(event) => setScheduledFor(event.target.value)}
           className="mt-1.5"
         />
       </label>
       <label className="text-muted-foreground text-xs">
         Exact time
         <Input
+          ref={timeRef}
           name="scheduledTime"
           type="time"
-          defaultValue={taskTimeInputValue(task.scheduled_time)}
+          value={scheduledTime}
+          onChange={(event) => setScheduledTime(event.target.value)}
           className="mt-1.5"
         />
       </label>
@@ -82,11 +104,28 @@ export function TaskEditForm({
           type="number"
           min="1"
           max="1440"
-          defaultValue={task.estimated_minutes ?? ""}
+          value={estimatedMinutes}
+          onChange={(event) => setEstimatedMinutes(event.target.value)}
           className="mt-1.5"
         />
       </label>
-      <Button type="submit" variant="secondary" className="self-end">
+      <TaskTimeRecommendations
+        scheduledTasks={scheduledTasks}
+        scheduledFor={scheduledFor}
+        scheduledTime={scheduledTime}
+        estimatedMinutes={estimatedMinutes ? Number(estimatedMinutes) : null}
+        excludeTaskId={task.id}
+        onSelectTime={(time) => {
+          setScheduledTime(time);
+          timeRef.current?.focus();
+        }}
+        className="sm:col-span-2 xl:col-span-5"
+      />
+      <Button
+        type="submit"
+        variant="secondary"
+        className="self-end sm:col-span-2 xl:col-span-1 xl:col-start-4 xl:row-start-2"
+      >
         Save
       </Button>
     </OfflineMutationForm>

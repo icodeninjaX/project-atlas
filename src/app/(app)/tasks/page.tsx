@@ -10,7 +10,7 @@ import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { manilaDateLabel } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
 import { getTaskPriorityBadgeClass } from "@/lib/tasks/priority";
-import { formatTaskTime } from "@/lib/tasks/task-time";
+import { formatTaskTime, type ScheduledTaskSlot } from "@/lib/tasks/task-time";
 
 export const metadata = { title: "Tasks" };
 
@@ -54,13 +54,13 @@ export default async function TasksPage({
     default_task_priority: string;
     default_task_estimated_minutes: number | null;
   } | null = null;
+  let scheduledTasks: ScheduledTaskSlot[] = [];
 
   if (supabase) {
-    const { data: preferences } = await supabase
+    const preferencesQuery = supabase
       .from("user_preferences")
       .select("default_task_priority,default_task_estimated_minutes")
       .maybeSingle();
-    taskDefaults = preferences;
     let query = supabase
       .from("tasks")
       .select(
@@ -96,8 +96,19 @@ export default async function TasksPage({
       query = query.order("created_at", { ascending: false });
     }
     query = query.limit(100);
-    const { data } = await query;
+    const scheduledTasksQuery = supabase
+      .from("tasks")
+      .select("id,title,scheduled_for,scheduled_time,estimated_minutes")
+      .not("scheduled_for", "is", null)
+      .not("scheduled_time", "is", null)
+      .neq("status", "completed")
+      .neq("status", "cancelled");
+    const [preferencesResult, taskResult, scheduledTaskResult] =
+      await Promise.all([preferencesQuery, query, scheduledTasksQuery]);
+    taskDefaults = preferencesResult.data;
+    const { data } = taskResult;
     tasks = data ?? [];
+    scheduledTasks = scheduledTaskResult.data ?? [];
   }
 
   return (
@@ -116,6 +127,7 @@ export default async function TasksPage({
           defaultEstimatedMinutes={
             taskDefaults?.default_task_estimated_minutes ?? null
           }
+          scheduledTasks={scheduledTasks}
         />
       </div>
 
@@ -260,6 +272,7 @@ export default async function TasksPage({
                         <TaskActionsMenu
                           task={task}
                           scheduledLabel={scheduledLabel}
+                          scheduledTasks={scheduledTasks}
                         />
                       </div>
                     </div>
@@ -316,7 +329,10 @@ export default async function TasksPage({
                       <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-[11px]">
                         Edit task
                       </summary>
-                      <TaskEditForm task={task} />
+                      <TaskEditForm
+                        task={task}
+                        scheduledTasks={scheduledTasks}
+                      />
                     </details>
                   </div>
                   <OfflineMutationForm

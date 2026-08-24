@@ -1,20 +1,27 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { TaskActionState } from "@/lib/tasks/actions";
 import { useOfflineActionState } from "@/components/offline/offline-mutation";
+import { TaskTimeRecommendations } from "@/components/tasks/task-time-recommendations";
+import {
+  EMPTY_SCHEDULED_TASKS,
+  type ScheduledTaskSlot,
+} from "@/lib/tasks/task-time";
 
 const initialState: TaskActionState = { success: false, message: "" };
 
 export function QuickTaskForm({
   defaultPriority = "medium",
   defaultEstimatedMinutes = null,
+  scheduledTasks = EMPTY_SCHEDULED_TASKS,
 }: {
   defaultPriority?: string;
   defaultEstimatedMinutes?: number | null;
+  scheduledTasks?: ScheduledTaskSlot[];
 }) {
   const [state, action, pending] = useOfflineActionState(
     "task.create",
@@ -22,6 +29,12 @@ export function QuickTaskForm({
   );
   const formRef = useRef<HTMLFormElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
+  const timeRef = useRef<HTMLInputElement>(null);
+  const [scheduledFor, setScheduledFor] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
+  const [estimatedMinutes, setEstimatedMinutes] = useState(
+    defaultEstimatedMinutes?.toString() ?? "",
+  );
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -53,6 +66,11 @@ export function QuickTaskForm({
     <form
       ref={formRef}
       action={action}
+      onReset={() => {
+        setScheduledFor("");
+        setScheduledTime("");
+        setEstimatedMinutes(defaultEstimatedMinutes?.toString() ?? "");
+      }}
       className="border-border bg-card rounded-2xl border p-3.5 shadow-sm sm:p-5 sm:shadow-none"
     >
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(210px,1fr)_145px_125px_125px_130px_auto]">
@@ -79,7 +97,13 @@ export function QuickTaskForm({
           >
             Scheduled date
           </label>
-          <Input id="quick-task-date" name="scheduledFor" type="date" />
+          <Input
+            id="quick-task-date"
+            name="scheduledFor"
+            type="date"
+            value={scheduledFor}
+            onChange={(event) => setScheduledFor(event.target.value)}
+          />
         </div>
         <div>
           <label
@@ -88,7 +112,14 @@ export function QuickTaskForm({
           >
             Exact time
           </label>
-          <Input id="quick-task-time" name="scheduledTime" type="time" />
+          <Input
+            ref={timeRef}
+            id="quick-task-time"
+            name="scheduledTime"
+            type="time"
+            value={scheduledTime}
+            onChange={(event) => setScheduledTime(event.target.value)}
+          />
         </div>
         <div>
           <label
@@ -124,13 +155,25 @@ export function QuickTaskForm({
             min="1"
             max="1440"
             placeholder="30"
-            defaultValue={defaultEstimatedMinutes ?? ""}
+            value={estimatedMinutes}
+            onChange={(event) => setEstimatedMinutes(event.target.value)}
           />
         </div>
+        <TaskTimeRecommendations
+          scheduledTasks={scheduledTasks}
+          scheduledFor={scheduledFor}
+          scheduledTime={scheduledTime}
+          estimatedMinutes={estimatedMinutes ? Number(estimatedMinutes) : null}
+          onSelectTime={(time) => {
+            setScheduledTime(time);
+            timeRef.current?.focus();
+          }}
+          className="md:col-span-2 xl:col-span-6"
+        />
         <Button
           type="submit"
           disabled={pending}
-          className="min-h-12 self-end md:col-span-2 xl:col-span-1 xl:min-h-10"
+          className="min-h-12 self-end md:col-span-2 xl:col-span-1 xl:col-start-6 xl:row-start-1 xl:min-h-10"
         >
           {pending ? "Adding…" : "Add task"}
         </Button>
