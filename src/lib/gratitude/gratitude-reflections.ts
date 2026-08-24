@@ -84,68 +84,63 @@ const GRATITUDE_SUBJECTS = [
   "the simple, astonishing fact that I am here and alive today",
 ] as const;
 
-const MILLISECONDS_PER_DAY = 86_400_000;
-const DAILY_MULTIPLIER = 137;
-const DAILY_OFFSET = 197;
-
 export const GRATITUDE_COLLECTION_SIZE =
   GRATITUDE_TEMPLATES.length * GRATITUDE_SUBJECTS.length;
 
-export type DailyGratitude = {
+export type GratitudeReflection = {
   collectionSize: number;
-  dayOfYear: number;
-  daysInYear: number;
+  index: number;
   message: string;
 };
-
-function parseIsoDate(isoDate: string) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
-  if (!match) throw new Error(`Invalid ISO date: ${isoDate}`);
-
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const timestamp = Date.UTC(year, month - 1, day);
-  const parsed = new Date(timestamp);
-
-  if (
-    parsed.getUTCFullYear() !== year ||
-    parsed.getUTCMonth() !== month - 1 ||
-    parsed.getUTCDate() !== day
-  ) {
-    throw new Error(`Invalid ISO date: ${isoDate}`);
-  }
-
-  return { day, month, timestamp, year };
-}
 
 function positiveModulo(value: number, divisor: number) {
   return ((value % divisor) + divisor) % divisor;
 }
 
-export function getDailyGratitude(isoDate: string): DailyGratitude {
-  const { timestamp, year } = parseIsoDate(isoDate);
-  const startOfYear = Date.UTC(year, 0, 1);
-  const startOfNextYear = Date.UTC(year + 1, 0, 1);
-  const dayOfYear =
-    Math.floor((timestamp - startOfYear) / MILLISECONDS_PER_DAY) + 1;
-  const daysInYear = Math.round(
-    (startOfNextYear - startOfYear) / MILLISECONDS_PER_DAY,
-  );
-  const epochDay = Math.floor(timestamp / MILLISECONDS_PER_DAY);
-  const messageIndex = positiveModulo(
-    epochDay * DAILY_MULTIPLIER + DAILY_OFFSET,
-    GRATITUDE_COLLECTION_SIZE,
-  );
+export function getGratitudeReflection(index: number): GratitudeReflection {
+  if (!Number.isInteger(index)) {
+    throw new Error(`Gratitude index must be an integer: ${index}`);
+  }
+
+  const normalizedIndex = positiveModulo(index, GRATITUDE_COLLECTION_SIZE);
   const template =
-    GRATITUDE_TEMPLATES[messageIndex % GRATITUDE_TEMPLATES.length]!;
+    GRATITUDE_TEMPLATES[normalizedIndex % GRATITUDE_TEMPLATES.length]!;
   const subject =
-    GRATITUDE_SUBJECTS[Math.floor(messageIndex / GRATITUDE_TEMPLATES.length)]!;
+    GRATITUDE_SUBJECTS[
+      Math.floor(normalizedIndex / GRATITUDE_TEMPLATES.length)
+    ]!;
 
   return {
     collectionSize: GRATITUDE_COLLECTION_SIZE,
-    dayOfYear,
-    daysInYear,
+    index: normalizedIndex,
     message: template(subject),
   };
+}
+
+export function getRandomGratitude(
+  excludeIndex?: number,
+  randomValue = Math.random(),
+): GratitudeReflection {
+  if (!Number.isFinite(randomValue) || randomValue < 0 || randomValue >= 1) {
+    throw new Error(
+      `Random value must be between 0 (inclusive) and 1: ${randomValue}`,
+    );
+  }
+
+  const normalizedExcludedIndex =
+    excludeIndex === undefined
+      ? undefined
+      : positiveModulo(excludeIndex, GRATITUDE_COLLECTION_SIZE);
+  const candidateCount =
+    GRATITUDE_COLLECTION_SIZE - (normalizedExcludedIndex === undefined ? 0 : 1);
+  let selectedIndex = Math.floor(randomValue * candidateCount);
+
+  if (
+    normalizedExcludedIndex !== undefined &&
+    selectedIndex >= normalizedExcludedIndex
+  ) {
+    selectedIndex += 1;
+  }
+
+  return getGratitudeReflection(selectedIndex);
 }
