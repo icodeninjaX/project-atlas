@@ -24,10 +24,15 @@ const activeAccount: AccountSummary = {
 
 describe("AccountCard", () => {
   it("shows active-account controls", () => {
-    render(<AccountCard account={activeAccount} today="2026-08-13" />);
+    const { container } = render(
+      <AccountCard account={activeAccount} today="2026-08-13" />,
+    );
 
-    expect(screen.getByText("Edit account details")).toBeInTheDocument();
-    expect(screen.getByText("Adjust current balance")).toBeInTheDocument();
+    expect(screen.getByLabelText("Edit GCash")).toBeInTheDocument();
+    expect(screen.queryByText("Edit account")).not.toBeInTheDocument();
+    expect(screen.getByText("Account details")).toBeInTheDocument();
+    expect(screen.getByText("Current balance")).toBeInTheDocument();
+    expect(container.querySelectorAll("details")).toHaveLength(1);
     expect(
       screen.getByRole("button", { name: "Archive GCash" }),
     ).toBeInTheDocument();
@@ -44,10 +49,7 @@ describe("AccountCard", () => {
       screen.getByRole("button", { name: "Restore account" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Delete permanently")).toBeInTheDocument();
-    expect(screen.queryByText("Edit account details")).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("Adjust current balance"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Edit GCash")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Archive GCash" }),
     ).not.toBeInTheDocument();

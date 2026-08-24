@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore } from "lucide-react";
+import { Archive, ArchiveRestore, Pencil } from "lucide-react";
 import { AccountForm } from "@/components/money/account-form";
 import { BalanceAdjustmentForm } from "@/components/money/balance-adjustment-form";
 import { DeleteArchivedAccountForm } from "@/components/money/delete-archived-account-form";
@@ -29,9 +29,9 @@ export function AccountCard({
 
   return (
     <Card>
-      <CardContent>
+      <CardContent className="relative">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+          <div className={account.is_archived ? "min-w-0" : "min-w-0 pr-12"}>
             <p className="truncate text-sm font-semibold">{account.name}</p>
             <p className="text-muted-foreground mt-1 truncate text-xs capitalize">
               {account.account_type.replaceAll("_", " ")}
@@ -55,17 +55,6 @@ export function AccountCard({
             </OfflineMutationForm>
           )}
         </div>
-
-        {!account.is_archived && (
-          <details className="border-border @container mt-4 border-t pt-3">
-            <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-xs font-medium">
-              Edit account details
-            </summary>
-            <div className="mt-3">
-              <AccountForm account={account} />
-            </div>
-          </details>
-        )}
 
         <p className="mt-6 font-mono text-2xl font-semibold">
           <SensitiveValue>{formatCentavos(balanceCentavos)}</SensitiveValue>
@@ -92,16 +81,42 @@ export function AccountCard({
             />
           </>
         ) : (
-          <details className="border-border @container mt-4 border-t pt-3">
-            <summary className="text-primary cursor-pointer text-xs font-semibold">
-              Adjust current balance
-            </summary>
-            <BalanceAdjustmentForm
-              accountId={account.id}
-              accountName={account.name}
-              currentBalanceCentavos={balanceCentavos}
-              today={today ?? ""}
-            />
+          <details className="@container">
+            <TooltipHint label={`Edit ${account.name}`} side="left">
+              <Button asChild variant="ghost" size="icon">
+                <summary
+                  aria-label={`Edit ${account.name}`}
+                  className="absolute top-4 right-[3.75rem] cursor-pointer list-none sm:top-5 [&::-webkit-details-marker]:hidden"
+                >
+                  <Pencil className="size-4" aria-hidden="true" />
+                </summary>
+              </Button>
+            </TooltipHint>
+            <div className="border-border mt-4 grid gap-4 border-t pt-3">
+              <section aria-labelledby={`account-details-${account.id}`}>
+                <p
+                  id={`account-details-${account.id}`}
+                  className="text-muted-foreground mb-2 text-xs font-medium"
+                >
+                  Account details
+                </p>
+                <AccountForm account={account} />
+              </section>
+              <section aria-labelledby={`account-balance-${account.id}`}>
+                <p
+                  id={`account-balance-${account.id}`}
+                  className="text-muted-foreground text-xs font-medium"
+                >
+                  Current balance
+                </p>
+                <BalanceAdjustmentForm
+                  accountId={account.id}
+                  accountName={account.name}
+                  currentBalanceCentavos={balanceCentavos}
+                  today={today ?? ""}
+                />
+              </section>
+            </div>
           </details>
         )}
       </CardContent>
