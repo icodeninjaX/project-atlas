@@ -1,6 +1,6 @@
 import { Clock3, Inbox, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { QuickTaskForm } from "@/components/tasks/quick-task-form";
+import { TaskCreatePanel } from "@/components/tasks/task-create-panel";
 import { TaskActionsMenu } from "@/components/tasks/task-actions-menu";
 import { TaskEditForm } from "@/components/tasks/task-edit-form";
 import { TaskFocusMode } from "@/components/tasks/task-focus-mode";
@@ -35,9 +35,10 @@ function localDate() {
 export default async function TasksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; create?: string }>;
 }) {
-  const selected = (await searchParams).view ?? "today";
+  const params = await searchParams;
+  const selected = params.view ?? "today";
   const supabase = await createClient();
   const today = localDate();
   let tasks: Array<{
@@ -123,12 +124,13 @@ export default async function TasksPage({
       </p>
 
       <div className="mt-6 sm:mt-7">
-        <QuickTaskForm
+        <TaskCreatePanel
           defaultPriority={taskDefaults?.default_task_priority ?? "medium"}
           defaultEstimatedMinutes={
             taskDefaults?.default_task_estimated_minutes ?? null
           }
           scheduledTasks={scheduledTasks}
+          initiallyOpen={params.create === "true"}
         />
       </div>
 
@@ -160,7 +162,7 @@ export default async function TasksPage({
                 No tasks in this view.
               </p>
               <p className="text-muted-foreground mt-1 text-xs">
-                Capture one above or choose another view.
+                Use Add task above or choose another view.
               </p>
             </div>
           </div>

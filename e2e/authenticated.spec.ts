@@ -62,6 +62,7 @@ test.describe("authenticated ATLAS workflows", () => {
   test("captures and completes a task", async ({ page }) => {
     const title = `E2E task ${Date.now()}`;
     await page.goto("/tasks?view=inbox");
+    await page.getByRole("button", { name: "Add task" }).click();
     await page.getByLabel("Task title").fill(title);
     await page.getByRole("button", { name: "Add task" }).click();
     await expect(page.getByText(title)).toBeVisible();
@@ -82,6 +83,7 @@ test.describe("authenticated ATLAS workflows", () => {
     }).format(new Date(Date.now() - 24 * 60 * 60 * 1000));
 
     await page.goto("/tasks?view=today");
+    await page.getByRole("button", { name: "Add task" }).click();
     await page.getByLabel("Task title").fill(title);
     await page.getByLabel("Scheduled date").fill(yesterday);
     await page.getByRole("button", { name: "Add task" }).click();
@@ -104,6 +106,7 @@ test.describe("authenticated ATLAS workflows", () => {
     }).format(new Date());
 
     await page.goto("/tasks?view=today");
+    await page.getByRole("button", { name: "Add task" }).click();
     await page.getByLabel("Task title").fill(title);
     await page.getByLabel("Scheduled date").fill(today);
     await page.getByLabel("Exact time").fill("09:30");

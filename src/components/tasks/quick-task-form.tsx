@@ -18,10 +18,18 @@ export function QuickTaskForm({
   defaultPriority = "medium",
   defaultEstimatedMinutes = null,
   scheduledTasks = EMPTY_SCHEDULED_TASKS,
+  autoFocus = false,
+  focusRequest = 0,
+  onCancel,
+  onCreated,
 }: {
   defaultPriority?: string;
   defaultEstimatedMinutes?: number | null;
   scheduledTasks?: ScheduledTaskSlot[];
+  autoFocus?: boolean;
+  focusRequest?: number;
+  onCancel?: () => void;
+  onCreated?: () => void;
 }) {
   const [state, action, pending] = useOfflineActionState(
     "task.create",
@@ -37,33 +45,23 @@ export function QuickTaskForm({
   );
 
   useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      const target = event.target as HTMLElement;
-      if (
-        event.key.toLowerCase() === "n" &&
-        !["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) &&
-        !target.isContentEditable
-      ) {
-        event.preventDefault();
-        titleRef.current?.focus();
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+    if (focusRequest > 0) titleRef.current?.focus();
+  }, [focusRequest]);
 
   useEffect(() => {
     if (!state.message) return;
     if (state.success) {
       toast.success(state.message);
       formRef.current?.reset();
+      onCreated?.();
     } else {
       toast.error(state.message);
     }
-  }, [state]);
+  }, [onCreated, state]);
 
   return (
     <form
+      id="quick-task-form"
       ref={formRef}
       action={action}
       onReset={() => {
@@ -83,6 +81,7 @@ export function QuickTaskForm({
           </label>
           <Input
             ref={titleRef}
+            autoFocus={autoFocus}
             id="quick-task-title"
             name="title"
             required
@@ -170,13 +169,20 @@ export function QuickTaskForm({
           }}
           className="md:col-span-2 xl:col-span-6"
         />
-        <Button
-          type="submit"
-          disabled={pending}
-          className="min-h-12 self-end md:col-span-2 xl:col-span-1 xl:col-start-6 xl:row-start-1 xl:min-h-10"
-        >
-          {pending ? "Adding…" : "Add task"}
-        </Button>
+        <div className="flex items-end justify-end gap-2 md:col-span-2 xl:col-span-1 xl:col-start-6 xl:row-start-1">
+          {onCancel && (
+            <Button type="button" variant="ghost" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button
+            type="submit"
+            disabled={pending}
+            className="min-h-12 flex-1 xl:min-h-10"
+          >
+            {pending ? "Adding…" : "Add task"}
+          </Button>
+        </div>
       </div>
       <p className="text-muted-foreground mt-2 font-mono text-[10px]">
         Press N from any quiet area to focus quick capture. Exact times use

@@ -118,6 +118,7 @@ test("queues a signed-in change offline and syncs it after reconnecting", async 
 
   const title = `Offline E2E task ${Date.now()}`;
   await context.setOffline(true);
+  await page.getByRole("button", { name: "Add task" }).click();
   await page.getByLabel("Task title").fill(title);
   await page.getByRole("button", { name: "Add task" }).click();
   await expect(page.getByText(/Saved offline/)).toBeVisible();
