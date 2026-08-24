@@ -1,5 +1,3 @@
-begin;
-
 alter table public.notification_deliveries
   drop constraint notification_deliveries_notification_type_check;
 
@@ -61,5 +59,3 @@ revoke all on function public.validate_task_reminder_scheduler_secret(text)
 from public, anon, authenticated;
 grant execute on function public.validate_task_reminder_scheduler_secret(text)
 to service_role;
-
-commit;
