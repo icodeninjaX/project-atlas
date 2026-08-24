@@ -33,10 +33,24 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icons/192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/512.png", sizes: "512x512", type: "image/png" },
+      {
+        url: "/icons/atlas-system-core-192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/icons/atlas-system-core-512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
     ],
-    apple: [{ url: "/icons/180.png", sizes: "180x180", type: "image/png" }],
+    apple: [
+      {
+        url: "/icons/atlas-system-core-180.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
   },
 };
 

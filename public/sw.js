@@ -1,5 +1,5 @@
 /* Project Atlas service worker: user-scoped page caching and durable sync. */
-const VERSION = "atlas-pwa-v1";
+const VERSION = "atlas-pwa-v2";
 const CORE_CACHE = `${VERSION}-core`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const PUBLIC_CACHE = `${VERSION}-public`;
@@ -11,9 +11,9 @@ const META_STORE = "meta";
 const CORE_URLS = [
   "/offline.html",
   "/manifest.webmanifest",
-  "/icons/192.png",
-  "/icons/512.png",
-  "/icons/512-maskable.png",
+  "/icons/atlas-system-core-192.png",
+  "/icons/atlas-system-core-512.png",
+  "/icons/atlas-system-core-maskable-512.png",
 ];
 const PUBLIC_PATHS = new Set([
   "/",
@@ -331,8 +331,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title, {
       body: payload.body,
-      icon: "/icons/192.png",
-      badge: "/icons/192.png",
+      icon: "/icons/atlas-system-core-192.png",
+      badge: "/icons/atlas-system-core-192.png",
       tag: "atlas-daily-digest",
       data: { url: payload.url },
     }),

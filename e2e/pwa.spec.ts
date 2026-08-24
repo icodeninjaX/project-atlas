@@ -26,6 +26,13 @@ test("publishes valid mobile installation metadata", async ({
     .locator('link[rel="manifest"]')
     .getAttribute("href");
   expect(manifestHref).toBe("/manifest.webmanifest");
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
+    "href",
+    "/icons/atlas-system-core-180.png",
+  );
+  await expect(
+    page.locator('link[rel="icon"][sizes="192x192"]'),
+  ).toHaveAttribute("href", "/icons/atlas-system-core-192.png");
 
   const response = await request.get(manifestHref!);
   expect(response.ok()).toBe(true);
@@ -40,8 +47,15 @@ test("publishes valid mobile installation metadata", async ({
   expect(manifest.start_url).toBe("/dashboard");
   expect(manifest.icons).toEqual(
     expect.arrayContaining([
-      expect.objectContaining({ sizes: "192x192" }),
-      expect.objectContaining({ sizes: "512x512", purpose: "maskable" }),
+      expect.objectContaining({
+        src: "/icons/atlas-system-core-192.png",
+        sizes: "192x192",
+      }),
+      expect.objectContaining({
+        src: "/icons/atlas-system-core-maskable-512.png",
+        sizes: "512x512",
+        purpose: "maskable",
+      }),
     ]),
   );
 
