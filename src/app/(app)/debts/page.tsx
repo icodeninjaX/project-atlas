@@ -1,8 +1,8 @@
 import { ArrowRight, Landmark } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+import { DebtCreatePanel } from "@/components/debts/debt-create-panel";
 import { DebtForm } from "@/components/debts/debt-form";
-import { PageHeading } from "@/components/shared/page-heading";
 import { TooltipHint } from "@/components/ui/tooltip";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Card, CardContent } from "@/components/ui/card";
@@ -55,32 +55,44 @@ export default async function DebtsPage({
 
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
-      <PageHeading
-        eyebrow="Recovery plan"
-        title="Debts"
-        description="Compare strategies with the same facts. Projections are estimates, not guarantees."
+      <p className="text-primary mb-2 font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
+        Recovery plan
+      </p>
+      <DebtCreatePanel
+        heading={
+          <h1 className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+            Debts
+          </h1>
+        }
+        description={
+          <p className="text-muted-foreground mt-3 max-w-2xl text-sm leading-6">
+            Compare strategies with the same facts. Projections are estimates,
+            not guarantees.
+          </p>
+        }
+        summary={
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            <Card>
+              <CardContent>
+                <p className="text-muted-foreground text-xs">Total remaining</p>
+                <p className="mt-3 font-mono text-3xl font-semibold">
+                  <SensitiveValue>{formatCentavos(total)}</SensitiveValue>
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent>
+                <p className="text-muted-foreground text-xs">
+                  Minimum payments
+                </p>
+                <p className="mt-3 font-mono text-3xl font-semibold">
+                  <SensitiveValue>{formatCentavos(minimums)}</SensitiveValue>
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        }
       />
-      <div className="mt-8 grid gap-3 sm:grid-cols-2">
-        <Card>
-          <CardContent>
-            <p className="text-muted-foreground text-xs">Total remaining</p>
-            <p className="mt-3 font-mono text-3xl font-semibold">
-              <SensitiveValue>{formatCentavos(total)}</SensitiveValue>
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent>
-            <p className="text-muted-foreground text-xs">Minimum payments</p>
-            <p className="mt-3 font-mono text-3xl font-semibold">
-              <SensitiveValue>{formatCentavos(minimums)}</SensitiveValue>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="mt-4">
-        <DebtForm />
-      </div>
       <nav
         aria-label="Debt payoff strategy"
         className="border-border mt-6 flex [scrollbar-width:none] gap-1 overflow-x-auto border-b [&::-webkit-scrollbar]:hidden"

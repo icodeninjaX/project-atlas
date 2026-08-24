@@ -11,6 +11,9 @@ const initial: DebtActionState = { success: false, message: "" };
 
 export function DebtForm({
   debt,
+  autoFocus = false,
+  onCancel,
+  onCreated,
 }: {
   debt?: {
     id: string;
@@ -26,6 +29,9 @@ export function DebtForm({
     priority: number;
     notes: string | null;
   };
+  autoFocus?: boolean;
+  onCancel?: () => void;
+  onCreated?: () => void;
 }) {
   const [state, action, pending] = useOfflineActionState(
     debt ? "debt.update" : "debt.create",
@@ -34,13 +40,18 @@ export function DebtForm({
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (!state.message) return;
-    if (state.success) toast.success(state.message);
-    else toast.error(state.message);
-    if (state.success) form.current?.reset();
-  }, [state]);
+    if (state.success) {
+      toast.success(state.message);
+      form.current?.reset();
+      onCreated?.();
+    } else {
+      toast.error(state.message);
+    }
+  }, [onCreated, state]);
 
   return (
     <form
+      id={debt ? undefined : "debt-create-form"}
       ref={form}
       action={action}
       className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-2 lg:grid-cols-4"
@@ -50,6 +61,7 @@ export function DebtForm({
       <label className="text-muted-foreground text-xs">
         Creditor name
         <Input
+          autoFocus={autoFocus}
           name="creditorName"
           required
           maxLength={160}
@@ -175,6 +187,11 @@ export function DebtForm({
             className="mt-1.5"
           />
         </label>
+        {onCancel ? (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+        ) : null}
         <Button className="shrink-0" type="submit" disabled={pending}>
           {pending ? "Saving…" : debt ? "Save changes" : "Add debt"}
         </Button>

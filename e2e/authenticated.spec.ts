@@ -47,6 +47,7 @@ test.describe("authenticated ATLAS workflows", () => {
   test("adds a debt and records a payment", async ({ page }) => {
     const unique = Date.now();
     await page.goto("/debts");
+    await page.getByRole("button", { name: "Add debt" }).click();
     await page.getByLabel("Creditor name").fill(`E2E debt ${unique}`);
     await page.getByLabel("Original balance in pesos").fill("1000.00");
     await page.getByLabel("Minimum payment in pesos").fill("100.00");
