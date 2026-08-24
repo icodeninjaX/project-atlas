@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { QuickTaskForm } from "@/components/tasks/quick-task-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,11 +10,15 @@ import {
 } from "@/lib/tasks/task-time";
 
 export function TaskCreatePanel({
+  heading,
+  description,
   defaultPriority = "medium",
   defaultEstimatedMinutes = null,
   scheduledTasks = EMPTY_SCHEDULED_TASKS,
   initiallyOpen = false,
 }: {
+  heading: ReactNode;
+  description: ReactNode;
   defaultPriority?: string;
   defaultEstimatedMinutes?: number | null;
   scheduledTasks?: ScheduledTaskSlot[];
@@ -42,29 +46,37 @@ export function TaskCreatePanel({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  if (!isOpen) {
-    return (
-      <Button
-        type="button"
-        aria-expanded="false"
-        aria-controls="quick-task-form"
-        onClick={() => setIsOpen(true)}
-      >
-        <Plus className="size-4" />
-        Add task
-      </Button>
-    );
-  }
-
   return (
-    <QuickTaskForm
-      defaultPriority={defaultPriority}
-      defaultEstimatedMinutes={defaultEstimatedMinutes}
-      scheduledTasks={scheduledTasks}
-      autoFocus
-      focusRequest={focusRequest}
-      onCancel={closeForm}
-      onCreated={closeForm}
-    />
+    <>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        {heading}
+        {!isOpen ? (
+          <Button
+            type="button"
+            className="shrink-0"
+            aria-expanded="false"
+            aria-controls="quick-task-form"
+            onClick={() => setIsOpen(true)}
+          >
+            <Plus className="size-4" />
+            Add task
+          </Button>
+        ) : null}
+      </div>
+      {description}
+      {isOpen ? (
+        <div className="mt-6 sm:mt-7">
+          <QuickTaskForm
+            defaultPriority={defaultPriority}
+            defaultEstimatedMinutes={defaultEstimatedMinutes}
+            scheduledTasks={scheduledTasks}
+            autoFocus
+            focusRequest={focusRequest}
+            onCancel={closeForm}
+            onCreated={closeForm}
+          />
+        </div>
+      ) : null}
+    </>
   );
 }

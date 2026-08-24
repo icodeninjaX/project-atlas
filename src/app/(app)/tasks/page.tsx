@@ -118,21 +118,22 @@ export default async function TasksPage({
       <p className="text-primary font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
         {manilaDateLabel(new Date())}
       </p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">Tasks</h1>
-      <p className="text-muted-foreground mt-2 text-sm">
-        Capture quickly. Keep today small enough to finish.
-      </p>
-
-      <div className="mt-6 sm:mt-7">
-        <TaskCreatePanel
-          defaultPriority={taskDefaults?.default_task_priority ?? "medium"}
-          defaultEstimatedMinutes={
-            taskDefaults?.default_task_estimated_minutes ?? null
-          }
-          scheduledTasks={scheduledTasks}
-          initiallyOpen={params.create === "true"}
-        />
-      </div>
+      <TaskCreatePanel
+        heading={
+          <h1 className="text-3xl font-semibold tracking-[-0.04em]">Tasks</h1>
+        }
+        description={
+          <p className="text-muted-foreground mt-2 text-sm">
+            Capture quickly. Keep today small enough to finish.
+          </p>
+        }
+        defaultPriority={taskDefaults?.default_task_priority ?? "medium"}
+        defaultEstimatedMinutes={
+          taskDefaults?.default_task_estimated_minutes ?? null
+        }
+        scheduledTasks={scheduledTasks}
+        initiallyOpen={params.create === "true"}
+      />
 
       <nav
         aria-label="Task views"

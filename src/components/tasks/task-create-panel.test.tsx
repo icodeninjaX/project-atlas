@@ -4,26 +4,40 @@ import { TaskCreatePanel } from "./task-create-panel";
 
 afterEach(cleanup);
 
+function renderPanel({ initiallyOpen = false } = {}) {
+  return render(
+    <TaskCreatePanel
+      heading={<h1>Tasks</h1>}
+      description={<p>Capture quickly.</p>}
+      initiallyOpen={initiallyOpen}
+    />,
+  );
+}
+
 describe("TaskCreatePanel", () => {
   it("keeps the task form collapsed until Add task is selected", () => {
-    render(<TaskCreatePanel />);
+    renderPanel();
 
     expect(screen.queryByLabelText("Task title")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Add task" }));
+    const heading = screen.getByRole("heading", { name: "Tasks" });
+    const addTaskButton = screen.getByRole("button", { name: "Add task" });
+
+    expect(heading.parentElement).toContainElement(addTaskButton);
+    fireEvent.click(addTaskButton);
 
     expect(screen.getByLabelText("Task title")).toHaveFocus();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
   });
 
   it("opens immediately when requested by a deep link", () => {
-    render(<TaskCreatePanel initiallyOpen />);
+    renderPanel({ initiallyOpen: true });
 
     expect(screen.getByLabelText("Task title")).toBeVisible();
   });
 
   it("opens with the N keyboard shortcut", () => {
-    render(<TaskCreatePanel />);
+    renderPanel();
 
     fireEvent.keyDown(window, { key: "n" });
 
@@ -31,7 +45,7 @@ describe("TaskCreatePanel", () => {
   });
 
   it("collapses when Cancel is selected", () => {
-    render(<TaskCreatePanel initiallyOpen />);
+    renderPanel({ initiallyOpen: true });
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 

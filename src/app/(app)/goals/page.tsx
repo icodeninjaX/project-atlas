@@ -1,9 +1,8 @@
 import { Goal } from "lucide-react";
 import { GoalCardHeader } from "@/components/goals/goal-card-header";
-import { GoalForm } from "@/components/goals/goal-form";
+import { GoalCreatePanel } from "@/components/goals/goal-create-panel";
 import { GoalProgressSlider } from "@/components/goals/goal-progress-slider";
 import { MilestoneList } from "@/components/goals/milestone-list";
-import { PageHeading } from "@/components/shared/page-heading";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 
@@ -39,14 +38,22 @@ export default async function GoalsPage() {
   }
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
-      <PageHeading
-        eyebrow="Direction"
-        title="Goals"
-        description="Manual progress and milestone completion stay separate, so neither hides the other."
+      <p className="text-primary mb-2 font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
+        Direction
+      </p>
+      <GoalCreatePanel
+        heading={
+          <h1 className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+            Goals
+          </h1>
+        }
+        description={
+          <p className="text-muted-foreground mt-3 max-w-2xl text-sm leading-6">
+            Manual progress and milestone completion stay separate, so neither
+            hides the other.
+          </p>
+        }
       />
-      <div className="mt-8">
-        <GoalForm />
-      </div>
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         {goals.length === 0 ? (
           <div className="border-border grid min-h-60 place-items-center rounded-2xl border border-dashed text-center lg:col-span-2">
