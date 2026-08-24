@@ -46,12 +46,12 @@ export function InstallAppButton() {
   if (installed || (!prompt && !isIOS)) return null;
 
   return (
-    <TooltipHint label="Install Project Atlas">
+    <TooltipHint label="Install ATLAS">
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        aria-label="Install Project Atlas"
+        aria-label="Install ATLAS"
         onClick={async () => {
           if (prompt) {
             await prompt.prompt();
@@ -61,7 +61,7 @@ export function InstallAppButton() {
             return;
           }
           toast.info(
-            "In Safari, tap Share, then choose Add to Home Screen to install Atlas.",
+            "In Safari, tap Share, then choose Add to Home Screen to install ATLAS.",
             { duration: 7000 },
           );
         }}

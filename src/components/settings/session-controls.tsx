@@ -22,7 +22,7 @@ export function SessionControls() {
           This device
         </p>
         <p className="text-muted-foreground mt-1 text-xs leading-5">
-          Atlas checks for unsynced offline changes before ending this session.
+          ATLAS checks for unsynced offline changes before ending this session.
         </p>
         <div className="border-border mt-3 rounded-xl border p-1">
           <SignOutButton showLabel />

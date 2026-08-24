@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Project Atlas",
-    short_name: "Atlas",
+    name: "ATLAS",
+    short_name: "ATLAS",
     description:
       "Your private personal operating system for money, work, goals, and weekly direction.",
     start_url: "/dashboard",

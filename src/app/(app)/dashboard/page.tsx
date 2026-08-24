@@ -176,8 +176,8 @@ export default async function DashboardPage() {
           </h1>
           <p className="text-muted-foreground mt-2 text-sm">
             {dashboard.priorities.length
-              ? "Atlas ranked these from current deadlines and commitments."
-              : "Add what matters and Atlas will surface the next useful move."}
+              ? "ATLAS ranked these from current deadlines and commitments."
+              : "Add what matters and ATLAS will surface the next useful move."}
           </p>
         </div>
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
@@ -279,7 +279,7 @@ export default async function DashboardPage() {
                     : "Review when the week closes"}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs leading-5">
-                  Atlas uses Monday through Sunday and keeps factual metrics
+                  ATLAS uses Monday through Sunday and keeps factual metrics
                   beside your reflection.
                 </p>
                 <Link

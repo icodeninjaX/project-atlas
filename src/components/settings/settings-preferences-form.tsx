@@ -60,7 +60,7 @@ export function SettingsPreferencesForm({
           defaultValue={displayName}
           maxLength={80}
           autoComplete="name"
-          placeholder="What should Atlas call you?"
+          placeholder="What should ATLAS call you?"
           aria-describedby="display-name-help"
         />
         <p id="display-name-help" className="text-muted-foreground text-xs">
@@ -105,7 +105,7 @@ export function SettingsPreferencesForm({
       <fieldset className="border-border border-t pt-5">
         <legend className="text-sm font-medium">Everyday defaults</legend>
         <p className="text-muted-foreground mt-1 text-xs leading-5">
-          Choose where Atlas opens and prefill the fields you use most often.
+          Choose where ATLAS opens and prefill the fields you use most often.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">

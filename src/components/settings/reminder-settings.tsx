@@ -116,10 +116,10 @@ export function ReminderSettings({
             ) : (
               <BellOff className="text-muted-foreground size-4" />
             )}
-            Daily Atlas digest
+            Daily ATLAS digest
           </p>
           <p className="text-muted-foreground mt-1 max-w-lg text-xs leading-5">
-            One concise notification at 8:00 AM Asia/Manila. Atlas skips it when
+            One concise notification at 8:00 AM Asia/Manila. ATLAS skips it when
             there is nothing actionable or the send time is quiet.
           </p>
         </div>

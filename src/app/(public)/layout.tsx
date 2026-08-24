@@ -15,7 +15,7 @@ export default function PublicLayout({
           className="focus-visible:ring-ring flex items-center gap-3 rounded-xl focus-visible:ring-2 focus-visible:outline-none"
         >
           <AtlasMark />
-          <span className="text-sm font-semibold">Project Atlas</span>
+          <span className="text-sm font-semibold">ATLAS</span>
         </Link>
         <div className="flex items-center gap-1">
           <ThemeToggle />

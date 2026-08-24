@@ -42,7 +42,7 @@ export function SearchInput({
       className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-[minmax(0,1fr)_auto]"
     >
       <label className="text-foreground text-sm font-semibold">
-        Search Atlas
+        Search ATLAS
         <span className="relative mt-2 block">
           <Search className="text-muted-foreground pointer-events-none absolute top-3.5 left-3.5 size-4" />
           <Input

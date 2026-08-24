@@ -40,7 +40,7 @@ export function DeleteArchivedAccountForm({
       >
         <input type="hidden" name="accountId" value={accountId} />
         <p className="text-muted-foreground text-xs leading-5">
-          This cannot be undone. Atlas will only delete an archived account that
+          This cannot be undone. ATLAS will only delete an archived account that
           has no transactions, transfers, or balance adjustments.
         </p>
         <label className="text-muted-foreground text-xs">

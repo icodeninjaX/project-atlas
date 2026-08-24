@@ -1,4 +1,4 @@
-# Project Atlas implementation plan
+# ATLAS implementation plan
 
 Status legend: planned, in progress, complete, blocked.
 
@@ -7,7 +7,7 @@ Status legend: planned, in progress, complete, blocked.
 Status: complete
 
 - Scaffold Next.js 16 App Router with strict TypeScript, Tailwind CSS v4, ESLint, Prettier, Vitest, and Playwright.
-- Establish the Atlas design system, responsive application shell, light/dark themes, loading/error states, health endpoint, and environment validation.
+- Establish the ATLAS design system, responsive application shell, light/dark themes, loading/error states, health endpoint, and environment validation.
 - Add lazy browser/server Supabase clients so builds do not require live credentials.
 - Validate with lint, type checking, unit tests, and a production build.
 

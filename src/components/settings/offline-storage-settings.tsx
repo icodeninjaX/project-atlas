@@ -80,7 +80,7 @@ export function OfflineStorageSettings() {
           onClick={() =>
             startSync(async () => {
               await syncNow();
-              toast.success("Atlas sync was requested.");
+              toast.success("ATLAS sync was requested.");
             })
           }
         >

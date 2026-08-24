@@ -1,4 +1,4 @@
-# Atlas logo concept prompts
+# ATLAS logo concept prompts
 
 Generated with the built-in `image_gen` tool on 2026-08-24.
 
@@ -12,12 +12,12 @@ Generated with the built-in `image_gen` tool on 2026-08-24.
 ## Shared brand brief
 
 - Use case: `logo-brand`
-- Asset type: symbol-only app logo for Project Atlas
+- Asset type: symbol-only app logo for ATLAS
 - Product: a private personal operating system unifying money, debts, tasks,
   goals, career, and weekly direction into one clear daily route
 - Style: precise vector-like mark, minimal flat geometry, strong silhouette,
   readable at 16 px, 32 px, and app-icon scale
-- Palette: Atlas primary blue `#2867E8` on a genuinely transparent background
+- Palette: ATLAS primary blue `#2867E8` on a genuinely transparent background
 - Constraints: original symbol only; one-color capable; no text, letters, `A`,
   wordmark, tagline, mockup, container tile, 3D, shadows, watermark, or fine
   details

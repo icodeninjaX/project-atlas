@@ -1,8 +1,8 @@
-# Project Atlas
+# ATLAS
 
 **Your personal operating system.**
 
-Project Atlas is a private, Philippines-first life-management application for seeing money, debts, tasks, goals, career applications, and weekly reflection in one daily route. It stores pesos as integer centavos, displays dates in Asia/Manila, and treats Monday through Sunday as the default review week.
+ATLAS is a private, Philippines-first life-management application for seeing money, debts, tasks, goals, career applications, and weekly reflection in one daily route. It stores pesos as integer centavos, displays dates in Asia/Manila, and treats Monday through Sunday as the default review week.
 
 ## Features
 
@@ -96,7 +96,7 @@ The application targets Vercel and Supabase. Apply the database migration first,
 
 ```text
 src/app/          App Router pages, layouts, route handlers, and errors
-src/components/   Atlas, module, shared, and shadcn-style UI components
+src/components/   ATLAS, module, shared, and shadcn-style UI components
 src/lib/          auth, Supabase, validation, calculations, and mutations
 src/test/         Vitest environment
 supabase/         migration, seed, and pgTAP tests

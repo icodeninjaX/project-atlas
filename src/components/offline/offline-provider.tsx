@@ -90,7 +90,7 @@ export function OfflineProvider({
 
   const syncNow = useCallback(async () => {
     if (!navigator.onLine) {
-      toast.error("Connect to the internet to sync Atlas.");
+      toast.error("Connect to the internet to sync ATLAS.");
       return;
     }
     await retryBlockedMutations(userId);
@@ -115,12 +115,12 @@ export function OfflineProvider({
     }
     const registration = await navigator.serviceWorker.ready;
     const worker = navigator.serviceWorker.controller ?? registration.active;
-    if (!worker) throw new Error("Atlas storage is not ready yet.");
+    if (!worker) throw new Error("ATLAS storage is not ready yet.");
     await new Promise<void>((resolve, reject) => {
       const channel = new MessageChannel();
       const timeout = window.setTimeout(() => {
         channel.port1.close();
-        reject(new Error("Atlas storage did not respond. Try again."));
+        reject(new Error("ATLAS storage did not respond. Try again."));
       }, 3000);
       channel.port1.onmessage = () => {
         window.clearTimeout(timeout);

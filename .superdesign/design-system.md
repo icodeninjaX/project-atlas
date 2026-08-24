@@ -1,8 +1,8 @@
-# Project Atlas Design System
+# ATLAS Design System
 
 ## Product context
 
-Project Atlas is a private personal operating system that joins money, debts, tasks, goals, career activity, and weekly reviews into one daily route. Its primary job is to reduce cognitive load: show the user's present position, highlight the next useful action, and keep every value traceable. Philippine-peso amounts and Manila dates are first-class content.
+ATLAS is a private personal operating system that joins money, debts, tasks, goals, career activity, and weekly reviews into one daily route. Its primary job is to reduce cognitive load: show the user's present position, highlight the next useful action, and keep every value traceable. Philippine-peso amounts and Manila dates are first-class content.
 
 Primary surfaces:
 - Public landing and authentication.
@@ -12,7 +12,7 @@ Primary surfaces:
 
 ## Visual foundation
 
-Preserve the existing Atlas identity. The product is calm, precise, restrained, and information-forward—not ornamental.
+Preserve the existing ATLAS identity. The product is calm, precise, restrained, and information-forward—not ornamental.
 
 - UI font: Geist Sans (`--font-geist-sans`).
 - Data font: Geist Mono (`--font-geist-mono`) for money, dates, status labels, counts, and metadata.

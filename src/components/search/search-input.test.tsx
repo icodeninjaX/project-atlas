@@ -16,14 +16,14 @@ describe("SearchInput", () => {
   it("names the search field and groups the optional filters", () => {
     render(<SearchInput defaultValue="portfolio" />);
 
-    expect(screen.getByRole("searchbox", { name: "Search Atlas" })).toHaveValue(
+    expect(screen.getByRole("searchbox", { name: "Search ATLAS" })).toHaveValue(
       "portfolio",
     );
     expect(
       screen.getByRole("group", { name: "Narrow results" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("searchbox", { name: "Search Atlas" }),
+      screen.getByRole("searchbox", { name: "Search ATLAS" }),
     ).toHaveAttribute("minlength", "2");
   });
 

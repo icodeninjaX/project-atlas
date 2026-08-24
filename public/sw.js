@@ -1,4 +1,4 @@
-/* Project Atlas service worker: user-scoped page caching and durable sync. */
+/* ATLAS service worker: user-scoped page caching and durable sync. */
 const VERSION = "atlas-pwa-v2";
 const CORE_CACHE = `${VERSION}-core`;
 const ASSET_CACHE = `${VERSION}-assets`;
@@ -318,8 +318,8 @@ self.addEventListener("sync", (event) => {
 
 self.addEventListener("push", (event) => {
   const fallback = {
-    title: "Project Atlas",
-    body: "You have an Atlas reminder.",
+    title: "ATLAS",
+    body: "You have an ATLAS reminder.",
     url: "/dashboard",
   };
   let payload = fallback;

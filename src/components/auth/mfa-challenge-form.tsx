@@ -62,7 +62,7 @@ export function MfaChallengeForm({ destination }: { destination: string }) {
     >
       <div className="bg-primary/10 text-primary flex items-center gap-3 rounded-xl px-3 py-3 text-xs leading-5">
         <KeyRound className="size-4 shrink-0" />
-        Open your authenticator app and enter the code for Project Atlas.
+        Open your authenticator app and enter the code for ATLAS.
       </div>
       <div className="space-y-1.5">
         <label htmlFor="mfa-code" className="text-sm font-medium">

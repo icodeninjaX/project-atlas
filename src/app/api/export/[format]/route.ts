@@ -120,7 +120,7 @@ const jsonTables = [
 ] as const;
 
 function filename(suffix: string) {
-  return `project-atlas-${suffix}-${new Date().toISOString().slice(0, 10)}`;
+  return `atlas-${suffix}-${new Date().toISOString().slice(0, 10)}`;
 }
 
 export async function GET(

@@ -137,7 +137,7 @@ export default async function SettingsPage() {
           { data: [] },
         ];
 
-  const email = userResult.data.user?.email ?? "Atlas account";
+  const email = userResult.data.user?.email ?? "ATLAS account";
   const displayName = profileResult.data?.display_name ?? "";
   const accountName = displayName || email;
   const debtStrategy = preferencesResult.data?.debt_strategy ?? "avalanche";
@@ -149,9 +149,9 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-[1120px] p-4 sm:p-6 lg:p-8">
       <PageHeading
-        eyebrow="Your Atlas"
+        eyebrow="Your ATLAS"
         title="Settings"
-        description="Shape your defaults, choose how Atlas looks, and manage your account data in one place."
+        description="Shape your defaults, choose how ATLAS looks, and manage your account data in one place."
       />
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -167,7 +167,7 @@ export default async function SettingsPage() {
                     Profile and planning defaults
                   </CardTitle>
                   <p className="text-muted-foreground mt-1 text-xs leading-5">
-                    Personalize your header and the payoff plan Atlas opens
+                    Personalize your header and the payoff plan ATLAS opens
                     first.
                   </p>
                 </div>
@@ -194,7 +194,7 @@ export default async function SettingsPage() {
                 <div className="flex items-center gap-2">
                   <LockKeyhole className="text-muted-foreground size-3.5" />
                   <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                    Atlas regional defaults
+                    ATLAS regional defaults
                   </p>
                 </div>
                 <dl className="mt-3 grid gap-2 sm:grid-cols-3">
@@ -346,7 +346,7 @@ export default async function SettingsPage() {
                   </CardTitle>
                   <p className="text-muted-foreground mt-1 text-xs leading-5">
                     Review your audit trail or take a portable copy of your
-                    Atlas records.
+                    ATLAS records.
                   </p>
                 </div>
               </div>
@@ -376,7 +376,7 @@ export default async function SettingsPage() {
               <div className="border-border border-t pt-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold">Full Atlas archive</p>
+                    <p className="text-sm font-semibold">Full ATLAS archive</p>
                     <p className="text-muted-foreground mt-1 max-w-lg text-xs leading-5">
                       A single JSON file with all supported records. Auth data,
                       passwords, and internal credentials are never included.
@@ -462,7 +462,7 @@ export default async function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-1">
               <ShortcutRow label="Capture a task" keys="N" />
-              <ShortcutRow label="Search Atlas" keys="/" />
+              <ShortcutRow label="Search ATLAS" keys="/" />
               <ShortcutRow label="Close an overlay" keys="Esc" />
               <p className="text-muted-foreground border-border mt-3 border-t pt-3 text-xs leading-5">
                 Single-key shortcuts pause while you are typing in a field.

@@ -66,7 +66,7 @@ export default async function SearchPage({
   return (
     <div className="mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
       <p className="text-primary font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
-        Across Atlas
+        Across ATLAS
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">Search</h1>
       <p className="text-muted-foreground mt-2 text-sm">

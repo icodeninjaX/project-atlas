@@ -7,12 +7,12 @@ declare
   utilities_category uuid;
 begin
   if seed_user is null then
-    raise notice 'Project Atlas seed skipped: create a development auth user first.';
+    raise notice 'ATLAS seed skipped: create a development auth user first.';
     return;
   end if;
 
   update public.profiles
-  set display_name = coalesce(display_name, 'Atlas Demo'),
+  set display_name = coalesce(display_name, 'ATLAS Demo'),
       monthly_net_income_centavos = 1900000,
       next_payday = current_date + 7,
       onboarding_completed = true

@@ -109,7 +109,7 @@ describe("shared validation schemas", () => {
 
   it("keeps onboarding balances as integer centavos", () => {
     const result = onboardingSchema.safeParse({
-      displayName: "Atlas user",
+      displayName: "ATLAS user",
       currentCashCentavos: 250_000,
       monthlyNetIncomeCentavos: 1_900_000,
       nextPayday: "2026-07-31",

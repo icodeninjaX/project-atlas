@@ -23,10 +23,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  applicationName: "Project Atlas",
+  applicationName: "ATLAS",
   title: {
-    default: "Project Atlas",
-    template: "%s · Project Atlas",
+    default: "ATLAS",
+    template: "%s · ATLAS",
   },
   description:
     "A private personal operating system for money, work, goals, and weekly direction.",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Atlas",
+    title: "ATLAS",
   },
   icons: {
     icon: [
@@ -81,7 +81,7 @@ export default function RootLayout({
 
 ## Public layout
 - Path: `src/app/(public)/layout.tsx`
-- Description: Public-site header with Atlas identity, theme toggle, and login link.
+- Description: Public-site header with ATLAS identity, theme toggle, and login link.
 
 ```tsx
 import Link from "next/link";
@@ -101,7 +101,7 @@ export default function PublicLayout({
           className="focus-visible:ring-ring flex items-center gap-3 rounded-xl focus-visible:ring-2 focus-visible:outline-none"
         >
           <AtlasMark />
-          <span className="text-sm font-semibold">Project Atlas</span>
+          <span className="text-sm font-semibold">ATLAS</span>
         </Link>
         <div className="flex items-center gap-1">
           <ThemeToggle />
@@ -121,7 +121,7 @@ export default function PublicLayout({
 
 ## Authenticated layout
 - Path: `src/app/(app)/layout.tsx`
-- Description: Authenticated route guard and shared Atlas application shell/header.
+- Description: Authenticated route guard and shared ATLAS application shell/header.
 
 ```tsx
 import { redirect } from "next/navigation";
@@ -255,7 +255,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           <AtlasMark />
           <div>
-            <p className="text-sm font-semibold">Project Atlas</p>
+            <p className="text-sm font-semibold">ATLAS</p>
             <p className="text-muted-foreground text-[11px]">
               Personal operating system
             </p>
@@ -405,7 +405,7 @@ export function AppHeader({ displayName }: { displayName?: string | null }) {
       <div>
         <p className="text-muted-foreground text-xs">Signed in as</p>
         <p className="mt-0.5 text-sm font-semibold">
-          {displayName || "Atlas user"}
+          {displayName || "ATLAS user"}
         </p>
       </div>
       <div className="flex items-center gap-1">
@@ -432,7 +432,7 @@ export function AppHeader({ displayName }: { displayName?: string | null }) {
 
 ## AtlasMark
 - Path: `src/components/atlas/atlas-mark.tsx`
-- Description: Code-rendered Atlas brand mark used in public and desktop application chrome.
+- Description: Code-rendered ATLAS brand mark used in public and desktop application chrome.
 
 ```tsx
 import { cn } from "@/lib/utils";

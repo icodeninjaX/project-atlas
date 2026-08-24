@@ -18,10 +18,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  applicationName: "Project Atlas",
+  applicationName: "ATLAS",
   title: {
-    default: "Project Atlas",
-    template: "%s · Project Atlas",
+    default: "ATLAS",
+    template: "%s · ATLAS",
   },
   description:
     "A private personal operating system for money, work, goals, and weekly direction.",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Atlas",
+    title: "ATLAS",
   },
   icons: {
     icon: [

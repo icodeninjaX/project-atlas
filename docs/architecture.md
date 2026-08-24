@@ -1,8 +1,8 @@
-# Project Atlas architecture
+# ATLAS architecture
 
 ## Product boundary
 
-Project Atlas is a private, single-user-per-account personal operating system. The MVP combines daily planning, money, debt, goals, career applications, weekly reflection, search, export, and activity history. AI, CRM, journals, knowledge, calendar sync, habits, scoring, file attachments, and automations remain future modules.
+ATLAS is a private, single-user-per-account personal operating system. The MVP combines daily planning, money, debt, goals, career applications, weekly reflection, search, export, and activity history. AI, CRM, journals, knowledge, calendar sync, habits, scoring, file attachments, and automations remain future modules.
 
 ## Application shape
 
@@ -40,7 +40,7 @@ Service-role and OpenAI keys are server-only and optional during builds. The ser
 
 ## Design system
 
-Project Atlas uses map and navigation language as functional information architecture.
+ATLAS uses map and navigation language as functional information architecture.
 
 - Ink: `#070A0F`
 - Charcoal: `#0E131C`

@@ -23,7 +23,7 @@ export default async function LoginPage({
       description="Log in to see today’s priorities and the numbers behind them."
       footer={
         <>
-          New to Atlas?{" "}
+          New to ATLAS?{" "}
           <Link
             href="/signup"
             className="text-primary font-medium hover:underline"

@@ -29,7 +29,7 @@ export default async function MfaPage({
     <AuthCard
       eyebrow="Second step"
       title="Verify it’s you."
-      description="Your password was accepted. Complete the authenticator step to open your private Atlas workspace."
+      description="Your password was accepted. Complete the authenticator step to open your private ATLAS workspace."
     >
       <MfaChallengeForm destination={destination} />
     </AuthCard>

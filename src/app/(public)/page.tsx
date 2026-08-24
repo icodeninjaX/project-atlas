@@ -43,13 +43,13 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="text-muted-foreground mt-7 max-w-lg text-base leading-7 text-pretty sm:text-lg">
-              Atlas brings your money, debts, tasks, goals, and career into one
+              ATLAS brings your money, debts, tasks, goals, and career into one
               clear daily route—built for real life in Philippine pesos.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link href="/signup">
-                  Start your Atlas
+                  Start your ATLAS
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>

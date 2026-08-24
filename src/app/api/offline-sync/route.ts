@@ -234,7 +234,7 @@ async function processMutation(
     return {
       id: mutation.id,
       success: false,
-      message: "Atlas could not reserve this change for syncing.",
+      message: "ATLAS could not reserve this change for syncing.",
       retryable: true,
     };
   }

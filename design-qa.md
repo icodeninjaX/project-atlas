@@ -31,8 +31,8 @@ No actionable P0, P1, or P2 findings remain after the second visual pass.
 
 - Fonts and typography: the implementation retains Geist, the mono uppercase next-action label, bold company/stage hierarchy, readable 14–20 px mobile text, and restrained muted metadata. Long role and location values truncate without overlapping controls.
 - Spacing and layout rhythm: the card follows the selected record layout—status/date header, identity block, blue-rule next action, full-width stage selector, and divided secondary actions. The implementation is intentionally slightly taller than the generated target to preserve 44 px touch targets and real saved content.
-- Colors and visual tokens: the implementation uses Atlas `background`, `card`, `border`, `muted-foreground`, `primary`, and semantic destructive tokens. Blue is reserved for the record rule, due state, icons, and actions.
-- Image quality and asset fidelity: the card has no raster or illustrative assets. Building, location, calendar, pencil, external-link, and drag affordances use the existing Lucide outline family, which matches the selected concept and the rest of Atlas. No custom SVG, CSS art, emoji, or placeholder asset was introduced.
+- Colors and visual tokens: the implementation uses ATLAS `background`, `card`, `border`, `muted-foreground`, `primary`, and semantic destructive tokens. Blue is reserved for the record rule, due state, icons, and actions.
+- Image quality and asset fidelity: the card has no raster or illustrative assets. Building, location, calendar, pencil, external-link, and drag affordances use the existing Lucide outline family, which matches the selected concept and the rest of ATLAS. No custom SVG, CSS art, emoji, or placeholder asset was introduced.
 - Copy and content: company, role, stage, application date, location/setup, next action, due state, edit action, and optional job-post action all use live record data. The native stage control displays its actual current value instead of the concept's placeholder copy.
 - Responsiveness and accessibility: the mobile column shell is visually removed while its labelled region remains semantic. Cards remain full-width at 360 px and 390 px, interactive controls have at least 44 px touch height, focus rings remain visible, and desktop retains its original compact columns and drag affordance.
 
@@ -61,7 +61,7 @@ No actionable P0, P1, or P2 findings remain after the second visual pass.
 
 ### Source and rendered evidence
 
-- Selected Atlas form reference:
+- Selected ATLAS form reference:
   - `C:\Users\kdv06\.codex\visualizations\2026\08\24\01a03197-5ea8-7fe1-8380-507ca73421a2\mobile-application-create-form-reference.png`
 - Captured pre-fix edit flow:
   - `C:\Users\kdv06\.codex\visualizations\2026\08\24\01a03197-5ea8-7fe1-8380-507ca73421a2\02-mobile-kanban-edit-open.png`
@@ -89,9 +89,9 @@ No actionable P0, P1, or P2 findings remain after the second visual pass.
 
 No actionable P0, P1, or P2 findings remain after the editor refinement.
 
-- Fonts and typography: the editor uses the same Atlas heading, mono eyebrow, 12 px labels, muted descriptions, and 14 px input text as the selected form reference. Labels stay visible after values are populated.
+- Fonts and typography: the editor uses the same ATLAS heading, mono eyebrow, 12 px labels, muted descriptions, and 14 px input text as the selected form reference. Labels stay visible after values are populated.
 - Spacing and layout rhythm: mobile fields occupy the full available width with consistent 16 px section padding, 16 px vertical gaps, 44 px controls, and 16 px radii. The sticky header and footer remain stable while content scrolls. Desktop reflows to a centered two-column dialog.
-- Colors and visual tokens: background, card tint, borders, primary blue, muted foreground, focus ring, overlay opacity, and elevation all use existing Atlas tokens and match the reference surface treatment.
+- Colors and visual tokens: background, card tint, borders, primary blue, muted foreground, focus ring, overlay opacity, and elevation all use existing ATLAS tokens and match the reference surface treatment.
 - Image quality and asset fidelity: this form has no raster or illustrative assets. The Pencil and Close controls use the project's existing Lucide icon family; no placeholder art, CSS drawing, emoji, or custom SVG was added.
 - Copy and content: fields are grouped into Role details, Next move, Compensation, and Contact & notes. Section descriptions explain purpose without replacing labels. Cancel and Save changes remain explicit and always reachable.
 - Responsiveness: no form clipping, horizontal overflow, compressed half-width controls, or application-nav overlap was observed at 360 px or 390 px. The desktop modal remains bounded and scrollable.
@@ -111,7 +111,7 @@ No actionable P0, P1, or P2 findings remain after the editor refinement.
 
 #### Editor pass 2 — final comparison
 
-- The selected 390 × 844 Atlas form reference and final editor were placed together in `mobile-edit-form-reference-vs-final.png` and reviewed at equal dimensions.
+- The selected 390 × 844 ATLAS form reference and final editor were placed together in `mobile-edit-form-reference-vs-final.png` and reviewed at equal dimensions.
 - Top, middle, bottom, 360 px, desktop, focus, dismissal, and submission states were rechecked. No actionable P0/P1/P2 findings remain.
 
 ## Comparison target
@@ -126,7 +126,7 @@ No actionable P0, P1, or P2 findings remain after the editor refinement.
   - `C:\Users\kdv06\.codex\visualizations\2026\08\24\01a03197-5ea8-7fe1-8380-507ca73421a2\atlas-kanban-mobile-customize-final.png`
   - `C:\Users\kdv06\.codex\visualizations\2026\08\24\01a03197-5ea8-7fe1-8380-507ca73421a2\atlas-kanban-desktop-regression.png`
 - Route: `http://localhost:3000/career?view=kanban`
-- State: authenticated Atlas workspace, dark theme, Kanban selected. The source fixture contains active Applied-stage records; the available live account contains two Withdrawn-stage records. Dynamic record content was not treated as visual drift.
+- State: authenticated ATLAS workspace, dark theme, Kanban selected. The source fixture contains active Applied-stage records; the available live account contains two Withdrawn-stage records. Dynamic record content was not treated as visual drift.
 
 ## Viewport and normalization
 
@@ -144,10 +144,10 @@ No actionable P0, P1, or P2 findings remain after the editor refinement.
 
 No actionable P0, P1, or P2 findings remain.
 
-- Fonts and typography: the implementation retains Atlas's system font, compact mono eyebrow and metadata treatment, and the source's strong heading-to-body hierarchy. Mobile labels remain readable at 360 px, and long dynamic values truncate or wrap without colliding with actions.
-- Spacing and layout rhythm: the mobile toolbar now uses one compact search-and-tools row. At 360 px and 390 px, the selected stage and application identity appear above the persistent navigation. Stage tabs, column header, card padding, 16 px radii, and surface borders maintain the Atlas rhythm.
-- Colors and visual tokens: the background, cards, borders, primary blue, destructive red, muted text, and semantic stage dots map cleanly to existing Atlas tokens. Selected and focused states remain visually distinct.
-- Image quality and asset fidelity: the board has no photographic or illustrative source assets. The existing Atlas mark is preserved, and UI icons use the project's Lucide family. No placeholder art, emoji, CSS drawings, or handcrafted SVG substitutes were introduced.
+- Fonts and typography: the implementation retains ATLAS's system font, compact mono eyebrow and metadata treatment, and the source's strong heading-to-body hierarchy. Mobile labels remain readable at 360 px, and long dynamic values truncate or wrap without colliding with actions.
+- Spacing and layout rhythm: the mobile toolbar now uses one compact search-and-tools row. At 360 px and 390 px, the selected stage and application identity appear above the persistent navigation. Stage tabs, column header, card padding, 16 px radii, and surface borders maintain the ATLAS rhythm.
+- Colors and visual tokens: the background, cards, borders, primary blue, destructive red, muted text, and semantic stage dots map cleanly to existing ATLAS tokens. Selected and focused states remain visually distinct.
+- Image quality and asset fidelity: the board has no photographic or illustrative source assets. The existing ATLAS mark is preserved, and UI icons use the project's Lucide family. No placeholder art, emoji, CSS drawings, or handcrafted SVG substitutes were introduced.
 - Copy and content: “Search applications” and “Select a stage” stay clear at narrow widths. Customization explains that preferences are device-local, while Reset and Done provide explicit recovery and completion actions.
 - Icons: search, attention, customization, company, location, date, and external-link icons share consistent stroke weight and optical sizing. Icon-only mobile controls retain accessible labels and desktop text labels.
 - Responsiveness: no application-level overlap, horizontal page overflow, or awkward control wrapping was observed at the 360 px and 390 px checks. Desktop remains a horizontally navigable multi-column board with no regression from the mobile changes.

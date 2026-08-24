@@ -31,7 +31,7 @@ export function OnboardingForm() {
             id="displayName"
             name="displayName"
             maxLength={80}
-            placeholder="What should Atlas call you?"
+            placeholder="What should ATLAS call you?"
           />
         </div>
       </fieldset>

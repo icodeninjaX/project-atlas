@@ -1,4 +1,4 @@
--- Project Atlas MVP schema.
+-- ATLAS MVP schema.
 begin;
 
 create extension if not exists pgcrypto with schema extensions;

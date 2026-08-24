@@ -51,9 +51,9 @@ export function AppHeaderActions() {
         <SyncStatus />
       </div>
       <InstallAppButton />
-      <TooltipHint label="Search Atlas">
+      <TooltipHint label="Search ATLAS">
         <Button asChild variant="ghost" size="icon">
-          <Link href="/search" aria-label="Search Atlas">
+          <Link href="/search" aria-label="Search ATLAS">
             <Search className="size-4" />
           </Link>
         </Button>

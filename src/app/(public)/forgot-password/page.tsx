@@ -9,7 +9,7 @@ export default function ForgotPasswordPage() {
     <AuthCard
       eyebrow="Account recovery"
       title="Find your way back."
-      description="Enter your email. If an Atlas account exists, we will send a secure reset link."
+      description="Enter your email. If an ATLAS account exists, we will send a secure reset link."
     >
       <AuthForm
         action={forgotPasswordAction}

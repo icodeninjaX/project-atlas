@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 const email = process.env.E2E_EMAIL;
 const password = process.env.E2E_PASSWORD;
 
-test.describe("authenticated Atlas workflows", () => {
+test.describe("authenticated ATLAS workflows", () => {
   test.skip(
     !email || !password,
     "Dedicated E2E Supabase credentials are required.",

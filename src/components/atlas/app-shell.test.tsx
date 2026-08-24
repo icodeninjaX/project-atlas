@@ -21,7 +21,7 @@ afterEach(() => {
 });
 
 describe("AppShell", () => {
-  it("provides labelled primary navigation and the Atlas identity", () => {
+  it("provides labelled primary navigation and the ATLAS identity", () => {
     render(
       <AppShell>
         <h1>Today</h1>
@@ -29,7 +29,7 @@ describe("AppShell", () => {
     );
 
     expect(screen.getAllByLabelText("Primary navigation")).toHaveLength(2);
-    expect(screen.getByText("Project Atlas")).toBeInTheDocument();
+    expect(screen.getByText("ATLAS")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Money" })).toHaveLength(2);
     expect(

@@ -7,16 +7,16 @@ export function AppHeader({ displayName }: { displayName?: string | null }) {
       <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
         <AtlasMark className="size-9 shrink-0" />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">Project Atlas</p>
+          <p className="truncate text-sm font-semibold">ATLAS</p>
           <p className="text-muted-foreground truncate text-[11px]">
-            {displayName || "Atlas user"}
+            {displayName || "ATLAS user"}
           </p>
         </div>
       </div>
       <div className="hidden lg:block">
         <p className="text-muted-foreground text-xs">Signed in as</p>
         <p className="mt-0.5 text-sm font-semibold">
-          {displayName || "Atlas user"}
+          {displayName || "ATLAS user"}
         </p>
       </div>
       <AppHeaderActions />

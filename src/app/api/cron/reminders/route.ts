@@ -203,7 +203,7 @@ export async function GET(request: Request) {
             keys: { p256dh: subscription.p256dh, auth: subscription.auth },
           },
           JSON.stringify({
-            title: "Your Atlas dayline",
+            title: "Your ATLAS dayline",
             body,
             url: "/dashboard",
           }),

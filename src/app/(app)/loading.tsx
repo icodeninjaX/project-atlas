@@ -14,7 +14,7 @@ export default function AppLoading() {
           />
         ))}
       </div>
-      <span className="sr-only">Loading your Atlas</span>
+      <span className="sr-only">Loading your ATLAS</span>
     </div>
   );
 }

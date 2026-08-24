@@ -33,7 +33,7 @@
 
 - Serve production over HTTPS; browsers only allow mobile installation and service workers in secure contexts (localhost is the development exception).
 - Deploy the Supabase migrations before the application so `offline_mutation_receipts` is available when queued writes begin syncing.
-- Atlas caches the public shell and signed-in pages after they are visited. Private page caches are isolated by user and removed on logout.
+- ATLAS caches the public shell and signed-in pages after they are visited. Private page caches are isolated by user and removed on logout.
 - Money, task, goal, career, debt, and review changes are saved to IndexedDB first, then replayed through `/api/offline-sync`. Authentication and onboarding still require a connection.
 - Do not clear browser storage or uninstall the PWA while the header shows pending changes; that device-local queue has not reached Supabase yet.
 

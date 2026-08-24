@@ -13,7 +13,7 @@ export function PwaRegistration() {
     void navigator.serviceWorker
       .register("/sw.js", { scope: "/", updateViaCache: "none" })
       .catch(() => {
-        // Atlas continues online when service workers are unavailable or blocked.
+        // ATLAS continues online when service workers are unavailable or blocked.
       });
   }, []);
 

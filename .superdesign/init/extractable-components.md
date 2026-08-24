@@ -7,21 +7,21 @@
 - Category: layout
 - Description: Desktop sidebar and mobile bottom navigation wrapping authenticated content.
 - Extractable props: `activeItem` (string, default: `dashboard`), `moreOpen` (boolean, default: false)
-- Hardcoded: Atlas mark, navigation labels and hrefs, Lucide icon names, sidebar width, bottom-nav layout, safe-area spacing, utility classes
+- Hardcoded: ATLAS mark, navigation labels and hrefs, Lucide icon names, sidebar width, bottom-nav layout, safe-area spacing, utility classes
 
 ## AppHeader
 - Source: `src/components/atlas/app-header.tsx`
 - Category: layout
 - Description: Authenticated top bar with user identity and global actions.
-- Extractable props: `displayName` (string, default: `Atlas user`), `syncState` (string, default: `synced`), `showInstall` (boolean, default: false)
+- Extractable props: `displayName` (string, default: `ATLAS user`), `syncState` (string, default: `synced`), `showInstall` (boolean, default: false)
 - Hardcoded: Search, theme, quick-task, and sign-out actions; icon names; button variants; utility classes
 
 ## PublicHeader
 - Source: `src/app/(public)/layout.tsx`
 - Category: layout
-- Description: Public header with Atlas identity, theme control, and login action.
+- Description: Public header with ATLAS identity, theme control, and login action.
 - Extractable props: `activeItem` (string, default: `home`)
-- Hardcoded: Atlas mark, Project Atlas label, login href/text, height, spacing, utility classes
+- Hardcoded: ATLAS mark, ATLAS label, login href/text, height, spacing, utility classes
 
 ## AuthCard
 - Source: `src/components/auth/auth-card.tsx`
@@ -49,7 +49,7 @@
 ## AtlasMark
 - Source: `src/components/atlas/atlas-mark.tsx`
 - Category: basic
-- Description: Code-rendered Atlas brand mark built from the actual source spans and theme tokens.
+- Description: Code-rendered ATLAS brand mark built from the actual source spans and theme tokens.
 - Extractable props: none
 - Hardcoded: three mark strokes/dot, 36px container, primary color treatments, rounded shape
 

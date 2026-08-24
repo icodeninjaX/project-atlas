@@ -17,7 +17,7 @@ export function DeleteAccountControl({ configured }: { configured: boolean }) {
   const action = async (state: SecurityState, formData: FormData) => {
     if (
       !window.confirm(
-        "Permanently delete your Atlas account and cloud data? This cannot be undone.",
+        "Permanently delete your ATLAS account and cloud data? This cannot be undone.",
       )
     ) {
       return state;
@@ -35,7 +35,7 @@ export function DeleteAccountControl({ configured }: { configured: boolean }) {
       </summary>
       <div className="mt-3">
         <p className="text-muted-foreground text-xs leading-5">
-          Deletes your login and cascades all Atlas records. Export your data
+          Deletes your login and cascades all ATLAS records. Export your data
           first. This action cannot be reversed.
         </p>
         {!configured ? (
@@ -90,7 +90,7 @@ export function DeleteAccountControl({ configured }: { configured: boolean }) {
               disabled={deleting || unsynced > 0}
             >
               <Trash2 className="size-4" />
-              {deleting ? "Deleting…" : "Delete my Atlas"}
+              {deleting ? "Deleting…" : "Delete my ATLAS"}
             </Button>
           </form>
         )}

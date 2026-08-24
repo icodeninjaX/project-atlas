@@ -1,4 +1,4 @@
-# Project Atlas Playwright polish backlog
+# ATLAS Playwright polish backlog
 
 Last reviewed: 2026-08-08
 Target: `https://atlas.kdvwebsiteservices.com`
@@ -61,7 +61,7 @@ routing behavior plus redirect sanitization coverage.
 
 **Acceptance criteria:**
 
-- Unknown URLs return HTTP `404` and render the Atlas not-found state.
+- Unknown URLs return HTTP `404` and render the ATLAS not-found state.
 - Known protected routes still redirect anonymous visitors to login.
 - Unknown `/api/*` routes return API-appropriate `404` responses.
 

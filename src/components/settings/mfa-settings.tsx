@@ -53,8 +53,8 @@ export function MfaSettings() {
       setMessage("");
       const result = await supabase.auth.mfa.enroll({
         factorType: "totp",
-        friendlyName: "Atlas authenticator",
-        issuer: "Project Atlas",
+        friendlyName: "ATLAS authenticator",
+        issuer: "ATLAS",
       });
       if (result.error) {
         setError("Authenticator enrollment could not be started.");
@@ -169,7 +169,7 @@ export function MfaSettings() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">Authenticator app</p>
           <p className="text-muted-foreground mt-1 text-xs leading-5">
-            Require a rotating 6-digit code after your password. Atlas enforces
+            Require a rotating 6-digit code after your password. ATLAS enforces
             the stronger session before opening private pages.
           </p>
 
@@ -180,7 +180,7 @@ export function MfaSettings() {
                 Two-step verification enabled
               </p>
               <p className="text-muted-foreground mt-1 text-xs">
-                {verifiedFactor.friendly_name ?? "Atlas authenticator"}
+                {verifiedFactor.friendly_name ?? "ATLAS authenticator"}
               </p>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <Input

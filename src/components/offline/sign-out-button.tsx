@@ -55,7 +55,7 @@ export function SignOutButton({
         if (unsynced > 0) {
           if (blocked > 0) await retry();
           toast.info(
-            "Atlas is syncing saved changes. Log out after the sync indicator clears.",
+            "ATLAS is syncing saved changes. Log out after the sync indicator clears.",
           );
           return;
         }

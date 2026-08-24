@@ -1,6 +1,6 @@
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
 
-export const metadata = { title: "Set up your Atlas" };
+export const metadata = { title: "Set up your ATLAS" };
 
 export default function OnboardingPage() {
   return (

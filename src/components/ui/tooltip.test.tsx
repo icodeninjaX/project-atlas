@@ -11,20 +11,20 @@ describe("TooltipHint", () => {
     const user = userEvent.setup();
 
     render(
-      <TooltipHint label="Search Atlas">
-        <button type="button" aria-label="Search Atlas">
+      <TooltipHint label="Search ATLAS">
+        <button type="button" aria-label="Search ATLAS">
           Search icon
         </button>
       </TooltipHint>,
     );
 
-    const trigger = screen.getByRole("button", { name: "Search Atlas" });
+    const trigger = screen.getByRole("button", { name: "Search ATLAS" });
     await user.tab();
 
     expect(trigger).toHaveFocus();
     expect(await screen.findByRole("tooltip")).toHaveTextContent(
-      "Search Atlas",
+      "Search ATLAS",
     );
-    expect(trigger).toHaveAccessibleName("Search Atlas");
+    expect(trigger).toHaveAccessibleName("Search ATLAS");
   });
 });

@@ -39,7 +39,7 @@ export function BalanceAdjustmentForm({
     >
       <input type="hidden" name="accountId" value={accountId} />
       <p className="text-muted-foreground text-xs leading-5 @[20rem]:col-span-2">
-        Enter the amount you actually have. Atlas records only the difference as
+        Enter the amount you actually have. ATLAS records only the difference as
         a correction, so income and expense reports stay accurate.
       </p>
       <label className="text-muted-foreground min-w-0 text-xs">

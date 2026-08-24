@@ -201,7 +201,7 @@ export async function submitOfflineMutation(
     await requestBackgroundSync();
     return {
       success: true,
-      message: "Saved offline. Atlas will sync it when you are back online.",
+      message: "Saved offline. ATLAS will sync it when you are back online.",
       queued: true,
     } satisfies OfflineActionState;
   }
@@ -212,7 +212,7 @@ export async function submitOfflineMutation(
     await requestBackgroundSync();
     return {
       success: true,
-      message: "Saved on this device. Atlas will keep trying to sync it.",
+      message: "Saved on this device. ATLAS will keep trying to sync it.",
       queued: true,
     } satisfies OfflineActionState;
   }

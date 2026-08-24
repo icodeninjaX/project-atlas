@@ -154,7 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           <AtlasMark />
           <div>
-            <p className="text-sm font-semibold">Project Atlas</p>
+            <p className="text-sm font-semibold">ATLAS</p>
             <p className="text-muted-foreground text-[11px]">
               Personal operating system
             </p>
@@ -311,7 +311,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     More destinations
                   </p>
                   <p className="text-muted-foreground mt-0.5 text-xs">
-                    Jump to the rest of your Atlas workspace.
+                    Jump to the rest of your ATLAS workspace.
                   </p>
                 </div>
               </div>

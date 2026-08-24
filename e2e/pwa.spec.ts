@@ -42,7 +42,7 @@ test("publishes valid mobile installation metadata", async ({
     start_url: string;
     icons: Array<{ src: string; sizes: string; purpose?: string }>;
   };
-  expect(manifest.name).toBe("Project Atlas");
+  expect(manifest.name).toBe("ATLAS");
   expect(manifest.display).toBe("standalone");
   expect(manifest.start_url).toBe("/dashboard");
   expect(manifest.icons).toEqual(
