@@ -186,6 +186,36 @@ describe("CareerKanban", () => {
     });
   });
 
+  it("keeps the mobile record hierarchy and card actions together", () => {
+    const application = {
+      ...baseApplication,
+      job_url: "https://example.com/northstar-role",
+    };
+    render(
+      <CareerKanban
+        applications={[application]}
+        nowIso="2026-08-14T12:00:00+08:00"
+      />,
+    );
+
+    const card = screen.getByTestId(`kanban-card-${application.id}`);
+    const mobileStatus = within(card).getByTestId(
+      `kanban-card-mobile-status-${application.id}`,
+    );
+
+    expect(within(mobileStatus).getByText("Applied")).toBeInTheDocument();
+    expect(within(mobileStatus).getByText("Aug 10, 2026")).toBeInTheDocument();
+    expect(within(card).getByText("Follow up with recruiter")).toBeVisible();
+    expect(
+      within(card).getByRole("combobox", { name: "Stage for Northstar Labs" }),
+    ).toBeVisible();
+    expect(
+      within(card).getByRole("link", {
+        name: "Open job post for Northstar Labs",
+      }),
+    ).toHaveAttribute("href", "https://example.com/northstar-role");
+  });
+
   it("filters the board and persists layout customization", async () => {
     const user = userEvent.setup();
     render(

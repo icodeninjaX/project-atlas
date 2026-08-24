@@ -303,6 +303,12 @@ function ApplicationCard({
 }) {
   const overdue = application.is_follow_up_overdue;
   const due = dueLabel(application, nowIso);
+  const applicationStageLabel = isCareerStage(application.stage)
+    ? stageLabels[application.stage]
+    : label(application.stage);
+  const applicationStageTone = isCareerStage(application.stage)
+    ? stageTones[application.stage]
+    : stageTones.interested;
 
   return (
     <Card
@@ -315,24 +321,72 @@ function ApplicationCard({
       onDragEnd={onDragEnd}
       data-testid={`kanban-card-${application.id}`}
       className={cn(
-        "group hover:border-primary/45 bg-card overflow-hidden shadow-sm transition-[border-color,box-shadow,opacity,transform] lg:cursor-grab lg:active:cursor-grabbing",
+        "group hover:border-primary/45 bg-card/95 lg:bg-card overflow-hidden rounded-2xl shadow-md shadow-black/20 transition-[border-color,box-shadow,opacity,transform] lg:cursor-grab lg:shadow-sm lg:active:cursor-grabbing",
         moving && "opacity-55",
       )}
     >
-      <CardContent className={density === "compact" ? "p-3" : "p-4"}>
-        <div className="flex items-start gap-3">
-          <div className="border-primary/20 bg-primary/8 text-primary grid size-10 shrink-0 place-items-center rounded-xl border">
-            <Building2 className="size-[18px]" aria-hidden="true" />
+      <CardContent
+        className={cn(
+          "p-4 sm:p-4",
+          density === "compact" ? "lg:p-3" : "lg:p-4",
+        )}
+      >
+        <div
+          data-testid={`kanban-card-mobile-status-${application.id}`}
+          className="border-border/80 flex items-center justify-between gap-3 border-b pb-3 lg:hidden"
+        >
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span
+              className={cn(
+                "size-2.5 shrink-0 rounded-full",
+                applicationStageTone.dot,
+              )}
+              aria-hidden="true"
+            />
+            <span className="truncate text-sm font-semibold">
+              {applicationStageLabel}
+            </span>
+          </div>
+          {showAppliedDate && application.applied_at ? (
+            <span className="text-muted-foreground inline-flex shrink-0 items-center gap-1.5 text-xs font-medium">
+              <CalendarDays className="size-4" aria-hidden="true" />
+              <time dateTime={application.applied_at}>
+                {friendlyDate.format(new Date(application.applied_at))}
+              </time>
+            </span>
+          ) : null}
+        </div>
+
+        <div className="mt-3 flex items-start gap-3 lg:mt-0">
+          <div className="border-primary/20 bg-primary/8 text-primary grid size-12 shrink-0 place-items-center rounded-xl border lg:size-10">
+            <Building2 className="size-5 lg:size-[18px]" aria-hidden="true" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h3 className="truncate text-sm font-semibold tracking-[-0.01em]">
+                <h3 className="truncate text-xl font-semibold tracking-[-0.025em] lg:text-sm lg:tracking-[-0.01em]">
                   {application.company_name}
                 </h3>
-                <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs leading-5">
+                <p className="text-muted-foreground mt-1 line-clamp-2 text-sm leading-5 lg:mt-0.5 lg:text-xs">
                   {application.role_title}
                 </p>
+                {showLocation &&
+                (application.location ||
+                  application.work_setup !== "unspecified") ? (
+                  <span className="text-muted-foreground mt-1.5 inline-flex min-w-0 items-center gap-1.5 text-xs lg:hidden">
+                    <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
+                    <span className="truncate">
+                      {[
+                        application.location,
+                        application.work_setup !== "unspecified"
+                          ? label(application.work_setup)
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  </span>
+                ) : null}
               </div>
               <GripVertical
                 className="text-muted-foreground/45 mt-0.5 hidden size-4 shrink-0 lg:block"
@@ -343,7 +397,7 @@ function ApplicationCard({
         </div>
 
         {(showLocation || showAppliedDate) && (
-          <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px]">
+          <div className="text-muted-foreground mt-3 hidden flex-wrap items-center gap-x-3 gap-y-1.5 lg:flex lg:text-[11px]">
             {showLocation &&
             (application.location ||
               application.work_setup !== "unspecified") ? (
@@ -362,7 +416,7 @@ function ApplicationCard({
               </span>
             ) : null}
             {showAppliedDate && application.applied_at ? (
-              <span className="inline-flex items-center gap-1.5">
+              <span className="hidden items-center gap-1.5 lg:inline-flex">
                 <CalendarDays className="size-3.5" aria-hidden="true" />
                 <time dateTime={application.applied_at}>
                   {friendlyDate.format(new Date(application.applied_at))}
@@ -374,31 +428,31 @@ function ApplicationCard({
 
         <div
           className={cn(
-            "border-border border-t",
-            density === "compact" ? "mt-3 pt-3" : "mt-4 pt-4",
+            "border-primary lg:border-border mt-3 border-t pt-3",
+            density === "compact" ? "lg:mt-3 lg:pt-3" : "lg:mt-4 lg:pt-4",
           )}
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p
                 className={cn(
-                  "font-mono text-[9px] font-semibold tracking-[0.14em] uppercase",
+                  "font-mono text-[10px] font-semibold tracking-[0.16em] uppercase lg:text-[9px] lg:tracking-[0.14em]",
                   overdue ? "text-destructive" : "text-primary",
                 )}
               >
                 Next action
               </p>
-              <p className="mt-1.5 line-clamp-2 text-xs leading-5 font-medium">
+              <p className="mt-1.5 line-clamp-2 text-xl leading-7 font-semibold tracking-[-0.02em] lg:text-xs lg:leading-5 lg:font-medium lg:tracking-normal">
                 {application.next_action ?? "Add a next action"}
               </p>
             </div>
             {due ? (
               <span
                 className={cn(
-                  "shrink-0 rounded-lg border px-2 py-1 text-[10px] font-semibold",
+                  "shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold lg:border lg:px-2 lg:py-1 lg:text-[10px]",
                   overdue
-                    ? "border-destructive/35 bg-destructive/10 text-destructive"
-                    : "border-primary/25 bg-primary/8 text-primary",
+                    ? "bg-destructive lg:border-destructive/35 lg:bg-destructive/10 lg:text-destructive text-white"
+                    : "bg-primary text-primary-foreground lg:border-primary/25 lg:bg-primary/8 lg:text-primary",
                 )}
               >
                 {due}
@@ -409,8 +463,8 @@ function ApplicationCard({
 
         <div
           className={cn(
-            "grid grid-cols-[minmax(0,1fr)_auto] gap-2",
-            density === "compact" ? "mt-3" : "mt-4",
+            "mt-3 grid grid-cols-2 gap-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-2",
+            density === "compact" ? "lg:mt-3" : "lg:mt-4",
           )}
         >
           <StageSelect
@@ -418,22 +472,30 @@ function ApplicationCard({
             companyName={application.company_name}
             stage={application.stage}
             onStageChange={onStageChange}
-            className="min-h-10 w-full rounded-xl px-3 font-semibold"
+            className="col-span-2 min-h-11 w-full rounded-xl px-4 text-sm font-semibold lg:col-span-1 lg:min-h-10 lg:px-3 lg:text-xs"
           />
-          <ApplicationEditForm application={application} compact />
-        </div>
+          <ApplicationEditForm
+            application={application}
+            compact
+            triggerClassName={cn(
+              "border-border/80 text-primary col-span-1 mt-2.5 min-h-11 rounded-none border-0 border-t bg-transparent px-3 hover:bg-primary/5 lg:mt-0 lg:min-h-10 lg:rounded-xl lg:border lg:border-border lg:bg-secondary lg:text-secondary-foreground lg:hover:bg-muted",
+              !application.job_url && "col-span-2 lg:col-span-1",
+            )}
+          />
 
-        {application.job_url ? (
-          <a
-            href={application.job_url}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`Open job post for ${application.company_name}`}
-            className="text-muted-foreground hover:text-primary focus-visible:ring-ring mt-3 inline-flex min-h-8 items-center gap-1.5 rounded-lg text-[11px] font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none"
-          >
-            View job post <ExternalLink className="size-3" aria-hidden="true" />
-          </a>
-        ) : null}
+          {application.job_url ? (
+            <a
+              href={application.job_url}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Open job post for ${application.company_name}`}
+              className="border-border/80 text-primary hover:bg-primary/5 focus-visible:ring-ring col-span-1 mt-2.5 inline-flex min-h-11 items-center justify-center gap-2 border-t border-l px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none lg:col-span-2 lg:mt-1 lg:min-h-8 lg:justify-start lg:rounded-lg lg:border-0 lg:px-0 lg:text-[11px]"
+            >
+              View job post
+              <ExternalLink className="size-4 lg:size-3" aria-hidden="true" />
+            </a>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   );
@@ -1089,15 +1151,15 @@ export function CareerKanban({
                   if (application) moveApplication(application, stage);
                 }}
                 className={cn(
-                  "border-border bg-muted/25 w-full min-w-0 flex-col rounded-2xl border p-2 transition-[border-color,background-color,box-shadow] lg:flex lg:w-[292px] lg:shrink-0",
+                  "lg:border-border lg:bg-muted/25 w-full min-w-0 flex-col transition-[border-color,background-color,box-shadow] lg:flex lg:w-[292px] lg:shrink-0 lg:rounded-2xl lg:border lg:p-2",
                   selected ? "flex" : "hidden",
                   !selected && "lg:flex",
                   dropStage === stage &&
                     draggingId &&
-                    "border-primary bg-primary/5 ring-primary/20 ring-2",
+                    "border-primary bg-primary/5 ring-primary/20 rounded-2xl ring-2",
                 )}
               >
-                <header className="flex min-h-12 items-center justify-between gap-3 px-2 py-1.5">
+                <header className="hidden min-h-12 items-center justify-between gap-3 px-2 py-1.5 lg:flex">
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span
                       className={cn("size-2.5 shrink-0 rounded-full", tone.dot)}
