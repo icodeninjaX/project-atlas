@@ -1,4 +1,11 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CareerKanban, type CareerApplication } from "./career-kanban";
@@ -49,12 +56,13 @@ const baseApplication: CareerApplication = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.localStorage.clear();
 });
 
 afterEach(cleanup);
 
 describe("CareerKanban", () => {
-  it("opens on the stage with an overdue follow-up and switches stages", async () => {
+  it("focuses the stage with an overdue follow-up on mobile and switches stages", async () => {
     const user = userEvent.setup();
     render(
       <CareerKanban
@@ -73,13 +81,28 @@ describe("CareerKanban", () => {
       />,
     );
 
-    expect(screen.getByText("Northstar Labs")).toBeVisible();
-    expect(screen.queryByText("Cloudbank")).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Applied/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      within(screen.getByTestId("kanban-column-applied")).getByText(
+        "Northstar Labs",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId("kanban-column-interview")).getByText(
+        "Cloudbank",
+      ),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: /Interview/ }));
 
-    expect(screen.getByText("Cloudbank")).toBeVisible();
-    expect(screen.queryByText("Northstar Labs")).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Interview/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByTestId("kanban-column-interview")).toHaveClass("flex");
   });
 
   it("regroups a card immediately after its stage update succeeds", async () => {
@@ -100,13 +123,117 @@ describe("CareerKanban", () => {
       "offer",
     );
 
-    await waitFor(() =>
-      expect(screen.queryByText("Northstar Labs")).not.toBeInTheDocument(),
-    );
+    await waitFor(() => {
+      expect(
+        within(screen.getByTestId("kanban-column-applied")).queryByText(
+          "Northstar Labs",
+        ),
+      ).not.toBeInTheDocument();
+      expect(
+        within(screen.getByTestId("kanban-column-offer")).getByText(
+          "Northstar Labs",
+        ),
+      ).toBeInTheDocument();
+    });
     expect(screen.getByRole("tab", { name: /Applied/ })).toHaveTextContent("0");
     expect(screen.getByRole("tab", { name: /Offer/ })).toHaveTextContent("1");
 
     await user.click(screen.getByRole("tab", { name: /Offer/ }));
-    expect(screen.getByText("Northstar Labs")).toBeVisible();
+    expect(screen.getByTestId("kanban-column-offer")).toHaveClass("flex");
+  });
+
+  it("moves a card between columns with drag and drop", async () => {
+    mocks.updateStage.mockResolvedValue({
+      success: true,
+      message: "Application stage updated.",
+    });
+    render(
+      <CareerKanban
+        applications={[baseApplication]}
+        nowIso="2026-08-14T12:00:00+08:00"
+      />,
+    );
+    const dataTransfer = {
+      dropEffect: "none",
+      effectAllowed: "none",
+      getData: vi.fn(() => baseApplication.id),
+      setData: vi.fn(),
+    };
+
+    fireEvent.dragStart(
+      screen.getByTestId(`kanban-card-${baseApplication.id}`),
+      {
+        dataTransfer,
+      },
+    );
+    fireEvent.dragOver(screen.getByTestId("kanban-column-offer"), {
+      dataTransfer,
+    });
+    fireEvent.drop(screen.getByTestId("kanban-column-offer"), {
+      dataTransfer,
+    });
+
+    await waitFor(() => {
+      expect(mocks.updateStage).toHaveBeenCalledWith(
+        baseApplication.id,
+        "offer",
+      );
+      expect(
+        within(screen.getByTestId("kanban-column-offer")).getByText(
+          "Northstar Labs",
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("filters the board and persists layout customization", async () => {
+    const user = userEvent.setup();
+    render(
+      <CareerKanban
+        applications={[
+          baseApplication,
+          {
+            ...baseApplication,
+            id: "60000000-0000-4000-8000-000000000002",
+            company_name: "Cloudbank",
+            role_title: "UI Engineer",
+            stage: "interview",
+            is_follow_up_overdue: false,
+          },
+        ]}
+        nowIso="2026-08-14T12:00:00+08:00"
+      />,
+    );
+
+    await user.type(
+      screen.getByRole("searchbox", { name: "Search applications" }),
+      "Cloudbank",
+    );
+
+    expect(screen.queryByText("Northstar Labs")).not.toBeInTheDocument();
+    expect(screen.getByText("Cloudbank")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Customize" }));
+    expect(
+      screen.getByRole("dialog", { name: "Make the board yours" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "compact" }));
+    await user.click(
+      screen.getByRole("checkbox", { name: "Interested column" }),
+    );
+
+    const saved = JSON.parse(
+      window.localStorage.getItem("atlas-career-board-preferences-v1") ?? "{}",
+    );
+    expect(saved.density).toBe("compact");
+    expect(saved.visibleStages).not.toContain("interested");
+    expect(
+      screen.queryByTestId("kanban-column-interested"),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Done" }));
+    expect(
+      screen.queryByRole("dialog", { name: "Make the board yours" }),
+    ).not.toBeInTheDocument();
   });
 });

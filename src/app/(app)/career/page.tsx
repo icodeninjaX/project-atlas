@@ -182,7 +182,10 @@ export default async function CareerPage({
   ].filter((metric): metric is [string, string] => metric[1] !== null);
   return (
     <div className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8">
-      <nav aria-label="Breadcrumb" className="mb-4">
+      <nav
+        aria-label="Breadcrumb"
+        className={view === "kanban" ? "mb-4 hidden sm:block" : "mb-4"}
+      >
         <ol className="text-muted-foreground flex min-h-11 items-center gap-1 text-sm">
           <li>
             <Link
@@ -203,11 +206,11 @@ export default async function CareerPage({
         </ol>
       </nav>
       <PageHeading
-        eyebrow={view === "kanban" ? "Stage spotlight" : "Opportunity pipeline"}
+        eyebrow="Opportunity pipeline"
         title="Career"
         description={
           view === "kanban"
-            ? "Your applications, their momentum, and the next move at a glance."
+            ? "Scan every opportunity, spot what needs attention, and move work forward."
             : "Keep every application tied to a stage, a date, and one clear next action."
         }
         actions={
