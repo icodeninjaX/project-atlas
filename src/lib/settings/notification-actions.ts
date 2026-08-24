@@ -84,7 +84,7 @@ export async function saveReminderPreferencesAction(
   return {
     success: true,
     message: values.data.remindersEnabled
-      ? "Daily reminders are enabled for this device."
+      ? "ATLAS reminders are enabled for this device."
       : "Reminders are turned off.",
   };
 }

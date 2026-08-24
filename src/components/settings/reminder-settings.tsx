@@ -116,11 +116,12 @@ export function ReminderSettings({
             ) : (
               <BellOff className="text-muted-foreground size-4" />
             )}
-            Daily ATLAS digest
+            ATLAS phone notifications
           </p>
           <p className="text-muted-foreground mt-1 max-w-lg text-xs leading-5">
-            One concise notification at 8:00 AM Asia/Manila. ATLAS skips it when
-            there is nothing actionable or the send time is quiet.
+            Scheduled tasks arrive at their exact time, plus one concise daily
+            digest at 8:00 AM Asia/Manila. ATLAS stays quiet during your quiet
+            hours.
           </p>
         </div>
         <label className="border-border bg-background flex min-h-11 items-center gap-2 rounded-xl border px-3 text-sm font-medium">
@@ -150,7 +151,7 @@ export function ReminderSettings({
           {[
             [
               "taskReminders",
-              "Tasks due or overdue",
+              "Tasks at their scheduled time",
               preferences.taskReminders,
             ],
             [

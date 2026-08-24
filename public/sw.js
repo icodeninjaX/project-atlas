@@ -333,7 +333,7 @@ self.addEventListener("push", (event) => {
       body: payload.body,
       icon: "/icons/atlas-system-core-192.png",
       badge: "/icons/atlas-system-core-192.png",
-      tag: "atlas-daily-digest",
+      tag: payload.tag || "atlas-daily-digest",
       data: { url: payload.url },
     }),
   );

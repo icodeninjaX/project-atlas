@@ -307,7 +307,8 @@ export default async function SettingsPage() {
                     Reminders and quiet hours
                   </CardTitle>
                   <p className="text-muted-foreground mt-1 text-xs leading-5">
-                    Receive one useful daily digest without noisy empty alerts.
+                    Get timely task alerts and one useful daily digest without
+                    noisy empty notifications.
                   </p>
                 </div>
               </div>

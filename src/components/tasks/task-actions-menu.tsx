@@ -76,7 +76,7 @@ export function TaskActionsMenu({
   const editorTitle = editorMode === "reminder" ? "Set reminder" : "Edit task";
   const editorDescription =
     editorMode === "reminder"
-      ? "Choose the date and exact time for this task."
+      ? "Choose the date and exact time. ATLAS notifies subscribed devices when reminders are enabled."
       : "Update the task details, schedule, priority, or focus time.";
 
   const moveMenuFocus = (event: React.KeyboardEvent<HTMLDivElement>) => {

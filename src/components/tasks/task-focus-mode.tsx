@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import type { OfflineActionState } from "@/lib/offline/types";
+import { playFocusActivationSound } from "@/lib/tasks/focus-sound";
 
 type WakeLockHandle = {
   release: () => Promise<void>;
@@ -285,7 +286,10 @@ function FocusTimer({
           variant={menuItem ? "ghost" : "secondary"}
           size="sm"
           role={menuItem ? "menuitem" : undefined}
-          onClick={onTrigger}
+          onClick={() => {
+            void playFocusActivationSound();
+            onTrigger?.();
+          }}
           aria-label={`Focus on ${title}`}
           className={
             menuItem

@@ -15,8 +15,15 @@ import type {
 import { renderWithProviders as render } from "@/test/render";
 import { TaskFocusMode } from "./task-focus-mode";
 
+const mocks = vi.hoisted(() => ({ playFocusActivationSound: vi.fn() }));
+
+vi.mock("@/lib/tasks/focus-sound", () => ({
+  playFocusActivationSound: mocks.playFocusActivationSound,
+}));
+
 afterEach(() => {
   cleanup();
+  mocks.playFocusActivationSound.mockClear();
   vi.useRealTimers();
 });
 
@@ -63,6 +70,25 @@ describe("TaskFocusMode", () => {
     fireEvent.click(screen.getByRole("button", { name: "Pause" }));
     act(() => vi.advanceTimersByTime(2_000));
     expect(screen.getByRole("timer")).toHaveTextContent("24:59");
+  });
+
+  it("plays the activation chime when Focus opens", () => {
+    render(
+      <TaskFocusMode
+        taskId="1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb"
+        title="Write proposal"
+        description={null}
+        estimatedMinutes={25}
+        scheduledLabel={null}
+        triggerPresentation="menu"
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("menuitem", { name: "Focus on Write proposal" }),
+    );
+
+    expect(mocks.playFocusActivationSound).toHaveBeenCalledOnce();
   });
 
   it("keeps Focus open until the task is marked complete", async () => {
