@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  useActionState,
   useCallback,
   useEffect,
   useId,
@@ -19,8 +20,10 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { OfflineMutationForm } from "@/components/offline/offline-mutation";
+import { useOfflineSync } from "@/components/offline/offline-mutation";
+import type { OfflineActionState } from "@/lib/offline/types";
 
 type WakeLockHandle = {
   release: () => Promise<void>;
@@ -35,6 +38,11 @@ type TaskFocusModeProps = {
   triggerPresentation?: "button" | "menu";
   onTrigger?: () => void;
   onCloseAutoFocus?: () => void;
+};
+
+const initialCompletionState: OfflineActionState = {
+  success: false,
+  message: "",
 };
 
 function formatCountdown(totalSeconds: number) {
@@ -98,6 +106,7 @@ function FocusTimer({
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const deadlineRef = useRef<number | null>(null);
   const wakeLockRef = useRef<WakeLockHandle | null>(null);
+  const { submit } = useOfflineSync();
   const gradientId = useId().replaceAll(":", "");
   const menuItem = triggerPresentation === "menu";
   const finished = remainingSeconds === 0;
@@ -239,13 +248,34 @@ function FocusTimer({
     }
   };
 
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen && running) pauseTimer();
-    if (!nextOpen && document.fullscreenElement) {
-      void document.exitFullscreen().catch(() => undefined);
-    }
-    setOpen(nextOpen);
-  };
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen && running) pauseTimer();
+      if (!nextOpen && document.fullscreenElement) {
+        void document.exitFullscreen().catch(() => undefined);
+      }
+      setOpen(nextOpen);
+    },
+    [pauseTimer, running],
+  );
+
+  const completeTask = useCallback(
+    async (_state: OfflineActionState, formData: FormData) => {
+      const result = await submit("task.setStatus", formData);
+      if (result.success) {
+        toast.success(result.message);
+        handleOpenChange(false);
+      } else {
+        toast.error(result.message);
+      }
+      return result;
+    },
+    [handleOpenChange, submit],
+  );
+  const [, completeTaskAction, completingTask] = useActionState(
+    completeTask,
+    initialCompletionState,
+  );
 
   return (
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
@@ -306,9 +336,7 @@ function FocusTimer({
                 aria-label={
                   fullscreen ? "Exit full screen" : "Enter full screen"
                 }
-                title={
-                  fullscreen ? "Exit full screen" : "Enter full screen"
-                }
+                title={fullscreen ? "Exit full screen" : "Enter full screen"}
                 className="hidden size-11 text-blue-100 hover:bg-white/10 hover:text-white sm:inline-flex sm:size-10"
               >
                 <Expand className="size-4" />
@@ -431,19 +459,19 @@ function FocusTimer({
                 </Button>
               </div>
 
-              <OfflineMutationForm mutation="task.setStatus" className="mt-1">
+              <form action={completeTaskAction} className="mt-1">
                 <input type="hidden" name="taskId" value={taskId} />
                 <input type="hidden" name="status" value="completed" />
                 <Button
                   type="submit"
                   variant="ghost"
-                  onClick={() => handleOpenChange(false)}
+                  disabled={completingTask}
                   className="min-h-11 w-full rounded-2xl text-blue-200 hover:bg-emerald-400/10 hover:text-emerald-200"
                 >
                   <Check className="size-4" />
-                  Mark task complete
+                  {completingTask ? "Marking complete…" : "Mark task complete"}
                 </Button>
-              </OfflineMutationForm>
+              </form>
             </div>
           </main>
 
