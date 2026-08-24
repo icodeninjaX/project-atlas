@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { ApplicationForm } from "@/components/career/application-form";
+import { DebtForm } from "@/components/debts/debt-form";
 import { PaymentForm } from "@/components/debts/payment-form";
 import { AccountForm } from "@/components/money/account-form";
 import { BalanceAdjustmentForm } from "@/components/money/balance-adjustment-form";
@@ -122,6 +123,20 @@ describe("primary create forms", () => {
     expectVisibleLabel("Payment amount in pesos");
     expectVisibleLabel("Payment date");
     expectVisibleLabel("Payment note");
+  });
+
+  it("uses visible labels for debt details", () => {
+    render(<DebtForm />);
+
+    expectVisibleLabel("Creditor name");
+    expectVisibleLabel("Debt type");
+    expectVisibleLabel("Original balance in pesos");
+    expectVisibleLabel("Minimum payment in pesos");
+    expectVisibleLabel("Annual interest rate percent");
+    expectVisibleLabel("Next due date");
+    expectVisibleLabel("Due day");
+    expectVisibleLabel("Notes");
+    expectVisibleLabel("Priority order");
   });
 
   it("uses visible labels for the essential career fields", () => {
