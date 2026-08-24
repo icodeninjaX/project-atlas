@@ -6,7 +6,6 @@ import { TaskEditForm } from "@/components/tasks/task-edit-form";
 import { TaskFocusMode } from "@/components/tasks/task-focus-mode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { TooltipHint } from "@/components/ui/tooltip";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { manilaDateLabel } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
@@ -186,31 +185,28 @@ export default async function TasksPage({
                         task.status === "completed" ? "inbox" : "completed"
                       }
                     />
-                    <TooltipHint
-                      label={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="submit"
+                      className="size-11 sm:size-10"
+                      title={
                         task.status === "completed"
                           ? "Reopen task"
                           : "Complete task"
                       }
+                      aria-label={
+                        task.status === "completed"
+                          ? `Reopen ${task.title}`
+                          : `Complete ${task.title}`
+                      }
                     >
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        type="submit"
-                        className="size-11 sm:size-10"
-                        aria-label={
-                          task.status === "completed"
-                            ? `Reopen ${task.title}`
-                            : `Complete ${task.title}`
-                        }
-                      >
-                        {task.status === "completed" ? (
-                          <RotateCcw className="size-4" />
-                        ) : (
-                          <Check className="size-4" />
-                        )}
-                      </Button>
-                    </TooltipHint>
+                      {task.status === "completed" ? (
+                        <RotateCcw className="size-4" />
+                      ) : (
+                        <Check className="size-4" />
+                      )}
+                    </Button>
                   </OfflineMutationForm>
                   <div className="min-w-0 flex-1 pt-1.5 sm:pt-1.5">
                     <div className="flex items-start gap-2">
@@ -238,31 +234,28 @@ export default async function TasksPage({
                                 : "completed"
                             }
                           />
-                          <TooltipHint
-                            label={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            type="submit"
+                            className="-mt-2 size-10"
+                            title={
                               task.status === "completed"
                                 ? "Reopen task"
                                 : "Complete task"
                             }
+                            aria-label={
+                              task.status === "completed"
+                                ? `Reopen ${task.title}`
+                                : `Complete ${task.title}`
+                            }
                           >
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              type="submit"
-                              className="-mt-2 size-10"
-                              aria-label={
-                                task.status === "completed"
-                                  ? `Reopen ${task.title}`
-                                  : `Complete ${task.title}`
-                              }
-                            >
-                              {task.status === "completed" ? (
-                                <RotateCcw className="size-4" />
-                              ) : (
-                                <Check className="size-4" />
-                              )}
-                            </Button>
-                          </TooltipHint>
+                            {task.status === "completed" ? (
+                              <RotateCcw className="size-4" />
+                            ) : (
+                              <Check className="size-4" />
+                            )}
+                          </Button>
                         </OfflineMutationForm>
                         <TaskActionsMenu
                           task={task}
@@ -331,17 +324,16 @@ export default async function TasksPage({
                     className="hidden sm:block"
                   >
                     <input type="hidden" name="taskId" value={task.id} />
-                    <TooltipHint label="Delete task">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        type="submit"
-                        className="size-11 sm:size-10"
-                        aria-label={`Delete ${task.title}`}
-                      >
-                        <Trash2 className="text-muted-foreground size-4" />
-                      </Button>
-                    </TooltipHint>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="submit"
+                      className="size-11 sm:size-10"
+                      title="Delete task"
+                      aria-label={`Delete ${task.title}`}
+                    >
+                      <Trash2 className="text-muted-foreground size-4" />
+                    </Button>
                   </OfflineMutationForm>
                 </CardContent>
               </Card>
