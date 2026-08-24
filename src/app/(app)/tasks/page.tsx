@@ -1,9 +1,10 @@
-import { Check, Clock3, Inbox, RotateCcw, Trash2 } from "lucide-react";
+import { Clock3, Inbox, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { QuickTaskForm } from "@/components/tasks/quick-task-form";
 import { TaskActionsMenu } from "@/components/tasks/task-actions-menu";
 import { TaskEditForm } from "@/components/tasks/task-edit-form";
 import { TaskFocusMode } from "@/components/tasks/task-focus-mode";
+import { TaskStatusForm } from "@/components/tasks/task-status-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
@@ -185,41 +186,13 @@ export default async function TasksPage({
             return (
               <Card key={task.id}>
                 <CardContent className="flex items-start gap-2 p-3 sm:gap-3 sm:p-4">
-                  <OfflineMutationForm
-                    mutation="task.setStatus"
+                  <TaskStatusForm
+                    taskId={task.id}
+                    title={task.title}
+                    completed={task.status === "completed"}
                     className="hidden sm:block"
-                  >
-                    <input type="hidden" name="taskId" value={task.id} />
-                    <input
-                      type="hidden"
-                      name="status"
-                      value={
-                        task.status === "completed" ? "inbox" : "completed"
-                      }
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      type="submit"
-                      className="size-11 sm:size-10"
-                      title={
-                        task.status === "completed"
-                          ? "Reopen task"
-                          : "Complete task"
-                      }
-                      aria-label={
-                        task.status === "completed"
-                          ? `Reopen ${task.title}`
-                          : `Complete ${task.title}`
-                      }
-                    >
-                      {task.status === "completed" ? (
-                        <RotateCcw className="size-4" />
-                      ) : (
-                        <Check className="size-4" />
-                      )}
-                    </Button>
-                  </OfflineMutationForm>
+                    buttonClassName="size-11 sm:size-10"
+                  />
                   <div className="min-w-0 flex-1 pt-1.5 sm:pt-1.5">
                     <div className="flex items-start gap-2">
                       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
@@ -235,40 +208,12 @@ export default async function TasksPage({
                         </span>
                       </div>
                       <div className="flex shrink-0 items-start gap-0.5 sm:hidden">
-                        <OfflineMutationForm mutation="task.setStatus">
-                          <input type="hidden" name="taskId" value={task.id} />
-                          <input
-                            type="hidden"
-                            name="status"
-                            value={
-                              task.status === "completed"
-                                ? "inbox"
-                                : "completed"
-                            }
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            type="submit"
-                            className="-mt-2 size-10"
-                            title={
-                              task.status === "completed"
-                                ? "Reopen task"
-                                : "Complete task"
-                            }
-                            aria-label={
-                              task.status === "completed"
-                                ? `Reopen ${task.title}`
-                                : `Complete ${task.title}`
-                            }
-                          >
-                            {task.status === "completed" ? (
-                              <RotateCcw className="size-4" />
-                            ) : (
-                              <Check className="size-4" />
-                            )}
-                          </Button>
-                        </OfflineMutationForm>
+                        <TaskStatusForm
+                          taskId={task.id}
+                          title={task.title}
+                          completed={task.status === "completed"}
+                          buttonClassName="-mt-2 size-10"
+                        />
                         <TaskActionsMenu
                           task={task}
                           scheduledLabel={scheduledLabel}

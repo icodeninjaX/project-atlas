@@ -30,6 +30,7 @@ type OfflineContextValue = {
   submit: (
     type: OfflineMutationType,
     formData: FormData,
+    options?: { refresh?: boolean },
   ) => Promise<OfflineActionState>;
   retry: () => Promise<void>;
   syncNow: () => Promise<void>;
@@ -70,12 +71,16 @@ export function OfflineProvider({
   }, [userId]);
 
   const submit = useCallback(
-    async (type: OfflineMutationType, formData: FormData) => {
+    async (
+      type: OfflineMutationType,
+      formData: FormData,
+      options?: { refresh?: boolean },
+    ) => {
       const result = await submitOfflineMutation(userId, type, formData);
       await refreshCounts();
       if (result.success && !result.queued) {
         markSynced();
-        router.refresh();
+        if (options?.refresh !== false) router.refresh();
       }
       return result;
     },
