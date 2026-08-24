@@ -11,7 +11,7 @@ ATLAS is a private, Philippines-first life-management application for seeing mon
 - auditable accounts, income/expense transactions, monthly budgets, and server exports
 - debt strategies, payment history, atomic balance recalculation, and amortization estimates
 - task capture, Today/Upcoming/Inbox/Completed views, and keyboard shortcut
-- goals with manual progress
+- goals with milestone-driven progress
 - career table and Kanban views, stage history, overdue follow-ups, and conversion guards
 - weekly factual summaries, guided reflections, drafts, submission, and score trends
 - owner-scoped global search plus filterable, paginated activity history and export

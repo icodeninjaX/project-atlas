@@ -24,7 +24,6 @@ export async function createGoalAction(
     area: formData.get("area"),
     status: "active",
     targetDate: formData.get("targetDate") || undefined,
-    progressPercent: Number(formData.get("progressPercent") || 0),
     successDefinition: formData.get("successDefinition"),
   });
   if (!result.success)
@@ -40,7 +39,6 @@ export async function createGoalAction(
     area: result.data.area,
     status: result.data.status,
     target_date: result.data.targetDate ?? null,
-    progress_percent: result.data.progressPercent,
     success_definition: result.data.successDefinition ?? null,
   });
   if (error) return { success: false, message: "The goal could not be saved." };
@@ -69,7 +67,6 @@ export async function updateGoalAction(
     area: formData.get("area"),
     status: formData.get("status") || "active",
     targetDate: formData.get("targetDate") || undefined,
-    progressPercent: Number(formData.get("progressPercent") || 0),
     successDefinition: formData.get("successDefinition"),
   });
   if (!result.success)
@@ -85,7 +82,6 @@ export async function updateGoalAction(
       area: result.data.area,
       status: result.data.status,
       target_date: result.data.targetDate ?? null,
-      progress_percent: result.data.progressPercent,
       success_definition: result.data.successDefinition ?? null,
     })
     .eq("id", id)
@@ -101,16 +97,8 @@ export async function updateGoalProgressAction(
   formData: FormData,
 ): Promise<GoalActionState> {
   const id = String(formData.get("goalId") ?? "");
-  const progress = Number(formData.get("progress"));
-  const status = String(formData.get("status") ?? "active");
-  if (
-    !/^[0-9a-f-]{36}$/i.test(id) ||
-    !Number.isInteger(progress) ||
-    progress < 0 ||
-    progress > 100 ||
-    !["active", "paused", "completed", "abandoned"].includes(status)
-  )
-    return { success: false, message: "Choose valid goal progress." };
+  if (!/^[0-9a-f-]{36}$/i.test(id))
+    return { success: false, message: "The goal could not be found." };
   const supabase = await createClient();
   if (!supabase)
     return { success: false, message: "Supabase is not configured." };
@@ -118,16 +106,22 @@ export async function updateGoalProgressAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { success: false, message: "Your session expired." };
+
+  // Retain compatibility with progress mutations queued by older clients.
+  // The database trigger replaces this sentinel with the milestone-derived value.
   const { error } = await supabase
     .from("goals")
-    .update({ progress_percent: progress, status })
+    .update({ progress_percent: 0 })
     .eq("id", id)
     .eq("user_id", user.id);
   if (error)
-    return { success: false, message: "Goal progress could not be updated." };
+    return { success: false, message: "Goal progress could not be refreshed." };
   revalidatePath("/goals");
   revalidatePath("/dashboard");
-  return { success: true, message: "Goal progress updated." };
+  return {
+    success: true,
+    message: "Goal progress recalculated from milestones.",
+  };
 }
 
 export async function createMilestoneAction(

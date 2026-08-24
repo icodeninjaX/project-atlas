@@ -119,15 +119,15 @@ describe("shared validation schemas", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects goal progress above 100 percent", () => {
-    expect(
-      goalSchema.safeParse({
-        title: "Ship portfolio",
-        area: "career",
-        status: "active",
-        progressPercent: 101,
-      }).success,
-    ).toBe(false);
+  it("keeps manual progress out of editable goal data", () => {
+    const result = goalSchema.parse({
+      title: "Ship portfolio",
+      area: "career",
+      status: "active",
+      progressPercent: 101,
+    });
+
+    expect(result).not.toHaveProperty("progressPercent");
   });
 
   it("rejects a job salary range whose maximum is below its minimum", () => {

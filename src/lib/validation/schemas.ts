@@ -128,7 +128,6 @@ export const goalSchema = z.object({
     .enum(["active", "paused", "completed", "abandoned"])
     .default("active"),
   targetDate: z.iso.date().optional(),
-  progressPercent: z.number().int().min(0).max(100).default(0),
   successDefinition: optionalText,
 });
 

@@ -16,7 +16,6 @@ describe("GoalCardHeader", () => {
           area: "personal",
           status: "active",
           target_date: "2026-09-30",
-          progress_percent: 40,
           success_definition: "Share the portfolio with five leads",
         }}
       />,

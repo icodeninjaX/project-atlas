@@ -13,7 +13,6 @@ type Goal = {
   area: string;
   status: string;
   target_date: string | null;
-  progress_percent: number;
   success_definition: string | null;
 };
 

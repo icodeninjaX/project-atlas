@@ -1,7 +1,7 @@
 import { Goal } from "lucide-react";
 import { GoalCardHeader } from "@/components/goals/goal-card-header";
 import { GoalCreatePanel } from "@/components/goals/goal-create-panel";
-import { GoalProgressSlider } from "@/components/goals/goal-progress-slider";
+import { GoalProgress } from "@/components/goals/goal-progress";
 import { MilestoneList } from "@/components/goals/milestone-list";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
@@ -14,7 +14,7 @@ export default async function GoalsPage() {
     ? await supabase
         .from("goals")
         .select(
-          "id,title,description,area,status,target_date,progress_percent,success_definition",
+          "id,title,description,area,status,target_date,success_definition",
         )
         .order("target_date", { nullsFirst: false })
     : { data: [] };
@@ -49,8 +49,8 @@ export default async function GoalsPage() {
         }
         description={
           <p className="text-muted-foreground mt-3 max-w-2xl text-sm leading-6">
-            Manual progress and milestone completion stay separate, so neither
-            hides the other.
+            Progress updates automatically as you complete, reopen, or add
+            milestones.
           </p>
         }
       />
@@ -68,24 +68,26 @@ export default async function GoalsPage() {
             </div>
           </div>
         ) : (
-          goals.map((goal) => (
-            <Card key={goal.id}>
-              <CardContent>
-                <GoalCardHeader goal={goal} />
-                <GoalProgressSlider
-                  key={`${goal.id}-${goal.progress_percent}`}
-                  goalId={goal.id}
-                  goalTitle={goal.title}
-                  progressPercent={goal.progress_percent}
-                  status={goal.status}
-                />
-                <MilestoneList
-                  goalId={goal.id}
-                  milestones={milestonesByGoal.get(goal.id) ?? []}
-                />
-              </CardContent>
-            </Card>
-          ))
+          goals.map((goal) => {
+            const milestones = milestonesByGoal.get(goal.id) ?? [];
+            const completedMilestones = milestones.filter(
+              (milestone) => milestone.completed_at,
+            ).length;
+
+            return (
+              <Card key={goal.id}>
+                <CardContent>
+                  <GoalCardHeader goal={goal} />
+                  <GoalProgress
+                    goalTitle={goal.title}
+                    completedMilestones={completedMilestones}
+                    totalMilestones={milestones.length}
+                  />
+                  <MilestoneList goalId={goal.id} milestones={milestones} />
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
     </div>

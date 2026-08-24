@@ -22,7 +22,6 @@ export function GoalForm({
     area: string;
     status: string;
     target_date: string | null;
-    progress_percent: number;
     success_definition: string | null;
   };
   autoFocus?: boolean;
@@ -93,17 +92,6 @@ export function GoalForm({
           name="targetDate"
           type="date"
           defaultValue={goal?.target_date ?? ""}
-          className="mt-1.5"
-        />
-      </label>
-      <label className="text-muted-foreground text-xs">
-        Progress percent
-        <Input
-          name="progressPercent"
-          type="number"
-          min="0"
-          max="100"
-          defaultValue={goal?.progress_percent ?? 0}
           className="mt-1.5"
         />
       </label>

@@ -44,7 +44,6 @@ describe("edit form parity", () => {
       area: "career",
       status: "paused",
       target_date: "2026-09-30",
-      progress_percent: 40,
       success_definition: "Portfolio is live and shared with five leads",
     };
 
@@ -53,6 +52,7 @@ describe("edit form parity", () => {
     expect(screen.getByLabelText("Goal title")).toHaveValue(goal.title);
     expect(screen.getByLabelText("Description")).toHaveValue(goal.description);
     expect(screen.getByLabelText("Status")).toHaveValue(goal.status);
+    expect(screen.queryByLabelText("Progress percent")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Success definition")).toHaveValue(
       goal.success_definition,
     );

@@ -2,6 +2,8 @@
 
 import { Check, ChevronDown, Circle, Plus } from "lucide-react";
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
+import { AtlasMark } from "@/components/atlas/atlas-mark";
 import { Button } from "@/components/ui/button";
 import { TooltipHint } from "@/components/ui/tooltip";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
@@ -12,6 +14,36 @@ type Milestone = {
   target_date: string | null;
   completed_at: string | null;
 };
+
+function MilestoneToggleButton({ milestone }: { milestone: Milestone }) {
+  const { pending } = useFormStatus();
+  const completed = Boolean(milestone.completed_at);
+  const action = completed ? "Reopen" : "Complete";
+  const pendingAction = completed ? "Reopening" : "Completing";
+
+  return (
+    <TooltipHint
+      label={pending ? `${pendingAction} milestone…` : `${action} milestone`}
+    >
+      <Button
+        type="submit"
+        variant="ghost"
+        size="icon"
+        disabled={pending}
+        aria-busy={pending}
+        aria-label={`${pending ? pendingAction : action} milestone ${milestone.title}`}
+      >
+        {pending ? (
+          <AtlasMark className="size-4 animate-spin [animation-duration:1.1s] motion-reduce:animate-none" />
+        ) : completed ? (
+          <Check className="text-primary size-4" />
+        ) : (
+          <Circle className="size-4" />
+        )}
+      </Button>
+    </TooltipHint>
+  );
+}
 
 export function MilestoneList({
   goalId,
@@ -93,26 +125,7 @@ export function MilestoneList({
                     name="completed"
                     value={milestone.completed_at ? "false" : "true"}
                   />
-                  <TooltipHint
-                    label={
-                      milestone.completed_at
-                        ? "Reopen milestone"
-                        : "Complete milestone"
-                    }
-                  >
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`${milestone.completed_at ? "Reopen" : "Complete"} milestone ${milestone.title}`}
-                    >
-                      {milestone.completed_at ? (
-                        <Check className="text-primary size-4" />
-                      ) : (
-                        <Circle className="size-4" />
-                      )}
-                    </Button>
-                  </TooltipHint>
+                  <MilestoneToggleButton milestone={milestone} />
                   <span
                     className={`min-w-0 flex-1 text-xs ${milestone.completed_at ? "text-muted-foreground line-through" : ""}`}
                   >

@@ -47,11 +47,30 @@ begin
     original_balance_centavos = excluded.original_balance_centavos,
     current_balance_centavos = excluded.current_balance_centavos;
 
-  insert into public.goals(id, user_id, title, description, area, status, target_date, progress_percent, success_definition)
+  insert into public.goals(id, user_id, title, description, area, status, target_date, success_definition)
   values
-    ('40000000-0000-4000-8000-000000000001', seed_user, 'Strengthen my developer portfolio', 'Publish three focused case studies.', 'career', 'active', current_date + 60, 35, 'Three polished, publicly accessible case studies'),
-    ('40000000-0000-4000-8000-000000000002', seed_user, 'Build a starter emergency fund', 'Set aside one month of basic expenses.', 'finance', 'active', current_date + 120, 18, 'One month of essential expenses saved')
-  on conflict (id) do update set progress_percent = excluded.progress_percent;
+    ('40000000-0000-4000-8000-000000000001', seed_user, 'Strengthen my developer portfolio', 'Publish three focused case studies.', 'career', 'active', current_date + 60, 'Three polished, publicly accessible case studies'),
+    ('40000000-0000-4000-8000-000000000002', seed_user, 'Build a starter emergency fund', 'Set aside one month of basic expenses.', 'finance', 'active', current_date + 120, 'One month of essential expenses saved')
+  on conflict (id) do update set
+    title = excluded.title,
+    description = excluded.description,
+    target_date = excluded.target_date,
+    success_definition = excluded.success_definition;
+
+  insert into public.goal_milestones(id, user_id, goal_id, title, target_date, completed_at, sort_order)
+  values
+    ('41000000-0000-4000-8000-000000000001', seed_user, '40000000-0000-4000-8000-000000000001', 'Choose the case studies', current_date + 7, timezone('utc', now()) - interval '2 days', 1),
+    ('41000000-0000-4000-8000-000000000002', seed_user, '40000000-0000-4000-8000-000000000001', 'Write and polish each story', current_date + 35, null, 2),
+    ('41000000-0000-4000-8000-000000000003', seed_user, '40000000-0000-4000-8000-000000000001', 'Publish the portfolio', current_date + 60, null, 3),
+    ('41000000-0000-4000-8000-000000000004', seed_user, '40000000-0000-4000-8000-000000000002', 'Set the monthly savings target', current_date + 7, timezone('utc', now()) - interval '1 day', 1),
+    ('41000000-0000-4000-8000-000000000005', seed_user, '40000000-0000-4000-8000-000000000002', 'Save the first quarter', current_date + 35, null, 2),
+    ('41000000-0000-4000-8000-000000000006', seed_user, '40000000-0000-4000-8000-000000000002', 'Reach half of the target', current_date + 70, null, 3),
+    ('41000000-0000-4000-8000-000000000007', seed_user, '40000000-0000-4000-8000-000000000002', 'Fund one month of expenses', current_date + 120, null, 4)
+  on conflict (id) do update set
+    title = excluded.title,
+    target_date = excluded.target_date,
+    completed_at = excluded.completed_at,
+    sort_order = excluded.sort_order;
 
   insert into public.tasks(id, user_id, title, description, status, priority, due_at, scheduled_for, estimated_minutes, related_goal_id)
   values
