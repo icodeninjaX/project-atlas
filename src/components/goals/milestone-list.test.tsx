@@ -47,6 +47,7 @@ describe("MilestoneList", () => {
     fireEvent.click(screen.getByRole("button", { name: "View" }));
 
     expect(screen.getByText("Plan the route")).toBeVisible();
+    expect(screen.queryByText("2026-09-01")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Hide" }));
 
@@ -95,6 +96,11 @@ describe("MilestoneList", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "View" }));
+    expect(
+      screen.queryByText(
+        "The consequences of leaving a prospect's problem unsolved.",
+      ),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Add learning notes")).not.toBeInTheDocument();
     expect(screen.queryByText("Open learning notes")).not.toBeInTheDocument();
     await user.click(

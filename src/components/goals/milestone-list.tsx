@@ -14,7 +14,6 @@ import {
 import { useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { AtlasMark } from "@/components/atlas/atlas-mark";
-import { MilestoneRichTextDisplay } from "@/components/goals/milestone-rich-text-display";
 import { MilestoneRichTextEditor } from "@/components/goals/milestone-rich-text-editor";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
@@ -535,13 +534,7 @@ export function MilestoneList({
                     >
                       {milestone.title}
                     </button>
-                    <MilestoneRichTextDisplay content={milestone.description} />
                   </div>
-                  {milestone.target_date && (
-                    <time className="text-muted-foreground font-mono text-[10px]">
-                      {milestone.target_date}
-                    </time>
-                  )}
                   {actionMode === "edit" && (
                     <TooltipHint label={`Edit ${milestone.title}`}>
                       <Button
