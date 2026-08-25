@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createGoalAction,
+  deleteGoalAction,
   deleteMilestoneAction,
   updateGoalAction,
   updateGoalProgressAction,
@@ -109,6 +110,38 @@ describe("goal actions", () => {
       message: "Goal progress recalculated from milestones.",
     });
     expect(update).toHaveBeenCalledWith({ progress_percent: 0 });
+  });
+
+  it("deletes a goal and scopes the deletion to its owner", async () => {
+    const finalOwnerFilter = vi.fn().mockResolvedValue({ error: null });
+    const idFilter = vi.fn().mockReturnValue({ eq: finalOwnerFilter });
+    const deleteGoal = vi.fn().mockReturnValue({ eq: idFilter });
+
+    mocks.createClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: "user-1" } },
+        }),
+      },
+      from: vi.fn().mockReturnValue({ delete: deleteGoal }),
+    });
+
+    const formData = new FormData();
+    formData.set("goalId", "2d334d84-4e32-46fa-bbdb-05ce7dc0dfbb");
+
+    await expect(deleteGoalAction(formData)).resolves.toEqual({
+      success: true,
+      message: "Goal deleted.",
+    });
+    expect(deleteGoal).toHaveBeenCalledOnce();
+    expect(idFilter).toHaveBeenCalledWith(
+      "id",
+      "2d334d84-4e32-46fa-bbdb-05ce7dc0dfbb",
+    );
+    expect(finalOwnerFilter).toHaveBeenCalledWith("user_id", "user-1");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/goals");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/tasks");
   });
 
   it("updates a milestone and scopes the change to its owner", async () => {

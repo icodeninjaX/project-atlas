@@ -15,6 +15,7 @@ export const offlineMutationTypes = [
   "task.delete",
   "goal.create",
   "goal.update",
+  "goal.delete",
   "goal.updateProgress",
   "milestone.create",
   "milestone.update",

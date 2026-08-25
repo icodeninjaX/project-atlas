@@ -93,6 +93,32 @@ export async function updateGoalAction(
   return { success: true, message: "Goal updated." };
 }
 
+export async function deleteGoalAction(
+  formData: FormData,
+): Promise<GoalActionState> {
+  const id = String(formData.get("goalId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id))
+    return { success: false, message: "The goal could not be found." };
+  const supabase = await createClient();
+  if (!supabase)
+    return { success: false, message: "Supabase is not configured." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, message: "Your session expired." };
+  const { error } = await supabase
+    .from("goals")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error)
+    return { success: false, message: "The goal could not be deleted." };
+  revalidatePath("/goals");
+  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
+  return { success: true, message: "Goal deleted." };
+}
+
 export async function updateGoalProgressAction(
   formData: FormData,
 ): Promise<GoalActionState> {

@@ -14,6 +14,7 @@ import {
 import {
   createGoalAction,
   createMilestoneAction,
+  deleteGoalAction,
   deleteMilestoneAction,
   toggleMilestoneAction,
   updateGoalAction,
@@ -130,6 +131,8 @@ async function executeMutation(
       return createGoalAction(blankState, formData);
     case "goal.update":
       return updateGoalAction(blankState, formData);
+    case "goal.delete":
+      return deleteGoalAction(formData);
     case "goal.updateProgress":
       return updateGoalProgressAction(formData);
     case "milestone.create":
