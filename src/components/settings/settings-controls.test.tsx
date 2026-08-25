@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SettingsPreferencesForm } from "./settings-preferences-form";
+import { FontPreferencePicker } from "./font-preference-picker";
 import { ThemePreferencePicker } from "./theme-preference-picker";
 
 const mocks = vi.hoisted(() => ({
@@ -20,6 +21,8 @@ vi.mock("@/lib/settings/actions", () => ({
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  window.localStorage.clear();
+  delete document.documentElement.dataset.font;
 });
 
 describe("Settings controls", () => {
@@ -51,5 +54,25 @@ describe("Settings controls", () => {
     );
     await user.click(screen.getByRole("button", { name: "Dark" }));
     expect(mocks.setTheme).toHaveBeenCalledWith("dark");
+  });
+
+  it("previews, applies, persists, and resets the app font", async () => {
+    const user = userEvent.setup();
+    document.documentElement.dataset.font = "geist";
+    render(<FontPreferencePicker />);
+
+    expect(screen.getAllByRole("radio")).toHaveLength(11);
+    expect(screen.getByRole("radio", { name: /Geist/i })).toBeChecked();
+
+    await user.click(screen.getByRole("radio", { name: /Lora/i }));
+
+    expect(document.documentElement).toHaveAttribute("data-font", "lora");
+    expect(window.localStorage.getItem("atlas-font-family:v1")).toBe("lora");
+    expect(screen.getByText("Live preview · Lora")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Reset font" }));
+
+    expect(document.documentElement).toHaveAttribute("data-font", "geist");
+    expect(window.localStorage.getItem("atlas-font-family:v1")).toBe("geist");
   });
 });

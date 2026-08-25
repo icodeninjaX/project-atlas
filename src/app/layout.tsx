@@ -1,23 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Check } from "lucide-react";
 import { Toaster } from "sonner";
+import { appFontVariables } from "@/app/fonts";
 import { BrandLaunchScreen } from "@/components/atlas/brand-launch-screen";
 import { ThemeProvider } from "@/components/atlas/theme-provider";
 import { PwaRegistration } from "@/components/offline/pwa-registration";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DEFAULT_FONT_PREFERENCE } from "@/lib/font-preferences";
 import "./globals.css";
 import toastStyles from "./toast.module.css";
-
-const geist = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 function AtlasSuccessIcon() {
   return (
@@ -83,10 +74,13 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}
-      >
+    <html
+      lang="en"
+      className={appFontVariables}
+      data-font={DEFAULT_FONT_PREFERENCE}
+      suppressHydrationWarning
+    >
+      <body className="font-sans antialiased">
         <BrandLaunchScreen />
         <ThemeProvider
           attribute="class"

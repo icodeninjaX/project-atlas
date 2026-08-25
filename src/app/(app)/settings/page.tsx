@@ -28,6 +28,7 @@ import { SecuritySettings } from "@/components/settings/security-settings";
 import { MfaSettings } from "@/components/settings/mfa-settings";
 import { ReminderSettings } from "@/components/settings/reminder-settings";
 import { SettingsPreferencesForm } from "@/components/settings/settings-preferences-form";
+import { FontPreferencePicker } from "@/components/settings/font-preference-picker";
 import { ThemePreferencePicker } from "@/components/settings/theme-preference-picker";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -241,13 +242,17 @@ export default async function SettingsPage() {
                     Appearance
                   </CardTitle>
                   <p className="text-muted-foreground mt-1 text-xs leading-5">
-                    Choose a theme with a clear view of the active setting.
+                    Make ATLAS feel like your workspace with a theme and
+                    app-wide typeface.
                   </p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
               <ThemePreferencePicker />
+              <div className="border-border border-t pt-6">
+                <FontPreferencePicker />
+              </div>
             </CardContent>
           </Card>
 

@@ -17,12 +17,13 @@
   --color-ring: var(--ring);
   --color-destructive: var(--destructive);
   --color-sidebar: var(--sidebar);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-app);
   --font-mono: var(--font-geist-mono);
 }
 
 :root {
   color-scheme: light;
+  --font-app: var(--font-geist-sans);
   --background: #f4f7fb;
   --foreground: #111827;
   --card: #ffffff;
@@ -37,6 +38,46 @@
   --ring: #3977f6;
   --destructive: #c83a4a;
   --sidebar: #f9fbfe;
+}
+
+:root[data-font="inter"] {
+  --font-app: var(--font-inter);
+}
+
+:root[data-font="manrope"] {
+  --font-app: var(--font-manrope);
+}
+
+:root[data-font="dm-sans"] {
+  --font-app: var(--font-dm-sans);
+}
+
+:root[data-font="source-sans"] {
+  --font-app: var(--font-source-sans);
+}
+
+:root[data-font="atkinson"] {
+  --font-app: var(--font-atkinson);
+}
+
+:root[data-font="lexend"] {
+  --font-app: var(--font-lexend);
+}
+
+:root[data-font="space-grotesk"] {
+  --font-app: var(--font-space-grotesk);
+}
+
+:root[data-font="lora"] {
+  --font-app: var(--font-lora);
+}
+
+:root[data-font="merriweather"] {
+  --font-app: var(--font-merriweather);
+}
+
+:root[data-font="roboto-mono"] {
+  --font-app: var(--font-roboto-mono);
 }
 
 .dark {
