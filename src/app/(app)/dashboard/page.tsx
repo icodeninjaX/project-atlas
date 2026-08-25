@@ -4,6 +4,7 @@ import {
   CalendarClock,
   CheckCircle2,
   CircleDollarSign,
+  CreditCard,
   Landmark,
   Plus,
   Target,
@@ -308,33 +309,39 @@ export default async function DashboardPage() {
 
       <section aria-labelledby="financial-snapshot" className="mt-3 sm:mt-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle id="financial-snapshot">Financial snapshot</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-2">
+              <CreditCard
+                aria-hidden="true"
+                className="text-primary size-4 shrink-0"
+              />
+              <CardTitle id="financial-snapshot">Financial snapshot</CardTitle>
+            </div>
             <Link
               href="/money/accounts"
-              className="text-primary focus-visible:ring-ring rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+              className="text-primary focus-visible:ring-ring hidden rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none sm:inline-flex"
             >
               View money
             </Link>
           </CardHeader>
-          <CardContent className="p-0 pt-4 sm:p-0 sm:pt-5">
-            <div className="border-border grid border-t sm:grid-cols-2 xl:grid-cols-4">
+          <CardContent className="pt-4 sm:pt-5">
+            <div className="border-border grid grid-cols-2 overflow-hidden rounded-xl border xl:grid-cols-4">
               {metrics.map((metric, index) => (
                 <div
                   key={metric.label}
-                  className={`min-w-0 p-4 sm:p-5 ${
-                    index > 0 ? "border-border border-t" : ""
-                  } ${index === 1 ? "sm:border-t-0 sm:border-l" : ""} ${
-                    index === 2 ? "xl:border-t-0 xl:border-l" : ""
-                  } ${index === 3 ? "sm:border-l xl:border-t-0" : ""}`}
+                  className={`min-h-24 min-w-0 p-2.5 min-[360px]:p-3 sm:p-4 ${
+                    index >= 2 ? "border-border border-t xl:border-t-0" : ""
+                  } ${index % 2 === 1 ? "border-border border-l" : ""} ${
+                    index === 2 ? "xl:border-border xl:border-l" : ""
+                  }`}
                 >
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-muted-foreground text-[clamp(0.625rem,3vw,0.75rem)] sm:text-xs">
                     {metric.label}
                   </p>
-                  <p className="mt-2 font-mono text-xl font-semibold tracking-tight break-words sm:mt-3 sm:text-2xl">
+                  <p className="mt-2 font-mono text-[clamp(0.875rem,4.6vw,1.125rem)] leading-6 font-semibold tracking-tight break-words sm:text-xl">
                     <SensitiveValue>{metric.value}</SensitiveValue>
                   </p>
-                  <p className="text-muted-foreground mt-1.5 text-[11px] leading-4">
+                  <p className="text-muted-foreground mt-1.5 text-[clamp(0.625rem,2.8vw,0.6875rem)] leading-4 sm:text-[11px]">
                     {metric.label === "Expenses this month" &&
                     dashboard.financial.remaining_budget_centavos != null ? (
                       <SensitiveValue>{metric.note}</SensitiveValue>
