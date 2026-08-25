@@ -2,6 +2,15 @@ import { format, startOfWeek } from "date-fns";
 
 const MANILA_TIMEZONE = "Asia/Manila";
 
+function manilaIsoDate(value: string | Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: MANILA_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(typeof value === "string" ? new Date(value) : value);
+}
+
 function toManilaDate(value: string | Date): Date {
   const date = typeof value === "string" ? new Date(value) : value;
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -35,6 +44,22 @@ export function manilaDateLabel(value: string | Date): string {
     month: "long",
     day: "numeric",
   }).format(typeof value === "string" ? new Date(value) : value);
+}
+
+export function previousManilaDayWindow(value: string | Date): {
+  date: string;
+  start: string;
+  end: string;
+} {
+  const today = manilaIsoDate(value);
+  const todayStart = new Date(`${today}T00:00:00+08:00`);
+  const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
+
+  return {
+    date: manilaIsoDate(yesterdayStart),
+    start: yesterdayStart.toISOString(),
+    end: todayStart.toISOString(),
+  };
 }
 
 export function mondayWeekStart(value: string | Date): string {

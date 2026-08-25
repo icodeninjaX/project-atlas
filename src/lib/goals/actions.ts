@@ -153,6 +153,42 @@ export async function createMilestoneAction(
   return { success: true, message: "Milestone added." };
 }
 
+export async function updateMilestoneAction(
+  formData: FormData,
+): Promise<GoalActionState> {
+  const id = String(formData.get("milestoneId") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  const targetDate = String(formData.get("targetDate") ?? "").trim();
+  if (
+    !/^[0-9a-f-]{36}$/i.test(id) ||
+    !title ||
+    title.length > 160 ||
+    (targetDate && !/^\d{4}-\d{2}-\d{2}$/.test(targetDate))
+  ) {
+    return { success: false, message: "Check the milestone details." };
+  }
+  const supabase = await createClient();
+  if (!supabase)
+    return { success: false, message: "Supabase is not configured." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, message: "Your session expired." };
+  const { error } = await supabase
+    .from("goal_milestones")
+    .update({
+      title,
+      target_date: targetDate || null,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error)
+    return { success: false, message: "The milestone could not be updated." };
+  revalidatePath("/goals");
+  revalidatePath("/dashboard");
+  return { success: true, message: "Milestone updated." };
+}
+
 export async function toggleMilestoneAction(
   formData: FormData,
 ): Promise<GoalActionState> {
@@ -179,4 +215,29 @@ export async function toggleMilestoneAction(
   revalidatePath("/goals");
   revalidatePath("/dashboard");
   return { success: true, message: "Milestone updated." };
+}
+
+export async function deleteMilestoneAction(
+  formData: FormData,
+): Promise<GoalActionState> {
+  const id = String(formData.get("milestoneId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id))
+    return { success: false, message: "The milestone could not be found." };
+  const supabase = await createClient();
+  if (!supabase)
+    return { success: false, message: "Supabase is not configured." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, message: "Your session expired." };
+  const { error } = await supabase
+    .from("goal_milestones")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error)
+    return { success: false, message: "The milestone could not be removed." };
+  revalidatePath("/goals");
+  revalidatePath("/dashboard");
+  return { success: true, message: "Milestone removed." };
 }

@@ -1,3 +1,160 @@
+# Daily Progress Report Design QA
+
+## Comparison target
+
+- Source visual truth: `C:\Users\kdv06\AppData\Local\Temp\atlas-daily-progress-report-source-393x852.png`
+- Final implementation: `C:\Users\kdv06\AppData\Local\Temp\atlas-daily-progress-report-implementation-final-393x852.png`
+- Authenticated production-build evidence: `C:\Users\kdv06\.codex\visualizations\2026\08\25\01a037be-ce05-7ae3-ac5c-ef11e07bb7d7\atlas-daily-progress-report-live.png`
+- Full-view comparison: `C:\Users\kdv06\AppData\Local\Temp\atlas-daily-progress-report-comparison-final.png`
+- Focused card comparison: `C:\Users\kdv06\AppData\Local\Temp\atlas-daily-progress-report-focused-comparison-final.png`
+- Route under test: `http://localhost:3100/dashboard`; a temporary local-only harness rendered the same production component with the source's count for exact visual comparison and was removed after verification.
+- State: dark theme, three tasks completed yesterday, modal open, and the primary Done action focused.
+
+## Viewport and normalization
+
+- Source: 393 × 852 pixels at 1× density, captured from the selected Superdesign draft.
+- Implementation: 393 × 852 CSS pixels and 393 × 852 captured pixels at 1× density in the Codex in-app Browser.
+- The full screenshots were placed together without resizing. The focused comparison uses native-pixel card crops: source 361 × 417 pixels and implementation 361 × 418 pixels.
+- The source includes the authenticated dashboard behind the overlay while the isolated implementation harness has an empty page. The modal card, overlay treatment, content, focus state, and viewport are equivalent; background page content was excluded from fidelity findings.
+
+## Findings
+
+No actionable P0, P1, or P2 findings remain after the second comparison pass.
+
+- Fonts and typography: Geist and Geist Mono reproduce the source hierarchy, including the tracked eyebrow, tabular slashed-zero count, compact supporting copy, and strong report title. Text sizes, weights, line heights, and wrapping align in the focused comparison.
+- Spacing and layout rhythm: the card retains the source's 16-pixel mobile gutter, 361-pixel width, double-border construction, inset metric panel, section rhythm, 44-pixel controls, and near-identical final height. It remains vertically centered with a viewport-bounded scroll fallback.
+- Colors and visual tokens: ATLAS background, card, border, foreground, muted, and primary tokens match the selected dark visual. The fixed dark overlay and restrained arc preserve focus and contrast without gradients.
+- Image quality and asset fidelity: the target contains no photographic or illustrative assets. Check, close, and decorative circle elements use the project's Lucide icon family; no custom SVG, CSS drawing, emoji, or placeholder asset was introduced.
+- Copy and content: the selected factual report copy is preserved and made data-aware. Counts from one through ten use natural sentence wording, while the metric and momentum values remain numeric and pluralize correctly.
+- Responsiveness and accessibility: the modal uses Radix Dialog semantics, traps focus, supports Escape and backdrop dismissal, gives both close actions accessible labels, opens with focus on Done, and stays within 16-pixel mobile gutters. The momentum graphic has an accessible label.
+- Interaction integrity: Done closed the dialog, focus containment was active, and reloading did not reopen the already-shown user/date report. The final implementation produced no browser console errors or application warnings; only React development and Fast Refresh information appeared.
+
+## Comparison history
+
+### Pass 1
+
+- [P2] Metric and hierarchy drift: the first implementation used a filled circular metric icon, an oversized count, and a taller inset panel than the selected card.
+  - Fix: changed the icon container to the outlined rounded-square treatment, reduced the count to the source scale, and restored the dark inset surface.
+- [P2] Momentum emphasis and vertical rhythm: the first implementation emphasized the numeric result, added a visible divider, and placed the lower section too far down.
+  - Fix: emphasized the momentum label, moved the result to muted mono text, removed the extra divider, and matched the source spacing.
+- Post-fix evidence: `atlas-daily-progress-report-comparison-revised.png` and `atlas-daily-progress-report-focused-comparison-revised.png`.
+
+### Pass 2
+
+- The source and final implementation were compared together at equal 393 × 852 dimensions and again as native-pixel card crops.
+- Typography, spacing, tokens, icons, copy, focus state, responsive bounds, and dismissal behavior were rechecked. No actionable P0/P1/P2 difference remains.
+
+## Automated and browser verification
+
+- Six focused component tests passed, covering plural and singular content, the zero-task state, primary dismissal, once-per-user/date persistence, and React Strict Mode effect replay.
+- The Manila day-window tests passed.
+- The complete suite passed: 175 tests across 49 files.
+- Next.js route type generation and TypeScript passed.
+- ESLint passed without warnings.
+- The Next.js 16.3.2 production build passed.
+- Browser-rendered dismissal and once-only behavior passed at the 393 × 852 mobile viewport.
+- The authenticated production build rendered the card with the account's live count of 11 completed tasks and reported no console errors or application warnings.
+
+## Follow-up polish
+
+- [P3] The source's check icon border is marginally brighter than the token-driven implementation; the current treatment better preserves ATLAS's existing icon contrast and remains visually equivalent at device scale.
+
+## Implementation checklist
+
+- [x] Selected Daily Progress Report composition reproduced
+- [x] Live completed-task count and grammar
+- [x] Asia/Manila yesterday boundary
+- [x] Once-per-user/date persistence
+- [x] Accessible modal, focus, and dismissal behavior
+- [x] Native-size full and focused visual comparison
+- [x] Automated and browser verification
+
+final result: passed
+
+---
+
+# Financial Snapshot Mobile Design QA
+
+## Comparison target
+
+- Source visual truth:
+  - `C:\Users\kdv06\AppData\Local\Temp\codex-clipboard-07a018e3-dac5-4569-b6f5-805b1f6e888d.png`
+- Final mobile implementation:
+  - `C:\Users\kdv06\.codex\visualizations\2026\08\25\01a037ce-2865-7b50-946f-5252decdfe4e\financial-snapshot-mobile-final.png`
+- Equal-size source/implementation comparison:
+  - `C:\Users\kdv06\.codex\visualizations\2026\08\25\01a037ce-2865-7b50-946f-5252decdfe4e\financial-snapshot-source-vs-final.png`
+- Supporting responsive evidence:
+  - `C:\Users\kdv06\.codex\visualizations\2026\08\25\01a037ce-2865-7b50-946f-5252decdfe4e\atlas-dashboard-mobile-320-final.png`
+  - `C:\Users\kdv06\.codex\visualizations\2026\08\25\01a037ce-2865-7b50-946f-5252decdfe4e\atlas-dashboard-desktop-regression.png`
+- Route: `http://localhost:3000/dashboard#financial-snapshot`
+- State: authenticated ATLAS dashboard in the default dark theme. The source shows an empty financial state; the implementation uses live balances and helper copy, so dynamic amounts were checked for fit rather than literal equality.
+
+## Viewport and normalization
+
+- Source: 418 × 288 pixels at 1× density.
+- Primary implementation: 433 × 844 browser viewport override with a 418-pixel client/capture width at 1× density. The financial snapshot was cropped with 12 pixels of surrounding page background to 418 × 288 pixels, matching the source exactly.
+- The source card measures 398 × 265 pixels with a 364 × 195 inner grid. The implementation preserves the 265-pixel card height and 195-pixel grid height; its 386-pixel card and 352-pixel grid widths reflect ATLAS's existing 16-pixel mobile page gutter instead of the isolated mock's 12-pixel gutter.
+- Narrow resilience check: 320 × 800 CSS viewport at 1× density. Client width and scroll width were both 320 pixels; the card measured 288 × 264 pixels and retained two equal metric columns.
+- Desktop regression check: 1440 × 1000 viewport override with a 1425-pixel client width at 1× density. The snapshot retained four equal columns and the desktop `View money` link.
+
+## Comparison evidence
+
+- Full target comparison: `financial-snapshot-source-vs-final.png` places the complete 418 × 288 source and implementation crops together at native scale.
+- No additional focused crop was needed because the selected visual target is already a single compact component and every title, label, value, note, border, and icon remains legible in the native-scale comparison.
+
+## Findings
+
+No actionable P0, P1, or P2 findings remain after the second responsive pass.
+
+- Fonts and typography: the implementation uses ATLAS's existing Geist and Geist Mono fonts, matching the source's compact sans/mono hierarchy. Fluid mobile type keeps live values such as `₱49,500.00` on one line at 320 pixels while reaching the source's 18-pixel value size at the reference width.
+- Spacing and layout rhythm: the title row, 16-pixel card radius, 12-pixel inner radius, 2 × 2 grid, 265-pixel card height, 195-pixel inner-grid height, cell dividers, and compact vertical rhythm match the target. The only residual difference is the intentional four-pixel gutter increase required by the existing ATLAS page shell.
+- Colors and visual tokens: background, card surface, blue accent, muted labels, foreground values, and border contrast use the existing ATLAS dark-theme tokens and visually align with the source.
+- Image quality and asset fidelity: the component contains no photographic or illustrative raster assets. The header uses the closest matching icon from ATLAS's existing Lucide outline family; no custom SVG, CSS drawing, emoji, or placeholder asset was added.
+- Copy and content: all four source labels are unchanged. Helper copy remains data-aware (`budget left` and the next due date in the live state, source empty-state copy when those values are absent), and privacy masking still wraps every sensitive amount.
+- Responsiveness and accessibility: the card remains a labelled region, avoids horizontal overflow at 320 and 418 pixels, preserves a balanced two-column mobile scan, returns to four columns on desktop, and hides the secondary `View money` link only in the reference-matching mobile state.
+- Interaction integrity: the desktop `View money` link successfully navigated to `/money/accounts` and browser Back returned to the dashboard. The final browser console had no errors or warnings.
+
+## Comparison history
+
+### Pass 1
+
+- [P2] At 320 pixels, the first implementation allowed the live `₱49,500.00` value to wrap and made metric rows uneven because labels and helper text retained their reference-width sizes.
+  - Fix: added bounded fluid typography, narrower sub-360-pixel cell padding, and a fixed 24-pixel amount line height while retaining the source sizes at the reference width.
+  - Post-fix evidence: `atlas-dashboard-mobile-320-final.png` and browser measurements showing four 96-pixel metric cells with no value wrapping or page overflow.
+
+### Pass 2
+
+- The source and final implementation were placed together at 418 × 288 pixels in `financial-snapshot-source-vs-final.png`.
+- Typography, spacing, colors, assets, icon treatment, copy, responsive structure, live-value fit, link behavior, desktop regression, and console health were rechecked. No actionable P0/P1/P2 difference remains.
+
+## Automated and browser verification
+
+- Prettier passed for the changed dashboard file.
+- ESLint passed for the changed dashboard file.
+- Six focused money-formatting and balance tests passed.
+- Git whitespace validation passed for the dashboard diff.
+- Browser-rendered checks passed at 320 × 800, reference-matched 433 × 844, and 1440 × 1000 viewport overrides.
+- Repository-wide TypeScript verification is currently blocked by a pre-existing unrelated error in `src/components/goals/milestone-list.test.tsx:128` (`container` is not defined).
+
+## Follow-up polish
+
+- [P3] The app shell keeps its established 16-pixel mobile gutter, making the card eight pixels narrower overall than the isolated source. Tightening the page gutter for only this card would improve literal width fidelity but would break alignment with every neighboring dashboard card.
+
+## Implementation checklist
+
+- [x] Icon-led title row
+- [x] Reference-matching 2 × 2 mobile metric grid
+- [x] Live-data and privacy behavior preserved
+- [x] Long currency values fit at 320 pixels
+- [x] Mobile secondary link hidden and desktop link preserved
+- [x] Reference-sized visual comparison
+- [x] Desktop four-column regression check
+- [x] Browser console and navigation verification
+
+final result: passed
+
+---
+
 # Daily Gratitude Design QA
 
 ## Comparison target

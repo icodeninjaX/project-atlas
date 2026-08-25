@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createGoalAction,
+  deleteMilestoneAction,
   updateGoalAction,
   updateGoalProgressAction,
+  updateMilestoneAction,
 } from "./actions";
 
 const mocks = vi.hoisted(() => ({
@@ -107,5 +109,72 @@ describe("goal actions", () => {
       message: "Goal progress recalculated from milestones.",
     });
     expect(update).toHaveBeenCalledWith({ progress_percent: 0 });
+  });
+
+  it("updates a milestone and scopes the change to its owner", async () => {
+    const finalOwnerFilter = vi.fn().mockResolvedValue({ error: null });
+    const idFilter = vi.fn().mockReturnValue({ eq: finalOwnerFilter });
+    const update = vi.fn().mockReturnValue({ eq: idFilter });
+
+    mocks.createClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: "user-1" } },
+        }),
+      },
+      from: vi.fn().mockReturnValue({ update }),
+    });
+
+    const formData = new FormData();
+    formData.set("milestoneId", "53f3368c-d188-4aef-82b3-2846ba974169");
+    formData.set("title", "Book the lodging");
+    formData.set("targetDate", "2026-09-10");
+
+    await expect(updateMilestoneAction(formData)).resolves.toEqual({
+      success: true,
+      message: "Milestone updated.",
+    });
+    expect(update).toHaveBeenCalledWith({
+      title: "Book the lodging",
+      target_date: "2026-09-10",
+    });
+    expect(idFilter).toHaveBeenCalledWith(
+      "id",
+      "53f3368c-d188-4aef-82b3-2846ba974169",
+    );
+    expect(finalOwnerFilter).toHaveBeenCalledWith("user_id", "user-1");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/goals");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("removes a milestone and scopes the deletion to its owner", async () => {
+    const finalOwnerFilter = vi.fn().mockResolvedValue({ error: null });
+    const idFilter = vi.fn().mockReturnValue({ eq: finalOwnerFilter });
+    const deleteMilestone = vi.fn().mockReturnValue({ eq: idFilter });
+
+    mocks.createClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: "user-1" } },
+        }),
+      },
+      from: vi.fn().mockReturnValue({ delete: deleteMilestone }),
+    });
+
+    const formData = new FormData();
+    formData.set("milestoneId", "53f3368c-d188-4aef-82b3-2846ba974169");
+
+    await expect(deleteMilestoneAction(formData)).resolves.toEqual({
+      success: true,
+      message: "Milestone removed.",
+    });
+    expect(deleteMilestone).toHaveBeenCalledOnce();
+    expect(idFilter).toHaveBeenCalledWith(
+      "id",
+      "53f3368c-d188-4aef-82b3-2846ba974169",
+    );
+    expect(finalOwnerFilter).toHaveBeenCalledWith("user_id", "user-1");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/goals");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard");
   });
 });

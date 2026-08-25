@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/atlas/app-header";
 import { AppShell } from "@/components/atlas/app-shell";
+import { YesterdayProductivityReport } from "@/components/notifications/yesterday-productivity-report";
 import { OfflineProvider } from "@/components/offline/offline-provider";
 import { PrivacyProvider } from "@/components/privacy/privacy-provider";
+import { previousManilaDayWindow } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AuthenticatedLayout({
@@ -24,15 +26,30 @@ export default async function AuthenticatedLayout({
     redirect("/mfa");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", user.id)
-    .maybeSingle();
+  const yesterday = previousManilaDayWindow(new Date());
+  const [{ data: profile }, { count: completedTaskCount }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("status", "completed")
+      .gte("completed_at", yesterday.start)
+      .lt("completed_at", yesterday.end),
+  ]);
 
   return (
     <PrivacyProvider userId={user.id}>
       <OfflineProvider userId={user.id}>
+        <YesterdayProductivityReport
+          completedTaskCount={completedTaskCount ?? 0}
+          summaryDate={yesterday.date}
+          userId={user.id}
+        />
         <AppShell>
           <AppHeader displayName={profile?.display_name ?? user.email} />
           {children}

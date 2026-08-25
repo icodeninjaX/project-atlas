@@ -1,0 +1,227 @@
+.toast {
+  --border-radius: 1rem;
+
+  gap: 0.75rem !important;
+  padding: 0.875rem 1rem !important;
+  border-radius: 1rem !important;
+  font-family: var(--font-geist-sans), sans-serif !important;
+  box-shadow: 0 18px 46px -28px rgb(15 23 42 / 45%) !important;
+}
+
+.success {
+  --atlas-success-check: #15803d;
+
+  border-color: color-mix(
+    in srgb,
+    var(--primary) 32%,
+    var(--border)
+  ) !important;
+  border-inline-start: 3px solid var(--primary) !important;
+  color: var(--card-foreground) !important;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--primary) 11%, transparent),
+      transparent 58%
+    ),
+    var(--card) !important;
+  box-shadow:
+    0 18px 46px -28px rgb(15 23 42 / 52%),
+    inset 0 1px rgb(255 255 255 / 55%) !important;
+}
+
+.title {
+  color: inherit !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.012em;
+}
+
+.description {
+  font-size: 0.75rem !important;
+  line-height: 1.125rem !important;
+}
+
+.success .description {
+  color: var(--muted-foreground) !important;
+}
+
+.content {
+  gap: 0.125rem !important;
+  padding-inline-end: 1.5rem;
+}
+
+.success .icon {
+  display: grid !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  align-self: center !important;
+  justify-self: center !important;
+  line-height: 0 !important;
+  place-content: center !important;
+  place-items: center !important;
+  border: 1px solid
+    color-mix(in srgb, var(--atlas-success-check) 20%, var(--primary));
+  border-radius: 0.625rem;
+  color: var(--atlas-success-check);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.success .icon svg {
+  width: 1rem !important;
+  height: 1rem !important;
+  margin: 0 !important;
+  stroke-width: 2.5;
+}
+
+.successIcon {
+  position: relative;
+  display: grid;
+  width: 1rem;
+  height: 1rem;
+  place-items: center;
+}
+
+.successAtlasMark,
+.successCheckPhase {
+  grid-area: 1 / 1;
+  transform-origin: center;
+}
+
+.successAtlasMark {
+  width: 1.125rem;
+  height: 1.125rem;
+  background: var(--primary);
+  -webkit-mask: url("/brand/atlas-system-core.png") center / contain no-repeat;
+  mask: url("/brand/atlas-system-core.png") center / contain no-repeat;
+  animation: atlas-toast-logo-resolve 0.82s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.successCheckPhase {
+  display: grid;
+  width: 1rem;
+  height: 1rem;
+  place-items: center;
+  color: var(--atlas-success-check);
+  animation: atlas-toast-check-resolve 0.82s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.successCheck {
+  width: 1rem !important;
+  height: 1rem !important;
+  margin: 0 !important;
+  stroke-width: 2.8 !important;
+}
+
+.closeButton {
+  top: 0.625rem !important;
+  right: 0.625rem !important;
+  left: auto !important;
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  transform: none !important;
+  border-color: transparent !important;
+  color: var(--muted-foreground) !important;
+  background: transparent !important;
+}
+
+.closeButton:hover {
+  border-color: color-mix(in srgb, var(--border) 72%, transparent) !important;
+  color: var(--foreground) !important;
+  background: var(--muted) !important;
+}
+
+.actionButton,
+.cancelButton {
+  min-height: 2rem !important;
+  padding-inline: 0.75rem !important;
+  border-radius: 0.625rem !important;
+  font-weight: 650 !important;
+}
+
+.actionButton {
+  color: var(--primary-foreground) !important;
+  background: var(--primary) !important;
+}
+
+.cancelButton {
+  color: var(--secondary-foreground) !important;
+  background: var(--secondary) !important;
+}
+
+:global(.dark) .toast {
+  box-shadow: 0 22px 60px -30px rgb(0 0 0 / 92%) !important;
+}
+
+:global(.dark) .success {
+  --atlas-success-check: #4ade80;
+
+  border-color: color-mix(
+    in srgb,
+    var(--primary) 28%,
+    var(--border)
+  ) !important;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--primary) 13%, transparent),
+      transparent 60%
+    ),
+    color-mix(in srgb, var(--card) 96%, var(--background)) !important;
+  box-shadow:
+    0 24px 64px -30px rgb(0 0 0 / 96%),
+    inset 0 1px rgb(132 175 255 / 7%) !important;
+}
+
+@keyframes atlas-toast-logo-resolve {
+  0% {
+    transform: scale(0.68) rotate(-90deg);
+    opacity: 0;
+  }
+
+  16% {
+    opacity: 1;
+  }
+
+  60% {
+    transform: scale(1) rotate(240deg);
+    opacity: 1;
+  }
+
+  80% {
+    transform: scale(0.76) rotate(330deg);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(0.28) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes atlas-toast-check-resolve {
+  0%,
+  56% {
+    transform: scale(0.35) rotate(-28deg);
+    opacity: 0;
+  }
+
+  78% {
+    transform: scale(1.16) rotate(3deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .toast {
+    padding: 0.8125rem 0.875rem !important;
+  }
+}

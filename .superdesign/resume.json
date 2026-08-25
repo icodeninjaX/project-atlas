@@ -5,35 +5,33 @@
       "targetKind": "existing-ui",
       "projectId": "f9c0903b-9b0f-428c-a29a-fe058d903aa8",
       "baselineDraftId": "5b5bd3c5-4546-48e1-b9db-408672af1c20",
-      "activeDraftId": "5b5bd3c5-4546-48e1-b9db-408672af1c20",
+      "activeDraftId": "e4305043-579b-4417-86c1-a2ba4e0243f4",
       "designSystemPath": ".superdesign/design-system.md",
       "referenceIds": [],
       "contextFiles": [
         ".superdesign/design-system.md",
         "src/app/globals.css",
+        "src/app/(app)/layout.tsx",
         "src/components/atlas/app-shell.tsx",
         "src/components/atlas/app-header.tsx",
-        "src/components/atlas/atlas-mark.tsx",
-        "src/components/offline/sync-status.tsx",
-        "src/components/offline/install-app-button.tsx",
-        "src/components/offline/sign-out-button.tsx",
         "src/app/(app)/dashboard/page.tsx",
+        "src/components/dashboard/gratitude-card.tsx",
+        "src/components/notifications/yesterday-productivity-report.tsx",
         "src/components/ui/button.tsx",
         "src/components/ui/card.tsx",
         "src/lib/utils.ts"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "63bdd636aa97bd2d0d22a6e1b0e5ba1ea8531769e16cc2946989af7e1cec10f6",
-        "src/app/globals.css": "763c598950108783b03e36fe5e0b2a313cba53a41c8cf0ffd03d0148c20d4b4e",
-        "src/components/atlas/app-shell.tsx": "d9a2fe35a5f18010cf81606e39140404674cc5b0d2bbc9060bbe918dec6cafac",
-        "src/components/atlas/app-header.tsx": "419ee761465f882c9a21f454e25c82ef27c20c70fd2ac328f687240f75cab139",
-        "src/components/atlas/atlas-mark.tsx": "65d6514f7b7c904094e435933fe1c70438ff638e89ac2d6a14d7a95f19a55027",
-        "src/components/offline/sync-status.tsx": "892f8043c0a8cdccedf68aafa0241da71480279ee2da78fe70413a4c865371fb",
-        "src/components/offline/install-app-button.tsx": "aba5b59bc47a67603997a9e7f9950efc86a201a33777fd93d2bbc181bc287502",
-        "src/components/offline/sign-out-button.tsx": "75b8075460ea5a9300612e455a15ada71e7744583fab6b81f73dc0f658381374",
-        "src/app/(app)/dashboard/page.tsx": "6636ba765742b5af14953f77aadeae6ea877f3302f193dc6cbf313c0b5972184",
-        "src/components/ui/button.tsx": "8ad213f81f5fd8a26ce8111c4544e45d2d6fbcb5b176f90dbd2b98b994968d25",
-        "src/components/ui/card.tsx": "8faa256a8e9fb0a6b3cb5b59cf40708e7f95176be460a32495027de2708e088b",
+        ".superdesign/design-system.md": "0294c05875ca45818556c3c0c510f5b2e800f68759c15769cb88b2325b2b8123",
+        "src/app/globals.css": "8a38471cefaa6c87ee9ebb53c06ad018bf7641dd29793cb214504b48cf95c08c",
+        "src/app/(app)/layout.tsx": "686ba50344e7079e71b8833f0c25eec952e0880fc4ab68a799fca7d93a5ea16a",
+        "src/components/atlas/app-shell.tsx": "2da40514c3cabc2005f57da8a696e7cd9ff8786aa37807997532a9c73ef8349e",
+        "src/components/atlas/app-header.tsx": "183d4dc931c0312c019d32dccb139f0741f0210b4a61fc6ac8c5f073332eb961",
+        "src/app/(app)/dashboard/page.tsx": "d31fdc4a0109fbbabbfc35fe695109e56e03c53e8eee28712863191727623298",
+        "src/components/dashboard/gratitude-card.tsx": "312d9fd1c5990ab57d0207cd03f8fccfdf041739ac9085076f18bd6e88f02967",
+        "src/components/notifications/yesterday-productivity-report.tsx": "2d5d696026d179fc33c0728b6fd4626291ab07d0013791d89dfa75fcc5e25e87",
+        "src/components/ui/button.tsx": "871f1aec418a72d7cbe03844302b2fbad01977b81e1d7088aafde90abba1982a",
+        "src/components/ui/card.tsx": "9aed5af06f3898ed177262e6371d1d3fbfe5fa635fbd8342eec23ee1d093914b",
         "src/lib/utils.ts": "c0adf27efbfa148d5abcf99e860f8e3e6c8fc77a1f99e023c08ef4f12e6ece29"
       },
       "components": [
@@ -53,9 +51,21 @@
           "title": "Today · ATLAS — Mobile Usability Redesign",
           "visualDirection": "mobile-first consolidated dashboard preserving ATLAS visual identity",
           "currentVersion": 3
+        },
+        "e4305043-579b-4417-86c1-a2ba4e0243f4": {
+          "title": "Today · Project Atlas — Daily Progress Report",
+          "visualDirection": "centered daily system report card with a factual progress indicator",
+          "parentDraftId": "5b5bd3c5-4546-48e1-b9db-408672af1c20",
+          "currentVersion": 1
+        },
+        "17436a50-d0d2-4cf3-bdde-c6261c5566cf": {
+          "title": "Today · Project Atlas — Productivity Celebration",
+          "visualDirection": "mobile bottom-sheet celebration with restrained ATLAS grid and system glow",
+          "parentDraftId": "5b5bd3c5-4546-48e1-b9db-408672af1c20",
+          "currentVersion": 1
         }
       },
-      "updatedAt": "2026-08-23T03:10:11.9151159Z"
+      "updatedAt": "2026-08-25T07:41:23.9101998Z"
     },
     "/reviews": {
       "targetKind": "existing-ui",

@@ -1,12 +1,22 @@
 "use client";
 
-import { Check, ChevronDown, Circle, Plus } from "lucide-react";
-import { useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import {
+  Check,
+  ChevronDown,
+  Circle,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { AtlasMark } from "@/components/atlas/atlas-mark";
+import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { TooltipHint } from "@/components/ui/tooltip";
-import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 
 type Milestone = {
   id: string;
@@ -14,6 +24,124 @@ type Milestone = {
   target_date: string | null;
   completed_at: string | null;
 };
+
+type MilestoneActionMode = "edit" | "remove";
+type MilestoneDialogState = {
+  mode: MilestoneActionMode;
+  milestone: Milestone;
+} | null;
+
+const actionMenuClassName =
+  "absolute top-10 right-0 z-30 w-52 rounded-2xl border border-slate-300 bg-white p-1.5 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/10 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:shadow-[0_20px_55px_rgba(0,0,0,0.75)] dark:ring-white/10";
+
+function PendingAtlasMark() {
+  return (
+    <AtlasMark className="size-4 animate-spin [animation-duration:1.1s] motion-reduce:animate-none" />
+  );
+}
+
+function useActionMenu() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuId = useId();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    menuRef.current
+      ?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
+      ?.focus();
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+    const closeOnPointerAway = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !menuRef.current?.contains(event.target)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("pointerdown", closeOnPointerAway);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("pointerdown", closeOnPointerAway);
+    };
+  }, [menuOpen]);
+
+  const moveMenuFocus = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+
+    const items = Array.from(
+      event.currentTarget.querySelectorAll<HTMLButtonElement>(
+        '[role="menuitem"]:not(:disabled)',
+      ),
+    );
+    if (items.length === 0) return;
+
+    event.preventDefault();
+    const currentIndex = items.findIndex(
+      (item) => item === document.activeElement,
+    );
+    const nextIndex =
+      event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? items.length - 1
+          : event.key === "ArrowUp"
+            ? (currentIndex - 1 + items.length) % items.length
+            : (currentIndex + 1) % items.length;
+    items[nextIndex]?.focus();
+  };
+
+  return {
+    menuOpen,
+    setMenuOpen,
+    menuId,
+    menuRef,
+    menuButtonRef,
+    moveMenuFocus,
+  };
+}
+
+function MilestoneMutationButton({
+  idleLabel,
+  pendingLabel,
+  idleText,
+  pendingText,
+  icon,
+  variant = "secondary",
+}: {
+  idleLabel: string;
+  pendingLabel: string;
+  idleText: string;
+  pendingText: string;
+  icon?: React.ReactNode;
+  variant?: "secondary" | "destructive";
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      type="submit"
+      size="sm"
+      variant={variant}
+      disabled={pending}
+      aria-busy={pending}
+      aria-label={pending ? pendingLabel : idleLabel}
+    >
+      {pending ? <PendingAtlasMark /> : icon}
+      {pending ? pendingText : idleText}
+    </Button>
+  );
+}
 
 function MilestoneToggleButton({ milestone }: { milestone: Milestone }) {
   const { pending } = useFormStatus();
@@ -34,7 +162,7 @@ function MilestoneToggleButton({ milestone }: { milestone: Milestone }) {
         aria-label={`${pending ? pendingAction : action} milestone ${milestone.title}`}
       >
         {pending ? (
-          <AtlasMark className="size-4 animate-spin [animation-duration:1.1s] motion-reduce:animate-none" />
+          <PendingAtlasMark />
         ) : completed ? (
           <Check className="text-primary size-4" />
         ) : (
@@ -42,6 +170,240 @@ function MilestoneToggleButton({ milestone }: { milestone: Milestone }) {
         )}
       </Button>
     </TooltipHint>
+  );
+}
+
+function MilestoneSectionMenu({
+  addMilestoneOpen,
+  actionMode,
+  hasMilestones,
+  onToggleAdd,
+  onChangeMode,
+}: {
+  addMilestoneOpen: boolean;
+  actionMode: MilestoneActionMode | null;
+  hasMilestones: boolean;
+  onToggleAdd: () => void;
+  onChangeMode: (mode: MilestoneActionMode | null) => void;
+}) {
+  const {
+    menuOpen,
+    setMenuOpen,
+    menuId,
+    menuRef,
+    menuButtonRef,
+    moveMenuFocus,
+  } = useActionMenu();
+
+  const chooseMode = (mode: MilestoneActionMode) => {
+    setMenuOpen(false);
+    onChangeMode(actionMode === mode ? null : mode);
+  };
+
+  return (
+    <div ref={menuRef} className="relative shrink-0">
+      <TooltipHint label="Milestone actions">
+        <Button
+          ref={menuButtonRef}
+          type="button"
+          variant="ghost"
+          size="icon"
+          title="Milestone actions"
+          aria-label="Open milestone actions"
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+          aria-controls={menuId}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <MoreHorizontal className="size-5" aria-hidden="true" />
+        </Button>
+      </TooltipHint>
+      <div
+        id={menuId}
+        role="menu"
+        aria-label="Milestone actions"
+        hidden={!menuOpen}
+        onKeyDown={moveMenuFocus}
+        className={actionMenuClassName}
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          role="menuitem"
+          onClick={() => {
+            setMenuOpen(false);
+            onToggleAdd();
+          }}
+          className="w-full justify-start text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-white"
+        >
+          <Plus className="size-4" aria-hidden="true" />
+          {addMilestoneOpen ? "Cancel adding milestone" : "Add milestone"}
+        </Button>
+        <div className="border-border my-1 border-t" />
+        <Button
+          type="button"
+          variant="ghost"
+          role="menuitem"
+          disabled={!hasMilestones}
+          onClick={() => chooseMode("edit")}
+          className="w-full justify-start text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-white"
+        >
+          <Pencil className="size-4" aria-hidden="true" />
+          {actionMode === "edit" ? "Finish editing" : "Edit milestones"}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          role="menuitem"
+          disabled={!hasMilestones}
+          onClick={() => chooseMode("remove")}
+          className="text-destructive hover:bg-destructive/10 hover:text-destructive w-full justify-start"
+        >
+          <Trash2 className="size-4" aria-hidden="true" />
+          {actionMode === "remove" ? "Finish removing" : "Remove milestones"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function MilestoneActionDialog({
+  state,
+  returnFocusRef,
+  onClose,
+}: {
+  state: MilestoneDialogState;
+  returnFocusRef: React.RefObject<HTMLButtonElement | null>;
+  onClose: () => void;
+}) {
+  const dialogContentRef = useRef<HTMLDivElement>(null);
+
+  if (!state) return null;
+
+  const { milestone, mode } = state;
+  const editing = mode === "edit";
+  const dialogTitle = editing ? "Edit milestone" : "Remove milestone?";
+
+  return (
+    <Dialog.Root
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
+        <Dialog.Content
+          ref={dialogContentRef}
+          onOpenAutoFocus={(event) => {
+            if (!editing) return;
+            event.preventDefault();
+            dialogContentRef.current
+              ?.querySelector<HTMLInputElement>('[name="title"]')
+              ?.focus();
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            if (returnFocusRef.current?.isConnected) {
+              returnFocusRef.current.focus();
+            }
+          }}
+          className="border-border bg-card text-card-foreground fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border p-5 shadow-2xl outline-none"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <Dialog.Title className="text-base font-semibold">
+                {dialogTitle}
+              </Dialog.Title>
+              <Dialog.Description className="text-muted-foreground mt-1 text-xs leading-5">
+                {editing
+                  ? "Update the milestone name or target date."
+                  : `Remove “${milestone.title}”? Goal progress will be recalculated and this cannot be undone.`}
+              </Dialog.Description>
+            </div>
+            <Dialog.Close asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Close ${dialogTitle.toLowerCase()}`}
+                className="-mt-2 -mr-2 shrink-0"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </Button>
+            </Dialog.Close>
+          </div>
+
+          {editing ? (
+            <OfflineMutationForm
+              mutation="milestone.update"
+              onResult={(result) => {
+                if (result.success) onClose();
+              }}
+              className="mt-5 space-y-4"
+            >
+              <input type="hidden" name="milestoneId" value={milestone.id} />
+              <label className="block text-xs font-medium">
+                Milestone
+                <input
+                  name="title"
+                  required
+                  maxLength={160}
+                  defaultValue={milestone.title}
+                  className="border-border bg-background mt-1 min-h-10 w-full rounded-lg border px-3 text-sm"
+                />
+              </label>
+              <label className="block text-xs font-medium">
+                Target date
+                <input
+                  name="targetDate"
+                  type="date"
+                  defaultValue={milestone.target_date ?? ""}
+                  className="border-border bg-background mt-1 min-h-10 w-full rounded-lg border px-3 text-sm"
+                />
+              </label>
+              <div className="flex justify-end gap-2">
+                <Dialog.Close asChild>
+                  <Button type="button" size="sm" variant="ghost">
+                    Cancel
+                  </Button>
+                </Dialog.Close>
+                <MilestoneMutationButton
+                  idleLabel={`Save changes to ${milestone.title}`}
+                  pendingLabel={`Saving changes to ${milestone.title}`}
+                  idleText="Save changes"
+                  pendingText="Saving…"
+                  icon={<Pencil className="size-4" aria-hidden="true" />}
+                />
+              </div>
+            </OfflineMutationForm>
+          ) : (
+            <OfflineMutationForm
+              mutation="milestone.delete"
+              onResult={(result) => {
+                if (result.success) onClose();
+              }}
+              className="mt-5 flex justify-end gap-2"
+            >
+              <input type="hidden" name="milestoneId" value={milestone.id} />
+              <Dialog.Close asChild>
+                <Button type="button" size="sm" variant="ghost">
+                  Keep milestone
+                </Button>
+              </Dialog.Close>
+              <MilestoneMutationButton
+                idleLabel={`Remove ${milestone.title}`}
+                pendingLabel={`Removing ${milestone.title}`}
+                idleText="Remove milestone"
+                pendingText="Removing…"
+                variant="destructive"
+                icon={<Trash2 className="size-4" aria-hidden="true" />}
+              />
+            </OfflineMutationForm>
+          )}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
 
@@ -54,13 +416,24 @@ export function MilestoneList({
 }) {
   const [milestonesOpen, setMilestonesOpen] = useState(false);
   const [addMilestoneOpen, setAddMilestoneOpen] = useState(false);
+  const [actionMode, setActionMode] = useState<MilestoneActionMode | null>(
+    null,
+  );
+  const [dialogState, setDialogState] = useState<MilestoneDialogState>(null);
+  const actionButtonRef = useRef<HTMLButtonElement | null>(null);
   const milestonesId = `milestones-${goalId}`;
   const addMilestoneId = `add-milestone-${goalId}`;
+
+  const changeActionMode = (mode: MilestoneActionMode | null) => {
+    setActionMode(mode);
+    setAddMilestoneOpen(false);
+    if (mode) setMilestonesOpen(true);
+  };
 
   return (
     <div className="border-border mt-5 border-t pt-4">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
             Milestones
           </p>
@@ -70,6 +443,14 @@ export function MilestoneList({
           >
             {milestones.length}
           </span>
+          {actionMode && (
+            <span
+              aria-live="polite"
+              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${actionMode === "remove" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
+            >
+              {actionMode === "edit" ? "Editing" : "Removing"}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -86,23 +467,16 @@ export function MilestoneList({
               className={`size-3.5 transition-transform ${milestonesOpen ? "rotate-180" : ""}`}
             />
           </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            aria-label={
-              addMilestoneOpen ? "Cancel adding milestone" : "Add milestone"
-            }
-            aria-expanded={addMilestoneOpen}
-            aria-controls={addMilestoneId}
-            onClick={() => setAddMilestoneOpen((open) => !open)}
-          >
-            <Plus
-              aria-hidden="true"
-              className={`size-3.5 transition-transform ${addMilestoneOpen ? "rotate-45" : ""}`}
-            />
-            {addMilestoneOpen ? "Cancel" : "Add"}
-          </Button>
+          <MilestoneSectionMenu
+            addMilestoneOpen={addMilestoneOpen}
+            actionMode={actionMode}
+            hasMilestones={milestones.length > 0}
+            onToggleAdd={() => {
+              setActionMode(null);
+              setAddMilestoneOpen((open) => !open);
+            }}
+            onChangeMode={changeActionMode}
+          />
         </div>
       </div>
       {milestonesOpen && (
@@ -110,22 +484,20 @@ export function MilestoneList({
           {milestones.length ? (
             <div className="space-y-2">
               {milestones.map((milestone) => (
-                <OfflineMutationForm
-                  key={milestone.id}
-                  mutation="milestone.toggle"
-                  className="flex items-center gap-2"
-                >
-                  <input
-                    type="hidden"
-                    name="milestoneId"
-                    value={milestone.id}
-                  />
-                  <input
-                    type="hidden"
-                    name="completed"
-                    value={milestone.completed_at ? "false" : "true"}
-                  />
-                  <MilestoneToggleButton milestone={milestone} />
+                <div key={milestone.id} className="flex items-center gap-2">
+                  <OfflineMutationForm mutation="milestone.toggle">
+                    <input
+                      type="hidden"
+                      name="milestoneId"
+                      value={milestone.id}
+                    />
+                    <input
+                      type="hidden"
+                      name="completed"
+                      value={milestone.completed_at ? "false" : "true"}
+                    />
+                    <MilestoneToggleButton milestone={milestone} />
+                  </OfflineMutationForm>
                   <span
                     className={`min-w-0 flex-1 text-xs ${milestone.completed_at ? "text-muted-foreground line-through" : ""}`}
                   >
@@ -136,7 +508,40 @@ export function MilestoneList({
                       {milestone.target_date}
                     </time>
                   )}
-                </OfflineMutationForm>
+                  {actionMode === "edit" && (
+                    <TooltipHint label={`Edit ${milestone.title}`}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Edit milestone ${milestone.title}`}
+                        onClick={(event) => {
+                          actionButtonRef.current = event.currentTarget;
+                          setDialogState({ mode: "edit", milestone });
+                        }}
+                      >
+                        <Pencil className="size-4" aria-hidden="true" />
+                      </Button>
+                    </TooltipHint>
+                  )}
+                  {actionMode === "remove" && (
+                    <TooltipHint label={`Remove ${milestone.title}`}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Remove milestone ${milestone.title}`}
+                        onClick={(event) => {
+                          actionButtonRef.current = event.currentTarget;
+                          setDialogState({ mode: "remove", milestone });
+                        }}
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="size-4" aria-hidden="true" />
+                      </Button>
+                    </TooltipHint>
+                  )}
+                </div>
               ))}
             </div>
           ) : (
@@ -150,6 +555,9 @@ export function MilestoneList({
         <OfflineMutationForm
           id={addMilestoneId}
           mutation="milestone.create"
+          onResult={(result) => {
+            if (result.success) setAddMilestoneOpen(false);
+          }}
           className="mt-3 flex flex-wrap gap-2"
         >
           <input type="hidden" name="goalId" value={goalId} />
@@ -167,11 +575,27 @@ export function MilestoneList({
             aria-label="Milestone target date"
             className="border-border bg-background min-h-9 rounded-lg border px-2 text-xs"
           />
-          <Button type="submit" size="sm" variant="secondary">
-            Add
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setAddMilestoneOpen(false)}
+          >
+            Cancel
           </Button>
+          <MilestoneMutationButton
+            idleLabel="Add milestone"
+            pendingLabel="Adding milestone"
+            idleText="Add"
+            pendingText="Adding…"
+          />
         </OfflineMutationForm>
       )}
+      <MilestoneActionDialog
+        state={dialogState}
+        returnFocusRef={actionButtonRef}
+        onClose={() => setDialogState(null)}
+      />
     </div>
   );
 }

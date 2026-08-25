@@ -14,9 +14,11 @@ import {
 import {
   createGoalAction,
   createMilestoneAction,
+  deleteMilestoneAction,
   toggleMilestoneAction,
   updateGoalAction,
   updateGoalProgressAction,
+  updateMilestoneAction,
 } from "@/lib/goals/actions";
 import {
   adjustAccountBalanceAction,
@@ -132,8 +134,12 @@ async function executeMutation(
       return updateGoalProgressAction(formData);
     case "milestone.create":
       return createMilestoneAction(formData);
+    case "milestone.update":
+      return updateMilestoneAction(formData);
     case "milestone.toggle":
       return toggleMilestoneAction(formData);
+    case "milestone.delete":
+      return deleteMilestoneAction(formData);
     case "application.create":
       return createApplicationAction(blankState, formData);
     case "application.update":

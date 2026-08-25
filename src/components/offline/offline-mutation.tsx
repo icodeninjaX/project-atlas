@@ -43,10 +43,12 @@ export function useOfflineActionState(
 
 export function OfflineMutationForm({
   mutation,
+  onResult,
   children,
   ...props
 }: Omit<React.ComponentProps<"form">, "action"> & {
   mutation: OfflineMutationType;
+  onResult?: (result: OfflineActionState) => void;
 }) {
   const { submit } = useOfflineSync();
   const action = useCallback(
@@ -54,8 +56,9 @@ export function OfflineMutationForm({
       const result = await submit(mutation, formData);
       if (result.success) toast.success(result.message);
       else toast.error(result.message);
+      onResult?.(result);
     },
-    [mutation, submit],
+    [mutation, onResult, submit],
   );
 
   return (
