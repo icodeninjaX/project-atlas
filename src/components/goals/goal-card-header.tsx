@@ -20,6 +20,41 @@ type Goal = {
   success_definition: string | null;
 };
 
+const goalAreaBadgeStyles: Record<string, string> = {
+  finance:
+    "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300",
+  career:
+    "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300",
+  health:
+    "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-300",
+  relationship:
+    "border-pink-200 bg-pink-50 text-pink-800 dark:border-pink-800 dark:bg-pink-950/60 dark:text-pink-300",
+  family:
+    "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-300",
+  business:
+    "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800 dark:bg-violet-950/60 dark:text-violet-300",
+  learning:
+    "border-cyan-200 bg-cyan-50 text-cyan-800 dark:border-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300",
+  personal:
+    "border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-800 dark:bg-orange-950/60 dark:text-orange-300",
+};
+
+const fallbackGoalAreaBadgeStyle =
+  "border-border bg-muted text-muted-foreground";
+
+function GoalAreaBadge({ area }: { area: string }) {
+  const areaLabel = area.charAt(0).toUpperCase() + area.slice(1);
+
+  return (
+    <span
+      aria-label={`Goal category: ${areaLabel}`}
+      className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${goalAreaBadgeStyles[area] ?? fallbackGoalAreaBadgeStyle}`}
+    >
+      {areaLabel}
+    </span>
+  );
+}
+
 function DeleteGoalButton({ title }: { title: string }) {
   const { pending } = useFormStatus();
 
@@ -109,9 +144,7 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
   return (
     <Dialog.Root open={deleteOpen} onOpenChange={(open) => setDeleteOpen(open)}>
       <div className="flex items-center justify-between gap-3">
-        <span className="border-border text-muted-foreground rounded-full border px-2 py-1 text-[10px] capitalize">
-          {goal.area}
-        </span>
+        <GoalAreaBadge area={goal.area} />
         <div ref={menuRef} className="relative shrink-0">
           <TooltipHint label="Goal actions" side="left">
             <Button

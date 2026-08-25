@@ -10,28 +10,35 @@ export const metadata = { title: "Goals" };
 
 export default async function GoalsPage() {
   const supabase = await createClient();
-  const { data } = supabase
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const goalResult = await supabase
+    .from("goals")
+    .select("id,title,description,area,status,target_date,success_definition")
+    .order("target_date", { nullsFirst: false });
+  if (goalResult.error) {
+    throw new Error(`Could not load goals: ${goalResult.error.message}`);
+  }
+  const goals = goalResult.data ?? [];
+
+  const milestoneResult = goals.length
     ? await supabase
-        .from("goals")
-        .select(
-          "id,title,description,area,status,target_date,success_definition",
+        .from("goal_milestones")
+        .select("id,goal_id,title,description,target_date,completed_at")
+        .in(
+          "goal_id",
+          goals.map((goal) => goal.id),
         )
-        .order("target_date", { nullsFirst: false })
-    : { data: [] };
-  const goals = data ?? [];
-  const { data: milestoneData } =
-    supabase && goals.length
-      ? await supabase
-          .from("goal_milestones")
-          .select("id,goal_id,title,target_date,completed_at")
-          .in(
-            "goal_id",
-            goals.map((goal) => goal.id),
-          )
-          .order("sort_order")
-      : { data: [] };
+        .order("sort_order")
+    : { data: [], error: null };
+  if (milestoneResult.error) {
+    throw new Error(
+      `Could not load goal milestones: ${milestoneResult.error.message}`,
+    );
+  }
+  const milestoneData = milestoneResult.data ?? [];
   const milestonesByGoal = new Map<string, typeof milestoneData>();
-  for (const milestone of milestoneData ?? []) {
+  for (const milestone of milestoneData) {
     const items = milestonesByGoal.get(milestone.goal_id) ?? [];
     items.push(milestone);
     milestonesByGoal.set(milestone.goal_id, items);

@@ -161,6 +161,7 @@ describe("goal actions", () => {
     const formData = new FormData();
     formData.set("milestoneId", "53f3368c-d188-4aef-82b3-2846ba974169");
     formData.set("title", "Book the lodging");
+    formData.set("description", "Compare refundable rates before booking.");
     formData.set("targetDate", "2026-09-10");
 
     await expect(updateMilestoneAction(formData)).resolves.toEqual({
@@ -169,6 +170,7 @@ describe("goal actions", () => {
     });
     expect(update).toHaveBeenCalledWith({
       title: "Book the lodging",
+      description: "Compare refundable rates before booking.",
       target_date: "2026-09-10",
     });
     expect(idFilter).toHaveBeenCalledWith(

@@ -21,6 +21,7 @@ import { TooltipHint } from "@/components/ui/tooltip";
 type Milestone = {
   id: string;
   title: string;
+  description?: string | null;
   target_date: string | null;
   completed_at: string | null;
 };
@@ -277,12 +278,14 @@ function MilestoneActionDialog({
   onClose: () => void;
 }) {
   const dialogContentRef = useRef<HTMLDivElement>(null);
+  const descriptionId = useId();
+  const descriptionHelpId = useId();
 
   if (!state) return null;
 
   const { milestone, mode } = state;
   const editing = mode === "edit";
-  const dialogTitle = editing ? "Edit milestone" : "Remove milestone?";
+  const dialogTitle = editing ? "Milestone details" : "Remove milestone?";
 
   return (
     <Dialog.Root
@@ -308,7 +311,7 @@ function MilestoneActionDialog({
               returnFocusRef.current.focus();
             }
           }}
-          className="border-border bg-card text-card-foreground fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border p-5 shadow-2xl outline-none"
+          className="border-border bg-card text-card-foreground fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border p-5 shadow-2xl outline-none"
         >
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -317,7 +320,7 @@ function MilestoneActionDialog({
               </Dialog.Title>
               <Dialog.Description className="text-muted-foreground mt-1 text-xs leading-5">
                 {editing
-                  ? "Update the milestone name or target date."
+                  ? "Keep what this means, what you learn, and anything you want to remember here."
                   : `Remove “${milestone.title}”? Goal progress will be recalculated and this cannot be undone.`}
               </Dialog.Description>
             </div>
@@ -344,7 +347,7 @@ function MilestoneActionDialog({
             >
               <input type="hidden" name="milestoneId" value={milestone.id} />
               <label className="block text-xs font-medium">
-                Milestone
+                Title
                 <input
                   name="title"
                   required
@@ -353,6 +356,31 @@ function MilestoneActionDialog({
                   className="border-border bg-background mt-1 min-h-10 w-full rounded-lg border px-3 text-sm"
                 />
               </label>
+              <div>
+                <label
+                  htmlFor={descriptionId}
+                  className="block text-xs font-medium"
+                >
+                  Description or learning notes
+                </label>
+                <textarea
+                  id={descriptionId}
+                  name="description"
+                  maxLength={20_000}
+                  rows={9}
+                  defaultValue={milestone.description ?? ""}
+                  aria-describedby={descriptionHelpId}
+                  placeholder="Paste what you learned, explain the idea in your own words, or add examples to revisit later…"
+                  className="border-border bg-background mt-1 min-h-48 w-full resize-y rounded-lg border px-3 py-2 text-sm leading-6"
+                />
+                <p
+                  id={descriptionHelpId}
+                  className="text-muted-foreground mt-1 text-[10px] font-normal"
+                >
+                  You can come back and add to these notes before completing the
+                  milestone.
+                </p>
+              </div>
               <label className="block text-xs font-medium">
                 Target date
                 <input
@@ -498,11 +526,21 @@ export function MilestoneList({
                     />
                     <MilestoneToggleButton milestone={milestone} />
                   </OfflineMutationForm>
-                  <span
-                    className={`min-w-0 flex-1 text-xs ${milestone.completed_at ? "text-muted-foreground line-through" : ""}`}
+                  <button
+                    type="button"
+                    aria-label={`Open milestone ${milestone.title}`}
+                    onClick={(event) => {
+                      actionButtonRef.current = event.currentTarget;
+                      setDialogState({ mode: "edit", milestone });
+                    }}
+                    className={`group hover:bg-muted/60 focus-visible:ring-ring min-w-0 flex-1 rounded-md px-1 py-1 text-left text-xs outline-none focus-visible:ring-2 ${milestone.completed_at ? "text-muted-foreground" : ""}`}
                   >
-                    {milestone.title}
-                  </span>
+                    <span
+                      className={`block truncate group-hover:underline ${milestone.completed_at ? "line-through" : ""}`}
+                    >
+                      {milestone.title}
+                    </span>
+                  </button>
                   {milestone.target_date && (
                     <time className="text-muted-foreground font-mono text-[10px]">
                       {milestone.target_date}

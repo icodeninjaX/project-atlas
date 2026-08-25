@@ -155,8 +155,14 @@ export async function createMilestoneAction(
 ): Promise<GoalActionState> {
   const goalId = String(formData.get("goalId") ?? "");
   const title = String(formData.get("title") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
   const targetDate = String(formData.get("targetDate") ?? "").trim();
-  if (!/^[0-9a-f-]{36}$/i.test(goalId) || !title || title.length > 160)
+  if (
+    !/^[0-9a-f-]{36}$/i.test(goalId) ||
+    !title ||
+    title.length > 160 ||
+    description.length > 20_000
+  )
     return { success: false, message: "Check the milestone details." };
   const supabase = await createClient();
   if (!supabase)
@@ -170,6 +176,7 @@ export async function createMilestoneAction(
     user_id: user.id,
     goal_id: goalId,
     title,
+    description: description || null,
     target_date: /^\d{4}-\d{2}-\d{2}$/.test(targetDate) ? targetDate : null,
   });
   if (error)
@@ -184,11 +191,13 @@ export async function updateMilestoneAction(
 ): Promise<GoalActionState> {
   const id = String(formData.get("milestoneId") ?? "");
   const title = String(formData.get("title") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
   const targetDate = String(formData.get("targetDate") ?? "").trim();
   if (
     !/^[0-9a-f-]{36}$/i.test(id) ||
     !title ||
     title.length > 160 ||
+    description.length > 20_000 ||
     (targetDate && !/^\d{4}-\d{2}-\d{2}$/.test(targetDate))
   ) {
     return { success: false, message: "Check the milestone details." };
@@ -204,6 +213,7 @@ export async function updateMilestoneAction(
     .from("goal_milestones")
     .update({
       title,
+      description: description || null,
       target_date: targetDate || null,
     })
     .eq("id", id)

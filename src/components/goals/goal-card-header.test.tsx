@@ -28,6 +28,24 @@ const goal = {
 afterEach(cleanup);
 
 describe("GoalCardHeader", () => {
+  it("uses distinct, readable colors for each goal category", () => {
+    render(
+      <>
+        <GoalCardHeader goal={{ ...goal, area: "learning" }} />
+        <GoalCardHeader goal={{ ...goal, area: "personal" }} />
+      </>,
+    );
+
+    const learning = screen.getByLabelText("Goal category: Learning");
+    const personal = screen.getByLabelText("Goal category: Personal");
+
+    expect(learning).toHaveTextContent("Learning");
+    expect(learning).toHaveClass("bg-cyan-50", "text-cyan-800");
+    expect(personal).toHaveTextContent("Personal");
+    expect(personal).toHaveClass("bg-orange-50", "text-orange-800");
+    expect(learning.className).not.toBe(personal.className);
+  });
+
   it("groups edit and delete behind an accessible goal action menu", () => {
     render(<GoalCardHeader goal={goal} />);
 

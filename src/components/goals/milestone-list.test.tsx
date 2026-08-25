@@ -75,6 +75,42 @@ describe("MilestoneList", () => {
     expect(screen.queryByLabelText("New milestone")).not.toBeInTheDocument();
   });
 
+  it("opens learning notes when the milestone title is clicked", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MilestoneList
+        goalId="1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb"
+        milestones={[
+          {
+            id: "53f3368c-d188-4aef-82b3-2846ba974169",
+            title: "Cost of Inaction",
+            description:
+              "The consequences of leaving a prospect's problem unsolved.",
+            target_date: null,
+            completed_at: null,
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "View" }));
+    expect(screen.queryByText("Add learning notes")).not.toBeInTheDocument();
+    expect(screen.queryByText("Open learning notes")).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Open milestone Cost of Inaction" }),
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "Milestone details" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("textbox", {
+        name: "Description or learning notes",
+      }),
+    ).toHaveValue("The consequences of leaving a prospect's problem unsolved.");
+  });
+
   it("shows the spinning ATLAS mark while completing a milestone", async () => {
     const user = userEvent.setup();
     let resolveSubmit:
@@ -327,13 +363,21 @@ describe("MilestoneList", () => {
     );
 
     expect(
-      screen.getByRole("dialog", { name: "Edit milestone" }),
+      screen.getByRole("dialog", { name: "Milestone details" }),
     ).toBeVisible();
-    const title = screen.getByRole("textbox", { name: "Milestone" });
+    const title = screen.getByRole("textbox", { name: "Title" });
     expect(title).toHaveValue("Plan the route");
+    const description = screen.getByRole("textbox", {
+      name: "Description or learning notes",
+    });
+    expect(description).toHaveValue("");
     expect(screen.getByLabelText("Target date")).toHaveValue("2026-09-01");
     await user.clear(title);
     await user.type(title, "Confirm the route");
+    await user.type(
+      description,
+      "Learn the tradeoffs before choosing a route.",
+    );
     await user.click(
       screen.getByRole("button", { name: "Save changes to Plan the route" }),
     );
@@ -356,6 +400,9 @@ describe("MilestoneList", () => {
       "53f3368c-d188-4aef-82b3-2846ba974169",
     );
     expect(submittedForm.get("title")).toBe("Confirm the route");
+    expect(submittedForm.get("description")).toBe(
+      "Learn the tradeoffs before choosing a route.",
+    );
     expect(submittedForm.get("targetDate")).toBe("2026-09-01");
 
     await act(async () => {
