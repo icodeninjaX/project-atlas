@@ -6,14 +6,16 @@ import {
 import { PageHeading } from "@/components/shared/page-heading";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mondayWeekStart } from "@/lib/dates/dates";
+import { mondayWeekStart, reviewWeekLabel } from "@/lib/dates/dates";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Weekly reviews" };
 
 export default async function ReviewsPage() {
-  const weekStart = mondayWeekStart(new Date());
+  const now = new Date();
+  const weekStart = mondayWeekStart(now);
+  const entryTimestamp = now.toISOString();
   const endDate = new Date(`${weekStart}T00:00:00+08:00`);
   endDate.setDate(endDate.getDate() + 7);
   const weekEnd = endDate.toISOString();
@@ -29,7 +31,7 @@ export default async function ReviewsPage() {
         supabase
           .from("weekly_reviews")
           .select(
-            "id,week_start,wins,challenges,lessons,time_wasters,money_reflection,career_reflection,next_week_focus,energy_score,stress_score,overall_score,completed_at",
+            "id,week_start,wins,challenges,lessons,time_wasters,money_reflection,career_reflection,next_week_focus,energy_score,stress_score,overall_score,completed_at,created_at,updated_at",
           )
           .order("week_start", { ascending: false })
           .limit(12),
@@ -112,10 +114,12 @@ export default async function ReviewsPage() {
       stressScore: review.stress_score,
       overallScore: review.overall_score,
       completedAt: review.completed_at,
+      reflectedAt:
+        review.completed_at ?? review.updated_at ?? review.created_at ?? null,
     }));
 
   return (
-    <div className="mx-auto max-w-[1180px] p-4 sm:p-6 lg:p-8">
+    <div className="mx-auto max-w-[1180px] px-4 pt-4 sm:p-6 lg:p-8">
       <PageHeading
         eyebrow="Monday–Sunday"
         title="Weekly reviews"
@@ -127,13 +131,13 @@ export default async function ReviewsPage() {
           <div>
             <section>
               <h2 className="text-sm font-semibold">This week in facts</h2>
-              <div className="-mx-4 mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5 [&::-webkit-scrollbar]:hidden">
+              <div className="-mx-4 mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-2.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5 [&::-webkit-scrollbar]:hidden">
                 {metrics.map(([label, value]) => (
                   <Card
                     key={label}
-                    className="w-[8.75rem] min-w-[8.75rem] snap-start sm:w-auto sm:min-w-0"
+                    className="w-[8rem] min-w-[8rem] snap-start sm:w-auto sm:min-w-0"
                   >
-                    <CardContent className="p-4 sm:p-5">
+                    <CardContent className="p-3.5 sm:p-5">
                       <p className="text-muted-foreground text-xs leading-4">
                         {label}
                       </p>
@@ -153,10 +157,10 @@ export default async function ReviewsPage() {
               </p>
             </section>
 
-            <Card className="mt-5">
-              <CardHeader className="p-4 pb-0 sm:p-5 sm:pb-0">
+            <Card className="sm:bg-card mt-4 border-0 bg-transparent sm:mt-5 sm:border">
+              <CardHeader className="px-0 pt-0 pb-0 sm:p-5 sm:pb-0">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <CardTitle>Week of {weekStart}</CardTitle>
+                  <CardTitle>Week of {reviewWeekLabel(weekStart)}</CardTitle>
                   {current ? (
                     <span className="border-border bg-secondary text-muted-foreground rounded-full border px-2 py-1 text-[10px] font-medium">
                       {current.completed_at ? "Submitted" : "Draft"}
@@ -164,9 +168,13 @@ export default async function ReviewsPage() {
                   ) : null}
                 </div>
               </CardHeader>
-              <CardContent className="p-4 sm:p-5">
+              <CardContent className="px-0 pt-4 pb-0 sm:p-5">
                 <ReviewForm
                   weekStart={weekStart}
+                  entryTimestamp={entryTimestamp}
+                  lastSavedAt={
+                    current?.updated_at ?? current?.created_at ?? undefined
+                  }
                   initial={
                     current
                       ? {

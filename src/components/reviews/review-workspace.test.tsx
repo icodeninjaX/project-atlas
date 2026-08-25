@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ReviewWorkspace, type ReviewArchiveItem } from "./review-workspace";
@@ -24,6 +30,7 @@ const reviews: ReviewArchiveItem[] = [
     stressScore: 5,
     overallScore: 8,
     completedAt: "2026-08-16T12:00:00Z",
+    reflectedAt: "2026-08-16T12:00:00Z",
   },
   {
     id: "70000000-0000-4000-8000-000000000002",
@@ -39,6 +46,7 @@ const reviews: ReviewArchiveItem[] = [
     stressScore: 6,
     overallScore: 7,
     completedAt: "2026-08-09T12:00:00Z",
+    reflectedAt: "2026-08-09T12:00:00Z",
   },
 ];
 
@@ -97,6 +105,9 @@ describe("ReviewWorkspace", () => {
     expect(
       within(selectedReview).getAllByText("Keep the momentum simple"),
     ).not.toHaveLength(0);
+    expect(
+      within(selectedReview).getByText("Sunday, August 9, 2026"),
+    ).toBeVisible();
     expect(
       screen.getByRole("button", { name: /Keep the momentum simple/ }),
     ).toHaveAttribute("aria-pressed", "true");

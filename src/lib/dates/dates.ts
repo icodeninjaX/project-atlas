@@ -2,6 +2,19 @@ import { format, startOfWeek } from "date-fns";
 
 const MANILA_TIMEZONE = "Asia/Manila";
 
+const shortDate = new Intl.DateTimeFormat("en-PH", {
+  timeZone: "UTC",
+  month: "short",
+  day: "numeric",
+});
+
+const longDate = new Intl.DateTimeFormat("en-PH", {
+  timeZone: "UTC",
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+});
+
 function manilaIsoDate(value: string | Date): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: MANILA_TIMEZONE,
@@ -44,6 +57,49 @@ export function manilaDateLabel(value: string | Date): string {
     month: "long",
     day: "numeric",
   }).format(typeof value === "string" ? new Date(value) : value);
+}
+
+function weekDates(weekStart: string) {
+  const start = new Date(`${weekStart}T00:00:00Z`);
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 6);
+  return { start, end };
+}
+
+function datePart(
+  parts: Intl.DateTimeFormatPart[],
+  type: Intl.DateTimeFormatPartTypes,
+) {
+  return parts.find((part) => part.type === type)?.value;
+}
+
+export function compactReviewWeekLabel(weekStart: string): string {
+  const { start, end } = weekDates(weekStart);
+  const startParts = shortDate.formatToParts(start);
+  const endParts = shortDate.formatToParts(end);
+  const startMonth = datePart(startParts, "month");
+  const startDay = datePart(startParts, "day");
+  const endMonth = datePart(endParts, "month");
+  const endDay = datePart(endParts, "day");
+
+  return startMonth === endMonth
+    ? `${startMonth} ${startDay}–${endDay}`
+    : `${startMonth} ${startDay}–${endMonth} ${endDay}`;
+}
+
+export function reviewWeekLabel(weekStart: string): string {
+  const { start, end } = weekDates(weekStart);
+  const startParts = longDate.formatToParts(start);
+  const endParts = longDate.formatToParts(end);
+  const startMonth = datePart(startParts, "month");
+  const startDay = datePart(startParts, "day");
+  const endMonth = datePart(endParts, "month");
+  const endDay = datePart(endParts, "day");
+  const year = datePart(endParts, "year");
+
+  return startMonth === endMonth
+    ? `${startMonth} ${startDay}–${endDay}, ${year}`
+    : `${startMonth} ${startDay}–${endMonth} ${endDay}, ${year}`;
 }
 
 export function previousManilaDayWindow(value: string | Date): {

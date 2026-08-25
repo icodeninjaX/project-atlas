@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  compactReviewWeekLabel,
   manilaDateLabel,
   mondayWeekStart,
   previousManilaDayWindow,
+  reviewWeekLabel,
   resolveCalendarMonth,
 } from "./dates";
 
@@ -15,6 +17,11 @@ describe("date helpers", () => {
 
   it("returns Monday as the start of a Philippine-local week", () => {
     expect(mondayWeekStart("2026-07-26T04:00:00.000Z")).toBe("2026-07-20");
+  });
+
+  it("formats review weeks without making the user decode an ISO date", () => {
+    expect(reviewWeekLabel("2026-08-24")).toBe("August 24–30, 2026");
+    expect(compactReviewWeekLabel("2026-08-31")).toBe("Aug 31–Sep 6");
   });
 
   it("returns yesterday's UTC boundaries in the Manila timezone", () => {

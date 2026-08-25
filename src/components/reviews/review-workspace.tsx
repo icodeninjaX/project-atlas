@@ -15,6 +15,11 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  compactReviewWeekLabel,
+  manilaDateLabel,
+  reviewWeekLabel,
+} from "@/lib/dates/dates";
 import { cn } from "@/lib/utils";
 
 const ReviewTrend = dynamic(
@@ -44,58 +49,16 @@ export type ReviewArchiveItem = {
   stressScore: number | null;
   overallScore: number | null;
   completedAt: string | null;
+  reflectedAt: string | null;
 };
 
 type ReviewView = "current" | "archive";
 
-const shortDate = new Intl.DateTimeFormat("en-PH", {
-  timeZone: "UTC",
+const archiveEntryDate = new Intl.DateTimeFormat("en-PH", {
+  timeZone: "Asia/Manila",
   month: "short",
   day: "numeric",
 });
-
-const longDate = new Intl.DateTimeFormat("en-PH", {
-  timeZone: "UTC",
-  month: "long",
-  day: "numeric",
-  year: "numeric",
-});
-
-function weekDates(weekStart: string) {
-  const start = new Date(`${weekStart}T00:00:00Z`);
-  const end = new Date(start);
-  end.setUTCDate(end.getUTCDate() + 6);
-  return { start, end };
-}
-
-function compactWeekLabel(weekStart: string) {
-  const { start, end } = weekDates(weekStart);
-  const startParts = shortDate.formatToParts(start);
-  const endParts = shortDate.formatToParts(end);
-  const startMonth = startParts.find((part) => part.type === "month")?.value;
-  const startDay = startParts.find((part) => part.type === "day")?.value;
-  const endMonth = endParts.find((part) => part.type === "month")?.value;
-  const endDay = endParts.find((part) => part.type === "day")?.value;
-
-  return startMonth === endMonth
-    ? `${startMonth} ${startDay}–${endDay}`
-    : `${startMonth} ${startDay}–${endMonth} ${endDay}`;
-}
-
-function fullWeekLabel(weekStart: string) {
-  const { start, end } = weekDates(weekStart);
-  const startParts = longDate.formatToParts(start);
-  const endParts = longDate.formatToParts(end);
-  const startMonth = startParts.find((part) => part.type === "month")?.value;
-  const startDay = startParts.find((part) => part.type === "day")?.value;
-  const endMonth = endParts.find((part) => part.type === "month")?.value;
-  const endDay = endParts.find((part) => part.type === "day")?.value;
-  const year = endParts.find((part) => part.type === "year")?.value;
-
-  return startMonth === endMonth
-    ? `${startMonth} ${startDay}–${endDay}, ${year}`
-    : `${startMonth} ${startDay}–${endMonth} ${endDay}, ${year}`;
-}
 
 function reviewHeadline(review: ReviewArchiveItem) {
   return review.nextWeekFocus || review.wins || "A week worth remembering";
@@ -198,7 +161,13 @@ function ReflectionBlock({
   );
 }
 
-function ReviewArchive({ reviews }: { reviews: ReviewArchiveItem[] }) {
+function ReviewArchive({
+  reviews,
+  active,
+}: {
+  reviews: ReviewArchiveItem[];
+  active: boolean;
+}) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const reviewButtons = useRef<Array<HTMLButtonElement | null>>([]);
   const selected = reviews[selectedIndex];
@@ -331,7 +300,7 @@ function ReviewArchive({ reviews }: { reviews: ReviewArchiveItem[] }) {
                         dateTime={review.weekStart}
                         className="text-primary font-mono text-[10px] font-semibold tracking-[0.14em] uppercase"
                       >
-                        {compactWeekLabel(review.weekStart)}
+                        {compactReviewWeekLabel(review.weekStart)}
                       </time>
                       <p className="mt-2 line-clamp-2 text-sm leading-5 font-semibold">
                         {reviewHeadline(review)}
@@ -351,7 +320,7 @@ function ReviewArchive({ reviews }: { reviews: ReviewArchiveItem[] }) {
                   <p className="text-muted-foreground mt-2 line-clamp-2 text-xs leading-5">
                     {reviewSummary(review)}
                   </p>
-                  <div className="text-muted-foreground mt-3 flex items-center gap-3 text-[10px]">
+                  <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px]">
                     <span className="flex items-center gap-1">
                       <span className="bg-primary size-1.5 rounded-full" />
                       Energy {review.energyScore ?? "—"}
@@ -360,6 +329,15 @@ function ReviewArchive({ reviews }: { reviews: ReviewArchiveItem[] }) {
                       <span className="bg-destructive size-1.5 rounded-full" />
                       Stress {review.stressScore ?? "—"}
                     </span>
+                    {review.reflectedAt ? (
+                      <time
+                        dateTime={review.reflectedAt}
+                        className="flex items-center gap-1"
+                      >
+                        <CalendarDays className="size-3" />
+                        {archiveEntryDate.format(new Date(review.reflectedAt))}
+                      </time>
+                    ) : null}
                   </div>
                 </button>
               );
@@ -370,7 +348,7 @@ function ReviewArchive({ reviews }: { reviews: ReviewArchiveItem[] }) {
         <article
           className="border-border bg-card min-w-0 overflow-hidden rounded-2xl border"
           aria-live="polite"
-          aria-label={`Review for ${fullWeekLabel(selected.weekStart)}`}
+          aria-label={`Review for ${reviewWeekLabel(selected.weekStart)}`}
         >
           <header className="border-border border-b px-5 py-5 sm:px-7 sm:py-6">
             <div className="flex items-start justify-between gap-4 sm:gap-5">
@@ -380,7 +358,7 @@ function ReviewArchive({ reviews }: { reviews: ReviewArchiveItem[] }) {
                     dateTime={selected.weekStart}
                     className="text-primary font-mono text-[10px] font-semibold tracking-[0.16em] uppercase"
                   >
-                    {fullWeekLabel(selected.weekStart)}
+                    {reviewWeekLabel(selected.weekStart)}
                   </time>
                   <span className="border-border bg-secondary text-muted-foreground rounded-full border px-2 py-1 text-[10px] font-medium">
                     {selected.completedAt ? "Completed" : "Draft"}
@@ -389,6 +367,18 @@ function ReviewArchive({ reviews }: { reviews: ReviewArchiveItem[] }) {
                 <h2 className="mt-3 text-xl leading-7 font-semibold tracking-[-0.03em] sm:text-2xl">
                   {reviewHeadline(selected)}
                 </h2>
+                {selected.reflectedAt ? (
+                  <p className="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs">
+                    <CalendarDays className="size-3.5" />
+                    Latest reflection added
+                    <time
+                      dateTime={selected.reflectedAt}
+                      className="font-medium"
+                    >
+                      {manilaDateLabel(selected.reflectedAt)}
+                    </time>
+                  </p>
+                ) : null}
               </div>
               <div className="shrink-0 text-right">
                 <p className="font-mono text-3xl font-semibold tracking-[-0.05em] tabular-nums">
@@ -480,7 +470,7 @@ function ReviewArchive({ reviews }: { reviews: ReviewArchiveItem[] }) {
         </article>
       </div>
 
-      {trend.length > 1 ? (
+      {active && trend.length > 1 ? (
         <section
           className="border-border bg-card mt-4 rounded-2xl border p-5 sm:p-6"
           aria-labelledby="archive-trend-heading"
@@ -529,8 +519,8 @@ export function ReviewWorkspace({
   };
 
   return (
-    <div className="mt-7">
-      <div className="border-border bg-background/95 sm:bg-card sticky top-0 z-20 -mx-4 border-y px-4 py-2 backdrop-blur sm:static sm:mx-0 sm:max-w-md sm:rounded-xl sm:border sm:p-1">
+    <div className="mt-5 sm:mt-7">
+      <div className="border-border bg-background/95 sm:bg-card sticky top-[calc(4rem+env(safe-area-inset-top))] z-20 -mx-4 border-y px-4 py-2 backdrop-blur sm:static sm:mx-0 sm:max-w-md sm:rounded-xl sm:border sm:p-1">
         <div role="tablist" aria-label="Review views" className="flex gap-1">
           {(
             [
@@ -593,7 +583,7 @@ export function ReviewWorkspace({
         role="tabpanel"
         aria-labelledby="reviews-current-tab"
         hidden={view !== "current"}
-        className="mt-5"
+        className="mt-4 sm:mt-5"
       >
         {currentContent}
       </section>
@@ -602,9 +592,11 @@ export function ReviewWorkspace({
         role="tabpanel"
         aria-labelledby="reviews-archive-tab"
         hidden={view !== "archive"}
-        className="mt-5"
+        className="mt-4 sm:mt-5"
       >
-        {archiveOpened ? <ReviewArchive reviews={reviews} /> : null}
+        {archiveOpened ? (
+          <ReviewArchive reviews={reviews} active={view === "archive"} />
+        ) : null}
       </section>
     </div>
   );
