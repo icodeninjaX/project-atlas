@@ -170,7 +170,20 @@ describe("goal actions", () => {
     });
     expect(update).toHaveBeenCalledWith({
       title: "Book the lodging",
-      description: "Compare refundable rates before booking.",
+      description: {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "Compare refundable rates before booking.",
+              },
+            ],
+          },
+        ],
+      },
       target_date: "2026-09-10",
     });
     expect(idFilter).toHaveBeenCalledWith(

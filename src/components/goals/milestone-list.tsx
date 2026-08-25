@@ -14,6 +14,8 @@ import {
 import { useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { AtlasMark } from "@/components/atlas/atlas-mark";
+import { MilestoneRichTextDisplay } from "@/components/goals/milestone-rich-text-display";
+import { MilestoneRichTextEditor } from "@/components/goals/milestone-rich-text-editor";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { TooltipHint } from "@/components/ui/tooltip";
@@ -21,7 +23,7 @@ import { TooltipHint } from "@/components/ui/tooltip";
 type Milestone = {
   id: string;
   title: string;
-  description?: string | null;
+  description?: unknown;
   target_date: string | null;
   completed_at: string | null;
 };
@@ -363,15 +365,10 @@ function MilestoneActionDialog({
                 >
                   Description or learning notes
                 </label>
-                <textarea
+                <MilestoneRichTextEditor
                   id={descriptionId}
-                  name="description"
-                  maxLength={20_000}
-                  rows={9}
-                  defaultValue={milestone.description ?? ""}
-                  aria-describedby={descriptionHelpId}
-                  placeholder="Paste what you learned, explain the idea in your own words, or add examples to revisit later…"
-                  className="border-border bg-background mt-1 min-h-48 w-full resize-y rounded-lg border px-3 py-2 text-sm leading-6"
+                  initialContent={milestone.description}
+                  describedBy={descriptionHelpId}
                 />
                 <p
                   id={descriptionHelpId}
@@ -512,7 +509,7 @@ export function MilestoneList({
           {milestones.length ? (
             <div className="space-y-2">
               {milestones.map((milestone) => (
-                <div key={milestone.id} className="flex items-center gap-2">
+                <div key={milestone.id} className="flex items-start gap-2">
                   <OfflineMutationForm mutation="milestone.toggle">
                     <input
                       type="hidden"
@@ -526,21 +523,20 @@ export function MilestoneList({
                     />
                     <MilestoneToggleButton milestone={milestone} />
                   </OfflineMutationForm>
-                  <button
-                    type="button"
-                    aria-label={`Open milestone ${milestone.title}`}
-                    onClick={(event) => {
-                      actionButtonRef.current = event.currentTarget;
-                      setDialogState({ mode: "edit", milestone });
-                    }}
-                    className={`group hover:bg-muted/60 focus-visible:ring-ring min-w-0 flex-1 rounded-md px-1 py-1 text-left text-xs outline-none focus-visible:ring-2 ${milestone.completed_at ? "text-muted-foreground" : ""}`}
-                  >
-                    <span
-                      className={`block truncate group-hover:underline ${milestone.completed_at ? "line-through" : ""}`}
+                  <div className="min-w-0 flex-1 px-1 py-1">
+                    <button
+                      type="button"
+                      aria-label={`Open milestone ${milestone.title}`}
+                      onClick={(event) => {
+                        actionButtonRef.current = event.currentTarget;
+                        setDialogState({ mode: "edit", milestone });
+                      }}
+                      className={`hover:text-foreground focus-visible:ring-ring block max-w-full text-left text-xs outline-none hover:underline focus-visible:ring-2 ${milestone.completed_at ? "text-muted-foreground line-through" : ""}`}
                     >
                       {milestone.title}
-                    </span>
-                  </button>
+                    </button>
+                    <MilestoneRichTextDisplay content={milestone.description} />
+                  </div>
                   {milestone.target_date && (
                     <time className="text-muted-foreground font-mono text-[10px]">
                       {milestone.target_date}
@@ -596,37 +592,59 @@ export function MilestoneList({
           onResult={(result) => {
             if (result.success) setAddMilestoneOpen(false);
           }}
-          className="mt-3 flex flex-wrap gap-2"
+          className="border-border bg-muted/20 mt-3 space-y-3 rounded-xl border p-3"
         >
           <input type="hidden" name="goalId" value={goalId} />
-          <input
-            name="title"
-            required
-            maxLength={160}
-            placeholder="Add a milestone"
-            aria-label="New milestone"
-            className="border-border bg-background min-h-9 min-w-0 flex-1 rounded-lg border px-2 text-xs"
-          />
-          <input
-            name="targetDate"
-            type="date"
-            aria-label="Milestone target date"
-            className="border-border bg-background min-h-9 rounded-lg border px-2 text-xs"
-          />
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => setAddMilestoneOpen(false)}
-          >
-            Cancel
-          </Button>
-          <MilestoneMutationButton
-            idleLabel="Add milestone"
-            pendingLabel="Adding milestone"
-            idleText="Add"
-            pendingText="Adding…"
-          />
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <input
+              name="title"
+              required
+              maxLength={160}
+              placeholder="Add a milestone"
+              aria-label="New milestone"
+              className="border-border bg-background min-h-10 min-w-0 rounded-lg border px-3 text-xs"
+            />
+            <input
+              name="targetDate"
+              type="date"
+              aria-label="Milestone target date"
+              className="border-border bg-background min-h-10 rounded-lg border px-3 text-xs"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor={`add-milestone-description-${goalId}`}
+              className="block text-xs font-medium"
+            >
+              Description or learning notes
+            </label>
+            <MilestoneRichTextEditor
+              id={`add-milestone-description-${goalId}`}
+              describedBy={`add-milestone-description-help-${goalId}`}
+            />
+            <p
+              id={`add-milestone-description-help-${goalId}`}
+              className="text-muted-foreground mt-1 text-[10px]"
+            >
+              Add context now or keep building these notes as you make progress.
+            </p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setAddMilestoneOpen(false)}
+            >
+              Cancel
+            </Button>
+            <MilestoneMutationButton
+              idleLabel="Add milestone"
+              pendingLabel="Adding milestone"
+              idleText="Add"
+              pendingText="Adding…"
+            />
+          </div>
         </OfflineMutationForm>
       )}
       <MilestoneActionDialog

@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { parseMilestoneDescriptionInput } from "@/lib/goals/milestone-rich-text";
+import { offlineEntityId } from "@/lib/offline/server";
 import { createClient } from "@/lib/supabase/server";
 import { goalSchema } from "@/lib/validation/schemas";
-import { offlineEntityId } from "@/lib/offline/server";
 
 export type GoalActionState = { success: boolean; message: string };
 
@@ -155,15 +156,22 @@ export async function createMilestoneAction(
 ): Promise<GoalActionState> {
   const goalId = String(formData.get("goalId") ?? "");
   const title = String(formData.get("title") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
+  const description = parseMilestoneDescriptionInput(
+    formData.get("description"),
+  );
   const targetDate = String(formData.get("targetDate") ?? "").trim();
   if (
     !/^[0-9a-f-]{36}$/i.test(goalId) ||
     !title ||
     title.length > 160 ||
-    description.length > 20_000
+    !description.success
   )
-    return { success: false, message: "Check the milestone details." };
+    return {
+      success: false,
+      message: description.success
+        ? "Check the milestone details."
+        : description.message,
+    };
   const supabase = await createClient();
   if (!supabase)
     return { success: false, message: "Supabase is not configured." };
@@ -176,7 +184,7 @@ export async function createMilestoneAction(
     user_id: user.id,
     goal_id: goalId,
     title,
-    description: description || null,
+    description: description.data,
     target_date: /^\d{4}-\d{2}-\d{2}$/.test(targetDate) ? targetDate : null,
   });
   if (error)
@@ -191,16 +199,23 @@ export async function updateMilestoneAction(
 ): Promise<GoalActionState> {
   const id = String(formData.get("milestoneId") ?? "");
   const title = String(formData.get("title") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
+  const description = parseMilestoneDescriptionInput(
+    formData.get("description"),
+  );
   const targetDate = String(formData.get("targetDate") ?? "").trim();
   if (
     !/^[0-9a-f-]{36}$/i.test(id) ||
     !title ||
     title.length > 160 ||
-    description.length > 20_000 ||
+    !description.success ||
     (targetDate && !/^\d{4}-\d{2}-\d{2}$/.test(targetDate))
   ) {
-    return { success: false, message: "Check the milestone details." };
+    return {
+      success: false,
+      message: description.success
+        ? "Check the milestone details."
+        : description.message,
+    };
   }
   const supabase = await createClient();
   if (!supabase)
@@ -213,7 +228,7 @@ export async function updateMilestoneAction(
     .from("goal_milestones")
     .update({
       title,
-      description: description || null,
+      description: description.data,
       target_date: targetDate || null,
     })
     .eq("id", id)

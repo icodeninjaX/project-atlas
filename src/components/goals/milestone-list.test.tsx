@@ -108,7 +108,9 @@ describe("MilestoneList", () => {
       screen.getByRole("textbox", {
         name: "Description or learning notes",
       }),
-    ).toHaveValue("The consequences of leaving a prospect's problem unsolved.");
+    ).toHaveTextContent(
+      "The consequences of leaving a prospect's problem unsolved.",
+    );
   });
 
   it("shows the spinning ATLAS mark while completing a milestone", async () => {
@@ -370,7 +372,7 @@ describe("MilestoneList", () => {
     const description = screen.getByRole("textbox", {
       name: "Description or learning notes",
     });
-    expect(description).toHaveValue("");
+    expect(description).toHaveTextContent("");
     expect(screen.getByLabelText("Target date")).toHaveValue("2026-09-01");
     await user.clear(title);
     await user.type(title, "Confirm the route");
@@ -400,9 +402,20 @@ describe("MilestoneList", () => {
       "53f3368c-d188-4aef-82b3-2846ba974169",
     );
     expect(submittedForm.get("title")).toBe("Confirm the route");
-    expect(submittedForm.get("description")).toBe(
-      "Learn the tradeoffs before choosing a route.",
-    );
+    expect(JSON.parse(String(submittedForm.get("description")))).toEqual({
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "Learn the tradeoffs before choosing a route.",
+            },
+          ],
+        },
+      ],
+    });
     expect(submittedForm.get("targetDate")).toBe("2026-09-01");
 
     await act(async () => {
