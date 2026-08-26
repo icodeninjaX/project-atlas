@@ -75,6 +75,74 @@ final result: passed
 
 ---
 
+# Milestone Reader Formatting Design QA
+
+## Comparison target
+
+- Expected editor spacing: `C:\Users\kdv06\AppData\Local\Temp\codex-clipboard-77961373-1a3b-4c24-a31a-1a8dd03335f4.png`
+- Collapsed reader baseline: `C:\Users\kdv06\AppData\Local\Temp\codex-clipboard-8cf61d69-986b-4f2e-8777-736d65fd074a.png`
+- Final browser-rendered reader: `C:\Users\kdv06\.codex\visualizations\2026\08\25\01a037be-4216-71a1-9540-3c2ea6196aa9\milestone-reader-fixed-390x844.png`
+- Equal-width editor/reader comparison: `C:\Users\kdv06\.codex\visualizations\2026\08\25\01a037be-4216-71a1-9540-3c2ea6196aa9\milestone-reader-spacing-comparison.png`
+- Route and state: authenticated `/goals`, dark theme, Learn Sales expanded, Loss Aversion milestone open in read mode.
+
+## Viewport and normalization
+
+- Source editor image: 374 × 724 pixels.
+- Implementation: 390 × 844 CSS pixels and captured pixels at 1× density; client width and scroll width both measured 390 pixels.
+- For the focused comparison, the implementation was proportionally resized to the source's 374-pixel width. The two panels were placed together without altering either panel's vertical rhythm.
+- The supplied images are already focused on the milestone editor and reader, so an additional content crop was unnecessary. The combined comparison keeps the complete visible text region readable at native scale.
+
+## Findings
+
+No actionable P0, P1, or P2 findings remain after the second comparison pass.
+
+- Fonts and typography: the reader retains the configured ATLAS application font and uses a comfortable 15-pixel body with 28-pixel line height. Bold, italic, underline, strike, inline code, headings, lists, and quotations continue to map to semantic React elements.
+- Spacing and layout rhythm: every stored newline is now represented explicitly and whitespace is preserved. The real Loss Aversion record rendered 26 line breaks, matching its 13 blank-line paragraph gaps from edit mode. The reader intentionally remains slightly roomier than the editor for long-form reading.
+- Colors and visual tokens: foreground, muted, primary, border, card, and background treatments are unchanged and remain aligned with the approved ATLAS milestone-reader design.
+- Image quality and asset fidelity: the reader contains no raster or illustrative content. Existing Lucide controls and the ATLAS shell are unchanged; no replacement or placeholder assets were introduced.
+- Copy and content: the reader shows the same Loss Aversion wording and currency content as the editor. No text is removed, rewritten, or merged.
+- Responsiveness and accessibility: the 390-pixel reader has no horizontal overflow, remains a labelled dialog, and keeps the Edit and Close controls keyboard-accessible. Edit opened the formatting toolbar, Cancel closed the editor, and selecting Loss Aversion reopened the corrected reader.
+
+## Comparison history
+
+### Pass 1
+
+- [P1] Migrated milestone notes stored their original newline characters inside one rich-text paragraph. ProseMirror preserved those newlines in edit mode, while normal reader HTML collapsed them into spaces and removed the intended paragraph rhythm.
+  - Fix: split newline-bearing text nodes into explicit line breaks during safe React rendering and apply inherited `white-space: pre-wrap` so repeated spaces and remaining whitespace are retained.
+  - Regression coverage: added a migrated-note fixture containing multiple blank lines and asserted four rendered line breaks plus the preserved-whitespace treatment.
+
+### Pass 2
+
+- The editor source and final reader were compared together at the same 374-pixel width in `milestone-reader-spacing-comparison.png`.
+- Paragraph gaps, wrapping, copy, typography, token usage, dialog bounds, Edit/Cancel/Read behavior, and horizontal overflow were rechecked. No actionable P0/P1/P2 difference remains.
+
+## Automated and browser verification
+
+- 214 tests passed across 55 files.
+- The editor-to-reader contract test covers every supported mark and block: bold, italic, underline, strikethrough, inline code, combined marks, headings, bullet and numbered lists, quotations, and hard breaks.
+- ESLint passed without warnings.
+- Next.js route type generation and TypeScript passed.
+- Next.js 16.3.2 production build passed.
+- Browser-rendered checks passed for the live Loss Aversion note at 390 × 844 and 1× density.
+- The milestone interaction produced no reader-specific console errors. The development console retained one pre-existing Next.js script-tag warning outside this renderer change.
+
+## Follow-up polish
+
+- No follow-up visual changes are required for the formatting issue.
+
+## Implementation checklist
+
+- [x] Legacy newline structure preserved
+- [x] Current rich-text blocks and marks preserved
+- [x] Editor → Cancel → Reader interaction checked
+- [x] Mobile horizontal overflow checked
+- [x] Source and implementation compared together
+- [x] Regression, lint, type, and build gates passed
+
+final result: passed
+
+---
+
 # Financial Snapshot Mobile Design QA
 
 ## Comparison target

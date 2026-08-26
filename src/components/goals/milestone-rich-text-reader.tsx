@@ -4,8 +4,19 @@ import {
   type MilestoneRichTextNode,
 } from "@/lib/goals/milestone-rich-text";
 
+const lineBreakPattern = /\r\n?|\n/;
+
 function renderText(node: MilestoneRichTextNode, key: string): ReactNode {
-  let content: ReactNode = node.text;
+  const lines = node.text?.split(lineBreakPattern) ?? [];
+  let content: ReactNode =
+    lines.length > 1
+      ? lines.map((line, index) => (
+          <Fragment key={`${key}-line-${index}`}>
+            {index > 0 ? <br /> : null}
+            {line}
+          </Fragment>
+        ))
+      : node.text;
 
   for (const mark of node.marks ?? []) {
     if (mark.type === "bold") {
@@ -109,7 +120,7 @@ export function MilestoneRichTextReader({
   if (!document) return emptyFallback;
 
   return (
-    <div className="text-foreground/90 space-y-5 text-[15px] leading-7 [overflow-wrap:anywhere]">
+    <div className="text-foreground/90 space-y-5 text-[15px] leading-7 [overflow-wrap:anywhere] whitespace-pre-wrap">
       {document.content.map((node, index) => renderNode(node, String(index)))}
     </div>
   );
