@@ -126,6 +126,63 @@
         }
       },
       "updatedAt": "2026-08-23T08:00:00.000Z"
+    },
+    "/goals#milestone-reader": {
+      "targetKind": "new-ui",
+      "projectId": "f9c0903b-9b0f-428c-a29a-fe058d903aa8",
+      "activeDraftId": "b8708c59-fd93-4166-b3e6-07d7c0204a7b",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": [],
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "src/app/globals.css",
+        "src/app/(app)/layout.tsx",
+        "src/components/atlas/app-shell.tsx",
+        "src/components/atlas/app-header.tsx",
+        "src/app/(app)/goals/page.tsx",
+        "src/components/goals/milestone-list.tsx",
+        "src/components/goals/milestone-rich-text-editor.tsx",
+        "src/components/goals/goal-card-header.tsx",
+        "src/components/goals/goal-progress.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/card.tsx",
+        "src/lib/utils.ts"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "0294c05875ca45818556c3c0c510f5b2e800f68759c15769cb88b2325b2b8123",
+        "src/app/globals.css": "617ad1ad3bf20b0ffb1409a91f0aa30a3792b6ea60729c3a7bd23ee25a81ae34",
+        "src/app/(app)/layout.tsx": "686ba50344e7079e71b8833f0c25eec952e0880fc4ab68a799fca7d93a5ea16a",
+        "src/components/atlas/app-shell.tsx": "2da40514c3cabc2005f57da8a696e7cd9ff8786aa37807997532a9c73ef8349e",
+        "src/components/atlas/app-header.tsx": "183d4dc931c0312c019d32dccb139f0741f0210b4a61fc6ac8c5f073332eb961",
+        "src/app/(app)/goals/page.tsx": "bf32fe518cb975c40c4b41335cb29d563506fb18c7f496cc1396fde18db95eb8",
+        "src/components/goals/milestone-list.tsx": "3d9750ff3e087c6a668514b5740a481706f07d80e1dada5fdc010fc062b779d0",
+        "src/components/goals/milestone-rich-text-editor.tsx": "9ffeb55b1e28d836e188cadd09e7b843ee6f6efbe9442d54e66fbad54aa5027e",
+        "src/components/goals/goal-card-header.tsx": "87442e3ea578f1e945168eaf5f0e93a50563b4a73a124fa1636ca7850282f2e5",
+        "src/components/goals/goal-progress.tsx": "547226011a6a1434e5c82f93ff8e0022b7ee2473b3e1506a0317e22414ce5f3d",
+        "src/components/ui/button.tsx": "871f1aec418a72d7cbe03844302b2fbad01977b81e1d7088aafde90abba1982a",
+        "src/components/ui/card.tsx": "9aed5af06f3898ed177262e6371d1d3fbfe5fa635fbd8342eec23ee1d093914b",
+        "src/lib/utils.ts": "c0adf27efbfa148d5abcf99e860f8e3e6c8fc77a1f99e023c08ef4f12e6ece29"
+      },
+      "components": [
+        {
+          "name": "AppShell",
+          "id": "db39a627-d06d-4bfb-8a21-8e13c57498ce",
+          "sourcePath": "src/components/atlas/app-shell.tsx"
+        },
+        {
+          "name": "AppHeader",
+          "id": "9e3be54b-09ae-408c-88f4-a2e51cfb441b",
+          "sourcePath": "src/components/atlas/app-header.tsx"
+        }
+      ],
+      "drafts": {
+        "b8708c59-fd93-4166-b3e6-07d7c0204a7b": {
+          "title": "Goals · Milestone Reading View",
+          "visualDirection": "calm editorial reader with ATLAS metadata and explicit edit action",
+          "currentVersion": 2
+        }
+      },
+      "updatedAt": "2026-08-25T15:19:15.2573032Z"
     }
   }
 }

@@ -76,7 +76,7 @@ describe("MilestoneList", () => {
     expect(screen.queryByLabelText("New milestone")).not.toBeInTheDocument();
   });
 
-  it("opens learning notes when the milestone title is clicked", async () => {
+  it("opens a readable milestone view before showing any editing controls", async () => {
     const user = userEvent.setup();
 
     render(
@@ -86,8 +86,20 @@ describe("MilestoneList", () => {
           {
             id: "53f3368c-d188-4aef-82b3-2846ba974169",
             title: "Cost of Inaction",
-            description:
-              "The consequences of leaving a prospect's problem unsolved.",
+            description: {
+              type: "doc",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: "text",
+                      text: "The consequences of leaving a prospect's problem unsolved.",
+                    },
+                  ],
+                },
+              ],
+            },
             target_date: null,
             completed_at: null,
           },
@@ -107,9 +119,31 @@ describe("MilestoneList", () => {
       screen.getByRole("button", { name: "Open milestone Cost of Inaction" }),
     );
 
+    const reader = screen.getByRole("dialog", { name: "Cost of Inaction" });
+    expect(reader).toBeVisible();
+    expect(reader).toHaveTextContent("In progress");
+    expect(
+      screen.getByText(
+        "The consequences of leaving a prospect's problem unsolved.",
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("textbox", {
+        name: "Description or learning notes",
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("toolbar", { name: "Description formatting" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Edit milestone" }));
+
     expect(
       screen.getByRole("dialog", { name: "Milestone details" }),
     ).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "Title" })).toHaveValue(
+      "Cost of Inaction",
+    );
     expect(
       screen.getByRole("textbox", {
         name: "Description or learning notes",
@@ -117,6 +151,36 @@ describe("MilestoneList", () => {
     ).toHaveTextContent(
       "The consequences of leaving a prospect's problem unsolved.",
     );
+  });
+
+  it("shows a quiet empty state when a milestone has no notes", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MilestoneList
+        goalId="1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb"
+        milestones={[
+          {
+            id: "53f3368c-d188-4aef-82b3-2846ba974169",
+            title: "Plan the route",
+            target_date: "2026-09-01",
+            completed_at: null,
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "View" }));
+    await user.click(
+      screen.getByRole("button", { name: "Open milestone Plan the route" }),
+    );
+
+    const reader = screen.getByRole("dialog", { name: "Plan the route" });
+    expect(reader).toHaveTextContent("Target: Sep 1, 2026");
+    expect(screen.getByText("No notes yet.")).toBeVisible();
+    expect(
+      screen.getByText(/Use Edit when you are ready to capture context/),
+    ).toBeVisible();
   });
 
   it("shows the spinning ATLAS mark while completing a milestone", async () => {
