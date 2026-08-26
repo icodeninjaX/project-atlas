@@ -1,5 +1,7 @@
 # Testing
 
+Latest local snapshot: 2026-08-26. See [MVP status](mvp-status.md) for the release-level summary.
+
 ## Unit and component tests
 
 ```bash
@@ -7,7 +9,7 @@ npm run test
 npm run test:watch
 ```
 
-Vitest covers currency input/formatting, account balances, debt recalculation, debt strategies, amortization, deterministic priorities, Manila date/week helpers, shared validation, safe redirects, CSV safety, shell accessibility, and keyboard search behavior.
+Vitest currently passes 193 tests across 53 files. Coverage includes currency input/formatting, account balances, transaction/account editing, debt recalculation, debt strategies, amortization, deterministic priorities, Manila date/week helpers, task scheduling and Focus mode, milestone-derived progress and rich text, shared validation, safe redirects, reminder delivery, CSV safety, shell/settings accessibility, offline behavior, and keyboard search.
 
 ## Static quality
 
@@ -19,6 +21,8 @@ npm run build
 ```
 
 The production build intentionally succeeds without Supabase or OpenAI keys.
+
+The current CI quality job runs lint, type checking, unit tests, and the production build. `format:check` remains useful locally but currently reports legacy formatting drift across unchanged repository files; normalize that baseline as a separate mechanical cleanup rather than mixing it into feature work.
 
 ## Database integration tests
 
@@ -61,6 +65,14 @@ E2E_PASSWORD=
 
 The authenticated suite skips without those values. It creates records, so the account and project must be disposable.
 
+Latest credential-free Chromium result: 19 passed, 10 authenticated checks skipped, and 0 failed. Run both configured projects for full desktop/mobile coverage:
+
+```bash
+npm run test:e2e
+```
+
 ## Accessibility
 
-Automated browser accessibility tooling is not yet included. Current checks cover semantic navigation, labelled forms, visible focus, skip links, text status, reduced motion, chart text alternatives, and touch-sized controls. Add `@axe-core/playwright` once the authenticated fixture is available.
+`@axe-core/playwright` is configured for the public landing, login, signup, and password-recovery routes. Component and browser checks also cover semantic navigation, labelled forms, visible focus, skip links, text status, reduced motion, chart text alternatives, dialog focus behavior, and touch-sized controls.
+
+Authenticated Axe coverage still requires the dedicated disposable fixture. Add those checks to the existing authenticated workflow once its CI credentials and cleanup are in place.

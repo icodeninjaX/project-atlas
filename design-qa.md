@@ -1,5 +1,7 @@
 # Daily Progress Report Design QA
 
+> This file is a chronological visual-evidence log. Individual environment notes describe the state at the time of each capture. For the current release-level verification state, see [MVP status](docs/mvp-status.md). The full lint, type-check, unit, and production-build gates pass as of 2026-08-26.
+
 ## Comparison target
 
 - Source visual truth: `C:\Users\kdv06\AppData\Local\Temp\atlas-daily-progress-report-source-393x852.png`
@@ -134,7 +136,7 @@ No actionable P0, P1, or P2 findings remain after the second responsive pass.
 - Six focused money-formatting and balance tests passed.
 - Git whitespace validation passed for the dashboard diff.
 - Browser-rendered checks passed at 320 × 800, reference-matched 433 × 844, and 1440 × 1000 viewport overrides.
-- Repository-wide TypeScript verification is currently blocked by a pre-existing unrelated error in `src/components/goals/milestone-list.test.tsx:128` (`container` is not defined).
+- At the time of this capture, repository-wide TypeScript verification was blocked by an unrelated test error in `src/components/goals/milestone-list.test.tsx`. That issue is resolved; `npm run typecheck` passes in the 2026-08-26 release-candidate verification.
 
 ## Follow-up polish
 

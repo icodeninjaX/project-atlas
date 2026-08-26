@@ -2,7 +2,7 @@
 
 ## Migration
 
-`supabase/migrations/20260726082930_initial_schema.sql` creates the complete MVP data model:
+`supabase/migrations/20260726082930_initial_schema.sql` creates the baseline MVP data model:
 
 - profiles and user preferences
 - financial accounts, categories, transactions, transfers, monthly budgets, and budget items
@@ -10,6 +10,8 @@
 - tasks, goals, and milestones
 - job applications and stage events
 - weekly reviews, pinned priorities, and activity history
+
+Forward migrations extend that baseline with composite foreign-key indexes, hardened RLS, advanced search filters, account balance adjustments, permanent empty-archive deletion, exact task times, offline mutation receipts, expanded settings, task reminder delivery, milestone-derived goal progress, and rich milestone descriptions. Production and clean test environments must apply the entire ordered migration directory, not only the initial file.
 
 All money uses signed `bigint` centavos. Timestamps use `timestamptz` and are written in UTC. User-facing date-only values use `date`.
 
@@ -43,7 +45,9 @@ Run the pgTAP file only in a disposable local/test database:
 npm run supabase:test
 ```
 
-The test creates two fictional auth users inside a transaction, proves owner and cross-user behavior, and verifies debt payment insert, edit, delete, paid, and reopen behavior before rolling back.
+The pgTAP suites create fictional users inside transactions and cover owner/cross-user RLS, debt payment insert/edit/delete and paid/reopen behavior, account balance adjustments, archived-account filters and deletion guards, offline receipt permissions, exact task scheduling, and milestone-derived goal progress before rolling back.
+
+Latest local status (2026-08-26): the suites were not executed because the Docker daemon was unavailable and no linked disposable branch was supplied. Running the full migration chain and pgTAP suite remains a launch gate.
 
 ## Generated types
 

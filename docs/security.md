@@ -73,3 +73,5 @@ Not yet verified locally: migration execution and pgTAP, because Docker Desktop
 was unavailable and no linked disposable project was supplied. The Supabase
 CLI schema-lint command was checked but needs a running local database or a
 linked branch.
+
+Before the release is marked production-verified, also confirm leaked-password protection and Auth rate limits in Supabase, apply edge limits to sensitive endpoints, run the authenticated Playwright suite with a disposable user, and repeat cross-user RLS checks against the deployed migration chain. See [MVP status](mvp-status.md).

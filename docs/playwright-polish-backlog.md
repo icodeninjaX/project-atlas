@@ -1,20 +1,16 @@
 # ATLAS Playwright polish backlog
 
-Last reviewed: 2026-08-08
+Last reviewed: 2026-08-26
 Target: `https://atlas.kdvwebsiteservices.com`
 Browsers: Playwright Desktop Chrome and Pixel 7 emulation
 
 ## Test summary
 
-- Existing public and accessibility suite: **12 passed, 0 failed**.
-- Existing authenticated suite: **10 skipped** because `E2E_EMAIL` and `E2E_PASSWORD` are not configured.
-- New production-safe edge suite: **8 passed, 4 failed**. The four failures are two reproducible product issues, each failing on desktop and mobile.
-- Health endpoint returned `200`, `Cache-Control: no-store`, and the expected service payload.
-- No production records were created or changed during this review.
-
-Local implementation verification on 2026-08-09: **16 passed, 0 failed** across
-Desktop Chrome and Pixel 7 emulation. This includes the fixed API-auth and 404
-routing behavior plus redirect sanitization coverage.
+- Latest local Chromium run: **19 passed, 10 skipped, 0 failed**. The skipped checks require dedicated authenticated E2E credentials.
+- Public routes now have automated Axe coverage; the credential-free run also covers responsive layout, PWA metadata/cache behavior, API auth, redirect sanitization, and 404 handling.
+- The production landing page, health endpoint, and manifest returned `200` on 2026-08-26. Health returned `Cache-Control: no-store` and the expected service payload.
+- The original API-auth, unknown-route, and preserved-destination issues below are implemented. They remain in this document as regression context.
+- No production records were created or changed during the latest review.
 
 ## Work next
 

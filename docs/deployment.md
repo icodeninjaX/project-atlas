@@ -1,5 +1,7 @@
 # Deployment
 
+Current status (2026-08-26): the public production origin, health endpoint, and web manifest respond successfully at `https://atlas.kdvwebsiteservices.com`. The checks below must still be completed against the release commit before production is considered fully verified. See [MVP status](mvp-status.md).
+
 ## Supabase
 
 1. Create a dedicated Supabase project in the intended region.
@@ -11,7 +13,8 @@
    - production application origin
    - `http://localhost:3000/auth/callback`
 6. Enable email confirmations and configure a production SMTP provider.
-7. Do not run `supabase/seed.sql` in production.
+7. Enable leaked-password protection when supported by the selected Supabase plan, review Auth rate limits, and verify signup and reset behavior.
+8. Do not run `supabase/seed.sql` in production.
 
 ## Vercel
 
@@ -53,6 +56,7 @@
 - a push-enabled account receives at most one actionable daily digest; invalid subscriptions are removed
 - account deletion rejects the wrong password or confirmation phrase and is unavailable without the service role
 - primary mobile and desktop workflows remain keyboard accessible
+- authenticated Axe checks have no serious or critical findings on the primary workflows
 
 ## Rollback
 

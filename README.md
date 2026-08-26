@@ -4,22 +4,25 @@
 
 ATLAS is a private, Philippines-first life-management application for seeing money, debts, tasks, goals, career applications, and weekly reflection in one daily route. It stores pesos as integer centavos, displays dates in Asia/Manila, and treats Monday through Sunday as the default review week.
 
+The scoped MVP is implemented and is now in release-candidate validation. See the [MVP status](docs/mvp-status.md) for the current verification snapshot and remaining launch gates.
+
 ## Features
 
 - Supabase email/password authentication, recovery, protected routes, and onboarding
 - data-driven Today dashboard with deterministic Dayline priorities
 - auditable accounts, income/expense transactions, monthly budgets, and server exports
 - debt strategies, payment history, atomic balance recalculation, and amortization estimates
-- task capture, Today/Upcoming/Inbox/Completed views, and keyboard shortcut
-- goals with milestone-driven progress
-- career table and Kanban views, stage history, overdue follow-ups, and conversion guards
+- task capture, Today/Upcoming/Overdue/Inbox/Completed views, exact-time scheduling, recommendations, Focus mode, completion feedback, and keyboard shortcuts
+- goal CRUD with category colors, rich milestone notes, milestone-driven progress, and related tasks
+- customizable career table and Kanban views, application editing, stage history, overdue follow-ups, and conversion guards
 - weekly factual summaries, guided reflections, drafts, submission, and score trends
 - owner-scoped global search plus filterable, paginated activity history and export
 - installable PWA with user-scoped offline page caches and automatic mutation replay
-- device privacy mode, sync/storage controls, quick-capture defaults, and scoped session controls
+- device privacy mode, sync/storage controls, quick-capture defaults, app-wide font preferences, and scoped session controls
 - password/email changes, authenticated account deletion, and TOTP authenticator MFA
 - opt-in daily web-push reminders with quiet hours and idempotent Vercel cron delivery
-- dark-first responsive shell with light mode, focus states, reduced motion, loading, empty, and error states
+- daily gratitude and productivity prompts, rotating local wisdom, and dark-first responsive visual treatments
+- light/dark/system themes, focus states, reduced motion, loading, empty, and error states
 
 ## Stack
 
@@ -106,6 +109,7 @@ docs/             architecture, database, security, testing, and delivery docs
 
 ## Documentation
 
+- [MVP status](docs/mvp-status.md)
 - [Implementation plan](docs/implementation-plan.md)
 - [Architecture](docs/architecture.md)
 - [Database](docs/database.md)
@@ -116,13 +120,14 @@ docs/             architecture, database, security, testing, and delivery docs
 
 ## Screenshots
 
-Screenshots will be added after a migrated Supabase test project is connected and representative fictional data can be rendered safely.
+The career Kanban comparison below shows the responsive desktop and mobile treatment built from fictional records. Additional component-level visual evidence is catalogued in [design-qa.md](design-qa.md).
+
+![ATLAS career Kanban on desktop and mobile](career-kanban-comparison.png)
 
 ## Known limitations
 
-- The newest SQL migration and pgTAP suite were not executed locally because Docker Desktop was unavailable; apply them to a disposable Supabase branch before production.
-- Account deletion remains visibly disabled when `SUPABASE_SERVICE_ROLE_KEY` is absent.
-- Browser reminders remain visibly disabled until VAPID and cron secrets are configured.
-- Full edit dialogs, goal milestone management, transfer entry, and advanced transaction filters remain incomplete.
-- Authenticated Playwright workflows require dedicated test credentials and skip without them.
-- Automated axe accessibility checks are not yet configured.
+- The current migration chain and pgTAP suite still need a clean run against a disposable Supabase database; Docker Desktop was unavailable during the latest local verification.
+- Authenticated Playwright workflows require dedicated test credentials and currently skip without them. Public, PWA, edge-case, responsive, and Axe checks run without credentials.
+- Account deletion is intentionally unavailable when `SUPABASE_SERVICE_ROLE_KEY` is absent, and browser reminders remain unavailable until VAPID and cron secrets are configured.
+- Production launch still requires the deployment checks in [MVP status](docs/mvp-status.md), including cross-user RLS verification, authenticated E2E, and production Auth/security configuration.
+- Dedicated career detail views, bulk operations, and deeper reporting filters are post-MVP enhancements rather than launch blockers.
