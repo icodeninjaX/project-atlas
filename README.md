@@ -117,6 +117,7 @@ docs/             architecture, database, security, testing, and delivery docs
 - [Testing](docs/testing.md)
 - [Deployment](docs/deployment.md)
 - [Future roadmap](docs/future-roadmap.md)
+- [Intelligent roadmap](docs/intelligent-roadmap.md)
 
 ## Screenshots
 

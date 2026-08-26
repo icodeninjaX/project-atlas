@@ -4,6 +4,8 @@ Last reviewed: 2026-08-26
 
 The scoped MVP features are implemented. Immediate work is the production-validation checklist in [MVP status](mvp-status.md), not another product module.
 
+The phased sequence for intelligent and cross-domain product improvements is maintained in the [Intelligent roadmap](intelligent-roadmap.md). Where the two documents overlap, follow that phase ordering; the milestones below describe complementary post-MVP work.
+
 ## Post-MVP milestones
 
 1. **Workflow depth and reporting:** dedicated career detail surfaces, bulk actions, richer filters, saved views, improved trends, and generated Supabase database types.
