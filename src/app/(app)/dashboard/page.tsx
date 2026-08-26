@@ -187,12 +187,12 @@ export default async function DashboardPage() {
           <div className="order-3 lg:order-none">
             <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:mt-6 sm:text-4xl lg:mt-3">
               {dashboard.priorities.length
-                ? "Your next moves are mapped."
+                ? "Your Day, Mapped."
                 : "Your route is clear."}
             </h1>
             <p className="text-muted-foreground mt-2 text-sm">
               {dashboard.priorities.length
-                ? "ATLAS ranked these from current deadlines and commitments."
+                ? "Ranked by deadlines and commitments."
                 : "Add what matters and ATLAS will surface the next useful move."}
             </p>
 
@@ -287,32 +287,28 @@ export default async function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex items-start justify-between gap-4">
             <CardTitle>Week position</CardTitle>
+            <div className="bg-primary/10 text-primary grid size-11 shrink-0 place-items-center rounded-xl">
+              <CalendarClock aria-hidden="true" className="size-5" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-start gap-4">
-              <div className="bg-primary/10 text-primary grid size-11 shrink-0 place-items-center rounded-xl">
-                <CalendarClock className="size-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold">
-                  {dashboard.review_complete
-                    ? "This week is reviewed"
-                    : "Review when the week closes"}
-                </p>
-                <p className="text-muted-foreground mt-1 text-xs leading-5">
-                  ATLAS uses Monday through Sunday and keeps factual metrics
-                  beside your reflection.
-                </p>
-                <Link
-                  href="/reviews"
-                  className="text-primary mt-4 inline-flex items-center gap-1 text-xs font-semibold"
-                >
-                  Open weekly reviews <ArrowRight className="size-3" />
-                </Link>
-              </div>
-            </div>
+            <p className="text-sm font-semibold">
+              {dashboard.review_complete
+                ? "This week is reviewed"
+                : "Review when the week closes"}
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs leading-5">
+              ATLAS uses Monday through Sunday and keeps factual metrics beside
+              your reflection.
+            </p>
+            <Link
+              href="/reviews"
+              className="text-primary mt-4 inline-flex items-center gap-1 text-xs font-semibold"
+            >
+              Open weekly reviews <ArrowRight className="size-3" />
+            </Link>
           </CardContent>
         </Card>
       </div>
