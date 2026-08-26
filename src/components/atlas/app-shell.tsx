@@ -8,6 +8,7 @@ import {
   Goal,
   Landmark,
   Menu,
+  Radar,
   Search,
   Settings,
   WalletCards,
@@ -20,19 +21,40 @@ import type { ReactNode } from "react";
 import { AtlasMark } from "./atlas-mark";
 import { cn } from "@/lib/utils";
 
+const destinations = {
+  today: { href: "/dashboard", label: "Today", icon: Gauge },
+  signals: { href: "/signals", label: "Signals", icon: Radar },
+  money: { href: "/money/accounts", label: "Money", icon: WalletCards },
+  debts: { href: "/debts", label: "Debts", icon: Landmark },
+  tasks: { href: "/tasks", label: "Tasks", icon: ClipboardCheck },
+  goals: { href: "/goals", label: "Goals", icon: Goal },
+  career: { href: "/career", label: "Career", icon: BriefcaseBusiness },
+  reviews: { href: "/reviews", label: "Reviews", icon: CircleDollarSign },
+} as const;
+
 const navigation = [
-  { href: "/dashboard", label: "Today", icon: Gauge },
-  { href: "/money/accounts", label: "Money", icon: WalletCards },
-  { href: "/debts", label: "Debts", icon: Landmark },
-  { href: "/tasks", label: "Tasks", icon: ClipboardCheck },
-  { href: "/goals", label: "Goals", icon: Goal },
-  { href: "/career", label: "Career", icon: BriefcaseBusiness },
-  { href: "/reviews", label: "Reviews", icon: CircleDollarSign },
+  destinations.today,
+  destinations.signals,
+  destinations.money,
+  destinations.debts,
+  destinations.tasks,
+  destinations.goals,
+  destinations.career,
+  destinations.reviews,
+] as const;
+
+const mobilePrimaryNavigation = [
+  destinations.today,
+  destinations.money,
+  destinations.debts,
+  destinations.tasks,
+  destinations.goals,
 ] as const;
 
 const mobileMoreNavigation = [
-  { href: "/career", label: "Career", icon: BriefcaseBusiness },
-  { href: "/reviews", label: "Reviews", icon: CircleDollarSign },
+  destinations.signals,
+  destinations.career,
+  destinations.reviews,
   { href: "/search", label: "Search", icon: Search },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
@@ -230,7 +252,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           keyboardOpen ? "hidden" : "grid",
         )}
       >
-        {navigation.slice(0, 5).map(({ href, label, icon: Icon }) => (
+        {mobilePrimaryNavigation.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}

@@ -16,8 +16,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TooltipHint } from "@/components/ui/tooltip";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { GratitudeCard } from "@/components/dashboard/gratitude-card";
+import { SignalsPanel } from "@/components/signals/signals-panel";
 import { manilaDateLabel } from "@/lib/dates/dates";
 import { formatCentavos } from "@/lib/money/money";
+import { selectDashboardSignals } from "@/lib/signals/engine";
+import { loadSignals } from "@/lib/signals/server";
 import { createClient } from "@/lib/supabase/server";
 import { getRandomWisdomQuote } from "@/lib/gratitude/gratitude-reflections";
 
@@ -106,14 +109,21 @@ export default async function DashboardPage() {
   weekStartDate.setUTCDate(localNoon.getUTCDate() + mondayOffset);
   const weekStart = weekStartDate.toISOString().slice(0, 10);
   const supabase = await createClient();
-  const { data } = supabase
-    ? await supabase.rpc("dashboard_snapshot", {
-        p_today: today,
-        p_month_start: monthStart,
-        p_week_start: weekStart,
-      })
-    : { data: null };
+  const [dashboardResult, signalResult] = supabase
+    ? await Promise.all([
+        supabase.rpc("dashboard_snapshot", {
+          p_today: today,
+          p_month_start: monthStart,
+          p_week_start: weekStart,
+        }),
+        loadSignals(supabase, now).catch(() => null),
+      ])
+    : [{ data: null }, null];
+  const { data } = dashboardResult;
   const dashboard = (data as DashboardData | null) ?? emptyData;
+  const dashboardSignals = signalResult
+    ? selectDashboardSignals(signalResult)
+    : null;
 
   const metrics = [
     {
@@ -306,6 +316,8 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <SignalsPanel signals={dashboardSignals} />
 
       <section aria-labelledby="financial-snapshot" className="mt-3 sm:mt-4">
         <Card>

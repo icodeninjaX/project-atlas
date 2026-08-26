@@ -51,6 +51,9 @@ describe("AppShell", () => {
     const sheet = screen.getByRole("dialog", { name: "More destinations" });
     expect(sheet).toHaveClass("bg-card");
     expect(
+      within(sheet).getByRole("link", { name: "Signals" }),
+    ).toBeInTheDocument();
+    expect(
       within(sheet).getByRole("link", { name: "Career" }),
     ).toBeInTheDocument();
     expect(
