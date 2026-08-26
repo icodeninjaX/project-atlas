@@ -628,7 +628,7 @@ export function MilestoneList({
           {milestones.length ? (
             <div className="space-y-2">
               {milestones.map((milestone) => (
-                <div key={milestone.id} className="flex items-start gap-2">
+                <div key={milestone.id} className="flex items-center gap-2">
                   <OfflineMutationForm mutation="milestone.toggle">
                     <input
                       type="hidden"

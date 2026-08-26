@@ -85,6 +85,7 @@ describe("MilestoneRichTextReader", () => {
     );
 
     expect(container.firstElementChild).toHaveClass("whitespace-pre-wrap");
+    expect(container.firstElementChild).toHaveClass("text-justify");
     expect(container.querySelectorAll("br")).toHaveLength(4);
     expect(container).toHaveTextContent("First thought.");
     expect(container).toHaveTextContent("Second thought.");

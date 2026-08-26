@@ -120,7 +120,7 @@ export function MilestoneRichTextReader({
   if (!document) return emptyFallback;
 
   return (
-    <div className="text-foreground/90 space-y-5 text-[15px] leading-7 [overflow-wrap:anywhere] whitespace-pre-wrap">
+    <div className="text-foreground/90 space-y-5 text-justify text-[15px] leading-7 [overflow-wrap:anywhere] whitespace-pre-wrap">
       {document.content.map((node, index) => renderNode(node, String(index)))}
     </div>
   );
