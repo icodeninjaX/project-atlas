@@ -89,8 +89,17 @@ export default async function SignalsPage({
         })}
       </nav>
 
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <form method="get" className="flex items-end gap-2">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+        {visibleSignals && (
+          <p className="text-muted-foreground order-2 font-mono text-xs sm:order-1">
+            {visibleSignals.length}{" "}
+            {visibleSignals.length === 1 ? "signal" : "signals"}
+          </p>
+        )}
+        <form
+          method="get"
+          className="order-1 flex w-full items-end gap-2.5 sm:order-2 sm:ml-auto sm:w-auto"
+        >
           {category && (
             <input
               type="hidden"
@@ -98,12 +107,12 @@ export default async function SignalsPage({
               value={category.toLowerCase()}
             />
           )}
-          <label className="text-muted-foreground text-xs">
+          <label className="text-muted-foreground min-w-0 flex-1 text-xs sm:w-48 sm:flex-none">
             Severity
             <select
               name="severity"
               defaultValue={severity ?? ""}
-              className="border-border bg-background mt-1.5 min-h-11 rounded-xl border px-3 text-sm"
+              className="border-border bg-background focus-visible:ring-ring mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none"
             >
               <option value="">All severities</option>
               {signalSeverities.map((item) => (
@@ -113,16 +122,15 @@ export default async function SignalsPage({
               ))}
             </select>
           </label>
-          <Button type="submit" variant="secondary" size="sm">
+          <Button
+            type="submit"
+            variant="secondary"
+            size="sm"
+            className="shrink-0"
+          >
             Apply
           </Button>
         </form>
-        {visibleSignals && (
-          <p className="text-muted-foreground font-mono text-xs">
-            {visibleSignals.length}{" "}
-            {visibleSignals.length === 1 ? "signal" : "signals"}
-          </p>
-        )}
       </div>
 
       <div className="mt-5">
