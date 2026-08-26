@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, RotateCcw, Type } from "lucide-react";
+import { RotateCcw, Type } from "lucide-react";
 import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,17 @@ import {
 } from "@/lib/font-preferences";
 
 const FONT_CHANGE_EVENT = "atlas-font-change";
+const FONT_CATEGORIES = [
+  "Popular sans",
+  "Modern sans",
+  "Reading & accessibility",
+  "Serif",
+  "Monospace",
+] as const;
+const FONT_GROUPS = FONT_CATEGORIES.map((label) => ({
+  label,
+  fonts: FONT_PREFERENCES.filter((font) => font.category === label),
+}));
 
 function getAppliedFont(): FontPreference {
   if (typeof document === "undefined") return DEFAULT_FONT_PREFERENCE;
@@ -86,75 +97,50 @@ export function FontPreferencePicker() {
         </Button>
       </div>
 
+      <label
+        htmlFor="app-font-preference"
+        className="mt-4 block text-xs font-semibold"
+      >
+        Font family
+      </label>
+      <select
+        id="app-font-preference"
+        value={selectedFont}
+        onChange={(event) => {
+          if (isFontPreference(event.target.value)) {
+            applyFont(event.target.value);
+          }
+        }}
+        className="border-border bg-background focus-visible:ring-ring mt-2 min-h-11 w-full rounded-xl border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none"
+      >
+        {FONT_GROUPS.map((group) => (
+          <optgroup key={group.label} label={group.label}>
+            {group.fonts.map((font) => (
+              <option key={font.value} value={font.value}>
+                {font.label}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+
       <div
         aria-live="polite"
-        className="border-primary/20 bg-primary/5 relative mt-4 overflow-hidden rounded-2xl border p-4 sm:p-5"
+        className="border-border bg-muted/40 mt-3 flex items-center gap-3 rounded-xl border p-3"
         style={{ fontFamily: `var(${selected.cssVariable})` }}
       >
-        <div className="bg-primary/10 text-primary absolute top-3 right-3 grid size-10 place-items-center rounded-xl text-lg font-semibold sm:top-4 sm:right-4">
+        <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-lg text-base font-semibold">
           Aa
-        </div>
-        <p className="text-primary text-[11px] font-semibold tracking-[0.16em] uppercase">
-          Live preview · {selected.label}
-        </p>
-        <p className="mt-3 max-w-xl pr-12 text-lg leading-7 font-semibold tracking-tight sm:text-xl">
-          Plan clearly. Spend intentionally. Move what matters forward.
-        </p>
-        <p className="text-muted-foreground mt-2 max-w-xl text-xs leading-5">
-          Today, you have 4 priorities and one meaningful next step.
-        </p>
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold">
+            {selected.label} · Plan clearly, move intentionally.
+          </span>
+          <span className="text-muted-foreground mt-0.5 block text-xs leading-5">
+            {selected.description}
+          </span>
+        </span>
       </div>
-
-      <fieldset className="mt-4">
-        <legend className="sr-only">Choose an app font</legend>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {FONT_PREFERENCES.map((font) => {
-            const isSelected = selectedFont === font.value;
-
-            return (
-              <label
-                key={font.value}
-                className={`focus-within:ring-ring relative flex min-h-24 cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors focus-within:ring-2 focus-within:outline-none sm:p-4 ${
-                  isSelected
-                    ? "border-primary bg-primary/10"
-                    : "border-border bg-background hover:border-primary/60"
-                }`}
-                style={{ fontFamily: `var(${font.cssVariable})` }}
-              >
-                <input
-                  type="radio"
-                  name="app-font"
-                  value={font.value}
-                  checked={isSelected}
-                  onChange={() => applyFont(font.value)}
-                  className="sr-only"
-                />
-                <span
-                  aria-hidden="true"
-                  className={`grid size-10 shrink-0 place-items-center rounded-xl text-base font-semibold ${
-                    isSelected
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground"
-                  }`}
-                >
-                  {isSelected ? <Check className="size-4" /> : "Aa"}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="text-sm font-semibold">{font.label}</span>
-                    <span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
-                      {font.category}
-                    </span>
-                  </span>
-                  <span className="text-muted-foreground mt-1 block text-xs leading-5">
-                    {font.description}
-                  </span>
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      </fieldset>
 
       <p className="text-muted-foreground mt-3 text-xs leading-5">
         Applies instantly throughout ATLAS and stays selected on this browser.

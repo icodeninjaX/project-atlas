@@ -44,6 +44,46 @@
   --font-app: var(--font-inter);
 }
 
+:root[data-font="roboto"] {
+  --font-app: var(--font-roboto);
+}
+
+:root[data-font="open-sans"] {
+  --font-app: var(--font-open-sans);
+}
+
+:root[data-font="montserrat"] {
+  --font-app: var(--font-montserrat);
+}
+
+:root[data-font="poppins"] {
+  --font-app: var(--font-poppins);
+}
+
+:root[data-font="lato"] {
+  --font-app: var(--font-lato);
+}
+
+:root[data-font="noto-sans"] {
+  --font-app: var(--font-noto-sans);
+}
+
+:root[data-font="nunito-sans"] {
+  --font-app: var(--font-nunito-sans);
+}
+
+:root[data-font="raleway"] {
+  --font-app: var(--font-raleway);
+}
+
+:root[data-font="work-sans"] {
+  --font-app: var(--font-work-sans);
+}
+
+:root[data-font="ubuntu"] {
+  --font-app: var(--font-ubuntu);
+}
+
 :root[data-font="manrope"] {
   --font-app: var(--font-manrope);
 }
@@ -74,6 +114,14 @@
 
 :root[data-font="merriweather"] {
   --font-app: var(--font-merriweather);
+}
+
+:root[data-font="playfair-display"] {
+  --font-app: var(--font-playfair-display);
+}
+
+:root[data-font="roboto-slab"] {
+  --font-app: var(--font-roboto-slab);
 }
 
 :root[data-font="roboto-mono"] {

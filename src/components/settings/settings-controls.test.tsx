@@ -61,14 +61,18 @@ describe("Settings controls", () => {
     document.documentElement.dataset.font = "geist";
     render(<FontPreferencePicker />);
 
-    expect(screen.getAllByRole("radio")).toHaveLength(11);
-    expect(screen.getByRole("radio", { name: /Geist/i })).toBeChecked();
+    const fontSelect = screen.getByRole("combobox", { name: "Font family" });
+    expect(screen.getAllByRole("option")).toHaveLength(23);
+    expect(screen.queryByRole("radio")).not.toBeInTheDocument();
+    expect(fontSelect).toHaveValue("geist");
 
-    await user.click(screen.getByRole("radio", { name: /Lora/i }));
+    await user.selectOptions(fontSelect, "lora");
 
     expect(document.documentElement).toHaveAttribute("data-font", "lora");
     expect(window.localStorage.getItem("atlas-font-family:v1")).toBe("lora");
-    expect(screen.getByText("Live preview · Lora")).toBeInTheDocument();
+    expect(
+      screen.getByText("Lora · Plan clearly, move intentionally."),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Reset font" }));
 
