@@ -181,7 +181,11 @@ export default async function TasksPage({
                 }`
               : null;
             const mobileScheduleLabel = task.scheduled_for
-              ? `${overdue ? "Overdue · " : ""}${task.scheduled_for}`
+              ? `${overdue ? "Overdue · " : ""}${task.scheduled_for}${
+                  task.scheduled_time
+                    ? ` at ${formatTaskTime(task.scheduled_time)}`
+                    : ""
+                }`
               : task.estimated_minutes
                 ? `${task.estimated_minutes} min`
                 : null;
