@@ -2,6 +2,7 @@
 
 **Project:** ATLAS — Personal Operating System\
 **Repository:** `icodeninjaX/project-atlas`\
+**Last reviewed:** 2026-09-04\
 **Purpose:** Give an AI coding agent a clear, sequential roadmap for evolving ATLAS from a structured personal tracker into a connected and increasingly intelligent personal operating system.
 
 ---
@@ -30,7 +31,7 @@ ATLAS already includes or substantially includes:
 
 - Authentication and onboarding
 - Today dashboard
-- Dayline priorities
+- Capacity-aware Dayline priorities
 - Money/accounts/transactions/budgets
 - Debt tracking and payoff calculations
 - Tasks
@@ -85,6 +86,9 @@ Every phase should follow these rules:
 13. **Add tests for every meaningful business rule.**
 14. **Do not redesign unrelated modules while implementing a feature.**
 15. **Stop scope creep.**
+16. **Treat mobile as a first-class experience.** Every new or changed product
+    surface must preserve clear hierarchy, touch-friendly controls, readable
+    explanations, and usable loading, empty, and error states on narrow screens.
 
 ---
 
@@ -104,6 +108,24 @@ The planned sequence is:
 The ordering is intentional.
 
 ATLAS should first become better at **detecting**, then **prioritizing**, then **simulating**, then **remembering**, then **teaching**, then **understanding natural language**, then **reasoning with AI**, and only after that become deeply **connected across domains**.
+
+## Current Delivery Status
+
+| Phase                                    | Status   | Current note                                                                                                                     |
+| ---------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Signals                               | Complete | Implemented and verified on 2026-08-26.                                                                                          |
+| 2. Capacity-Aware Dayline                | Complete | Implemented on 2026-09-04; application validation passed, while local pgTAP execution remains pending until Docker is available. |
+| 3. Personal Runway & Financial Scenarios | Next     | The next product phase. Begin only after the outstanding release/database validation gates are understood and scheduled.         |
+| 4. Life Timeline                         | Planned  | Build on the existing activity-history foundation.                                                                               |
+| 5. Knowledge & Spaced Repetition         | Planned  | Deterministic learning and review before AI assistance.                                                                          |
+| 6. Universal Capture                     | Planned  | First AI-assisted mutation proposal flow.                                                                                        |
+| 7. ATLAS Analyst                         | Planned  | Evidence-backed explanations over bounded structured facts.                                                                      |
+| 8. ATLAS Graph                           | Planned  | Cross-domain relationships after the underlying modules are mature.                                                              |
+
+The active product target is **Phase 3 — Personal Runway & Financial
+Scenarios**. Production validation, authenticated mobile checks, and database
+integration testing remain release-quality work that can proceed without changing
+the phase order.
 
 ---
 
@@ -279,6 +301,26 @@ Do not expand scope beyond the Signals MVP.
 production build pass. The local pgTAP migration check remains pending because
 Docker Desktop was unavailable during verification.
 
+## Delivered Scope
+
+- Deterministic `NOW`, `NEXT`, and `LATER` recommendations from tasks, debt
+  actions, career follow-ups, and active-goal milestones.
+- Ranking explanations based on urgency, importance, duration/capacity fit,
+  energy fit, task age, and active-goal linkage.
+- User-configurable daily focus capacity and planning energy.
+- Task energy metadata with backward-compatible defaults.
+- Responsive task capture, task editing, task lists, Dayline presentation, and
+  settings controls for desktop and mobile layouts.
+- Unit coverage for ranking edge cases and task-energy persistence, plus a pgTAP
+  migration test ready for the next local database run.
+
+## Remaining Verification Follow-ups
+
+- Run the new migration and pgTAP suite against a clean local Supabase database
+  when Docker Desktop is available.
+- Complete authenticated visual checks of the changed Dayline, task, and settings
+  surfaces at representative mobile and desktop viewport sizes.
+
 ## Goal
 
 Upgrade the existing Dayline from deadline-based prioritization into a realistic daily execution system.
@@ -290,17 +332,16 @@ Dayline answers:
 Signals observes.\
 Dayline acts.
 
-## New Task Metadata
+## Task Metadata
 
-Consider adding:
+The implemented version uses:
 
 - estimated duration
 - energy requirement
-- importance
-- optional preferred time/daypart
-- optional blocking/dependency metadata later
+- existing task priority as the importance signal
 
-Keep the first version simple.
+Preferred time/daypart and blocking/dependency metadata remain possible later
+extensions. They are not required for the completed Phase 2 scope.
 
 Suggested values:
 
@@ -440,6 +481,8 @@ Do not implement Signals again and do not add AI.
 
 # Phase 3 — Personal Runway & Financial Scenarios
 
+**Status:** Planned — next product phase.
+
 ## Goal
 
 Move ATLAS finance from historical tracking toward deterministic decision support.
@@ -552,6 +595,8 @@ Final response:
 ---
 
 # Phase 4 — Life Timeline
+
+**Status:** Planned.
 
 ## Goal
 
@@ -676,6 +721,8 @@ Final response:
 ---
 
 # Phase 5 — Knowledge & Spaced Repetition
+
+**Status:** Planned.
 
 ## Goal
 
@@ -824,6 +871,8 @@ Final response:
 ---
 
 # Phase 6 — Universal Capture
+
+**Status:** Planned.
 
 ## Goal
 
@@ -991,6 +1040,8 @@ Final response:
 
 # Phase 7 — ATLAS Analyst
 
+**Status:** Planned.
+
 ## Goal
 
 Create an evidence-based AI analysis layer over structured ATLAS data.
@@ -1146,6 +1197,8 @@ Final response:
 ---
 
 # Phase 8 — ATLAS Graph
+
+**Status:** Planned.
 
 ## Goal
 
