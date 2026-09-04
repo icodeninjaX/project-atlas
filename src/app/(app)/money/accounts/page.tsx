@@ -54,6 +54,9 @@ export default async function AccountsPage() {
               <Link href="/money/budget">Budget</Link>
             </Button>
             <Button asChild variant="secondary">
+              <Link href="/money/runway">Runway</Link>
+            </Button>
+            <Button asChild variant="secondary">
               <Link href="/money/accounts/archived">
                 <Archive className="size-4" aria-hidden="true" />
                 Archived

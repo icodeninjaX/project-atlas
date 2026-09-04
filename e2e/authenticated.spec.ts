@@ -161,6 +161,27 @@ test.describe("authenticated ATLAS workflows", () => {
     await expect(page.getByText("Today’s priorities")).toBeVisible();
   });
 
+  test("runway is usable on a 320px phone without horizontal overflow", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto("/money/runway");
+
+    await expect(
+      page.getByRole("heading", { name: "Personal runway" }),
+    ).toBeVisible();
+    await expect(page.getByText("Saved assumptions")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Save assumptions" }),
+    ).toBeVisible();
+
+    const dimensions = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+  });
+
   test("mobile shell fits and exposes every destination", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     await page.goto("/dashboard");

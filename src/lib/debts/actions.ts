@@ -74,6 +74,7 @@ export async function createDebtAction(
   if (error) return { success: false, message: "The debt could not be saved." };
 
   revalidatePath("/debts");
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return { success: true, message: "Debt added." };
 }
@@ -142,6 +143,7 @@ export async function updateDebtAction(
     return { success: false, message: "The debt could not be updated." };
   revalidatePath("/debts");
   revalidatePath(`/debts/${id}`);
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return { success: true, message: "Debt updated." };
 }
@@ -189,6 +191,7 @@ export async function recordDebtPaymentAction(
 
   revalidatePath("/debts");
   revalidatePath(`/debts/${result.data.debtId}`);
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return {
     success: true,
@@ -215,6 +218,7 @@ export async function deleteDebtPaymentAction(
     return { success: false, message: "The payment could not be deleted." };
   revalidatePath("/debts");
   revalidatePath(`/debts/${debtId}`);
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return { success: true, message: "Payment deleted." };
 }

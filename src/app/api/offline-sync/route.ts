@@ -40,6 +40,7 @@ import {
   type SyncMutationResult,
 } from "@/lib/offline/types";
 import { saveWeeklyReviewAction } from "@/lib/reviews/actions";
+import { saveRunwayPreferencesAction } from "@/lib/runway/actions";
 import { createClient } from "@/lib/supabase/server";
 import {
   createTaskAction,
@@ -119,6 +120,8 @@ async function executeMutation(
       return createTransferAction(blankState, formData);
     case "budget.save":
       return saveBudgetAction(blankState, formData);
+    case "runway.savePreferences":
+      return saveRunwayPreferencesAction(blankState, formData);
     case "task.create":
       return createTaskAction(blankState, formData);
     case "task.update":

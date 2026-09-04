@@ -58,11 +58,15 @@ export async function createAccountAction(
     account_type: result.data.accountType,
     institution: result.data.institution ?? null,
     opening_balance_centavos: result.data.openingBalanceCentavos,
+    include_in_runway: ["cash", "bank", "e_wallet", "savings"].includes(
+      result.data.accountType,
+    ),
   });
   if (error)
     return { success: false, message: "The account could not be saved." };
 
   revalidatePath("/money/accounts");
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return { success: true, message: "Account added." };
 }
@@ -105,6 +109,7 @@ export async function updateAccountAction(
     return { success: false, message: "The account could not be updated." };
 
   revalidatePath("/money/accounts");
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return { success: true, message: "Account updated." };
 }
@@ -148,6 +153,7 @@ export async function adjustAccountBalanceAction(
     return { success: false, message: "The balance could not be adjusted." };
 
   revalidatePath("/money/accounts");
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return data
     ? { success: true, message: "Current balance adjusted." }
@@ -170,9 +176,13 @@ export async function archiveAccountAction(
     .eq("id", id)
     .eq("user_id", auth.user.id);
   if (error)
-    return { success: false, message: "The account status could not be updated." };
+    return {
+      success: false,
+      message: "The account status could not be updated.",
+    };
   revalidatePath("/money/accounts");
   revalidatePath("/money/accounts/archived");
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return {
     success: true,
@@ -222,6 +232,7 @@ export async function deleteArchivedAccountAction(
 
   revalidatePath("/money/accounts");
   revalidatePath("/money/accounts/archived");
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return { success: true, message: "Archived account permanently deleted." };
 }
@@ -272,6 +283,7 @@ export async function createTransactionAction(
 
   revalidatePath("/money/transactions");
   revalidatePath("/money/accounts");
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return { success: true, message: "Transaction recorded." };
 }
@@ -329,6 +341,7 @@ export async function updateTransactionAction(
 
   revalidatePath("/money/transactions");
   revalidatePath("/money/accounts");
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return { success: true, message: "Transaction updated." };
 }
@@ -370,6 +383,7 @@ export async function createTransferAction(
     return { success: false, message: "The transfer could not be saved." };
   revalidatePath("/money/accounts");
   revalidatePath("/money/transactions");
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return { success: true, message: "Transfer recorded." };
 }
@@ -392,6 +406,7 @@ export async function deleteTransactionAction(
     return { success: false, message: "The transaction could not be deleted." };
   revalidatePath("/money/transactions");
   revalidatePath("/money/accounts");
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return { success: true, message: "Transaction deleted." };
 }

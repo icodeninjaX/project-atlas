@@ -350,12 +350,20 @@ export default async function DashboardPage() {
               />
               <CardTitle id="financial-snapshot">Financial snapshot</CardTitle>
             </div>
-            <Link
-              href="/money/accounts"
-              className="text-primary focus-visible:ring-ring hidden rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none sm:inline-flex"
-            >
-              View money
-            </Link>
+            <div className="hidden items-center gap-3 sm:flex">
+              <Link
+                href="/money/runway"
+                className="text-primary focus-visible:ring-ring rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+              >
+                Runway
+              </Link>
+              <Link
+                href="/money/accounts"
+                className="text-primary focus-visible:ring-ring rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+              >
+                View money
+              </Link>
+            </div>
           </CardHeader>
           <CardContent className="pt-4 sm:pt-5">
             <div className="border-border grid grid-cols-2 overflow-hidden rounded-xl border xl:grid-cols-4">

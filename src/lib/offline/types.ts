@@ -9,6 +9,7 @@ export const offlineMutationTypes = [
   "transaction.delete",
   "transfer.create",
   "budget.save",
+  "runway.savePreferences",
   "task.create",
   "task.update",
   "task.setStatus",

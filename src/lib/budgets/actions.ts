@@ -53,6 +53,7 @@ export async function saveBudgetAction(
     return { success: false, message: "Enter valid peso amounts." };
   }
   revalidatePath("/money/budget");
+  revalidatePath("/money/runway");
   revalidatePath("/dashboard");
   return { success: true, message: "Monthly budget saved." };
 }

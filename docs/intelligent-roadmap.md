@@ -2,7 +2,7 @@
 
 **Project:** ATLAS — Personal Operating System\
 **Repository:** `icodeninjaX/project-atlas`\
-**Last reviewed:** 2026-09-04\
+**Last reviewed:** 2026-09-05\
 **Purpose:** Give an AI coding agent a clear, sequential roadmap for evolving ATLAS from a structured personal tracker into a connected and increasingly intelligent personal operating system.
 
 ---
@@ -115,17 +115,17 @@ ATLAS should first become better at **detecting**, then **prioritizing**, then *
 | ---------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | 1. Signals                               | Complete | Implemented and verified on 2026-08-26.                                                                                          |
 | 2. Capacity-Aware Dayline                | Complete | Implemented on 2026-09-04; application validation passed, while local pgTAP execution remains pending until Docker is available. |
-| 3. Personal Runway & Financial Scenarios | Next     | The next product phase. Begin only after the outstanding release/database validation gates are understood and scheduled.         |
-| 4. Life Timeline                         | Planned  | Build on the existing activity-history foundation.                                                                               |
+| 3. Personal Runway & Financial Scenarios | Complete | Implemented on 2026-09-05 with deterministic runway, saved assumptions, and non-destructive scenarios.                           |
+| 4. Life Timeline                         | Next     | Build on the existing activity-history foundation.                                                                               |
 | 5. Knowledge & Spaced Repetition         | Planned  | Deterministic learning and review before AI assistance.                                                                          |
 | 6. Universal Capture                     | Planned  | First AI-assisted mutation proposal flow.                                                                                        |
 | 7. ATLAS Analyst                         | Planned  | Evidence-backed explanations over bounded structured facts.                                                                      |
 | 8. ATLAS Graph                           | Planned  | Cross-domain relationships after the underlying modules are mature.                                                              |
 
-The active product target is **Phase 3 — Personal Runway & Financial
-Scenarios**. Production validation, authenticated mobile checks, and database
-integration testing remain release-quality work that can proceed without changing
-the phase order.
+The active product target is **Phase 4 — Life Timeline**. Production validation,
+authenticated mobile checks, and database integration testing for delivered
+phases remain release-quality work that can proceed without changing the phase
+order.
 
 ---
 
@@ -481,7 +481,48 @@ Do not implement Signals again and do not add AI.
 
 # Phase 3 — Personal Runway & Financial Scenarios
 
-**Status:** Planned — next product phase.
+**Status:** Implemented on 2026-09-05. The deterministic engine, unit and
+component coverage, lint, type checking, and production build are verified.
+Local Supabase and authenticated browser verification remain environment-dependent
+release checks.
+
+## Delivered Scope
+
+- Mobile-first `/money/runway` workspace with a conservative headline that uses
+  selected current funds only; expected income affects cash-flow comparison, not
+  runway duration.
+- Saved account/category/target assumptions, validated by an atomic owner-scoped
+  Supabase RPC and compatible with the existing offline mutation queue.
+- Three fully completed Asia/Manila months of recorded history, with a latest
+  applicable essential-budget fallback when fewer than two usable months exist.
+- Essential expense filtering, active-debt minimums added once, zero/negative
+  fund handling, a profile-income fallback that is visibly labeled, and no
+  infinite runway when monthly need is zero.
+- In-memory combined scenarios for income, recurring essential-cost changes,
+  one-time purchases, a single extra debt payment, and a runway-target override.
+  Scenarios do not create or change real financial records.
+- RLS-safe account-balance view extension, owner-scoped bounded monthly totals,
+  type-based account defaults, essential-category defaults including Housing,
+  and pgTAP coverage for ownership and atomicity boundaries.
+- Runway links from Accounts, Budget, and the dashboard financial snapshot,
+  plus 320px-friendly stacked sections, touch-sized controls, guided empty
+  states, collapsible calculation details, and privacy masking for amounts.
+
+## Verification and Limitations
+
+- `npm run lint`, `npm run typecheck`, `npm run test` (242 tests), and
+  `npm run build` passed during implementation. Engine, action, and scenario
+  component tests cover calculation boundaries, fallback behavior, combined
+  scenarios, reset behavior, and save failures.
+- The hosted `add_personal_runway` migration was applied to ProjectAtlas and its
+  columns, invoker-secured RPCs, and `security_invoker` view were verified on
+  2026-09-05. Local `supabase:reset` and `supabase:test` remain unverified
+  because Docker Desktop/local Postgres was unavailable. Authenticated Playwright
+  is unverified because dedicated E2E credentials were not configured. The
+  repository-wide format check still reports existing unrelated formatting drift.
+- The feature intentionally does not store named scenarios, forecast returns or
+  inflation, schedule future transactions, distribute extra payments across
+  debts, or turn hypothetical values into real records.
 
 ## Goal
 

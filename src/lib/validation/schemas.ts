@@ -219,6 +219,14 @@ export const monthlyBudgetSchema = z
     path: ["monthStart"],
   });
 
+export const runwayPreferencesSchema = z.object({
+  accountIds: z.array(z.uuid()).min(1, "Select at least one liquid account."),
+  categoryIds: z
+    .array(z.uuid())
+    .min(1, "Select at least one essential expense category."),
+  targetMonths: z.number().int().min(1).max(24),
+});
+
 export type TaskInput = z.infer<typeof taskSchema>;
 export type TransactionInput = z.infer<typeof transactionSchema>;
 export type DebtInput = z.infer<typeof debtSchema>;

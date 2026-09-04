@@ -1,31 +1,28 @@
 # Future roadmap
 
-Last reviewed: 2026-09-04
+Last reviewed: 2026-09-05
 
-The scoped MVP features are implemented. Signals and Capacity-Aware Dayline, the
-first two phases of the [Intelligent roadmap](intelligent-roadmap.md), are also
-implemented.
+The scoped MVP features are implemented. Signals, Capacity-Aware Dayline, and
+Personal Runway & Financial Scenarios, the first three phases of the
+[Intelligent roadmap](intelligent-roadmap.md), are also implemented.
 
-The next product improvement is **Phase 3 — Personal Runway & Financial
-Scenarios**. The production-validation checklist in [MVP status](mvp-status.md)
-remains a parallel release track and should not be mistaken for a new product
-phase.
+The next product improvement is **Phase 4 — Life Timeline**. The
+production-validation checklist in [MVP status](mvp-status.md) remains a parallel
+release track and should not be mistaken for a new product phase.
 
 ## Ordered intelligent improvements
 
 These phases are authoritative and must remain sequential:
 
-1. **Personal Runway & Financial Scenarios:** deterministic runway estimates and
-   non-destructive what-if comparisons with visible assumptions.
-2. **Life Timeline:** a useful chronological view built on existing activity
+1. **Life Timeline:** a useful chronological view built on existing activity
    history rather than a duplicate audit system.
-3. **Knowledge & Spaced Repetition:** searchable concepts and deterministic review
+2. **Knowledge & Spaced Repetition:** searchable concepts and deterministic review
    scheduling.
-4. **Universal Capture:** AI-assisted structured proposals that require validation
+3. **Universal Capture:** AI-assisted structured proposals that require validation
    and user confirmation before existing mutation paths run.
-5. **ATLAS Analyst:** evidence-backed explanations over bounded, owner-scoped
+4. **ATLAS Analyst:** evidence-backed explanations over bounded, owner-scoped
    ATLAS facts.
-6. **ATLAS Graph:** safe cross-domain relationships before any graph visualization.
+5. **ATLAS Graph:** safe cross-domain relationships before any graph visualization.
 
 Implementation prompts, acceptance criteria, exclusions, and phase-specific
 safety rules live in the [Intelligent roadmap](intelligent-roadmap.md).

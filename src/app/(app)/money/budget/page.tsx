@@ -89,9 +89,14 @@ export default async function BudgetPage({
         title="Monthly plan"
         description="Planned and actual pesos remain visible together. Overspending is always named in text."
         actions={
-          <Button asChild variant="secondary">
-            <Link href="/money/transactions">Transactions</Link>
-          </Button>
+          <>
+            <Button asChild variant="secondary">
+              <Link href="/money/transactions">Transactions</Link>
+            </Button>
+            <Button asChild variant="secondary">
+              <Link href="/money/runway">Runway</Link>
+            </Button>
+          </>
         }
       />
       <div className="mt-8 grid gap-3 sm:grid-cols-3">
