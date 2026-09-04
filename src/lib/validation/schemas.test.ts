@@ -107,6 +107,25 @@ describe("shared validation schemas", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts supported task energy and rejects unknown values", () => {
+    expect(
+      taskSchema.safeParse({
+        title: "Write architecture notes",
+        status: "planned",
+        priority: "high",
+        energyRequired: "high",
+      }).success,
+    ).toBe(true);
+    expect(
+      taskSchema.safeParse({
+        title: "Write architecture notes",
+        status: "planned",
+        priority: "high",
+        energyRequired: "extreme",
+      }).success,
+    ).toBe(false);
+  });
+
   it("keeps onboarding balances as integer centavos", () => {
     const result = onboardingSchema.safeParse({
       displayName: "ATLAS user",

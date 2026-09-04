@@ -30,6 +30,7 @@ export async function createTaskAction(
     estimatedMinutes: formData.get("estimatedMinutes")
       ? Number(formData.get("estimatedMinutes"))
       : undefined,
+    energyRequired: formData.get("energyRequired") || "medium",
   });
   if (!result.success) {
     return {
@@ -48,6 +49,7 @@ export async function createTaskAction(
     scheduled_for: result.data.scheduledFor ?? null,
     scheduled_time: result.data.scheduledTime ?? null,
     estimated_minutes: result.data.estimatedMinutes ?? null,
+    energy_required: result.data.energyRequired,
   });
   if (error) return { success: false, message: "The task could not be saved." };
 
@@ -72,6 +74,7 @@ export async function updateTaskAction(
     estimatedMinutes: formData.get("estimatedMinutes")
       ? Number(formData.get("estimatedMinutes"))
       : undefined,
+    energyRequired: formData.get("energyRequired") || "medium",
   });
   if (!result.success)
     return {
@@ -94,6 +97,7 @@ export async function updateTaskAction(
       scheduled_for: result.data.scheduledFor ?? null,
       scheduled_time: result.data.scheduledTime ?? null,
       estimated_minutes: result.data.estimatedMinutes ?? null,
+      energy_required: result.data.energyRequired,
     })
     .eq("id", id)
     .eq("user_id", user.id);

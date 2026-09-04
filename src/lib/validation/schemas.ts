@@ -49,6 +49,7 @@ export const taskSchema = z
       .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a valid scheduled time")
       .optional(),
     estimatedMinutes: z.number().int().positive().max(1_440).optional(),
+    energyRequired: z.enum(["low", "medium", "high"]).default("medium"),
     relatedGoalId: z.uuid().optional(),
   })
   .superRefine((task, context) => {

@@ -23,6 +23,7 @@ export function TaskEditForm({
     scheduled_for: string | null;
     scheduled_time: string | null;
     estimated_minutes: number | null;
+    energy_required: string;
     status: string;
   };
   scheduledTasks?: ScheduledTaskSlot[];
@@ -39,7 +40,7 @@ export function TaskEditForm({
   return (
     <OfflineMutationForm
       mutation="task.update"
-      className="border-border mt-3 grid gap-3 border-t pt-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_160px_140px_140px_auto]"
+      className="border-border mt-3 grid gap-3 border-t pt-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_150px_130px_130px_120px_auto]"
     >
       <input type="hidden" name="taskId" value={task.id} />
       <input type="hidden" name="status" value={task.status} />
@@ -109,6 +110,18 @@ export function TaskEditForm({
           className="mt-1.5"
         />
       </label>
+      <label className="text-muted-foreground text-xs">
+        Energy needed
+        <select
+          name="energyRequired"
+          defaultValue={task.energy_required}
+          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+        >
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+      </label>
       <TaskTimeRecommendations
         scheduledTasks={scheduledTasks}
         scheduledFor={scheduledFor}
@@ -119,12 +132,12 @@ export function TaskEditForm({
           setScheduledTime(time);
           timeRef.current?.focus();
         }}
-        className="sm:col-span-2 xl:col-span-5"
+        className="sm:col-span-2 xl:col-span-6"
       />
       <FormSubmitButton
         variant="secondary"
         pendingLabel="Saving…"
-        className="self-end sm:col-span-2 xl:col-span-1 xl:col-start-4 xl:row-start-2"
+        className="self-end sm:col-span-2 xl:col-span-1 xl:col-start-5 xl:row-start-2"
       >
         Save
       </FormSubmitButton>

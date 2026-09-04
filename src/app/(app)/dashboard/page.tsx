@@ -18,6 +18,7 @@ import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { GratitudeCard } from "@/components/dashboard/gratitude-card";
 import { SignalsPanel } from "@/components/signals/signals-panel";
 import { manilaDateLabel } from "@/lib/dates/dates";
+import { loadDayline } from "@/lib/dayline/server";
 import { formatCentavos } from "@/lib/money/money";
 import { selectDashboardSignals } from "@/lib/signals/engine";
 import { loadSignals } from "@/lib/signals/server";
@@ -109,7 +110,7 @@ export default async function DashboardPage() {
   weekStartDate.setUTCDate(localNoon.getUTCDate() + mondayOffset);
   const weekStart = weekStartDate.toISOString().slice(0, 10);
   const supabase = await createClient();
-  const [dashboardResult, signalResult] = supabase
+  const [dashboardResult, signalResult, daylineResult] = supabase
     ? await Promise.all([
         supabase.rpc("dashboard_snapshot", {
           p_today: today,
@@ -117,13 +118,23 @@ export default async function DashboardPage() {
           p_week_start: weekStart,
         }),
         loadSignals(supabase, now).catch(() => null),
+        loadDayline(supabase, now).catch(() => null),
       ])
-    : [{ data: null }, null];
+    : [{ data: null }, null, null];
   const { data } = dashboardResult;
   const dashboard = (data as DashboardData | null) ?? emptyData;
   const dashboardSignals = signalResult
     ? selectDashboardSignals(signalResult)
     : null;
+  const fallbackPositions = ["NOW", "NEXT", "LATER"] as const;
+  const daylineItems = daylineResult
+    ? daylineResult.items
+    : dashboard.priorities.map((priority, index) => ({
+        ...priority,
+        position: fallbackPositions[index] ?? "LATER",
+        durationMinutes: null,
+        energy: null,
+      }));
 
   const metrics = [
     {
@@ -186,13 +197,13 @@ export default async function DashboardPage() {
 
           <div className="order-3 lg:order-none">
             <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:mt-6 sm:text-4xl lg:mt-3">
-              {dashboard.priorities.length
+              {daylineItems.length
                 ? "Your Day, Mapped."
                 : "Your route is clear."}
             </h1>
             <p className="text-muted-foreground mt-2 text-sm">
-              {dashboard.priorities.length
-                ? "Ranked by deadlines and commitments."
+              {daylineItems.length
+                ? "Ranked by urgency, importance, effort, and your capacity."
                 : "Add what matters and ATLAS will surface the next useful move."}
             </p>
 
@@ -228,12 +239,23 @@ export default async function DashboardPage() {
               </p>
               <CardTitle className="mt-1">Today’s priorities</CardTitle>
             </div>
-            <span className="border-border text-muted-foreground rounded-full border px-2.5 py-1 font-mono text-[10px]">
-              {dashboard.priorities.length} of 3
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="border-border text-muted-foreground rounded-full border px-2.5 py-1 font-mono text-[10px]">
+                {daylineResult
+                  ? `${daylineResult.plannedMinutes}/${daylineResult.capacityMinutes} min · ${daylineResult.energyLevel} energy`
+                  : `${daylineItems.length} of 3`}
+              </span>
+              <Link
+                href="/settings"
+                aria-label="Tune Dayline planning"
+                className="text-primary text-[11px] font-semibold"
+              >
+                Tune
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
-            {dashboard.priorities.length === 0 ? (
+            {daylineItems.length === 0 ? (
               <div className="border-border bg-background/45 grid min-h-44 place-items-center rounded-xl border border-dashed p-5 text-center sm:min-h-56 sm:p-6">
                 <div className="max-w-sm">
                   <Target className="text-primary mx-auto size-6" />
@@ -241,19 +263,19 @@ export default async function DashboardPage() {
                     Nothing urgent is competing for attention.
                   </p>
                   <p className="text-muted-foreground mt-2 text-xs leading-5">
-                    Critical tasks, due debts, career follow-ups, and
-                    approaching milestones will appear here with a reason.
+                    Scheduled tasks, deadlines, follow-ups, and milestones will
+                    appear when they fit your plan or need urgent attention.
                   </p>
                 </div>
               </div>
             ) : (
               <ol>
-                {dashboard.priorities.map((priority, index) => (
+                {daylineItems.map((priority, index) => (
                   <li
                     key={`${priority.kind}-${priority.id}`}
                     className="relative grid grid-cols-[18px_minmax(0,1fr)_auto] gap-2.5 pb-5 last:pb-0 sm:grid-cols-[22px_minmax(0,1fr)_auto] sm:gap-3 sm:pb-6"
                   >
-                    {index < dashboard.priorities.length - 1 && (
+                    {index < daylineItems.length - 1 && (
                       <span className="bg-border absolute top-3 bottom-0 left-[6px] w-px" />
                     )}
                     <span
@@ -264,8 +286,11 @@ export default async function DashboardPage() {
                       }`}
                     />
                     <div>
+                      <p className="text-primary font-mono text-[10px] font-semibold tracking-widest">
+                        {priority.position}
+                      </p>
                       <p className="text-sm font-semibold">{priority.title}</p>
-                      <p className="text-muted-foreground mt-1 text-xs">
+                      <p className="text-muted-foreground mt-1 text-xs leading-5">
                         {priority.reason}
                       </p>
                     </div>

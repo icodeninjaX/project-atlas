@@ -19,6 +19,7 @@ describe("edit form parity", () => {
           scheduled_for: "2026-08-04",
           scheduled_time: "14:30:00",
           estimated_minutes: 45,
+          energy_required: "high",
           status: "planned",
         }}
       />,
@@ -34,6 +35,7 @@ describe("edit form parity", () => {
     expect(screen.getByLabelText("Exact time")).toHaveValue("14:30");
     expect(screen.getByLabelText("Estimated minutes")).toHaveValue(45);
     expect(screen.getByLabelText("Priority")).toHaveValue("high");
+    expect(screen.getByLabelText("Energy needed")).toHaveValue("high");
   });
 
   it("keeps every persisted goal field available while editing", () => {

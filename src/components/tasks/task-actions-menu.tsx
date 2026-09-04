@@ -18,6 +18,7 @@ type Task = {
   scheduled_for: string | null;
   scheduled_time: string | null;
   estimated_minutes: number | null;
+  energy_required: string;
   status: string;
 };
 

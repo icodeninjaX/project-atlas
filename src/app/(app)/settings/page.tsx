@@ -122,7 +122,7 @@ export default async function SettingsPage() {
           supabase
             .from("user_preferences")
             .select(
-              "debt_strategy,week_starts_on,home_route,default_task_priority,default_task_estimated_minutes,default_account_id,reminders_enabled,task_reminders,debt_reminders,payday_reminders,review_reminders,quiet_hours_start,quiet_hours_end",
+              "debt_strategy,week_starts_on,home_route,default_task_priority,default_task_estimated_minutes,dayline_capacity_minutes,dayline_energy_level,default_account_id,reminders_enabled,task_reminders,debt_reminders,payday_reminders,review_reminders,quiet_hours_start,quiet_hours_end",
             )
             .maybeSingle(),
           supabase
@@ -184,6 +184,12 @@ export default async function SettingsPage() {
                 }
                 defaultTaskEstimatedMinutes={
                   preferencesResult.data?.default_task_estimated_minutes ?? null
+                }
+                daylineCapacityMinutes={
+                  preferencesResult.data?.dayline_capacity_minutes ?? 180
+                }
+                daylineEnergyLevel={
+                  preferencesResult.data?.dayline_energy_level ?? "medium"
                 }
                 defaultAccountId={
                   preferencesResult.data?.default_account_id ?? null

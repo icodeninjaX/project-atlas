@@ -34,6 +34,8 @@ describe("Settings controls", () => {
         homeRoute="/dashboard"
         defaultTaskPriority="medium"
         defaultTaskEstimatedMinutes={30}
+        daylineCapacityMinutes={180}
+        daylineEnergyLevel="medium"
         defaultAccountId={null}
         accounts={[]}
       />,
@@ -42,6 +44,8 @@ describe("Settings controls", () => {
     expect(screen.getByLabelText("Display name")).toHaveValue("Kai Rivera");
     expect(screen.getByRole("radio", { name: /Snowball/i })).toBeChecked();
     expect(screen.getByRole("radio", { name: /Avalanche/i })).not.toBeChecked();
+    expect(screen.getByLabelText("Daily focus capacity")).toHaveValue(180);
+    expect(screen.getByLabelText("Planning energy")).toHaveValue("medium");
   });
 
   it("offers system, light, and dark appearance choices", async () => {

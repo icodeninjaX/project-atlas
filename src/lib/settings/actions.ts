@@ -23,6 +23,8 @@ const settingsSchema = z.object({
   defaultTaskEstimatedMinutes: z
     .union([z.literal(""), z.coerce.number().int().min(1).max(1440)])
     .transform((value) => (value === "" ? null : value)),
+  daylineCapacityMinutes: z.coerce.number().int().min(15).max(720),
+  daylineEnergyLevel: z.enum(["low", "medium", "high"]),
   defaultAccountId: z
     .union([z.literal(""), z.string().uuid()])
     .transform((value) => value || null),
@@ -42,6 +44,10 @@ export async function saveSettingsAction(
     defaultTaskEstimatedMinutes: String(
       formData.get("defaultTaskEstimatedMinutes") ?? "",
     ),
+    daylineCapacityMinutes: String(
+      formData.get("daylineCapacityMinutes") ?? "",
+    ),
+    daylineEnergyLevel: String(formData.get("daylineEnergyLevel") ?? ""),
     defaultAccountId: String(formData.get("defaultAccountId") ?? ""),
   });
   if (!values.success) {
@@ -94,6 +100,8 @@ export async function saveSettingsAction(
         home_route: values.data.homeRoute,
         default_task_priority: values.data.defaultTaskPriority,
         default_task_estimated_minutes: values.data.defaultTaskEstimatedMinutes,
+        dayline_capacity_minutes: values.data.daylineCapacityMinutes,
+        dayline_energy_level: values.data.daylineEnergyLevel,
         default_account_id: values.data.defaultAccountId,
       },
       { onConflict: "user_id" },
@@ -110,6 +118,7 @@ export async function saveSettingsAction(
   revalidatePath("/settings");
   revalidatePath("/debts");
   revalidatePath("/tasks");
+  revalidatePath("/dashboard");
   revalidatePath("/money/transactions");
   return { success: true, message: "Preferences saved." };
 }

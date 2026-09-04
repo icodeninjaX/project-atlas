@@ -11,6 +11,7 @@ const task = {
   scheduled_for: "2026-08-23",
   scheduled_time: "09:30:00",
   estimated_minutes: 25,
+  energy_required: "medium",
   status: "inbox",
 };
 

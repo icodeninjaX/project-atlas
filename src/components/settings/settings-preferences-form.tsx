@@ -32,6 +32,8 @@ export function SettingsPreferencesForm({
   homeRoute,
   defaultTaskPriority,
   defaultTaskEstimatedMinutes,
+  daylineCapacityMinutes,
+  daylineEnergyLevel,
   defaultAccountId,
   accounts,
 }: {
@@ -40,6 +42,8 @@ export function SettingsPreferencesForm({
   homeRoute: string;
   defaultTaskPriority: string;
   defaultTaskEstimatedMinutes: number | null;
+  daylineCapacityMinutes: number;
+  daylineEnergyLevel: string;
   defaultAccountId: string | null;
   accounts: Array<{ id: string; name: string }>;
 }) {
@@ -181,6 +185,60 @@ export function SettingsPreferencesForm({
               defaultValue={defaultTaskEstimatedMinutes ?? ""}
               placeholder="No default"
             />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset className="border-border border-t pt-5">
+        <legend className="text-sm font-medium">Dayline planning</legend>
+        <p className="text-muted-foreground mt-1 text-xs leading-5">
+          Set the focus time and energy ATLAS should use when choosing realistic
+          next actions.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label htmlFor="dayline-capacity" className="text-xs font-medium">
+              Daily focus capacity
+            </label>
+            <Input
+              id="dayline-capacity"
+              name="daylineCapacityMinutes"
+              type="number"
+              inputMode="numeric"
+              min="15"
+              max="720"
+              step="15"
+              defaultValue={daylineCapacityMinutes}
+              aria-describedby="dayline-capacity-help"
+            />
+            <p
+              id="dayline-capacity-help"
+              className="text-muted-foreground text-[11px]"
+            >
+              Minutes available for focused work on a typical day.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="dayline-energy" className="text-xs font-medium">
+              Planning energy
+            </label>
+            <select
+              id="dayline-energy"
+              name="daylineEnergyLevel"
+              defaultValue={daylineEnergyLevel}
+              className="border-border bg-background focus-visible:ring-ring min-h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
+              aria-describedby="dayline-energy-help"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+            <p
+              id="dayline-energy-help"
+              className="text-muted-foreground text-[11px]"
+            >
+              High-effort tasks move down when your available energy is lower.
+            </p>
           </div>
         </div>
       </fieldset>

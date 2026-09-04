@@ -71,7 +71,7 @@ export function QuickTaskForm({
       }}
       className="border-border bg-card rounded-2xl border p-3.5 shadow-sm sm:p-5 sm:shadow-none"
     >
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(210px,1fr)_145px_125px_125px_130px_auto]">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(210px,1fr)_140px_120px_110px_120px_115px_auto]">
         <div>
           <label
             htmlFor="quick-task-title"
@@ -158,6 +158,24 @@ export function QuickTaskForm({
             onChange={(event) => setEstimatedMinutes(event.target.value)}
           />
         </div>
+        <div>
+          <label
+            htmlFor="quick-task-energy"
+            className="text-muted-foreground mb-1.5 block text-xs font-medium"
+          >
+            Energy needed
+          </label>
+          <select
+            id="quick-task-energy"
+            name="energyRequired"
+            defaultValue="medium"
+            className="border-border bg-background focus-visible:ring-ring min-h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
         <TaskTimeRecommendations
           scheduledTasks={scheduledTasks}
           scheduledFor={scheduledFor}
@@ -167,9 +185,9 @@ export function QuickTaskForm({
             setScheduledTime(time);
             timeRef.current?.focus();
           }}
-          className="md:col-span-2 xl:col-span-6"
+          className="md:col-span-2 xl:col-span-7"
         />
-        <div className="flex items-end justify-end gap-2 md:col-span-2 xl:col-span-1 xl:col-start-6 xl:row-start-1">
+        <div className="flex items-end justify-end gap-2 md:col-span-2 xl:col-span-1 xl:col-start-7 xl:row-start-1">
           {onCancel && (
             <Button type="button" variant="ghost" onClick={onCancel}>
               Cancel

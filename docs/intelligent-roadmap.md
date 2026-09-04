@@ -109,6 +109,8 @@ ATLAS should first become better at **detecting**, then **prioritizing**, then *
 
 # Phase 1 — Signals
 
+**Status:** Implemented and verified on 2026-08-26.
+
 ## Goal
 
 Make ATLAS detect meaningful changes, risks, opportunities, and trends from existing structured data.
@@ -272,6 +274,10 @@ Do not expand scope beyond the Signals MVP.
 ---
 
 # Phase 2 — Capacity-Aware Dayline
+
+**Status:** Implemented on 2026-09-04. Unit tests, lint, type checking, and the
+production build pass. The local pgTAP migration check remains pending because
+Docker Desktop was unavailable during verification.
 
 ## Goal
 

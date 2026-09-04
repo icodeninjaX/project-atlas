@@ -42,6 +42,8 @@ function settingsForm({
   homeRoute = "/tasks",
   defaultTaskPriority = "high",
   defaultTaskEstimatedMinutes = "45",
+  daylineCapacityMinutes = "150",
+  daylineEnergyLevel = "high",
   defaultAccountId = "",
 } = {}) {
   const formData = new FormData();
@@ -50,6 +52,8 @@ function settingsForm({
   formData.set("homeRoute", homeRoute);
   formData.set("defaultTaskPriority", defaultTaskPriority);
   formData.set("defaultTaskEstimatedMinutes", defaultTaskEstimatedMinutes);
+  formData.set("daylineCapacityMinutes", daylineCapacityMinutes);
+  formData.set("daylineEnergyLevel", daylineEnergyLevel);
   formData.set("defaultAccountId", defaultAccountId);
   return formData;
 }
@@ -71,12 +75,15 @@ describe("settings actions", () => {
         home_route: "/tasks",
         default_task_priority: "high",
         default_task_estimated_minutes: 45,
+        dayline_capacity_minutes: 150,
+        dayline_energy_level: "high",
         default_account_id: null,
       },
       { onConflict: "user_id" },
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/settings");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/debts");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard");
   });
 
   it("rejects unsupported payoff plans before contacting the database", async () => {

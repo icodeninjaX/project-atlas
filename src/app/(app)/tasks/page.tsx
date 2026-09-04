@@ -51,6 +51,7 @@ export default async function TasksPage({
     scheduled_time: string | null;
     due_at: string | null;
     estimated_minutes: number | null;
+    energy_required: string;
   }> = [];
   let taskDefaults: {
     default_task_priority: string;
@@ -66,7 +67,7 @@ export default async function TasksPage({
     let query = supabase
       .from("tasks")
       .select(
-        "id,title,description,status,priority,scheduled_for,scheduled_time,due_at,estimated_minutes",
+        "id,title,description,status,priority,scheduled_for,scheduled_time,due_at,estimated_minutes,energy_required",
       );
 
     if (selected === "today")
@@ -213,6 +214,9 @@ export default async function TasksPage({
                         >
                           {task.priority}
                         </span>
+                        <span className="border-border text-muted-foreground hidden shrink-0 rounded-full border px-2 py-0.5 text-[10px] capitalize sm:inline-flex">
+                          {task.energy_required} energy
+                        </span>
                       </div>
                       <div className="flex shrink-0 items-start gap-0.5 sm:hidden">
                         <TaskStatusForm
@@ -229,11 +233,16 @@ export default async function TasksPage({
                       </div>
                     </div>
                     <div className="mt-1.5 flex min-w-0 items-center justify-between gap-2 sm:hidden">
-                      <span
-                        className={`${getTaskPriorityBadgeClass(task.priority)} shrink-0 rounded-full border px-2 py-0.5 text-[10px] capitalize`}
-                      >
-                        {task.priority}
-                      </span>
+                      <div className="flex shrink-0 gap-1">
+                        <span
+                          className={`${getTaskPriorityBadgeClass(task.priority)} rounded-full border px-2 py-0.5 text-[10px] capitalize`}
+                        >
+                          {task.priority}
+                        </span>
+                        <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] capitalize">
+                          {task.energy_required} energy
+                        </span>
+                      </div>
                       {mobileScheduleLabel && (
                         <p
                           className={`ml-auto flex min-w-0 items-center justify-end gap-1 font-mono text-[10px] whitespace-nowrap ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
