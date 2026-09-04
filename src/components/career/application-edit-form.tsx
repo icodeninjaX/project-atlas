@@ -391,10 +391,11 @@ export function ApplicationEditForm({
               </Dialog.Close>
               <Button
                 type="submit"
-                disabled={pending}
+                pending={pending}
+                pendingLabel="Saving…"
                 className="flex-1 sm:ml-auto sm:flex-none"
               >
-                {pending ? "Saving…" : "Save changes"}
+                Save changes
               </Button>
             </footer>
           </form>

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Button } from "@/components/ui/button";
+import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { TooltipHint } from "@/components/ui/tooltip";
 import { formatCentavos } from "@/lib/money/money";
 import { TransactionForm } from "./transaction-form";
@@ -202,14 +203,13 @@ function TransactionHistory({
                     value={transaction.id}
                   />
                   <TooltipHint label="Delete transaction">
-                    <Button
-                      type="submit"
+                    <FormSubmitButton
                       variant="ghost"
                       size="icon"
                       aria-label="Delete transaction"
                     >
                       <Trash2 className="text-muted-foreground size-4" />
-                    </Button>
+                    </FormSubmitButton>
                   </TooltipHint>
                 </OfflineMutationForm>
               </>

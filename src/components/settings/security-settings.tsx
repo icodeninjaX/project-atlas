@@ -91,8 +91,13 @@ export function SecuritySettings({ currentEmail }: { currentEmail: string }) {
             />
           </div>
           <Feedback state={passwordState} />
-          <Button type="submit" size="sm" disabled={passwordPending}>
-            {passwordPending ? "Changing…" : "Change password"}
+          <Button
+            type="submit"
+            size="sm"
+            pending={passwordPending}
+            pendingLabel="Changing…"
+          >
+            Change password
           </Button>
         </form>
       </details>
@@ -131,8 +136,13 @@ export function SecuritySettings({ currentEmail }: { currentEmail: string }) {
             />
           </div>
           <Feedback state={emailState} />
-          <Button type="submit" size="sm" disabled={emailPending}>
-            {emailPending ? "Requesting…" : "Request email change"}
+          <Button
+            type="submit"
+            size="sm"
+            pending={emailPending}
+            pendingLabel="Requesting…"
+          >
+            Request email change
           </Button>
         </form>
       </details>

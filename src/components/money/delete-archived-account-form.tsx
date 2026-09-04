@@ -59,10 +59,12 @@ export function DeleteArchivedAccountForm({
           type="submit"
           variant="destructive"
           disabled={pending || confirmation !== accountName}
+          pending={pending}
+          pendingLabel="Deleting…"
           className="w-full"
         >
           <Trash2 className="size-4" aria-hidden="true" />
-          {pending ? "Deleting…" : "Delete account permanently"}
+          Delete account permanently
         </Button>
       </form>
     </details>

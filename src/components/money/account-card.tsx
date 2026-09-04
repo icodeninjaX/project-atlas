@@ -3,6 +3,7 @@ import { AccountForm } from "@/components/money/account-form";
 import { BalanceAdjustmentForm } from "@/components/money/balance-adjustment-form";
 import { DeleteArchivedAccountForm } from "@/components/money/delete-archived-account-form";
 import { Button } from "@/components/ui/button";
+import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { TooltipHint } from "@/components/ui/tooltip";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
@@ -43,14 +44,13 @@ export function AccountCard({
               <input type="hidden" name="accountId" value={account.id} />
               <input type="hidden" name="archived" value="true" />
               <TooltipHint label={`Archive ${account.name}`} side="left">
-                <Button
-                  type="submit"
+                <FormSubmitButton
                   variant="ghost"
                   size="icon"
                   aria-label={`Archive ${account.name}`}
                 >
                   <Archive className="size-4" aria-hidden="true" />
-                </Button>
+                </FormSubmitButton>
               </TooltipHint>
             </OfflineMutationForm>
           )}
@@ -70,10 +70,14 @@ export function AccountCard({
             <OfflineMutationForm mutation="account.archive" className="mt-4">
               <input type="hidden" name="accountId" value={account.id} />
               <input type="hidden" name="archived" value="false" />
-              <Button type="submit" variant="secondary" className="w-full">
+              <FormSubmitButton
+                variant="secondary"
+                pendingLabel="Restoring…"
+                className="w-full"
+              >
                 <ArchiveRestore className="size-4" aria-hidden="true" />
                 Restore account
-              </Button>
+              </FormSubmitButton>
             </OfflineMutationForm>
             <DeleteArchivedAccountForm
               accountId={account.id}

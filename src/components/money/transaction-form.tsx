@@ -158,13 +158,11 @@ export function TransactionForm({
       <Button
         type="submit"
         disabled={pending || accounts.length === 0}
+        pending={pending}
+        pendingLabel={transaction ? "Saving…" : "Recording…"}
         className="self-end"
       >
-        {pending
-          ? "Saving…"
-          : transaction
-            ? "Save changes"
-            : "Record transaction"}
+        {transaction ? "Save changes" : "Record transaction"}
       </Button>
     </form>
   );

@@ -1,11 +1,13 @@
 "use client";
 
 import { Cloud, CloudAlert, RefreshCw, WifiOff } from "lucide-react";
+import { useTransition } from "react";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 
 export function SyncStatus({ showLabel = false }: { showLabel?: boolean }) {
   const { online, pending, blocked, retry } = useOfflineSync();
+  const [retrying, startRetry] = useTransition();
 
   if (blocked > 0) {
     return (
@@ -13,7 +15,14 @@ export function SyncStatus({ showLabel = false }: { showLabel?: boolean }) {
         type="button"
         variant="ghost"
         size="sm"
-        onClick={() => void retry()}
+        pending={retrying}
+        pendingLabel={
+          <span className={showLabel ? "inline" : "hidden md:inline"}>
+            Retrying…
+          </span>
+        }
+        onClick={() => startRetry(retry)}
+        aria-label={retrying ? "Retrying sync" : "Retry failed sync changes"}
         title="Retry changes that could not sync"
         className="text-destructive px-2"
       >

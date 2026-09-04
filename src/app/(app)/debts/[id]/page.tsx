@@ -2,8 +2,8 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PaymentForm } from "@/components/debts/payment-form";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { TooltipHint } from "@/components/ui/tooltip";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
@@ -146,14 +146,13 @@ export default async function DebtDetailPage({
                   <input type="hidden" name="paymentId" value={payment.id} />
                   <input type="hidden" name="debtId" value={debt.id} />
                   <TooltipHint label="Delete payment">
-                    <Button
+                    <FormSubmitButton
                       variant="ghost"
                       size="icon"
-                      type="submit"
                       aria-label="Delete payment"
                     >
                       <Trash2 className="text-muted-foreground size-4" />
-                    </Button>
+                    </FormSubmitButton>
                   </TooltipHint>
                 </OfflineMutationForm>
               </div>

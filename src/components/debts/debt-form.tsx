@@ -192,8 +192,13 @@ export function DebtForm({
             Cancel
           </Button>
         ) : null}
-        <Button className="shrink-0" type="submit" disabled={pending}>
-          {pending ? "Saving…" : debt ? "Save changes" : "Add debt"}
+        <Button
+          className="shrink-0"
+          type="submit"
+          pending={pending}
+          pendingLabel={debt ? "Saving…" : "Adding…"}
+        >
+          {debt ? "Save changes" : "Add debt"}
         </Button>
       </div>
     </form>

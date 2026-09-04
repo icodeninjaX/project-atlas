@@ -158,6 +158,9 @@ export function ReviewForm({
   });
   const [savedAt, setSavedAt] = useState(lastSavedAt);
   const [activePrompt, setActivePrompt] = useState(0);
+  const [savingIntent, setSavingIntent] = useState<"draft" | "submit">(
+    "submit",
+  );
   const [pending, startTransition] = useTransition();
   const { submit } = useOfflineSync();
   const values = useWatch({ control });
@@ -174,6 +177,7 @@ export function ReviewForm({
       Object.entries(formValues).forEach(([key, value]) =>
         data.set(key, value ?? ""),
       );
+      setSavingIntent(intent);
       startTransition(async () => {
         const result = await submit("review.save", data);
         if (result.success) {
@@ -476,21 +480,23 @@ export function ReviewForm({
             type="button"
             variant="secondary"
             disabled={pending}
+            pending={pending && savingIntent === "draft"}
+            pendingLabel="Saving…"
             onClick={submitReview("draft")}
             className="w-full sm:w-auto"
           >
             <Save className="size-4" />
             Save draft
           </Button>
-          <Button type="submit" disabled={pending} className="w-full sm:w-auto">
-            {pending ? (
-              "Saving…"
-            ) : (
-              <>
-                <Send className="size-4" />
-                Submit review
-              </>
-            )}
+          <Button
+            type="submit"
+            disabled={pending}
+            pending={pending && savingIntent === "submit"}
+            pendingLabel="Saving…"
+            className="w-full sm:w-auto"
+          >
+            <Send className="size-4" />
+            Submit review
           </Button>
         </div>
       </div>

@@ -15,6 +15,7 @@ export function InstallAppButton() {
   const [prompt, setPrompt] = useState<InstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [installed, setInstalled] = useState(true);
+  const [installing, setInstalling] = useState(false);
 
   useEffect(() => {
     const readPlatformState = () => {
@@ -52,12 +53,18 @@ export function InstallAppButton() {
         variant="ghost"
         size="icon"
         aria-label="Install ATLAS"
+        pending={installing}
         onClick={async () => {
           if (prompt) {
-            await prompt.prompt();
-            const choice = await prompt.userChoice;
-            if (choice.outcome === "accepted") setInstalled(true);
-            setPrompt(null);
+            setInstalling(true);
+            try {
+              await prompt.prompt();
+              const choice = await prompt.userChoice;
+              if (choice.outcome === "accepted") setInstalled(true);
+              setPrompt(null);
+            } finally {
+              setInstalling(false);
+            }
             return;
           }
           toast.info(

@@ -7,6 +7,7 @@ import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { TaskEditForm } from "@/components/tasks/task-edit-form";
 import { TaskFocusMode } from "@/components/tasks/task-focus-mode";
 import { Button } from "@/components/ui/button";
+import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import type { ScheduledTaskSlot } from "@/lib/tasks/task-time";
 
 type Task = {
@@ -169,18 +170,22 @@ export function TaskActionsMenu({
             Edit task
           </Button>
           <div className="border-border my-1 border-t" />
-          <OfflineMutationForm mutation="task.delete">
+          <OfflineMutationForm
+            mutation="task.delete"
+            onResult={(result) => {
+              if (result.success) setMenuOpen(false);
+            }}
+          >
             <input type="hidden" name="taskId" value={task.id} />
-            <Button
-              type="submit"
+            <FormSubmitButton
               variant="ghost"
               role="menuitem"
-              onClick={() => setMenuOpen(false)}
+              pendingLabel="Deleting…"
               className="text-destructive hover:bg-destructive/10 hover:text-destructive w-full justify-start"
             >
               <Trash2 className="size-4" aria-hidden="true" />
               Delete task
-            </Button>
+            </FormSubmitButton>
           </OfflineMutationForm>
         </div>
       </div>

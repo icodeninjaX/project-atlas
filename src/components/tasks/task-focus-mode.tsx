@@ -469,11 +469,12 @@ function FocusTimer({
                 <Button
                   type="submit"
                   variant="ghost"
-                  disabled={completingTask}
+                  pending={completingTask}
+                  pendingLabel="Marking complete…"
                   className="min-h-11 w-full rounded-2xl text-blue-200 hover:bg-emerald-400/10 hover:text-emerald-200"
                 >
                   <Check className="size-4" />
-                  {completingTask ? "Marking complete…" : "Mark task complete"}
+                  Mark task complete
                 </Button>
               </form>
             </div>

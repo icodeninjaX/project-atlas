@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,6 +14,9 @@ export function OnboardingForm() {
   const [state, action, pending] = useActionState(
     completeOnboardingAction,
     initialState,
+  );
+  const [submitIntent, setSubmitIntent] = useState<"details" | "skip">(
+    "details",
   );
 
   return (
@@ -107,11 +110,20 @@ export function OnboardingForm() {
           name="skip"
           value="true"
           disabled={pending}
+          pending={pending && submitIntent === "skip"}
+          pendingLabel="Skipping…"
+          onClick={() => setSubmitIntent("skip")}
         >
           Skip optional details
         </Button>
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Complete setup"}
+        <Button
+          type="submit"
+          disabled={pending}
+          pending={pending && submitIntent === "details"}
+          pendingLabel="Saving…"
+          onClick={() => setSubmitIntent("details")}
+        >
+          Complete setup
         </Button>
       </div>
     </form>

@@ -43,9 +43,10 @@ export function SessionControls() {
             variant="secondary"
             size="sm"
             className="w-full"
-            disabled={pending}
+            pending={pending}
+            pendingLabel="Signing out…"
           >
-            {pending ? "Signing out…" : "Log out other devices"}
+            Log out other devices
           </Button>
         </form>
         {state.message && (

@@ -103,16 +103,11 @@ export function AccountForm({
       )}
       <Button
         type="submit"
-        disabled={pending}
+        pending={pending}
+        pendingLabel={account ? "Saving…" : "Adding…"}
         className={cn("self-end", account && "w-full @[20rem]:col-span-2")}
       >
-        {pending
-          ? account
-            ? "Saving…"
-            : "Adding…"
-          : account
-            ? "Save changes"
-            : "Add account"}
+        {account ? "Save changes" : "Add account"}
       </Button>
     </form>
   );

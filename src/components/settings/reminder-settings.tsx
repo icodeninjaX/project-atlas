@@ -211,8 +211,8 @@ export function ReminderSettings({
         <p className="text-muted-foreground text-xs">
           This device: {deviceSubscribed ? "subscribed" : "not subscribed"}
         </p>
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save reminder settings"}
+        <Button type="submit" pending={pending} pendingLabel="Saving…">
+          Save reminder settings
         </Button>
       </div>
 

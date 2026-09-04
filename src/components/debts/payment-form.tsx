@@ -67,8 +67,13 @@ export function PaymentForm({
           className="mt-1.5"
         />
       </label>
-      <Button type="submit" disabled={pending} className="self-end">
-        {pending ? "Recording…" : "Record payment"}
+      <Button
+        type="submit"
+        pending={pending}
+        pendingLabel="Recording…"
+        className="self-end"
+      >
+        Record payment
       </Button>
     </form>
   );

@@ -5,8 +5,8 @@ import { TaskActionsMenu } from "@/components/tasks/task-actions-menu";
 import { TaskEditForm } from "@/components/tasks/task-edit-form";
 import { TaskFocusMode } from "@/components/tasks/task-focus-mode";
 import { TaskStatusForm } from "@/components/tasks/task-status-form";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { manilaDateLabel } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
@@ -292,16 +292,15 @@ export default async function TasksPage({
                     className="hidden sm:block"
                   >
                     <input type="hidden" name="taskId" value={task.id} />
-                    <Button
+                    <FormSubmitButton
                       variant="ghost"
                       size="icon"
-                      type="submit"
                       className="size-11 sm:size-10"
                       title="Delete task"
                       aria-label={`Delete ${task.title}`}
                     >
                       <Trash2 className="text-muted-foreground size-4" />
-                    </Button>
+                    </FormSubmitButton>
                   </OfflineMutationForm>
                 </CardContent>
               </Card>

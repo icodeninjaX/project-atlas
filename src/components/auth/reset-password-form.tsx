@@ -55,8 +55,13 @@ export function ResetPasswordForm() {
           <Link href="/dashboard">Continue to dashboard</Link>
         </Button>
       ) : (
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Updating…" : "Update password"}
+        <Button
+          type="submit"
+          className="w-full"
+          pending={pending}
+          pendingLabel="Updating…"
+        >
+          Update password
         </Button>
       )}
     </form>

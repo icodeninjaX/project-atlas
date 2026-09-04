@@ -69,8 +69,8 @@ export function BudgetForm({
         </div>
       </fieldset>
       <div className="flex justify-end">
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save monthly budget"}
+        <Button type="submit" pending={pending} pendingLabel="Saving…">
+          Save monthly budget
         </Button>
       </div>
     </form>

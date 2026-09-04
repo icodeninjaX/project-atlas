@@ -177,10 +177,11 @@ export function QuickTaskForm({
           )}
           <Button
             type="submit"
-            disabled={pending}
+            pending={pending}
+            pendingLabel="Adding…"
             className="min-h-12 flex-1 xl:min-h-10"
           >
-            {pending ? "Adding…" : "Add task"}
+            Add task
           </Button>
         </div>
       </div>

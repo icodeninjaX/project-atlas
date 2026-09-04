@@ -70,8 +70,13 @@ export function AuthForm({
           {state.message}
         </p>
       )}
-      <Button className="w-full" type="submit" disabled={pending}>
-        {pending ? `${submitLabel}…` : submitLabel}
+      <Button
+        className="w-full"
+        type="submit"
+        pending={pending}
+        pendingLabel={`${submitLabel}…`}
+      >
+        {submitLabel}
       </Button>
     </form>
   );

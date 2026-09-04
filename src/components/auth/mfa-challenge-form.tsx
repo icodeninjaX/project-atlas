@@ -86,8 +86,14 @@ export function MfaChallengeForm({ destination }: { destination: string }) {
           {error}
         </p>
       )}
-      <Button type="submit" className="w-full" disabled={pending || !factor}>
-        {pending ? "Verifying…" : "Verify and continue"}
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={!factor}
+        pending={pending}
+        pendingLabel="Verifying…"
+      >
+        Verify and continue
       </Button>
     </form>
   );

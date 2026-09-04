@@ -77,10 +77,11 @@ export function BalanceAdjustmentForm({
       </label>
       <Button
         type="submit"
-        disabled={pending}
+        pending={pending}
+        pendingLabel="Adjusting…"
         className="w-full @[20rem]:col-span-2"
       >
-        {pending ? "Adjusting…" : "Save balance adjustment"}
+        Save balance adjustment
       </Button>
     </form>
   );

@@ -200,8 +200,8 @@ export function SettingsPreferencesForm({
       )}
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save preferences"}
+        <Button type="submit" pending={pending} pendingLabel="Saving…">
+          Save preferences
         </Button>
       </div>
     </form>

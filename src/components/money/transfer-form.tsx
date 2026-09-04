@@ -118,9 +118,11 @@ export function TransferForm({
         <Button
           type="submit"
           disabled={pending || !canTransfer}
+          pending={pending}
+          pendingLabel="Recording…"
           className="w-full sm:w-auto sm:min-w-44"
         >
-          {pending ? "Recording…" : "Record transfer"}
+          Record transfer
         </Button>
       </div>
     </form>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { Input } from "@/components/ui/input";
 import {
   EMPTY_SCHEDULED_TASKS,
@@ -121,13 +121,13 @@ export function TaskEditForm({
         }}
         className="sm:col-span-2 xl:col-span-5"
       />
-      <Button
-        type="submit"
+      <FormSubmitButton
         variant="secondary"
+        pendingLabel="Saving…"
         className="self-end sm:col-span-2 xl:col-span-1 xl:col-start-4 xl:row-start-2"
       >
         Save
-      </Button>
+      </FormSubmitButton>
     </OfflineMutationForm>
   );
 }

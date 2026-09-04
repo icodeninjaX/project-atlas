@@ -88,9 +88,11 @@ export function DeleteAccountControl({ configured }: { configured: boolean }) {
               variant="destructive"
               size="sm"
               disabled={deleting || unsynced > 0}
+              pending={deleting}
+              pendingLabel="Deleting…"
             >
               <Trash2 className="size-4" />
-              {deleting ? "Deleting…" : "Delete my ATLAS"}
+              Delete my ATLAS
             </Button>
           </form>
         )}

@@ -242,8 +242,13 @@ export function ApplicationForm({
           className="border-border bg-background mt-1.5 min-h-20 w-full rounded-xl border px-3 py-2 text-sm outline-none"
         />
       </label>
-      <Button type="submit" disabled={pending} className="self-end">
-        {pending ? "Adding…" : "Add application"}
+      <Button
+        type="submit"
+        pending={pending}
+        pendingLabel="Adding…"
+        className="self-end"
+      >
+        Add application
       </Button>
     </form>
   );

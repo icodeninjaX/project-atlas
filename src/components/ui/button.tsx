@@ -1,6 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
+import { AtlasMark } from "@/components/atlas/atlas-mark";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -35,16 +36,36 @@ export function Button({
   variant,
   size,
   asChild = false,
+  pending = false,
+  pendingLabel,
+  children,
+  disabled,
+  "aria-busy": ariaBusy,
   ...props
 }: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean;
+    pending?: boolean;
+    pendingLabel?: React.ReactNode;
+  }) {
   const Comp = asChild ? Slot : "button";
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={disabled || pending}
+      aria-busy={pending ? true : ariaBusy}
       {...props}
-    />
+    >
+      {pending ? (
+        <>
+          <AtlasMark className="size-4 animate-spin [animation-duration:1.1s] motion-reduce:animate-none" />
+          {pendingLabel}
+        </>
+      ) : (
+        children
+      )}
+    </Comp>
   );
 }
 

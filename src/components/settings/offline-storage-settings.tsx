@@ -76,7 +76,9 @@ export function OfflineStorageSettings() {
           type="button"
           variant="secondary"
           size="sm"
-          disabled={!online || syncing}
+          disabled={!online}
+          pending={syncing}
+          pendingLabel="Syncing…"
           onClick={() =>
             startSync(async () => {
               await syncNow();
@@ -84,8 +86,8 @@ export function OfflineStorageSettings() {
             })
           }
         >
-          <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? "Syncing…" : "Sync now"}
+          <RefreshCw className="size-4" />
+          Sync now
         </Button>
       </div>
 
@@ -104,7 +106,8 @@ export function OfflineStorageSettings() {
           type="button"
           variant="secondary"
           size="sm"
-          disabled={clearing}
+          pending={clearing}
+          pendingLabel="Clearing…"
           onClick={() => {
             if (
               !window.confirm(
@@ -129,7 +132,7 @@ export function OfflineStorageSettings() {
           }}
         >
           <Trash2 className="size-4" />
-          {clearing ? "Clearing…" : "Clear page cache"}
+          Clear page cache
         </Button>
       </div>
     </div>

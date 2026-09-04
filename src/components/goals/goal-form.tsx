@@ -136,8 +136,13 @@ export function GoalForm({
             Cancel
           </Button>
         ) : null}
-        <Button className="flex-1" type="submit" disabled={pending}>
-          {pending ? "Saving…" : goal ? "Save changes" : "Create goal"}
+        <Button
+          className="flex-1"
+          type="submit"
+          pending={pending}
+          pendingLabel={goal ? "Saving…" : "Creating…"}
+        >
+          {goal ? "Save changes" : "Create goal"}
         </Button>
       </div>
     </form>

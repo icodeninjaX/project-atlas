@@ -20,6 +20,8 @@ type Enrollment = {
   secret: string;
 };
 
+type PendingAction = "begin" | "cancel" | "verify" | "remove";
+
 export function MfaSettings() {
   const supabase = useMemo(() => createClient(), []);
   const [factors, setFactors] = useState<Factor[]>([]);
@@ -28,6 +30,7 @@ export function MfaSettings() {
   const [removalCode, setRemovalCode] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [pendingAction, setPendingAction] = useState<PendingAction>("begin");
   const [pending, startTransition] = useTransition();
 
   const loadFactors = useCallback(async () => {
@@ -47,7 +50,8 @@ export function MfaSettings() {
     (factor) => factor.factor_type === "totp" && factor.status === "verified",
   );
 
-  const beginEnrollment = () =>
+  const beginEnrollment = () => {
+    setPendingAction("begin");
     startTransition(async () => {
       setError("");
       setMessage("");
@@ -70,8 +74,10 @@ export function MfaSettings() {
       });
       await loadFactors();
     });
+  };
 
-  const cancelEnrollment = () =>
+  const cancelEnrollment = () => {
+    setPendingAction("cancel");
     startTransition(async () => {
       if (enrollment) {
         await supabase.auth.mfa.unenroll({ factorId: enrollment.factorId });
@@ -80,8 +86,10 @@ export function MfaSettings() {
       setEnrollmentCode("");
       await loadFactors();
     });
+  };
 
-  const verifyEnrollment = () =>
+  const verifyEnrollment = () => {
+    setPendingAction("verify");
     startTransition(async () => {
       if (!enrollment || !/^\d{6}$/.test(enrollmentCode)) {
         setError("Enter the 6-digit code from your authenticator app.");
@@ -109,8 +117,10 @@ export function MfaSettings() {
       setMessage("Authenticator protection is now enabled.");
       await loadFactors();
     });
+  };
 
-  const removeFactor = () =>
+  const removeFactor = () => {
+    setPendingAction("remove");
     startTransition(async () => {
       if (!verifiedFactor) return;
       if (
@@ -159,6 +169,7 @@ export function MfaSettings() {
       setMessage("Authenticator protection was removed.");
       await loadFactors();
     });
+  };
 
   return (
     <div className="border-border mt-5 border-t pt-5">
@@ -197,6 +208,8 @@ export function MfaSettings() {
                   variant="secondary"
                   size="sm"
                   disabled={pending}
+                  pending={pending && pendingAction === "remove"}
+                  pendingLabel="Removing…"
                   onClick={removeFactor}
                 >
                   <Trash2 className="size-4" />
@@ -242,6 +255,8 @@ export function MfaSettings() {
                       type="button"
                       size="sm"
                       disabled={pending}
+                      pending={pending && pendingAction === "verify"}
+                      pendingLabel="Verifying…"
                       onClick={verifyEnrollment}
                     >
                       Verify and enable
@@ -251,6 +266,8 @@ export function MfaSettings() {
                       variant="ghost"
                       size="sm"
                       disabled={pending}
+                      pending={pending && pendingAction === "cancel"}
+                      pendingLabel="Cancelling…"
                       onClick={cancelEnrollment}
                     >
                       Cancel
@@ -266,6 +283,8 @@ export function MfaSettings() {
               size="sm"
               className="mt-4"
               disabled={pending}
+              pending={pending && pendingAction === "begin"}
+              pendingLabel="Starting…"
               onClick={beginEnrollment}
             >
               <ShieldPlus className="size-4" />
