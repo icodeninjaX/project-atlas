@@ -31,13 +31,14 @@ export function TransactionForm({
     description: string | null;
   };
 }) {
+  const defaultType = transaction?.transaction_type ?? "expense";
+  const defaultCategoryId = transaction?.category_id ?? "";
   const [state, action, pending] = useOfflineActionState(
     transaction ? "transaction.update" : "transaction.create",
     initial,
   );
-  const [type, setType] = useState<"expense" | "income">(
-    transaction?.transaction_type ?? "expense",
-  );
+  const [type, setType] = useState<"expense" | "income">(defaultType);
+  const [categoryId, setCategoryId] = useState(defaultCategoryId);
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (!state.message) return;
@@ -50,6 +51,10 @@ export function TransactionForm({
     <form
       ref={form}
       action={action}
+      onReset={() => {
+        setType(defaultType);
+        setCategoryId(defaultCategoryId);
+      }}
       className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-2 xl:grid-cols-4"
     >
       {transaction && (
@@ -60,9 +65,10 @@ export function TransactionForm({
         <select
           name="type"
           value={type}
-          onChange={(event) =>
-            setType(event.target.value as "expense" | "income")
-          }
+          onChange={(event) => {
+            setType(event.target.value as "expense" | "income");
+            setCategoryId("");
+          }}
           aria-label="Transaction type"
           className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
         >
@@ -92,7 +98,8 @@ export function TransactionForm({
         <select
           name="categoryId"
           required
-          defaultValue={transaction?.category_id ?? ""}
+          value={categoryId}
+          onChange={(event) => setCategoryId(event.target.value)}
           aria-label="Category"
           className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
         >
