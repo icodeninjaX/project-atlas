@@ -96,6 +96,9 @@ export default async function BudgetPage({
             <Button asChild variant="secondary">
               <Link href="/money/runway">Runway</Link>
             </Button>
+            <Button asChild variant="secondary">
+              <Link href="/timeline?module=money">Timeline</Link>
+            </Button>
           </>
         }
       />

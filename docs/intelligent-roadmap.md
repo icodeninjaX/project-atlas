@@ -116,13 +116,13 @@ ATLAS should first become better at **detecting**, then **prioritizing**, then *
 | 1. Signals                               | Complete | Implemented and verified on 2026-08-26.                                                                                          |
 | 2. Capacity-Aware Dayline                | Complete | Implemented on 2026-09-04; application validation passed, while local pgTAP execution remains pending until Docker is available. |
 | 3. Personal Runway & Financial Scenarios | Complete | Implemented on 2026-09-05 with deterministic runway, saved assumptions, and non-destructive scenarios.                           |
-| 4. Life Timeline                         | Next     | Build on the existing activity-history foundation.                                                                               |
-| 5. Knowledge & Spaced Repetition         | Planned  | Deterministic learning and review before AI assistance.                                                                          |
+| 4. Life Timeline                         | Complete | Implemented on 2026-09-05 with durable owner-scoped timeline snapshots, filters, pagination, and source links.                   |
+| 5. Knowledge & Spaced Repetition         | Next     | Deterministic learning and review before AI assistance.                                                                          |
 | 6. Universal Capture                     | Planned  | First AI-assisted mutation proposal flow.                                                                                        |
 | 7. ATLAS Analyst                         | Planned  | Evidence-backed explanations over bounded structured facts.                                                                      |
 | 8. ATLAS Graph                           | Planned  | Cross-domain relationships after the underlying modules are mature.                                                              |
 
-The active product target is **Phase 4 — Life Timeline**. Production validation,
+The active product target is **Phase 5 — Knowledge & Spaced Repetition**. Production validation,
 authenticated mobile checks, and database integration testing for delivered
 phases remain release-quality work that can proceed without changing the phase
 order.
@@ -637,7 +637,38 @@ Final response:
 
 # Phase 4 — Life Timeline
 
-**Status:** Planned.
+**Status:** Implemented on 2026-09-05. Application linting, type checks, and
+unit/component tests passed. Local Supabase reset and pgTAP remain unverified
+on this machine because Docker Desktop was unavailable.
+
+## Delivered Scope
+
+- Added `/timeline`: a mobile-first, day-grouped workspace with owner-scoped
+  search, module/date filters, and cursor-based loading for older events.
+- Extended the existing `activity_log` with normalized timeline fields rather
+  than creating another public event table. Current money records update a
+  stable presentation snapshot; completed tasks, goals/milestones, career
+  stage transitions, and review submissions retain immutable transition facts.
+- Added private trigger writers for transactions, transfers, debt payments,
+  tasks, milestones, applications/stage changes, goals, and reviews. A source
+  deletion leaves its snapshot visible while removing its deep link.
+- Added authenticated `life_timeline` RPC access, cursor/search indexes,
+  owner-only filtering, and revoked direct authenticated writes to
+  `activity_log`.
+- Linked Timeline from primary navigation, mobile More, dashboard finance,
+  Accounts, Budget, and the audit page. Timeline links open and highlight the
+  relevant money, debt, task, goal/milestone, career, or review record.
+- Added timeline fields to activity exports (JSON format version 2) and focused
+  helper/pgTAP coverage for filter normalization, grouping, owner isolation,
+  source deletion, and protected writes.
+
+## Limitations and Follow-up
+
+- Existing source records are backfilled; legacy deleted records that had no
+  previous activity entry cannot be reconstructed.
+- The local Docker-dependent migration and pgTAP checks still need to run in a
+  Docker-enabled environment, followed by authenticated responsive E2E checks.
+- The next product target is **Phase 5 — Knowledge & Spaced Repetition**.
 
 ## Goal
 

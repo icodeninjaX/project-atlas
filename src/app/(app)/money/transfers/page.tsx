@@ -1,10 +1,12 @@
 import { ArrowLeftRight } from "lucide-react";
 import Link from "next/link";
 import { TransferForm } from "@/components/money/transfer-form";
+import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
+import { formatCentavos } from "@/lib/money/money";
 
 export const metadata = { title: "Record transfer" };
 
@@ -17,15 +19,50 @@ function todayInManila() {
   }).format(new Date());
 }
 
-export default async function TransfersPage() {
+export default async function TransfersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ highlight?: string }>;
+}) {
+  const query = await searchParams;
   const supabase = await createClient();
-  const accountsResult = supabase
-    ? await supabase
-        .from("financial_accounts")
-        .select("id,name")
-        .eq("is_archived", false)
-        .order("name")
-    : { data: [] };
+  const [accountsResult, transfersResult, highlightedResult] = supabase
+    ? await Promise.all([
+        supabase
+          .from("financial_accounts")
+          .select("id,name")
+          .eq("is_archived", false)
+          .order("name"),
+        supabase
+          .from("account_transfers")
+          .select(
+            "id,source_account_id,destination_account_id,amount_centavos,transfer_date,description",
+          )
+          .order("transfer_date", { ascending: false })
+          .limit(100),
+        query.highlight && /^[0-9a-f-]{36}$/i.test(query.highlight)
+          ? supabase
+              .from("account_transfers")
+              .select(
+                "id,source_account_id,destination_account_id,amount_centavos,transfer_date,description",
+              )
+              .eq("id", query.highlight)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ])
+    : [{ data: [] }, { data: [] }, { data: null }];
+  const accountName = new Map(
+    (accountsResult.data ?? []).map((account) => [account.id, account.name]),
+  );
+  const recentTransfers = transfersResult.data ?? [];
+  const transfers = highlightedResult.data
+    ? [
+        highlightedResult.data,
+        ...recentTransfers.filter(
+          (transfer) => transfer.id !== highlightedResult.data?.id,
+        ),
+      ]
+    : recentTransfers;
 
   return (
     <div className="mx-auto max-w-[1100px] p-4 sm:p-6 lg:p-8">
@@ -70,6 +107,44 @@ export default async function TransfersPage() {
           </CardContent>
         </Card>
       </div>
+
+      <section className="mt-8">
+        <h2 className="text-lg font-semibold">Transfer history</h2>
+        <div className="border-border bg-card mt-3 overflow-hidden rounded-2xl border">
+          {transfers.length === 0 ? (
+            <p className="text-muted-foreground p-6 text-center text-sm">
+              No transfers recorded yet.
+            </p>
+          ) : (
+            transfers.map((transfer) => (
+              <article
+                key={transfer.id}
+                id={`transfer-${transfer.id}`}
+                className={`border-border flex min-w-0 flex-col gap-2 border-b p-4 last:border-0 sm:flex-row sm:items-center sm:justify-between ${
+                  query.highlight === transfer.id ? "bg-primary/[0.08]" : ""
+                }`}
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold break-words">
+                    {accountName.get(transfer.source_account_id) ?? "Account"} →{" "}
+                    {accountName.get(transfer.destination_account_id) ??
+                      "Account"}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {transfer.transfer_date}
+                    {transfer.description ? ` · ${transfer.description}` : ""}
+                  </p>
+                </div>
+                <p className="font-mono text-sm font-semibold">
+                  <SensitiveValue>
+                    {formatCentavos(Number(transfer.amount_centavos))}
+                  </SensitiveValue>
+                </p>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
     </div>
   );
 }

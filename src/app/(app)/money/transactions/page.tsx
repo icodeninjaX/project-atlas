@@ -26,12 +26,15 @@ export default async function TransactionsPage({
   searchParams,
 }: PageProps<"/money/transactions">) {
   const query = await searchParams;
+  const highlightId =
+    typeof query.highlight === "string" ? query.highlight : undefined;
   const supabase = await createClient();
   const [
     accountsResult,
     categoriesResult,
     transactionsResult,
     preferencesResult,
+    highlightedTransactionResult,
   ] = supabase
     ? await Promise.all([
         supabase
@@ -54,9 +57,33 @@ export default async function TransactionsPage({
           .from("user_preferences")
           .select("default_account_id")
           .maybeSingle(),
+        highlightId && /^[0-9a-f-]{36}$/i.test(highlightId)
+          ? supabase
+              .from("transactions")
+              .select(
+                "id,account_id,category_id,transaction_type,amount_centavos,transaction_date,merchant_or_source,description,financial_accounts(name),transaction_categories(name)",
+              )
+              .eq("id", highlightId)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
       ])
-    : [{ data: [] }, { data: [] }, { data: [] }, { data: null }];
-  const transactions = transactionsResult.data ?? [];
+    : [
+        { data: [] },
+        { data: [] },
+        { data: [] },
+        { data: null },
+        { data: null },
+      ];
+  const recentTransactions = transactionsResult.data ?? [];
+  const transactions = highlightedTransactionResult.data
+    ? [
+        highlightedTransactionResult.data,
+        ...recentTransactions.filter(
+          (transaction) =>
+            transaction.id !== highlightedTransactionResult.data?.id,
+        ),
+      ]
+    : recentTransactions;
   const monthPrefix = todayInManila().slice(0, 7);
   const monthRows = transactions.filter((transaction) =>
     String(transaction.transaction_date).startsWith(monthPrefix),
@@ -70,7 +97,7 @@ export default async function TransactionsPage({
   const initialView: TransactionWorkspaceView | null =
     query.create === "true" || query.view === "record"
       ? "record"
-      : query.view === "history" || query.highlight
+      : query.view === "history" || highlightId
         ? "history"
         : null;
   const transactionHistory: TransactionHistoryItem[] = transactions.map(
@@ -139,6 +166,7 @@ export default async function TransactionsPage({
         today={todayInManila()}
         defaultAccountId={preferencesResult.data?.default_account_id}
         initialView={initialView}
+        highlightId={highlightId ?? null}
       />
     </div>
   );

@@ -12,7 +12,12 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Weekly reviews" };
 
-export default async function ReviewsPage() {
+export default async function ReviewsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string; highlight?: string }>;
+}) {
+  const query = await searchParams;
   const now = new Date();
   const weekStart = mondayWeekStart(now);
   const entryTimestamp = now.toISOString();
@@ -81,6 +86,16 @@ export default async function ReviewsPage() {
     applicationsResult,
     goalsResult,
   ] = results;
+  const highlightedReviewResult =
+    supabase && query.highlight
+      ? await supabase
+          .from("weekly_reviews")
+          .select(
+            "id,week_start,wins,challenges,lessons,time_wasters,money_reflection,career_reflection,next_week_focus,energy_score,stress_score,overall_score,completed_at,created_at,updated_at",
+          )
+          .eq("id", query.highlight)
+          .maybeSingle()
+      : { data: null };
   const current = currentResult.data;
   const history = historyResult.data ?? [];
   const spending = (spendingResult.data ?? []).reduce(
@@ -98,8 +113,19 @@ export default async function ReviewsPage() {
     ["Applications sent", String(applicationsResult.count ?? 0)],
     ["Goals progressed", String(goalsResult.count ?? 0)],
   ];
-  const pastReviews: ReviewArchiveItem[] = history
-    .filter((review) => review.week_start !== weekStart)
+  const reviewHistory = highlightedReviewResult.data
+    ? [
+        highlightedReviewResult.data,
+        ...history.filter(
+          (review) => review.id !== highlightedReviewResult.data?.id,
+        ),
+      ]
+    : history;
+  const pastReviews: ReviewArchiveItem[] = reviewHistory
+    .filter(
+      (review) =>
+        review.week_start !== weekStart || review.id === query.highlight,
+    )
     .map((review) => ({
       id: review.id,
       weekStart: review.week_start,
@@ -127,6 +153,8 @@ export default async function ReviewsPage() {
       />
       <ReviewWorkspace
         reviews={pastReviews}
+        initialView={query.view === "archive" ? "archive" : "current"}
+        highlightReviewId={query.highlight}
         currentContent={
           <div>
             <section>

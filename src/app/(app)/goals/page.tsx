@@ -8,7 +8,12 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Goals" };
 
-export default async function GoalsPage() {
+export default async function GoalsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ highlight?: string; milestone?: string }>;
+}) {
+  const query = await searchParams;
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured.");
 
@@ -82,7 +87,15 @@ export default async function GoalsPage() {
             ).length;
 
             return (
-              <Card key={goal.id}>
+              <Card
+                key={goal.id}
+                id={`goal-${goal.id}`}
+                className={
+                  query.highlight === goal.id
+                    ? "ring-primary/60 bg-primary/5 ring-2"
+                    : undefined
+                }
+              >
                 <CardContent>
                   <GoalCardHeader goal={goal} />
                   <GoalProgress
@@ -90,7 +103,13 @@ export default async function GoalsPage() {
                     completedMilestones={completedMilestones}
                     totalMilestones={milestones.length}
                   />
-                  <MilestoneList goalId={goal.id} milestones={milestones} />
+                  <MilestoneList
+                    goalId={goal.id}
+                    milestones={milestones}
+                    highlightMilestoneId={
+                      query.highlight === goal.id ? query.milestone : undefined
+                    }
+                  />
                 </CardContent>
               </Card>
             );

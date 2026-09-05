@@ -32,6 +32,7 @@ type TransactionWorkspaceProps = {
   today: string;
   defaultAccountId?: string | null;
   initialView?: TransactionWorkspaceView | null;
+  highlightId?: string | null;
 };
 
 export function TransactionWorkspace({
@@ -41,6 +42,7 @@ export function TransactionWorkspace({
   today,
   defaultAccountId,
   initialView = null,
+  highlightId = null,
 }: TransactionWorkspaceProps) {
   const [view, setView] = useState<TransactionWorkspaceView | null>(
     initialView,
@@ -93,6 +95,7 @@ export function TransactionWorkspace({
           transactions={transactions}
           today={today}
           defaultAccountId={defaultAccountId}
+          highlightId={highlightId}
         />
       )}
     </div>
@@ -105,6 +108,7 @@ function TransactionHistory({
   transactions,
   today,
   defaultAccountId,
+  highlightId,
 }: Omit<TransactionWorkspaceProps, "initialView">) {
   const [editing, setEditing] = useState(false);
 
@@ -154,7 +158,10 @@ function TransactionHistory({
         transactions.map((transaction) => (
           <div
             key={transaction.id}
-            className="border-border flex items-center gap-4 border-b p-4 last:border-b-0"
+            id={`transaction-${transaction.id}`}
+            className={`border-border flex items-center gap-4 border-b p-4 last:border-b-0 ${
+              highlightId === transaction.id ? "bg-primary/[0.08]" : ""
+            }`}
           >
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">

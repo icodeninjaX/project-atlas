@@ -6,6 +6,7 @@ import {
   ClipboardCheck,
   Gauge,
   Goal,
+  History,
   Landmark,
   Menu,
   Radar,
@@ -30,6 +31,7 @@ const destinations = {
   goals: { href: "/goals", label: "Goals", icon: Goal },
   career: { href: "/career", label: "Career", icon: BriefcaseBusiness },
   reviews: { href: "/reviews", label: "Reviews", icon: CircleDollarSign },
+  timeline: { href: "/timeline", label: "Timeline", icon: History },
 } as const;
 
 const navigation = [
@@ -41,6 +43,7 @@ const navigation = [
   destinations.goals,
   destinations.career,
   destinations.reviews,
+  destinations.timeline,
 ] as const;
 
 const mobilePrimaryNavigation = [
@@ -55,6 +58,7 @@ const mobileMoreNavigation = [
   destinations.signals,
   destinations.career,
   destinations.reviews,
+  destinations.timeline,
   { href: "/search", label: "Search", icon: Search },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;

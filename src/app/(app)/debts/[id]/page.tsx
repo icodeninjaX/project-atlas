@@ -22,10 +22,13 @@ function todayInManila() {
 
 export default async function DebtDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ highlightPayment?: string }>;
 }) {
   const { id } = await params;
+  const query = await searchParams;
   const supabase = await createClient();
   if (!supabase) notFound();
   const [{ data: debt }, { data: payments }] = await Promise.all([
@@ -129,7 +132,12 @@ export default async function DebtDetailPage({
             (payments ?? []).map((payment) => (
               <div
                 key={payment.id}
-                className="border-border flex items-center gap-4 border-b p-4 last:border-0"
+                id={`payment-${payment.id}`}
+                className={`border-border flex items-center gap-4 border-b p-4 last:border-0 ${
+                  query.highlightPayment === payment.id
+                    ? "bg-primary/[0.08]"
+                    : ""
+                }`}
               >
                 <div className="min-w-0 flex-1">
                   <p className="font-mono text-sm font-semibold">

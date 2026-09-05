@@ -23,15 +23,25 @@ function rate(numerator: number, denominator: number) {
 
 function ApplicationCards({
   applications,
+  highlightId,
 }: {
   applications: CareerApplication[];
+  highlightId?: string;
 }) {
   return (
     <div className="mt-6 space-y-3 lg:hidden">
       {applications.map((application) => {
         const overdue = application.is_follow_up_overdue;
         return (
-          <Card key={application.id}>
+          <Card
+            key={application.id}
+            id={`application-${application.id}`}
+            className={
+              application.id === highlightId
+                ? "ring-primary/60 bg-primary/5 ring-2"
+                : undefined
+            }
+          >
             <CardContent>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -123,9 +133,10 @@ function ApplicationCards({
 export default async function CareerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; highlight?: string }>;
 }) {
-  const view = (await searchParams).view === "kanban" ? "kanban" : "table";
+  const query = await searchParams;
+  const view = query.view === "kanban" ? "kanban" : "table";
   const supabase = await createClient();
   const [applicationsResult, eventsResult] = supabase
     ? await Promise.all([
@@ -261,7 +272,10 @@ export default async function CareerPage({
         </div>
       ) : view === "table" ? (
         <>
-          <ApplicationCards applications={applications} />
+          <ApplicationCards
+            applications={applications}
+            highlightId={query.highlight}
+          />
           <div className="border-border bg-card mt-6 hidden overflow-x-auto rounded-2xl border lg:block">
             <table className="w-full min-w-[850px] text-left text-sm">
               <thead className="border-border text-muted-foreground border-b text-xs">
@@ -280,7 +294,8 @@ export default async function CareerPage({
                     <Fragment key={application.id}>
                       <tr
                         key={application.id}
-                        className="border-border border-b last:border-0"
+                        id={`application-${application.id}`}
+                        className={`border-border border-b last:border-0 ${application.id === query.highlight ? "bg-primary/5 outline-primary/60 outline-2 -outline-offset-2" : ""}`}
                       >
                         <td className="p-4">
                           <p className="font-semibold">

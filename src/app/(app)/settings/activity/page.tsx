@@ -102,12 +102,20 @@ export default async function ActivityPage({
         title="Activity history"
         description="A concise record of meaningful changes. Full record payloads, passwords, and secrets are never stored here."
         actions={
-          <Button asChild variant="secondary">
-            <Link href="/settings">
-              <ArrowLeft className="size-4" />
-              Back to settings
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="secondary">
+              <Link href="/timeline">
+                <History className="size-4" />
+                Open timeline
+              </Link>
+            </Button>
+            <Button asChild variant="secondary">
+              <Link href="/settings">
+                <ArrowLeft className="size-4" />
+                Back to settings
+              </Link>
+            </Button>
+          </div>
         }
       />
 

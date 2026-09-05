@@ -554,11 +554,18 @@ function MilestoneActionDialog({
 export function MilestoneList({
   goalId,
   milestones,
+  highlightMilestoneId,
 }: {
   goalId: string;
   milestones: Milestone[];
+  highlightMilestoneId?: string;
 }) {
-  const [milestonesOpen, setMilestonesOpen] = useState(false);
+  const [milestonesOpen, setMilestonesOpen] = useState(() =>
+    Boolean(
+      highlightMilestoneId &&
+      milestones.some((milestone) => milestone.id === highlightMilestoneId),
+    ),
+  );
   const [addMilestoneOpen, setAddMilestoneOpen] = useState(false);
   const [actionMode, setActionMode] = useState<MilestoneActionMode | null>(
     null,
@@ -628,7 +635,11 @@ export function MilestoneList({
           {milestones.length ? (
             <div className="space-y-2">
               {milestones.map((milestone) => (
-                <div key={milestone.id} className="flex items-center gap-2">
+                <div
+                  key={milestone.id}
+                  id={`milestone-${milestone.id}`}
+                  className={`flex items-center gap-2 rounded-lg ${highlightMilestoneId === milestone.id ? "bg-primary/10 ring-primary/50 ring-1" : ""}`}
+                >
                   <OfflineMutationForm mutation="milestone.toggle">
                     <input
                       type="hidden"

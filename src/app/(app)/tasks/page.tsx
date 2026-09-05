@@ -35,7 +35,7 @@ function localDate() {
 export default async function TasksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; create?: string }>;
+  searchParams: Promise<{ view?: string; create?: string; highlight?: string }>;
 }) {
   const params = await searchParams;
   const selected = params.view ?? "today";
@@ -112,6 +112,21 @@ export default async function TasksPage({
     const { data } = taskResult;
     tasks = data ?? [];
     scheduledTasks = scheduledTaskResult.data ?? [];
+    if (params.highlight) {
+      const { data: highlightedTask } = await supabase
+        .from("tasks")
+        .select(
+          "id,title,description,status,priority,scheduled_for,scheduled_time,due_at,estimated_minutes,energy_required",
+        )
+        .eq("id", params.highlight)
+        .maybeSingle();
+      if (
+        highlightedTask &&
+        !tasks.some((task) => task.id === highlightedTask.id)
+      ) {
+        tasks = [highlightedTask, ...tasks];
+      }
+    }
   }
 
   return (
@@ -192,7 +207,15 @@ export default async function TasksPage({
                 : null;
 
             return (
-              <Card key={task.id}>
+              <Card
+                key={task.id}
+                id={`task-${task.id}`}
+                className={
+                  task.id === params.highlight
+                    ? "ring-primary/60 bg-primary/5 ring-2"
+                    : undefined
+                }
+              >
                 <CardContent className="flex items-start gap-2 p-3 sm:gap-3 sm:p-4">
                   <TaskStatusForm
                     taskId={task.id}

@@ -72,6 +72,31 @@ test.describe("authenticated ATLAS workflows", () => {
     await expect(page.getByText(title)).toBeVisible();
   });
 
+  test("shows meaningful events in Timeline on a 320px phone", async ({
+    page,
+  }) => {
+    const title = `E2E timeline task ${Date.now()}`;
+    await page.goto("/tasks?view=inbox");
+    await page.getByRole("button", { name: "Add task" }).click();
+    await page.getByLabel("Task title").fill(title);
+    await page.getByRole("button", { name: "Add task" }).click();
+    await page.getByRole("button", { name: `Complete ${title}` }).click();
+
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto(`/timeline?q=${encodeURIComponent(title)}`);
+    await expect(
+      page.getByRole("heading", { name: "Life timeline" }),
+    ).toBeVisible();
+    await expect(page.getByText(title)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Open source" })).toBeVisible();
+
+    const dimensions = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+  });
+
   test("separates unfinished tasks from prior days into Overdue", async ({
     page,
   }) => {

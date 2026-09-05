@@ -2,11 +2,11 @@
 
 Last reviewed: 2026-09-05
 
-The scoped MVP features are implemented. Signals, Capacity-Aware Dayline, and
-Personal Runway & Financial Scenarios, the first three phases of the
-[Intelligent roadmap](intelligent-roadmap.md), are also implemented.
+The scoped MVP features are implemented. Signals, Capacity-Aware Dayline,
+Personal Runway & Financial Scenarios, and Life Timeline, the first four phases
+of the [Intelligent roadmap](intelligent-roadmap.md), are also implemented.
 
-The next product improvement is **Phase 4 — Life Timeline**. The
+The next product improvement is **Phase 5 — Knowledge & Spaced Repetition**. The
 production-validation checklist in [MVP status](mvp-status.md) remains a parallel
 release track and should not be mistaken for a new product phase.
 
@@ -14,15 +14,13 @@ release track and should not be mistaken for a new product phase.
 
 These phases are authoritative and must remain sequential:
 
-1. **Life Timeline:** a useful chronological view built on existing activity
-   history rather than a duplicate audit system.
-2. **Knowledge & Spaced Repetition:** searchable concepts and deterministic review
+1. **Knowledge & Spaced Repetition:** searchable concepts and deterministic review
    scheduling.
-3. **Universal Capture:** AI-assisted structured proposals that require validation
+2. **Universal Capture:** AI-assisted structured proposals that require validation
    and user confirmation before existing mutation paths run.
-4. **ATLAS Analyst:** evidence-backed explanations over bounded, owner-scoped
+3. **ATLAS Analyst:** evidence-backed explanations over bounded, owner-scoped
    ATLAS facts.
-5. **ATLAS Graph:** safe cross-domain relationships before any graph visualization.
+4. **ATLAS Graph:** safe cross-domain relationships before any graph visualization.
 
 Implementation prompts, acceptance criteria, exclusions, and phase-specific
 safety rules live in the [Intelligent roadmap](intelligent-roadmap.md).

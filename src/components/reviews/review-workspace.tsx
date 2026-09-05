@@ -164,11 +164,18 @@ function ReflectionBlock({
 function ReviewArchive({
   reviews,
   active,
+  highlightReviewId,
 }: {
   reviews: ReviewArchiveItem[];
   active: boolean;
+  highlightReviewId?: string;
 }) {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(() => {
+    const matchingIndex = reviews.findIndex(
+      (review) => review.id === highlightReviewId,
+    );
+    return matchingIndex >= 0 ? matchingIndex : 0;
+  });
   const reviewButtons = useRef<Array<HTMLButtonElement | null>>([]);
   const selected = reviews[selectedIndex];
 
@@ -501,12 +508,16 @@ function ReviewArchive({
 export function ReviewWorkspace({
   reviews,
   currentContent,
+  initialView = "current",
+  highlightReviewId,
 }: {
   reviews: ReviewArchiveItem[];
   currentContent: ReactNode;
+  initialView?: ReviewView;
+  highlightReviewId?: string;
 }) {
-  const [view, setView] = useState<ReviewView>("current");
-  const [archiveOpened, setArchiveOpened] = useState(false);
+  const [view, setView] = useState<ReviewView>(initialView);
+  const [archiveOpened, setArchiveOpened] = useState(initialView === "archive");
   const tabs = useRef<Record<ReviewView, HTMLButtonElement | null>>({
     current: null,
     archive: null,
@@ -595,7 +606,11 @@ export function ReviewWorkspace({
         className="mt-4 sm:mt-5"
       >
         {archiveOpened ? (
-          <ReviewArchive reviews={reviews} active={view === "archive"} />
+          <ReviewArchive
+            reviews={reviews}
+            active={view === "archive"}
+            highlightReviewId={highlightReviewId}
+          />
         ) : null}
       </section>
     </div>

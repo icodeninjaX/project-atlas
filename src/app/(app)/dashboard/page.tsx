@@ -363,6 +363,12 @@ export default async function DashboardPage() {
               >
                 View money
               </Link>
+              <Link
+                href="/timeline?module=money"
+                className="text-primary focus-visible:ring-ring rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+              >
+                Timeline
+              </Link>
             </div>
           </CardHeader>
           <CardContent className="pt-4 sm:pt-5">
