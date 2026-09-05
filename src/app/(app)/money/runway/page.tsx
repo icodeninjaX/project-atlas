@@ -5,6 +5,7 @@ import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { RunwayPreferencesForm } from "@/components/runway/runway-preferences-form";
 import { RunwayScenarioPlanner } from "@/components/runway/runway-scenario-planner";
 import { PageHeading } from "@/components/shared/page-heading";
+import { MoneyNavigation } from "@/components/money/money-navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCentavos } from "@/lib/money/money";
@@ -94,6 +95,7 @@ export default async function RunwayPage() {
           title="Personal runway"
           description="A conservative estimate based on funds already recorded in ATLAS."
         />
+        <MoneyNavigation currentHref="/money/runway" />
         <Card className="mt-8 border-dashed">
           <CardContent className="p-6 text-center">
             <WalletCards className="text-primary mx-auto size-6" />
@@ -144,6 +146,7 @@ export default async function RunwayPage() {
           </>
         }
       />
+      <MoneyNavigation currentHref="/money/runway" />
 
       {isReady ? (
         <>

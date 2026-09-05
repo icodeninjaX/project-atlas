@@ -24,6 +24,7 @@ test.describe("authenticated ATLAS workflows", () => {
   test("adds an account and records an expense", async ({ page }) => {
     const unique = Date.now();
     await page.goto("/money/accounts");
+    await page.getByRole("button", { name: "Add account" }).click();
     await page.getByLabel("Account name").fill(`E2E Cash ${unique}`);
     await page.getByLabel("Opening balance in pesos").fill("2500.00");
     await page.getByRole("button", { name: "Add account" }).click();
@@ -135,6 +136,7 @@ test.describe("authenticated ATLAS workflows", () => {
     await page.getByRole("button", { name: "Add task" }).click();
     await page.getByLabel("Task title").fill(title);
     await page.getByLabel("Scheduled date").fill(today);
+    await page.getByRole("button", { name: "Planning details" }).click();
     await page.getByLabel("Exact time").fill("09:30");
     await page.getByLabel("Estimated minutes").fill("25");
     await page.getByRole("button", { name: "Add task" }).click();

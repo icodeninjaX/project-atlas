@@ -41,7 +41,7 @@ export function TransactionWorkspace({
   transactions,
   today,
   defaultAccountId,
-  initialView = null,
+  initialView = "history",
   highlightId = null,
 }: TransactionWorkspaceProps) {
   const [view, setView] = useState<TransactionWorkspaceView | null>(

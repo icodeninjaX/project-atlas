@@ -1,13 +1,12 @@
-import { Clock3, Inbox, Trash2 } from "lucide-react";
+import { Clock3, Inbox } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { TaskCreatePanel } from "@/components/tasks/task-create-panel";
 import { TaskActionsMenu } from "@/components/tasks/task-actions-menu";
-import { TaskEditForm } from "@/components/tasks/task-edit-form";
-import { TaskFocusMode } from "@/components/tasks/task-focus-mode";
 import { TaskStatusForm } from "@/components/tasks/task-status-form";
 import { Card, CardContent } from "@/components/ui/card";
-import { FormSubmitButton } from "@/components/ui/form-submit-button";
-import { OfflineMutationForm } from "@/components/offline/offline-mutation";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { manilaDateLabel } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
 import { getTaskPriorityBadgeClass } from "@/lib/tasks/priority";
@@ -22,6 +21,44 @@ const views = [
   { value: "inbox", label: "Inbox" },
   { value: "completed", label: "Completed" },
 ] as const;
+
+const emptyViews: Record<
+  string,
+  {
+    title: string;
+    description: string;
+    action: { label: string; href: string };
+  }
+> = {
+  today: {
+    title: "Nothing is due today.",
+    description:
+      "Capture a task now, or keep the day open for what matters most.",
+    action: { label: "Add task", href: "/tasks?create=true" },
+  },
+  overdue: {
+    title: "Nothing is overdue.",
+    description: "You are clear to focus on today’s work.",
+    action: { label: "Open Today", href: "/tasks?view=today" },
+  },
+  upcoming: {
+    title: "Nothing is planned ahead.",
+    description:
+      "Add a task with a date when you are ready to protect the time.",
+    action: { label: "Add task", href: "/tasks?create=true" },
+  },
+  inbox: {
+    title: "Your inbox is clear.",
+    description:
+      "Capture loose thoughts here before they compete with today’s plan.",
+    action: { label: "Add task", href: "/tasks?create=true" },
+  },
+  completed: {
+    title: "No completed tasks yet.",
+    description: "Finish a task and ATLAS will keep the record here.",
+    action: { label: "Open Today", href: "/tasks?view=today" },
+  },
+};
 
 function localDate() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -39,6 +76,7 @@ export default async function TasksPage({
 }) {
   const params = await searchParams;
   const selected = params.view ?? "today";
+  const emptyView = emptyViews[selected] ?? emptyViews.today!;
   const supabase = await createClient();
   const today = localDate();
   let tasks: Array<{
@@ -136,7 +174,9 @@ export default async function TasksPage({
       </p>
       <TaskCreatePanel
         heading={
-          <h1 className="text-3xl font-semibold tracking-[-0.04em]">Tasks</h1>
+          <h1 className="text-[1.75rem] font-semibold tracking-[-0.04em] sm:text-[2rem]">
+            Tasks
+          </h1>
         }
         description={
           <p className="text-muted-foreground mt-2 text-sm">
@@ -172,17 +212,18 @@ export default async function TasksPage({
 
       <div className="mt-5 space-y-2">
         {tasks.length === 0 ? (
-          <div className="border-border grid min-h-60 place-items-center rounded-2xl border border-dashed text-center">
-            <div>
-              <Inbox className="text-primary mx-auto size-6" />
-              <p className="mt-4 text-sm font-semibold">
-                No tasks in this view.
-              </p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Use Add task above or choose another view.
-              </p>
-            </div>
-          </div>
+          <EmptyState
+            icon={Inbox}
+            title={emptyView.title}
+            description={emptyView.description}
+            action={
+              <Button asChild size="sm">
+                <Link href={emptyView.action.href as Route}>
+                  {emptyView.action.label}
+                </Link>
+              </Button>
+            }
+          />
         ) : (
           tasks.map((task) => {
             const overdue =
@@ -216,15 +257,14 @@ export default async function TasksPage({
                     : undefined
                 }
               >
-                <CardContent className="flex items-start gap-2 p-3 sm:gap-3 sm:p-4">
+                <CardContent className="flex items-start gap-3 p-3.5 sm:p-4">
                   <TaskStatusForm
                     taskId={task.id}
                     title={task.title}
                     completed={task.status === "completed"}
-                    className="hidden sm:block"
-                    buttonClassName="size-11 sm:size-10"
+                    buttonClassName="size-10"
                   />
-                  <div className="min-w-0 flex-1 pt-1.5 sm:pt-1.5">
+                  <div className="min-w-0 flex-1 pt-1">
                     <div className="flex items-start gap-2">
                       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                         <p
@@ -241,34 +281,21 @@ export default async function TasksPage({
                           {task.energy_required} energy
                         </span>
                       </div>
-                      <div className="flex shrink-0 items-start gap-0.5 sm:hidden">
-                        <TaskStatusForm
-                          taskId={task.id}
-                          title={task.title}
-                          completed={task.status === "completed"}
-                          buttonClassName="-mt-2 size-10"
-                        />
-                        <TaskActionsMenu
-                          task={task}
-                          scheduledLabel={scheduledLabel}
-                          scheduledTasks={scheduledTasks}
-                        />
-                      </div>
+                      <TaskActionsMenu
+                        task={task}
+                        scheduledLabel={scheduledLabel}
+                        scheduledTasks={scheduledTasks}
+                      />
                     </div>
-                    <div className="mt-1.5 flex min-w-0 items-center justify-between gap-2 sm:hidden">
-                      <div className="flex shrink-0 gap-1">
-                        <span
-                          className={`${getTaskPriorityBadgeClass(task.priority)} rounded-full border px-2 py-0.5 text-[10px] capitalize`}
-                        >
-                          {task.priority}
-                        </span>
-                        <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] capitalize">
-                          {task.energy_required} energy
-                        </span>
-                      </div>
+                    <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <span
+                        className={`${getTaskPriorityBadgeClass(task.priority)} rounded-full border px-2 py-0.5 text-[10px] capitalize`}
+                      >
+                        {task.priority}
+                      </span>
                       {mobileScheduleLabel && (
                         <p
-                          className={`ml-auto flex min-w-0 items-center justify-end gap-1 font-mono text-[10px] whitespace-nowrap ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
+                          className={`flex min-w-0 items-center gap-1 font-mono text-[10px] ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
                         >
                           <Clock3 className="size-3 shrink-0" />
                           <span className="truncate">
@@ -282,58 +309,7 @@ export default async function TasksPage({
                         {task.description}
                       </p>
                     )}
-                    {(task.scheduled_for || task.estimated_minutes) && (
-                      <p
-                        className={`mt-2 hidden items-center gap-1.5 font-mono text-[10px] sm:flex ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
-                      >
-                        <Clock3 className="size-3" />
-                        {overdue ? "Overdue · " : ""}
-                        {task.scheduled_for ?? "Unscheduled"}
-                        {task.scheduled_time
-                          ? ` at ${formatTaskTime(task.scheduled_time)}`
-                          : ""}
-                        {task.estimated_minutes
-                          ? ` · ${task.estimated_minutes} min`
-                          : ""}
-                      </p>
-                    )}
-                    {task.status !== "completed" &&
-                      task.status !== "cancelled" && (
-                        <div className="mt-3 hidden sm:block">
-                          <TaskFocusMode
-                            taskId={task.id}
-                            title={task.title}
-                            description={task.description}
-                            estimatedMinutes={task.estimated_minutes}
-                            scheduledLabel={scheduledLabel}
-                          />
-                        </div>
-                      )}
-                    <details className="mt-3 hidden sm:block">
-                      <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-[11px]">
-                        Edit task
-                      </summary>
-                      <TaskEditForm
-                        task={task}
-                        scheduledTasks={scheduledTasks}
-                      />
-                    </details>
                   </div>
-                  <OfflineMutationForm
-                    mutation="task.delete"
-                    className="hidden sm:block"
-                  >
-                    <input type="hidden" name="taskId" value={task.id} />
-                    <FormSubmitButton
-                      variant="ghost"
-                      size="icon"
-                      className="size-11 sm:size-10"
-                      title="Delete task"
-                      aria-label={`Delete ${task.title}`}
-                    >
-                      <Trash2 className="text-muted-foreground size-4" />
-                    </FormSubmitButton>
-                  </OfflineMutationForm>
                 </CardContent>
               </Card>
             );

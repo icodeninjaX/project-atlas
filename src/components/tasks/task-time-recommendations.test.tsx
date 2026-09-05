@@ -62,6 +62,8 @@ describe("TaskTimeRecommendations", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "Planning details" }));
+
     fireEvent.change(screen.getByLabelText("Scheduled date"), {
       target: { value: "2026-08-25" },
     });

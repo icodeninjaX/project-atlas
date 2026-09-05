@@ -19,7 +19,7 @@ export function PageHeading({
             {eyebrow}
           </p>
         )}
-        <h1 className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+        <h1 className="text-[1.75rem] font-semibold tracking-[-0.035em] sm:text-[2rem]">
           {title}
         </h1>
         <p className="text-muted-foreground mt-3 text-sm leading-6">

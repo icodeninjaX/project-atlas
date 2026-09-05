@@ -54,6 +54,9 @@ describe("AppShell", () => {
       within(sheet).getByRole("link", { name: "Signals" }),
     ).toBeInTheDocument();
     expect(
+      within(sheet).getByRole("link", { name: "Debts" }),
+    ).toBeInTheDocument();
+    expect(
       within(sheet).getByRole("link", { name: "Career" }),
     ).toBeInTheDocument();
     expect(

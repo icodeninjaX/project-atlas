@@ -37,7 +37,7 @@ const props = {
 };
 
 describe("TransactionWorkspace", () => {
-  it("shows only the transaction action buttons by default", () => {
+  it("shows history by default and opens transaction capture on demand", () => {
     render(<TransactionWorkspace {...props} />);
 
     expect(
@@ -47,9 +47,8 @@ describe("TransactionWorkspace", () => {
       screen.getByRole("button", { name: "View transaction history" }),
     ).toBeVisible();
     expect(screen.queryByTestId("record-form")).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", { name: "History" }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "History" })).toBeVisible();
+    expect(screen.getByText("Canteen")).toBeVisible();
   });
 
   it("opens the selected transaction view", () => {

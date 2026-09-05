@@ -55,7 +55,7 @@ export default async function GoalsPage({
       </p>
       <GoalCreatePanel
         heading={
-          <h1 className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+          <h1 className="text-[1.75rem] font-semibold tracking-[-0.035em] sm:text-[2rem]">
             Goals
           </h1>
         }
@@ -85,6 +85,9 @@ export default async function GoalsPage({
             const completedMilestones = milestones.filter(
               (milestone) => milestone.completed_at,
             ).length;
+            const nextMilestone = milestones.find(
+              (milestone) => !milestone.completed_at,
+            );
 
             return (
               <Card
@@ -102,6 +105,7 @@ export default async function GoalsPage({
                     goalTitle={goal.title}
                     completedMilestones={completedMilestones}
                     totalMilestones={milestones.length}
+                    nextMilestoneTitle={nextMilestone?.title}
                   />
                   <MilestoneList
                     goalId={goal.id}

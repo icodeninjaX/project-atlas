@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BudgetForm } from "@/components/money/budget-form";
 import { PageHeading } from "@/components/shared/page-heading";
+import { MoneyNavigation } from "@/components/money/money-navigation";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -102,6 +103,7 @@ export default async function BudgetPage({
           </>
         }
       />
+      <MoneyNavigation currentHref="/money/budget" />
       <div className="mt-8 grid gap-3 sm:grid-cols-3">
         <Card>
           <CardContent>

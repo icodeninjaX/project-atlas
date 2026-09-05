@@ -1,11 +1,12 @@
 import { Archive, WalletCards } from "lucide-react";
 import Link from "next/link";
-import { AccountForm } from "@/components/money/account-form";
+import { AccountCreatePanel } from "@/components/money/account-create-panel";
 import {
   AccountCard,
   type AccountSummary,
 } from "@/components/money/account-card";
 import { PageHeading } from "@/components/shared/page-heading";
+import { MoneyNavigation } from "@/components/money/money-navigation";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Button } from "@/components/ui/button";
 import { formatCentavos } from "@/lib/money/money";
@@ -46,28 +47,15 @@ export default async function AccountsPage() {
         title="Where your money lives"
         description="Every total is opening balance plus recorded movement, so it can always be explained."
         actions={
-          <>
-            <Button asChild variant="secondary">
-              <Link href="/money/transactions">Transactions</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/money/budget">Budget</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/money/runway">Runway</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/timeline?module=money">Timeline</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/money/accounts/archived">
-                <Archive className="size-4" aria-hidden="true" />
-                Archived
-              </Link>
-            </Button>
-          </>
+          <Button asChild variant="secondary">
+            <Link href="/money/accounts/archived">
+              <Archive className="size-4" aria-hidden="true" />
+              Archived
+            </Link>
+          </Button>
         }
       />
+      <MoneyNavigation currentHref="/money/accounts" />
       <div className="border-primary/20 bg-primary/8 mt-8 rounded-2xl border p-5">
         <p className="text-muted-foreground text-xs">
           Total available across active accounts
@@ -75,9 +63,6 @@ export default async function AccountsPage() {
         <p className="mt-2 font-mono text-3xl font-semibold">
           <SensitiveValue>{formatCentavos(total)}</SensitiveValue>
         </p>
-      </div>
-      <div className="mt-4">
-        <AccountForm />
       </div>
       <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {accounts.length === 0 ? (
@@ -103,6 +88,7 @@ export default async function AccountsPage() {
           ))
         )}
       </div>
+      <AccountCreatePanel />
     </div>
   );
 }

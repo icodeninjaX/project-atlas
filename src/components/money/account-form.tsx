@@ -12,6 +12,7 @@ const initial: MoneyActionState = { success: false, message: "" };
 
 export function AccountForm({
   account,
+  onSuccess,
 }: {
   account?: {
     id: string;
@@ -19,6 +20,7 @@ export function AccountForm({
     account_type: string;
     institution: string | null;
   };
+  onSuccess?: () => void;
 }) {
   const [state, action, pending] = useOfflineActionState(
     account ? "account.update" : "account.create",
@@ -27,10 +29,12 @@ export function AccountForm({
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (!state.message) return;
-    if (state.success) toast.success(state.message);
-    else toast.error(state.message);
-    if (state.success) form.current?.reset();
-  }, [state]);
+    if (state.success) {
+      toast.success(state.message);
+      form.current?.reset();
+      onSuccess?.();
+    } else toast.error(state.message);
+  }, [onSuccess, state]);
 
   return (
     <form
@@ -62,7 +66,7 @@ export function AccountForm({
           name="accountType"
           defaultValue={account?.account_type ?? "cash"}
           aria-label="Account type"
-          className="border-border bg-background focus-visible:border-ring focus-visible:ring-ring/25 mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
+          className="border-border bg-background focus-visible:border-ring focus-visible:ring-ring/25 mt-1.5 min-h-11 w-full rounded-xl border px-3 text-base outline-none focus-visible:ring-2 sm:text-sm"
         >
           <option value="cash">Cash</option>
           <option value="bank">Bank</option>

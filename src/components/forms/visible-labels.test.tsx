@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { ApplicationForm } from "@/components/career/application-form";
 import { DebtForm } from "@/components/debts/debt-form";
@@ -26,6 +26,9 @@ describe("primary create forms", () => {
 
     expectVisibleLabel("Task title");
     expectVisibleLabel("Scheduled date");
+
+    fireEvent.click(screen.getByRole("button", { name: "Planning details" }));
+
     expectVisibleLabel("Exact time");
     expectVisibleLabel("Priority");
     expectVisibleLabel("Estimated minutes");

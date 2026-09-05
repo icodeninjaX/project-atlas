@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
+import { CalendarDays, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { AtlasMark } from "@/components/atlas/atlas-mark";
@@ -41,6 +41,14 @@ const goalAreaBadgeStyles: Record<string, string> = {
 
 const fallbackGoalAreaBadgeStyle =
   "border-border bg-muted text-muted-foreground";
+
+function formatTargetDate(value: string) {
+  return new Intl.DateTimeFormat("en-PH", {
+    timeZone: "Asia/Manila",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(`${value}T12:00:00+08:00`));
+}
 
 function GoalAreaBadge({ area }: { area: string }) {
   const areaLabel = area.charAt(0).toUpperCase() + area.slice(1);
@@ -200,7 +208,15 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
           </div>
         </div>
       </div>
-      <h2 className="mt-3 text-base font-semibold">{goal.title}</h2>
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <h2 className="text-base font-semibold">{goal.title}</h2>
+        {goal.target_date ? (
+          <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px]">
+            <CalendarDays className="size-3.5" aria-hidden="true" />
+            Target {formatTargetDate(goal.target_date)}
+          </span>
+        ) : null}
+      </div>
       {goal.success_definition ? (
         <p className="text-muted-foreground mt-2 text-xs leading-5">
           {goal.success_definition}

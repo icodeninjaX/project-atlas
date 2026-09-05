@@ -5,6 +5,7 @@ import {
   type TransactionWorkspaceView,
 } from "@/components/money/transaction-workspace";
 import { PageHeading } from "@/components/shared/page-heading";
+import { MoneyNavigation } from "@/components/money/money-navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
@@ -94,12 +95,8 @@ export default async function TransactionsPage({
   const expenses = monthRows
     .filter((transaction) => transaction.transaction_type === "expense")
     .reduce((sum, transaction) => sum + Number(transaction.amount_centavos), 0);
-  const initialView: TransactionWorkspaceView | null =
-    query.create === "true" || query.view === "record"
-      ? "record"
-      : query.view === "history" || highlightId
-        ? "history"
-        : null;
+  const initialView: TransactionWorkspaceView =
+    query.create === "true" || query.view === "record" ? "record" : "history";
   const transactionHistory: TransactionHistoryItem[] = transactions.map(
     (transaction) => {
       const account = transaction.financial_accounts as unknown as {
@@ -141,6 +138,7 @@ export default async function TransactionsPage({
           </>
         }
       />
+      <MoneyNavigation currentHref="/money/transactions" />
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         <Card>
           <CardContent>

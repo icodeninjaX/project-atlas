@@ -48,13 +48,13 @@ const navigation = [
 
 const mobilePrimaryNavigation = [
   destinations.today,
-  destinations.money,
-  destinations.debts,
   destinations.tasks,
+  destinations.money,
   destinations.goals,
 ] as const;
 
 const mobileMoreNavigation = [
+  destinations.debts,
   destinations.signals,
   destinations.career,
   destinations.reviews,
@@ -252,7 +252,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav
         aria-label="Primary navigation"
         className={cn(
-          "border-border bg-background fixed inset-x-0 bottom-0 z-40 h-[calc(4.75rem+env(safe-area-inset-bottom))] grid-cols-6 items-start border-t px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgb(0_0_0/0.08)] lg:hidden",
+          "border-border bg-background fixed inset-x-0 bottom-0 z-40 h-[calc(4.75rem+env(safe-area-inset-bottom))] grid-cols-5 items-start border-t px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgb(0_0_0/0.08)] lg:hidden",
           keyboardOpen ? "hidden" : "grid",
         )}
       >

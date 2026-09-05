@@ -96,6 +96,10 @@ function manilaIsoDate(date: Date): string {
   }).format(date);
 }
 
+function prioritySummary(reason: string) {
+  return reason.split(" · ").slice(0, 2).filter(Boolean).join(" · ");
+}
+
 export const metadata = { title: "Today" };
 
 export default async function DashboardPage() {
@@ -188,49 +192,36 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8">
-      <div className="grid lg:grid-cols-[0.88fr_1.12fr] lg:items-stretch lg:gap-8">
-        <div className="contents min-w-0 lg:flex lg:flex-col lg:justify-center">
-          <p className="text-primary font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
-            {manilaDateLabel(now)}
-          </p>
-
-          <div className="order-3 lg:order-none">
-            <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:mt-6 sm:text-4xl lg:mt-3">
-              {daylineItems.length
-                ? "Your Day, Mapped."
-                : "Your route is clear."}
-            </h1>
-            <p className="text-muted-foreground mt-2 text-sm">
-              {daylineItems.length
-                ? "Ranked by urgency, importance, effort, and your capacity."
-                : "Add what matters and ATLAS will surface the next useful move."}
-            </p>
-
-            <div className="mt-6 grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
-              <Button asChild variant="secondary" size="sm" className="w-full">
-                <Link href="/money/transactions?create=true">
-                  <CircleDollarSign className="size-4" />
-                  Record expense
-                </Link>
-              </Button>
-              <Button asChild size="sm" className="w-full">
-                <Link href="/tasks?create=true">
-                  <Plus className="size-4" />
-                  Add task
-                </Link>
-              </Button>
-            </div>
-          </div>
+    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
+      <header>
+        <p className="text-primary font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
+          {manilaDateLabel(now)}
+        </p>
+        <h1 className="mt-3 text-[1.75rem] font-semibold tracking-[-0.04em] sm:text-[2rem]">
+          {daylineItems.length ? "Your Day, Mapped." : "Your route is clear."}
+        </h1>
+        <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-6">
+          {daylineItems.length
+            ? "Start with the work that needs your attention most."
+            : "Add what matters and ATLAS will surface the next useful move."}
+        </p>
+        <div className="mt-5 grid max-w-md grid-cols-2 gap-2">
+          <Button asChild variant="secondary" size="sm" className="w-full">
+            <Link href="/money/transactions?create=true">
+              <CircleDollarSign className="size-4" />
+              Record expense
+            </Link>
+          </Button>
+          <Button asChild size="sm" className="w-full">
+            <Link href="/tasks?create=true">
+              <Plus className="size-4" />
+              Add task
+            </Link>
+          </Button>
         </div>
+      </header>
 
-        <GratitudeCard
-          initialQuote={wisdomQuote}
-          className="order-2 mt-3 lg:order-none lg:mt-0"
-        />
-      </div>
-
-      <div className="mt-6 grid gap-3 sm:mt-8 xl:grid-cols-[1.35fr_0.65fr]">
+      <div className="mt-6 grid items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -290,9 +281,22 @@ export default async function DashboardPage() {
                         {priority.position}
                       </p>
                       <p className="text-sm font-semibold">{priority.title}</p>
-                      <p className="text-muted-foreground mt-1 text-xs leading-5">
-                        {priority.reason}
-                      </p>
+                      <div className="text-muted-foreground mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-xs leading-5">
+                        <span>{prioritySummary(priority.reason)}</span>
+                        {priority.durationMinutes ? (
+                          <span className="font-mono">
+                            {priority.durationMinutes} min
+                          </span>
+                        ) : null}
+                      </div>
+                      <details className="mt-2">
+                        <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring w-fit cursor-pointer rounded-md text-[11px] focus-visible:ring-2 focus-visible:outline-none">
+                          Why this is here
+                        </summary>
+                        <p className="text-muted-foreground mt-2 text-xs leading-5">
+                          {priority.reason}
+                        </p>
+                      </details>
                     </div>
                     <TooltipHint label={`Open ${priority.title}`} side="left">
                       <Button asChild variant="ghost" size="icon">
@@ -311,34 +315,8 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex items-start justify-between gap-4">
-            <CardTitle>Week position</CardTitle>
-            <div className="bg-primary/10 text-primary grid size-11 shrink-0 place-items-center rounded-xl">
-              <CalendarClock aria-hidden="true" className="size-5" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm font-semibold">
-              {dashboard.review_complete
-                ? "This week is reviewed"
-                : "Review when the week closes"}
-            </p>
-            <p className="text-muted-foreground mt-1 text-xs leading-5">
-              ATLAS uses Monday through Sunday and keeps factual metrics beside
-              your reflection.
-            </p>
-            <Link
-              href="/reviews"
-              className="text-primary mt-4 inline-flex items-center gap-1 text-xs font-semibold"
-            >
-              Open weekly reviews <ArrowRight className="size-3" />
-            </Link>
-          </CardContent>
-        </Card>
+        <SignalsPanel signals={dashboardSignals} className="mt-0" />
       </div>
-
-      <SignalsPanel signals={dashboardSignals} />
 
       <section aria-labelledby="financial-snapshot" className="mt-3 sm:mt-4">
         <Card>
@@ -438,6 +416,34 @@ export default async function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        <Card>
+          <CardHeader className="flex items-start justify-between gap-4">
+            <CardTitle>Week position</CardTitle>
+            <div className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-xl">
+              <CalendarClock aria-hidden="true" className="size-4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm font-semibold">
+              {dashboard.review_complete
+                ? "This week is reviewed"
+                : "Review when the week closes"}
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs leading-5">
+              ATLAS keeps the facts beside your weekly reflection.
+            </p>
+            <Link
+              href="/reviews"
+              className="text-primary focus-visible:ring-ring mt-4 inline-flex min-h-8 items-center gap-1 rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+            >
+              Open weekly reviews <ArrowRight className="size-3" />
+            </Link>
+          </CardContent>
+        </Card>
+        <GratitudeCard initialQuote={wisdomQuote} compact />
+      </div>
     </div>
   );
 }

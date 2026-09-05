@@ -3,16 +3,26 @@ import Link from "next/link";
 import { SignalList } from "@/components/signals/signal-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Signal } from "@/lib/signals/engine";
+import { cn } from "@/lib/utils";
 
 function countLabel(count: number): string {
   return `${count} ${count === 1 ? "thing" : "things"} worth noticing`;
 }
 
-export function SignalsPanel({ signals }: { signals: Signal[] | null }) {
+export function SignalsPanel({
+  signals,
+  className,
+}: {
+  signals: Signal[] | null;
+  className?: string;
+}) {
   const visibleSignals = signals?.slice(0, 5) ?? null;
 
   return (
-    <section aria-labelledby="dashboard-signals" className="mt-3 sm:mt-4">
+    <section
+      aria-labelledby="dashboard-signals"
+      className={cn("mt-3 sm:mt-4", className)}
+    >
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-row items-start justify-between gap-3 p-3.5 pb-0 sm:gap-4 sm:p-5 sm:pb-0">
           <div>

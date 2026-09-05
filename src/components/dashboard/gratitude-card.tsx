@@ -35,9 +35,11 @@ function rememberIndex(index: number) {
 export function GratitudeCard({
   className = "",
   initialQuote,
+  compact = false,
 }: {
   className?: string;
   initialQuote: WisdomQuote;
+  compact?: boolean;
 }) {
   const [quote, setQuote] = useState(initialQuote);
   const didResolveRefresh = useRef(false);
@@ -80,28 +82,50 @@ export function GratitudeCard({
         backgroundSize: "cover",
       }}
     >
-      <CardContent className="relative flex h-full min-h-44 flex-col justify-between p-4 sm:min-h-52 sm:p-6 lg:min-h-56 lg:p-7">
-        <div className="pr-16 sm:pr-20 lg:pr-24">
+      <CardContent
+        className={`relative flex h-full flex-col justify-between ${
+          compact
+            ? "min-h-36 p-4 sm:min-h-40 sm:p-5"
+            : "min-h-44 p-4 sm:min-h-52 sm:p-6 lg:min-h-56 lg:p-7"
+        }`}
+      >
+        <div className={compact ? "pr-12" : "pr-16 sm:pr-20 lg:pr-24"}>
           <p className="font-mono text-[10px] font-semibold tracking-[0.2em] text-[#a9c5ff] uppercase">
             {quote.category}
           </p>
-          <blockquote aria-live="polite" className="mt-3 sm:mt-4">
-            <p className="max-w-xl font-serif text-lg leading-6 text-[#f8fafc] sm:text-2xl sm:leading-[1.45] lg:text-[1.7rem] lg:leading-[1.35]">
+          <blockquote
+            aria-live="polite"
+            className={compact ? "mt-2" : "mt-3 sm:mt-4"}
+          >
+            <p
+              className={`max-w-xl font-serif text-[#f8fafc] ${
+                compact
+                  ? "text-base leading-6 sm:text-lg"
+                  : "text-lg leading-6 sm:text-2xl sm:leading-[1.45] lg:text-[1.7rem] lg:leading-[1.35]"
+              }`}
+            >
               “{quote.message}”
             </p>
-            <footer className="mt-2.5 text-sm font-medium text-[#dce6f5] sm:mt-3">
+            <footer className="mt-2 text-xs font-medium text-[#dce6f5] sm:text-sm">
               — {quote.author}
             </footer>
           </blockquote>
         </div>
 
-        <p className="mt-4 text-xs leading-5 text-[#aab6c8] sm:mt-5">
-          New on refresh · Changes hourly · {quote.collectionSize} famous quotes
-        </p>
+        {!compact && (
+          <p className="mt-4 text-xs leading-5 text-[#aab6c8] sm:mt-5">
+            New on refresh · Changes hourly · {quote.collectionSize} famous
+            quotes
+          </p>
+        )}
 
         <Sunrise
           aria-hidden="true"
-          className="absolute top-5 right-5 size-11 text-[#dce6f5]/85 sm:top-6 sm:right-6 sm:size-14 lg:top-1/2 lg:right-7 lg:size-16 lg:-translate-y-1/2"
+          className={`absolute text-[#dce6f5]/85 ${
+            compact
+              ? "top-4 right-4 size-8"
+              : "top-5 right-5 size-11 sm:top-6 sm:right-6 sm:size-14 lg:top-1/2 lg:right-7 lg:size-16 lg:-translate-y-1/2"
+          }`}
           strokeWidth={1.25}
         />
       </CardContent>

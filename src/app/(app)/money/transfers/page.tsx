@@ -3,6 +3,7 @@ import Link from "next/link";
 import { TransferForm } from "@/components/money/transfer-form";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { PageHeading } from "@/components/shared/page-heading";
+import { MoneyNavigation } from "@/components/money/money-navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
@@ -81,6 +82,7 @@ export default async function TransfersPage({
           </>
         }
       />
+      <MoneyNavigation currentHref="/money/transfers" />
 
       <div className="mt-8 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <TransferForm

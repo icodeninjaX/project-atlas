@@ -80,8 +80,50 @@ function SignalContent({
   const presentation = severityPresentation[signal.severity];
   const hasBothMetrics = Boolean(signal.metric && signal.comparison);
 
+  if (compact) {
+    return (
+      <div className="p-3.5 sm:p-4">
+        <div className="flex items-start gap-3">
+          <span
+            className={cn(
+              "mt-0.5 inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+              presentation.badgeClass,
+            )}
+          >
+            {presentation.label}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm leading-5 font-semibold">{signal.title}</p>
+            <p className="text-muted-foreground mt-0.5 text-xs leading-5">
+              <MaybeSensitive signal={signal}>{signal.message}</MaybeSensitive>
+            </p>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+              <details>
+                <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring w-fit cursor-pointer rounded-md text-[11px] focus-visible:ring-2 focus-visible:outline-none">
+                  Why this is here
+                </summary>
+                <p className="text-muted-foreground mt-2 text-xs leading-5">
+                  <MaybeSensitive signal={signal}>
+                    {signal.reason}
+                  </MaybeSensitive>
+                </p>
+              </details>
+              <Link
+                href={signal.href as Route}
+                className="text-primary focus-visible:ring-ring inline-flex min-h-8 items-center gap-1 rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+              >
+                View {signal.category.toLowerCase()}
+                <ArrowRight className="size-3" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={cn(compact ? "p-3 sm:p-5" : "p-3.5 sm:p-5")}>
+    <div className="p-3.5 sm:p-5">
       <div className="min-w-0">
         <div>
           <p className="text-sm leading-5 font-semibold">{signal.title}</p>

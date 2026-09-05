@@ -52,4 +52,15 @@ describe("TaskCreatePanel", () => {
     expect(screen.queryByLabelText("Task title")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add task" })).toBeVisible();
   });
+
+  it("keeps advanced task planning collapsed until it is requested", () => {
+    renderPanel({ initiallyOpen: true });
+
+    expect(screen.queryByLabelText("Exact time")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Planning details" }));
+
+    expect(screen.getByLabelText("Exact time")).toBeVisible();
+    expect(screen.getByLabelText("Priority")).toBeVisible();
+    expect(screen.getByLabelText("Estimated minutes")).toBeVisible();
+  });
 });
