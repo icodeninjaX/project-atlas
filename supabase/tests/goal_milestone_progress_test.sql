@@ -1,6 +1,6 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(8);
+SELECT plan(10);
 
 INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password,
@@ -81,6 +81,24 @@ SELECT is(
 UPDATE public.goal_milestones
 SET completed_at = now()
 WHERE id = '98000000-0000-4000-8000-000000000001';
+
+SELECT isnt(
+  (SELECT completed_at FROM public.goal_milestones WHERE id = '98000000-0000-4000-8000-000000000001'),
+  NULL::timestamptz,
+  'timeline recording cannot prevent a milestone from being completed'
+);
+
+SELECT is(
+  (
+    SELECT count(*)
+    FROM public.activity_log
+    WHERE entity_type = 'goal_milestones'
+      AND entity_id = '98000000-0000-4000-8000-000000000001'
+      AND action = 'goal_milestone_completed'
+  ),
+  1::bigint,
+  'completing a milestone records one timeline event'
+);
 
 SELECT is(
   (SELECT progress_percent FROM public.goals WHERE id = '97000000-0000-4000-8000-000000000001'),
