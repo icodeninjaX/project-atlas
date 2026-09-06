@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TooltipHint } from "@/components/ui/tooltip";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
@@ -299,14 +299,16 @@ export default async function DashboardPage() {
                       </details>
                     </div>
                     <TooltipHint label={`Open ${priority.title}`} side="left">
-                      <Button asChild variant="ghost" size="icon">
-                        <Link
-                          href={priority.href as Route}
-                          aria-label={`Open ${priority.title}`}
-                        >
-                          <ArrowRight className="size-4" />
-                        </Link>
-                      </Button>
+                      <Link
+                        href={priority.href as Route}
+                        aria-label={`Open ${priority.title}`}
+                        className={buttonVariants({
+                          variant: "ghost",
+                          size: "icon",
+                        })}
+                      >
+                        <ArrowRight className="size-4" />
+                      </Link>
                     </TooltipHint>
                   </li>
                 ))}
@@ -315,7 +317,10 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <SignalsPanel signals={dashboardSignals} className="mt-0" />
+        <SignalsPanel
+          signals={dashboardSignals}
+          className="mt-0 sm:mt-0"
+        />
       </div>
 
       <section aria-labelledby="financial-snapshot" className="mt-3 sm:mt-4">
