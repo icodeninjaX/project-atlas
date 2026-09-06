@@ -8,16 +8,18 @@ export function BrandLaunchScreen() {
         <div className="atlas-launch-identity">
           <div className="atlas-launch-core">
             <span className="atlas-launch-pulse" />
-            <Image
-              src="/brand/atlas-system-core-launch.png"
-              alt=""
-              width={144}
-              height={144}
-              className="atlas-launch-logo"
-              draggable={false}
-              preload
-              unoptimized
-            />
+            <span className="atlas-launch-spinner">
+              <Image
+                src="/brand/atlas-system-core-launch.png"
+                alt=""
+                width={144}
+                height={144}
+                className="atlas-launch-logo"
+                draggable={false}
+                preload
+                unoptimized
+              />
+            </span>
           </div>
           <p className="atlas-launch-wordmark">
             {[..."ATLAS"].map((letter, index) => (

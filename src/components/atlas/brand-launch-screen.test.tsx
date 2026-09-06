@@ -7,12 +7,16 @@ describe("BrandLaunchScreen", () => {
     const { container } = render(<BrandLaunchScreen />);
 
     const overlay = container.querySelector(".atlas-launch-screen");
+    const spinner = container.querySelector(".atlas-launch-spinner");
     const logo = container.querySelector("img");
     const wordmark = container.querySelector(".atlas-launch-wordmark");
 
     expect(overlay).toHaveAttribute("aria-hidden", "true");
     expect(logo).toHaveAttribute("src", "/brand/atlas-system-core-launch.png");
     expect(logo).toHaveAttribute("alt", "");
+    expect(spinner).toContainElement(logo);
+    expect(logo).toHaveClass("atlas-launch-logo");
+    expect(logo).not.toHaveClass("animate-spin");
     expect(wordmark).toHaveTextContent("ATLAS");
     expect(
       container.querySelectorAll(".atlas-launch-wordmark-letter"),

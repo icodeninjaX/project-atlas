@@ -214,12 +214,32 @@ body {
   animation: atlas-launch-core 1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.atlas-launch-logo {
+.atlas-launch-spinner {
   position: relative;
   z-index: 1;
+  display: grid;
+  size: 9rem;
+  place-items: center;
+  animation: atlas-launch-logo-spin 3s ease-out both;
+}
+
+.atlas-launch-spinner::after {
+  position: absolute;
+  inset: 0;
+  background: #22c55e;
+  content: "";
+  -webkit-mask: url("/brand/atlas-system-core-launch.png") center / contain
+    no-repeat;
+  mask: url("/brand/atlas-system-core-launch.png") center / contain no-repeat;
+  opacity: 0;
+  animation: atlas-launch-logo-resolve 3s ease-out both;
+}
+
+.atlas-launch-logo {
   size: 9rem;
   object-fit: contain;
   filter: drop-shadow(0 1.25rem 2.5rem rgb(40 103 232 / 24%));
+  animation: atlas-launch-logo-fade 3s ease-out both;
 }
 
 .atlas-launch-pulse {
@@ -319,6 +339,40 @@ body {
   68%,
   100% {
     transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes atlas-launch-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes atlas-launch-logo-fade {
+  0%,
+  78% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes atlas-launch-logo-resolve {
+  0%,
+  78% {
+    filter: drop-shadow(0 1.25rem 2.5rem rgb(34 197 94 / 0%));
+    opacity: 0;
+  }
+
+  100% {
+    filter: drop-shadow(0 1.25rem 2.5rem rgb(34 197 94 / 32%));
     opacity: 1;
   }
 }
