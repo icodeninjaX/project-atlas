@@ -21,6 +21,7 @@ const entityTypes = [
   ["job_applications", "Career applications"],
   ["goals", "Goals"],
   ["weekly_reviews", "Weekly reviews"],
+  ["knowledge_concepts", "Knowledge"],
 ] as const;
 
 const pageSize = 25;
@@ -224,8 +225,8 @@ export default async function ActivityPage({
               </span>
               <p className="mt-4 text-sm font-semibold">No activity yet</p>
               <p className="text-muted-foreground mt-2 text-xs leading-5">
-                Completed tasks, recorded debt payments, career stage changes,
-                goal updates, and submitted reviews will appear here.
+                Completed tasks, knowledge reviews, debt payments, career stage
+                changes, goal updates, and submitted reviews will appear here.
               </p>
               <Button asChild size="sm" className="mt-5">
                 <Link href="/dashboard">Return to Today</Link>

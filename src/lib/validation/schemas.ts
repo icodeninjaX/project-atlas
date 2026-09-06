@@ -212,6 +212,21 @@ export const weeklyReviewSchema = z.object({
   submitted: z.boolean().default(false),
 });
 
+export const knowledgeConceptSchema = z.object({
+  title: z.string().trim().min(1, "Concept title is required").max(160),
+  notes: z.string().trim().min(1, "Add learning notes").max(10_000),
+  category: z.string().trim().min(1, "Category is required").max(80),
+  tags: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
+  example: optionalText.pipe(z.string().max(2_000).optional()),
+  personalExplanation: optionalText.pipe(z.string().max(2_000).optional()),
+});
+
+export const knowledgeReviewSchema = z.object({
+  conceptId: z.uuid(),
+  outcome: z.enum(["again", "hard", "good", "easy"]),
+  recalledAnswer: optionalText.pipe(z.string().max(5_000).optional()),
+});
+
 export const monthlyBudgetSchema = z
   .object({
     monthStart: z.iso.date(),

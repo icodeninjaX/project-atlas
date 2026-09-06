@@ -84,6 +84,7 @@ export function SearchInput({
             <option value="Transactions">Money</option>
             <option value="Career">Career</option>
             <option value="Reviews">Reviews</option>
+            <option value="Knowledge">Knowledge</option>
           </select>
         </label>
         <label className="text-muted-foreground text-xs">

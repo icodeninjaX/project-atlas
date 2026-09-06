@@ -111,18 +111,18 @@ ATLAS should first become better at **detecting**, then **prioritizing**, then *
 
 ## Current Delivery Status
 
-| Phase                                    | Status   | Current note                                                                                                                     |
-| ---------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Signals                               | Complete | Implemented and verified on 2026-08-26.                                                                                          |
-| 2. Capacity-Aware Dayline                | Complete | Implemented on 2026-09-04; application validation passed, while local pgTAP execution remains pending until Docker is available. |
-| 3. Personal Runway & Financial Scenarios | Complete | Implemented on 2026-09-05 with deterministic runway, saved assumptions, and non-destructive scenarios.                           |
-| 4. Life Timeline                         | Complete | Implemented on 2026-09-05 with durable owner-scoped timeline snapshots, filters, pagination, and source links.                   |
-| 5. Knowledge & Spaced Repetition         | Next     | Deterministic learning and review before AI assistance.                                                                          |
-| 6. Universal Capture                     | Planned  | First AI-assisted mutation proposal flow.                                                                                        |
-| 7. ATLAS Analyst                         | Planned  | Evidence-backed explanations over bounded structured facts.                                                                      |
-| 8. ATLAS Graph                           | Planned  | Cross-domain relationships after the underlying modules are mature.                                                              |
+| Phase                                    | Status   | Current note                                                                                                                                 |
+| ---------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Signals                               | Complete | Implemented and verified on 2026-08-26.                                                                                                      |
+| 2. Capacity-Aware Dayline                | Complete | Implemented on 2026-09-04; application validation passed, while local pgTAP execution remains pending until Docker is available.             |
+| 3. Personal Runway & Financial Scenarios | Complete | Implemented on 2026-09-05 with deterministic runway, saved assumptions, and non-destructive scenarios.                                       |
+| 4. Life Timeline                         | Complete | Implemented on 2026-09-05 with durable owner-scoped timeline snapshots, filters, pagination, and source links.                               |
+| 5. Knowledge & Spaced Repetition         | Complete | Implemented on 2026-09-06 with concept lifecycle, active recall, review history, deterministic scheduling, search, and activity integration. |
+| 6. Universal Capture                     | Planned  | First AI-assisted mutation proposal flow.                                                                                                    |
+| 7. ATLAS Analyst                         | Planned  | Evidence-backed explanations over bounded structured facts.                                                                                  |
+| 8. ATLAS Graph                           | Planned  | Cross-domain relationships after the underlying modules are mature.                                                                          |
 
-The active product target is **Phase 5 — Knowledge & Spaced Repetition**. Production validation,
+The next product target is **Phase 6 — Universal Capture**. Production validation,
 authenticated mobile checks, and database integration testing for delivered
 phases remain release-quality work that can proceed without changing the phase
 order.
@@ -794,7 +794,23 @@ Final response:
 
 # Phase 5 — Knowledge & Spaced Repetition
 
-**Status:** Planned.
+**Status:** Implemented and hosted migration verified on 2026-09-06. Application
+validation and the Knowledge pgTAP ownership checks pass. A clean local database
+reset remains pending until Docker Desktop is available.
+
+## Delivered Scope
+
+- Owner-scoped concepts with notes, category, tags, examples, personal
+  explanations, confidence, archive/restore, and editing.
+- Deterministic Again, Hard, Good, and Easy scheduling with atomic updates and
+  immutable review history.
+- Responsive library, due, recent, weak, and archived views with an active-recall
+  flow that keeps notes and rating controls hidden until reveal.
+- Global search, activity history, desktop navigation, and mobile navigation
+  integration.
+- Unit and component coverage for scheduling boundaries, due behavior, recall
+  reveal, filtered empty states, review history, and archived concepts, plus
+  owner-isolation and atomicity pgTAP coverage.
 
 ## Goal
 

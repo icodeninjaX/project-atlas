@@ -2,6 +2,7 @@
 
 import {
   BriefcaseBusiness,
+  BookOpen,
   CircleDollarSign,
   ClipboardCheck,
   Gauge,
@@ -32,6 +33,7 @@ const destinations = {
   career: { href: "/career", label: "Career", icon: BriefcaseBusiness },
   reviews: { href: "/reviews", label: "Reviews", icon: CircleDollarSign },
   timeline: { href: "/timeline", label: "Timeline", icon: History },
+  knowledge: { href: "/knowledge", label: "Knowledge", icon: BookOpen },
 } as const;
 
 const navigation = [
@@ -44,6 +46,7 @@ const navigation = [
   destinations.career,
   destinations.reviews,
   destinations.timeline,
+  destinations.knowledge,
 ] as const;
 
 const mobilePrimaryNavigation = [
@@ -59,6 +62,7 @@ const mobileMoreNavigation = [
   destinations.career,
   destinations.reviews,
   destinations.timeline,
+  destinations.knowledge,
   { href: "/search", label: "Search", icon: Search },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
