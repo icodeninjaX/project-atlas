@@ -47,7 +47,10 @@ describe("primary create forms", () => {
     render(<AccountForm />);
 
     expectVisibleLabel("Account name");
-    expectVisibleLabel("Account type");
+    expect(
+      screen.getByRole("group", { name: "What kind of account is it?" }),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "E-wallet" })).toBeVisible();
     expectVisibleLabel("Institution");
     expectVisibleLabel("Opening balance in pesos");
   });

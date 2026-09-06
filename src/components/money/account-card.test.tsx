@@ -18,6 +18,7 @@ const activeAccount: AccountSummary = {
   name: "GCash",
   account_type: "e_wallet",
   institution: "G-Xchange",
+  provider_id: "gcash",
   current_balance_centavos: 70_100,
   is_archived: false,
 };
@@ -37,7 +38,7 @@ describe("AccountCard", () => {
     expect(screen.getByText("Current balance")).toBeVisible();
     expect(container.querySelectorAll("details")).toHaveLength(0);
     expect(
-      container.querySelector('img[src*="gcash-wallet.png"]'),
+      container.querySelector('img[src*="gcash-official.png"]'),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Archive GCash" }),
@@ -57,7 +58,7 @@ describe("AccountCard", () => {
 
     expect(container.querySelector("svg")).toBeInTheDocument();
     expect(
-      container.querySelector('img[src*="gcash-wallet.png"]'),
+      container.querySelector('img[src*="gcash-official.png"]'),
     ).not.toBeInTheDocument();
   });
 

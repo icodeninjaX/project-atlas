@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   adjustAccountBalanceAction,
   archiveAccountAction,
+  createAccountAction,
   deleteArchivedAccountAction,
 } from "./actions";
 
@@ -41,6 +42,35 @@ function adjustmentForm(targetBalance: string) {
 }
 
 describe("money actions", () => {
+  it("stores a supported provider ID with a new account", async () => {
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    mocks.createClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: "user-1" } },
+        }),
+      },
+      from: vi.fn().mockReturnValue({ insert }),
+    });
+    const formData = new FormData();
+    formData.set("name", "GCash");
+    formData.set("accountType", "e_wallet");
+    formData.set("providerId", "gcash");
+    formData.set("openingBalance", "250.00");
+
+    await expect(
+      createAccountAction({ success: false, message: "" }, formData),
+    ).resolves.toEqual({ success: true, message: "Account added." });
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "GCash",
+        account_type: "e_wallet",
+        provider_id: "gcash",
+        opening_balance_centavos: 25_000,
+      }),
+    );
+  });
+
   it("sends an exact signed target balance to the adjustment function", async () => {
     mocks.rpc.mockResolvedValue({
       data: "2d334d84-4e32-46fa-bbdb-05ce7dc0dfbb",

@@ -86,8 +86,7 @@ export function AccountLedger({
         </details>
       </div>
 
-      <div className="border-border bg-card rounded-2xl border shadow-[0_16px_40px_color-mix(in_srgb,var(--background)_45%,transparent)]">
-        <div className="bg-primary h-px w-full" />
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
         {accounts.map((account) => (
           <AccountCard
             key={account.id}

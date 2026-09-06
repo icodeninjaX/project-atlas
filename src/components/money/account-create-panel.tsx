@@ -19,8 +19,8 @@ export function AccountCreatePanel() {
         </Button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
-        <Dialog.Content className="bg-background fixed inset-0 z-50 overflow-y-auto p-4 outline-none sm:inset-6 sm:left-1/2 sm:max-w-4xl sm:-translate-x-1/2 sm:rounded-3xl sm:border sm:p-6 lg:inset-y-10">
+        <Dialog.Overlay className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm" />
+        <Dialog.Content className="bg-background fixed inset-0 z-[60] overflow-y-auto p-4 outline-none sm:inset-y-6 sm:left-1/2 sm:w-[min(calc(100vw-3rem),56rem)] sm:-translate-x-1/2 sm:rounded-3xl sm:border sm:p-6 lg:inset-y-10">
           <div className="mb-6 flex items-center justify-between gap-4">
             <Dialog.Title className="text-xl font-semibold tracking-[-0.025em]">
               New account

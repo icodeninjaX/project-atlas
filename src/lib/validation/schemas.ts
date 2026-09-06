@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isPhilippineAccountProviderId } from "@/lib/money/ph-account-providers";
 
 const optionalText = z.preprocess(
   (value) => value ?? undefined,
@@ -6,6 +7,14 @@ const optionalText = z.preprocess(
     .string()
     .trim()
     .transform((value) => value || undefined)
+    .optional(),
+);
+
+const optionalProviderId = z.preprocess(
+  (value) => value || undefined,
+  z
+    .string()
+    .refine(isPhilippineAccountProviderId, "Choose a supported provider")
     .optional(),
 );
 
@@ -20,6 +29,7 @@ export const accountSchema = z.object({
     "other",
   ]),
   institution: optionalText,
+  providerId: optionalProviderId,
   openingBalanceCentavos: z.number().int(),
 });
 

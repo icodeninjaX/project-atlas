@@ -23,6 +23,35 @@ describe("shared validation schemas", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts a catalog provider or an account without one", () => {
+    expect(
+      accountSchema.safeParse({
+        name: "GCash",
+        accountType: "e_wallet",
+        providerId: "gcash",
+        openingBalanceCentavos: 0,
+      }).success,
+    ).toBe(true);
+    expect(
+      accountSchema.safeParse({
+        name: "Cash envelope",
+        accountType: "cash",
+        openingBalanceCentavos: 0,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects an unknown provider ID", () => {
+    expect(
+      accountSchema.safeParse({
+        name: "Unknown wallet",
+        accountType: "e_wallet",
+        providerId: "not-in-the-catalog",
+        openingBalanceCentavos: 0,
+      }).success,
+    ).toBe(false);
+  });
+
   it("rejects an expense with a non-positive amount", () => {
     const result = transactionSchema.safeParse({
       accountId: "1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb",

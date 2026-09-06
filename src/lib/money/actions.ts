@@ -42,6 +42,7 @@ export async function createAccountAction(
     name: formData.get("name"),
     accountType: formData.get("accountType"),
     institution: formData.get("institution"),
+    providerId: formData.get("providerId"),
     openingBalanceCentavos,
   });
   if (!result.success) {
@@ -57,6 +58,7 @@ export async function createAccountAction(
     name: result.data.name,
     account_type: result.data.accountType,
     institution: result.data.institution ?? null,
+    ...(result.data.providerId ? { provider_id: result.data.providerId } : {}),
     opening_balance_centavos: result.data.openingBalanceCentavos,
     include_in_runway: ["cash", "bank", "e_wallet", "savings"].includes(
       result.data.accountType,
@@ -87,6 +89,7 @@ export async function updateAccountAction(
     name: formData.get("name"),
     accountType: formData.get("accountType"),
     institution: formData.get("institution"),
+    providerId: formData.get("providerId"),
     openingBalanceCentavos: 0,
   });
   if (!result.success) {
@@ -102,6 +105,9 @@ export async function updateAccountAction(
       name: result.data.name,
       account_type: result.data.accountType,
       institution: result.data.institution ?? null,
+      ...(result.data.providerId
+        ? { provider_id: result.data.providerId }
+        : {}),
     })
     .eq("id", id)
     .eq("user_id", auth.user.id);
