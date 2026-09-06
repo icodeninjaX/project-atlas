@@ -1,18 +1,5 @@
 "use client";
 
-import {
-  ArrowDownLeft,
-  ArrowLeftRight,
-  ArrowUpRight,
-  BookOpenCheck,
-  BriefcaseBusiness,
-  CheckCircle2,
-  ChevronRight,
-  CircleDollarSign,
-  Goal,
-  Landmark,
-  ReceiptText,
-} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
@@ -40,15 +27,6 @@ const timeFormatter = new Intl.DateTimeFormat("en-PH", {
   minute: "2-digit",
 });
 
-const moduleIcons = {
-  money: CircleDollarSign,
-  debt: Landmark,
-  tasks: CheckCircle2,
-  goals: Goal,
-  career: BriefcaseBusiness,
-  reviews: BookOpenCheck,
-} as const;
-
 function formatDay(value: string) {
   return dayFormatter.format(new Date(`${value}T12:00:00Z`));
 }
@@ -61,20 +39,12 @@ function EventAmount({ event }: { event: TimelineEvent }) {
       : event.amountDirection === "outflow"
         ? "−"
         : "";
-  const Icon =
-    event.amountDirection === "inflow"
-      ? ArrowUpRight
-      : event.amountDirection === "outflow"
-        ? ArrowDownLeft
-        : ArrowLeftRight;
-
   return (
     <p
       className={`flex shrink-0 items-center gap-1.5 font-mono text-sm font-semibold tabular-nums ${
         event.amountDirection === "inflow" ? "text-primary" : ""
       }`}
     >
-      <Icon className="size-3.5" aria-hidden="true" />
       <SensitiveValue>
         {prefix}
         {formatCentavos(event.amountCentavos)}
@@ -84,12 +54,8 @@ function EventAmount({ event }: { event: TimelineEvent }) {
 }
 
 function TimelineEventCard({ event }: { event: TimelineEvent }) {
-  const Icon = moduleIcons[event.module];
   return (
-    <li className="relative pl-11 sm:pl-14">
-      <span className="border-border bg-card text-primary absolute top-0 left-0 grid size-8 place-items-center rounded-xl border sm:size-9">
-        <Icon className="size-4" aria-hidden="true" />
-      </span>
+    <li>
       <article className="border-border bg-card min-w-0 rounded-2xl border p-3.5 sm:p-4">
         <div className="flex min-w-0 flex-col gap-3 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
           <div className="min-w-0">
@@ -130,7 +96,6 @@ function TimelineEventCard({ event }: { event: TimelineEvent }) {
                 className="text-primary focus-visible:ring-ring inline-flex min-h-8 items-center gap-1 rounded-lg text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
               >
                 Open source
-                <ChevronRight className="size-3.5" />
               </Link>
             ) : !event.sourceAvailable ? (
               <span className="text-muted-foreground text-[11px]">
@@ -188,8 +153,7 @@ export function TimelineWorkspace({
     return (
       <div className="border-border grid min-h-64 place-items-center rounded-2xl border border-dashed p-6 text-center">
         <div className="max-w-sm">
-          <ReceiptText className="text-primary mx-auto size-6" />
-          <h2 className="mt-4 text-sm font-semibold">No timeline events yet</h2>
+          <h2 className="text-sm font-semibold">No timeline events yet</h2>
           <p className="text-muted-foreground mt-2 text-xs leading-5">
             Record money movement, complete a task or milestone, update a career
             stage, or submit a review to start your history.
@@ -210,7 +174,7 @@ export function TimelineWorkspace({
             <h2 className="text-muted-foreground mb-3 font-mono text-[11px] font-semibold tracking-[0.14em] uppercase">
               {formatDay(group.occurredOn)}
             </h2>
-            <ol className="border-primary/20 ml-4 space-y-3 border-l pl-4 sm:ml-[18px] sm:pl-5">
+            <ol className="space-y-3">
               {group.events.map((event) => (
                 <TimelineEventCard key={event.eventId} event={event} />
               ))}

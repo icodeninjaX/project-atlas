@@ -6,7 +6,7 @@ afterEach(cleanup);
 
 describe("TimelineWorkspace", () => {
   it("groups meaningful events, masks amounts through the privacy boundary, and explains deleted sources", () => {
-    render(
+    const { container } = render(
       <TimelineWorkspace
         initialCursor={null}
         filters={{ query: "", module: null, from: null, to: null }}
@@ -58,5 +58,6 @@ describe("TimelineWorkspace", () => {
       "/money/transactions?view=history&highlight=one",
     );
     expect(screen.getByText("Source no longer available")).toBeInTheDocument();
+    expect(container.querySelector("svg")).not.toBeInTheDocument();
   });
 });
