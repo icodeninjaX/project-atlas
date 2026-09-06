@@ -246,14 +246,14 @@ function AccountCreateForm({
                         : "border-border bg-card hover:bg-muted",
                     )}
                   >
-                    <span className="grid size-9 place-items-center overflow-hidden rounded-lg bg-white shadow-sm">
+                    <span className="grid size-9 place-items-center overflow-hidden rounded-full bg-white shadow-sm">
                       {provider.iconPath ? (
                         <Image
                           src={provider.iconPath}
                           alt=""
                           width={36}
                           height={36}
-                          className="size-8 object-contain"
+                          className="size-full rounded-full object-cover"
                           aria-hidden="true"
                         />
                       ) : (
@@ -281,7 +281,7 @@ function AccountCreateForm({
                     : "border-border bg-card hover:bg-muted",
                 )}
               >
-                <span className="bg-muted grid size-9 place-items-center rounded-lg">
+                <span className="bg-muted grid size-9 place-items-center rounded-full">
                   <WalletCards className="size-4" aria-hidden="true" />
                 </span>
                 <span className="text-xs font-semibold">
@@ -312,14 +312,14 @@ function AccountCreateForm({
             style={{ backgroundColor: previewColor }}
           >
             <div className="flex min-w-0 items-center gap-3">
-              <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white/95 shadow-sm">
+              <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-white/95 shadow-sm">
                 {selectedProvider?.iconPath ? (
                   <Image
                     src={selectedProvider.iconPath}
                     alt=""
                     width={40}
                     height={40}
-                    className="size-9 object-contain"
+                    className="size-full rounded-full object-cover"
                     aria-hidden="true"
                   />
                 ) : (
