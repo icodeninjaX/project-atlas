@@ -25,17 +25,39 @@ const activeAccount: AccountSummary = {
 describe("AccountCard", () => {
   it("shows an active account editor when selected by the ledger", () => {
     const { container } = render(
-      <AccountCard account={activeAccount} today="2026-08-13" editing />,
+      <AccountCard
+        account={activeAccount}
+        today="2026-08-13"
+        layout="ledger"
+        editing
+      />,
     );
 
     expect(screen.getByText("Account details")).toBeVisible();
     expect(screen.getByText("Current balance")).toBeVisible();
     expect(container.querySelectorAll("details")).toHaveLength(0);
     expect(
+      container.querySelector('img[src*="gcash-wallet.png"]'),
+    ).toBeInTheDocument();
+    expect(
       screen.queryByRole("button", { name: "Archive GCash" }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Restore account" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the account-type icon fallback for other e-wallets", () => {
+    const { container } = render(
+      <AccountCard
+        account={{ ...activeAccount, name: "Maya" }}
+        layout="ledger"
+      />,
+    );
+
+    expect(container.querySelector("svg")).toBeInTheDocument();
+    expect(
+      container.querySelector('img[src*="gcash-wallet.png"]'),
     ).not.toBeInTheDocument();
   });
 

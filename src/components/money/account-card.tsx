@@ -7,6 +7,7 @@ import {
   PiggyBank,
   Smartphone,
 } from "lucide-react";
+import Image from "next/image";
 import { AccountForm } from "@/components/money/account-form";
 import { BalanceAdjustmentForm } from "@/components/money/balance-adjustment-form";
 import { DeleteArchivedAccountForm } from "@/components/money/delete-archived-account-form";
@@ -56,6 +57,7 @@ export function AccountCard({
 }) {
   const balanceCentavos = Number(account.current_balance_centavos);
   const AccountIcon = accountIcon(account.account_type);
+  const isGCash = account.name.trim().toLowerCase() === "gcash";
 
   return (
     <Card
@@ -80,7 +82,18 @@ export function AccountCard({
         >
           {layout === "ledger" ? (
             <div className="border-primary/20 bg-primary/8 text-primary grid size-8 shrink-0 place-items-center rounded-lg border sm:size-10 sm:rounded-xl">
-              <AccountIcon className="size-4 sm:size-5" aria-hidden="true" />
+              {isGCash ? (
+                <Image
+                  src="/icons/gcash-wallet.png"
+                  alt=""
+                  width={28}
+                  height={28}
+                  className="size-5 object-contain sm:size-7"
+                  aria-hidden="true"
+                />
+              ) : (
+                <AccountIcon className="size-4 sm:size-5" aria-hidden="true" />
+              )}
             </div>
           ) : null}
           <div className="min-w-0">
