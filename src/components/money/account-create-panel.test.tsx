@@ -8,10 +8,13 @@ describe("AccountCreatePanel", () => {
   it("keeps account creation out of the way until requested", () => {
     render(<AccountCreatePanel />);
 
+    expect(screen.queryByText("Add an account")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Account name")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Add account" }));
 
     expect(screen.getByLabelText("Account name")).toBeVisible();
-    expect(screen.getByRole("button", { name: "Close form" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Close new account form" }),
+    ).toBeVisible();
   });
 });

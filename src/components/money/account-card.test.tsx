@@ -23,19 +23,17 @@ const activeAccount: AccountSummary = {
 };
 
 describe("AccountCard", () => {
-  it("shows active-account controls", () => {
+  it("shows an active account editor when selected by the ledger", () => {
     const { container } = render(
-      <AccountCard account={activeAccount} today="2026-08-13" />,
+      <AccountCard account={activeAccount} today="2026-08-13" editing />,
     );
 
-    expect(screen.getByLabelText("Edit GCash")).toBeInTheDocument();
-    expect(screen.queryByText("Edit account")).not.toBeInTheDocument();
-    expect(screen.getByText("Account details")).toBeInTheDocument();
-    expect(screen.getByText("Current balance")).toBeInTheDocument();
-    expect(container.querySelectorAll("details")).toHaveLength(1);
+    expect(screen.getByText("Account details")).toBeVisible();
+    expect(screen.getByText("Current balance")).toBeVisible();
+    expect(container.querySelectorAll("details")).toHaveLength(0);
     expect(
-      screen.getByRole("button", { name: "Archive GCash" }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: "Archive GCash" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Restore account" }),
     ).not.toBeInTheDocument();

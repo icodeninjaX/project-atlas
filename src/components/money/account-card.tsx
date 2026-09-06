@@ -1,14 +1,21 @@
-import { Archive, ArchiveRestore, Pencil } from "lucide-react";
+import {
+  ArchiveRestore,
+  Banknote,
+  ChartNoAxesCombined,
+  CircleDollarSign,
+  Landmark,
+  PiggyBank,
+  Smartphone,
+} from "lucide-react";
 import { AccountForm } from "@/components/money/account-form";
 import { BalanceAdjustmentForm } from "@/components/money/balance-adjustment-form";
 import { DeleteArchivedAccountForm } from "@/components/money/delete-archived-account-form";
-import { Button } from "@/components/ui/button";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
-import { TooltipHint } from "@/components/ui/tooltip";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { formatCentavos } from "@/lib/money/money";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export type AccountSummary = {
   id: string;
@@ -19,54 +26,94 @@ export type AccountSummary = {
   is_archived: boolean;
 };
 
+function accountIcon(accountType: string) {
+  switch (accountType) {
+    case "cash":
+      return Banknote;
+    case "bank":
+      return Landmark;
+    case "e_wallet":
+      return Smartphone;
+    case "savings":
+      return PiggyBank;
+    case "investment":
+      return ChartNoAxesCombined;
+    default:
+      return CircleDollarSign;
+  }
+}
+
 export function AccountCard({
   account,
   today,
+  layout = "card",
+  editing = false,
 }: {
   account: AccountSummary;
   today?: string;
+  layout?: "card" | "ledger";
+  editing?: boolean;
 }) {
   const balanceCentavos = Number(account.current_balance_centavos);
+  const AccountIcon = accountIcon(account.account_type);
 
   return (
-    <Card>
-      <CardContent className="relative">
-        <div className="flex items-start justify-between gap-3">
-          <div className={account.is_archived ? "min-w-0" : "min-w-0 pr-12"}>
-            <p className="truncate text-sm font-semibold">{account.name}</p>
-            <p className="text-muted-foreground mt-1 truncate text-xs capitalize">
+    <Card
+      className={cn(
+        "overflow-visible",
+        layout === "ledger" &&
+          "rounded-none border-0 bg-transparent shadow-none first:rounded-t-2xl last:rounded-b-2xl [&:not(:last-child)]:border-b",
+      )}
+    >
+      <CardContent
+        className={cn(
+          "relative p-4",
+          layout === "ledger" && "p-3 sm:px-5 sm:py-4",
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center justify-between gap-3",
+            layout === "ledger" &&
+              "grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-2.5 sm:grid-cols-[auto_minmax(0,1fr)_minmax(9rem,auto)] sm:gap-x-5",
+          )}
+        >
+          {layout === "ledger" ? (
+            <div className="border-primary/20 bg-primary/8 text-primary grid size-8 shrink-0 place-items-center rounded-lg border sm:size-10 sm:rounded-xl">
+              <AccountIcon className="size-4 sm:size-5" aria-hidden="true" />
+            </div>
+          ) : null}
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold tracking-[-0.01em] sm:text-[15px]">
+              {account.name}
+            </p>
+            <p className="text-muted-foreground mt-0.5 truncate text-xs capitalize">
               {account.account_type.replaceAll("_", " ")}
               {account.institution ? ` · ${account.institution}` : ""}
             </p>
           </div>
-          {!account.is_archived && (
-            <OfflineMutationForm mutation="account.archive">
-              <input type="hidden" name="accountId" value={account.id} />
-              <input type="hidden" name="archived" value="true" />
-              <TooltipHint label={`Archive ${account.name}`} side="left">
-                <FormSubmitButton
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Archive ${account.name}`}
-                >
-                  <Archive className="size-4" aria-hidden="true" />
-                </FormSubmitButton>
-              </TooltipHint>
-            </OfflineMutationForm>
-          )}
+
+          {layout === "ledger" ? (
+            <p className="text-right font-mono text-base font-semibold tracking-[-0.035em] tabular-nums sm:text-2xl">
+              <SensitiveValue>{formatCentavos(balanceCentavos)}</SensitiveValue>
+            </p>
+          ) : null}
         </div>
 
-        <p className="mt-6 font-mono text-2xl font-semibold">
-          <SensitiveValue>{formatCentavos(balanceCentavos)}</SensitiveValue>
-        </p>
-        <p className="text-muted-foreground mt-1 text-[11px]">
-          {account.is_archived
-            ? "Balance when archived"
-            : "Current derived balance"}
-        </p>
+        {layout === "card" ? (
+          <>
+            <div className="border-border/80 mt-3 border-t" />
+            <p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.035em] tabular-nums">
+              <SensitiveValue>{formatCentavos(balanceCentavos)}</SensitiveValue>
+            </p>
+          </>
+        ) : null}
 
         {account.is_archived ? (
           <>
+            <p className="text-muted-foreground mt-1 text-[11px]">
+              Balance when archived
+            </p>
             <OfflineMutationForm mutation="account.archive" className="mt-4">
               <input type="hidden" name="accountId" value={account.id} />
               <input type="hidden" name="archived" value="false" />
@@ -84,18 +131,8 @@ export function AccountCard({
               accountName={account.name}
             />
           </>
-        ) : (
-          <details className="@container">
-            <TooltipHint label={`Edit ${account.name}`} side="left">
-              <Button asChild variant="ghost" size="icon">
-                <summary
-                  aria-label={`Edit ${account.name}`}
-                  className="absolute top-4 right-[3.75rem] cursor-pointer list-none sm:top-5 [&::-webkit-details-marker]:hidden"
-                >
-                  <Pencil className="size-4" aria-hidden="true" />
-                </summary>
-              </Button>
-            </TooltipHint>
+        ) : editing ? (
+          <div className="@container">
             <div className="border-border mt-4 grid gap-4 border-t pt-3">
               <section aria-labelledby={`account-details-${account.id}`}>
                 <p
@@ -121,8 +158,8 @@ export function AccountCard({
                 />
               </section>
             </div>
-          </details>
-        )}
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

@@ -1,10 +1,8 @@
 import { Archive, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { AccountCreatePanel } from "@/components/money/account-create-panel";
-import {
-  AccountCard,
-  type AccountSummary,
-} from "@/components/money/account-card";
+import { type AccountSummary } from "@/components/money/account-card";
+import { AccountLedger } from "@/components/money/account-ledger";
 import { PageHeading } from "@/components/shared/page-heading";
 import { MoneyNavigation } from "@/components/money/money-navigation";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
@@ -47,12 +45,15 @@ export default async function AccountsPage() {
         title="Where your money lives"
         description="Every total is opening balance plus recorded movement, so it can always be explained."
         actions={
-          <Button asChild variant="secondary">
-            <Link href="/money/accounts/archived">
-              <Archive className="size-4" aria-hidden="true" />
-              Archived
-            </Link>
-          </Button>
+          <>
+            <AccountCreatePanel />
+            <Button asChild variant="secondary">
+              <Link href="/money/accounts/archived">
+                <Archive className="size-4" aria-hidden="true" />
+                Archived
+              </Link>
+            </Button>
+          </>
         }
       />
       <MoneyNavigation currentHref="/money/accounts" />
@@ -64,8 +65,8 @@ export default async function AccountsPage() {
           <SensitiveValue>{formatCentavos(total)}</SensitiveValue>
         </p>
       </div>
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {accounts.length === 0 ? (
+      {accounts.length === 0 ? (
+        <div className="mt-6 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
           <div className="border-border grid min-h-60 place-items-center rounded-2xl border border-dashed sm:col-span-2 xl:col-span-3">
             <div className="text-center">
               <WalletCards className="text-primary mx-auto size-6" />
@@ -78,17 +79,10 @@ export default async function AccountsPage() {
               </p>
             </div>
           </div>
-        ) : (
-          accounts.map((account) => (
-            <AccountCard
-              key={account.id}
-              account={account}
-              today={todayInManila()}
-            />
-          ))
-        )}
-      </div>
-      <AccountCreatePanel />
+        </div>
+      ) : (
+        <AccountLedger accounts={accounts} today={todayInManila()} />
+      )}
     </div>
   );
 }
