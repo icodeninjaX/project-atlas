@@ -193,33 +193,44 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
-      <header>
-        <p className="text-primary font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
-          {manilaDateLabel(now)}
-        </p>
-        <h1 className="mt-3 text-[1.75rem] font-semibold tracking-[-0.04em] sm:text-[2rem]">
-          {daylineItems.length ? "Your Day, Mapped." : "Your route is clear."}
-        </h1>
-        <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-6">
-          {daylineItems.length
-            ? "Start with the work that needs your attention most."
-            : "Add what matters and ATLAS will surface the next useful move."}
-        </p>
-        <div className="mt-5 grid max-w-md grid-cols-2 gap-2">
-          <Button asChild variant="secondary" size="sm" className="w-full">
-            <Link href="/money/transactions?create=true">
-              <CircleDollarSign className="size-4" />
-              Record expense
-            </Link>
-          </Button>
-          <Button asChild size="sm" className="w-full">
-            <Link href="/tasks?create=true">
-              <Plus className="size-4" />
-              Add task
-            </Link>
-          </Button>
-        </div>
-      </header>
+      <div className="grid lg:grid-cols-[0.88fr_1.12fr] lg:items-stretch lg:gap-8">
+        <header className="contents min-w-0 lg:flex lg:flex-col lg:justify-center">
+          <p className="text-primary font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
+            {manilaDateLabel(now)}
+          </p>
+          <div className="order-3 lg:order-none">
+            <h1 className="mt-4 text-[1.75rem] font-semibold tracking-[-0.04em] sm:mt-6 sm:text-[2rem] lg:mt-3">
+              {daylineItems.length
+                ? "Your Day, Mapped."
+                : "Your route is clear."}
+            </h1>
+            <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-6">
+              {daylineItems.length
+                ? "Start with the work that needs your attention most."
+                : "Add what matters and ATLAS will surface the next useful move."}
+            </p>
+            <div className="mt-5 grid max-w-md grid-cols-2 gap-2">
+              <Button asChild variant="secondary" size="sm" className="w-full">
+                <Link href="/money/transactions?create=true">
+                  <CircleDollarSign className="size-4" />
+                  Record expense
+                </Link>
+              </Button>
+              <Button asChild size="sm" className="w-full">
+                <Link href="/tasks?create=true">
+                  <Plus className="size-4" />
+                  Add task
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <GratitudeCard
+          initialQuote={wisdomQuote}
+          className="order-2 mt-3 lg:order-none lg:mt-0"
+        />
+      </div>
 
       <div className="mt-6 grid items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
         <Card>
@@ -317,10 +328,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <SignalsPanel
-          signals={dashboardSignals}
-          className="mt-0 sm:mt-0"
-        />
+        <SignalsPanel signals={dashboardSignals} className="mt-0 sm:mt-0" />
       </div>
 
       <section aria-labelledby="financial-snapshot" className="mt-3 sm:mt-4">
@@ -422,7 +430,7 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+      <div className="mt-4">
         <Card>
           <CardHeader className="flex items-start justify-between gap-4">
             <CardTitle>Week position</CardTitle>
@@ -447,7 +455,6 @@ export default async function DashboardPage() {
             </Link>
           </CardContent>
         </Card>
-        <GratitudeCard initialQuote={wisdomQuote} compact />
       </div>
     </div>
   );
