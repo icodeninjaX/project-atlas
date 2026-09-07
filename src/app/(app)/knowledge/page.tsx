@@ -8,18 +8,49 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Knowledge" };
 
+type KnowledgeSearchParams = {
+  view?: string;
+  highlight?: string;
+  query?: string;
+  category?: string;
+  sort?: string;
+};
+
+export function resolveKnowledgeBrowseState(params: KnowledgeSearchParams) {
+  const allowed = new Set(["library", "due", "recent", "weak", "archived"]);
+  const initialView = params.highlight
+    ? "all"
+    : allowed.has(params.view ?? "")
+      ? params.view === "archived"
+        ? "archived"
+        : params.view === "due"
+          ? "due"
+          : params.view === "weak"
+            ? "weak"
+            : "all"
+      : "all";
+  const initialSort =
+    params.view === "recent"
+      ? "newest"
+      : params.sort === "newest" || params.sort === "title"
+        ? params.sort
+        : "next-review";
+
+  return {
+    initialView,
+    initialSort,
+    initialQuery: params.query ?? "",
+    initialCategory: params.category ?? "all",
+  } as const;
+}
+
 export default async function KnowledgePage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; highlight?: string }>;
+  searchParams: Promise<KnowledgeSearchParams>;
 }) {
   const params = await searchParams;
-  const allowed = new Set(["library", "due", "recent", "weak", "archived"]);
-  const initialView = params.highlight
-    ? "library"
-    : allowed.has(params.view ?? "")
-      ? (params.view as "library" | "due" | "recent" | "weak" | "archived")
-      : "due";
+  const browseState = resolveKnowledgeBrowseState(params);
   const supabase = await createClient();
   const [conceptResult, reviewResult] = supabase
     ? await Promise.all([
@@ -49,7 +80,7 @@ export default async function KnowledgePage({
       <KnowledgeWorkspace
         concepts={(conceptResult.data ?? []) as KnowledgeConcept[]}
         reviews={(reviewResult.data ?? []) as KnowledgeReview[]}
-        initialView={initialView}
+        {...browseState}
         initialConceptId={params.highlight}
         nowIso={new Date().toISOString()}
       />
