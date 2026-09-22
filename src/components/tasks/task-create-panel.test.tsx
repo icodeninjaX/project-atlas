@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { TaskCreatePanel } from "./task-create-panel";
+import { TaskCreateTrigger } from "./task-create-trigger";
 
 afterEach(cleanup);
 
@@ -34,6 +35,19 @@ describe("TaskCreatePanel", () => {
     renderPanel({ initiallyOpen: true });
 
     expect(screen.getByLabelText("Task title")).toBeVisible();
+  });
+
+  it("opens from the empty-state Add task control", () => {
+    render(
+      <>
+        <TaskCreatePanel heading={<h1>Tasks</h1>} description={<p>Capture quickly.</p>} />
+        <TaskCreateTrigger />
+      </>,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Add task" })[1]!);
+
+    expect(screen.getByLabelText("Task title")).toHaveFocus();
   });
 
   it("opens with the N keyboard shortcut", () => {

@@ -1,7 +1,7 @@
 import { Clock3, Inbox } from "lucide-react";
-import type { Route } from "next";
 import Link from "next/link";
 import { TaskCreatePanel } from "@/components/tasks/task-create-panel";
+import { TaskCreateTrigger } from "@/components/tasks/task-create-trigger";
 import { TaskActionsMenu } from "@/components/tasks/task-actions-menu";
 import { TaskStatusForm } from "@/components/tasks/task-status-form";
 import { Card, CardContent } from "@/components/ui/card";
@@ -217,11 +217,15 @@ export default async function TasksPage({
             title={emptyView.title}
             description={emptyView.description}
             action={
-              <Button asChild size="sm">
-                <Link href={emptyView.action.href as Route}>
-                  {emptyView.action.label}
-                </Link>
-              </Button>
+              emptyView.action.label === "Add task" ? (
+                <TaskCreateTrigger />
+              ) : (
+                <Button asChild size="sm">
+                  <Link href={emptyView.action.href as `/tasks?view=${string}`}>
+                    {emptyView.action.label}
+                  </Link>
+                </Button>
+              )
             }
           />
         ) : (

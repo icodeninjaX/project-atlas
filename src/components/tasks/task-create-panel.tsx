@@ -3,6 +3,7 @@
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { QuickTaskForm } from "@/components/tasks/quick-task-form";
+import { OPEN_TASK_CREATE_EVENT } from "@/components/tasks/task-create-trigger";
 import { Button } from "@/components/ui/button";
 import {
   EMPTY_SCHEDULED_TASKS,
@@ -29,6 +30,12 @@ export function TaskCreatePanel({
   const closeForm = useCallback(() => setIsOpen(false), []);
 
   useEffect(() => {
+    function onOpenTaskCreate() {
+      setIsOpen(true);
+      setFocusRequest((request) => request + 1);
+    }
+
+    window.addEventListener(OPEN_TASK_CREATE_EVENT, onOpenTaskCreate);
     function onKeyDown(event: KeyboardEvent) {
       const target = event.target as HTMLElement;
       if (
@@ -43,7 +50,10 @@ export function TaskCreatePanel({
     }
 
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener(OPEN_TASK_CREATE_EVENT, onOpenTaskCreate);
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
 
   return (
