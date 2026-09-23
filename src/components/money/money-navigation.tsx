@@ -24,7 +24,7 @@ export function MoneyNavigation({ currentHref }: { currentHref: string }) {
             href={href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "focus-visible:ring-ring inline-flex min-h-10 shrink-0 items-center rounded-lg px-3 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none",
+              "focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center rounded-lg px-3 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none",
               active
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:bg-card/60 hover:text-foreground",

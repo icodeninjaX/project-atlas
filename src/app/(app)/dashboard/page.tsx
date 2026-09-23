@@ -198,7 +198,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-[1240px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+    <div className="mx-auto w-full max-w-[1240px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
           <p className="text-primary text-xs font-semibold tracking-[0.1em] uppercase">
@@ -213,7 +213,7 @@ export default async function DashboardPage() {
               : "Add what matters and ATLAS will surface the next useful move."}
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex">
+        <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:flex">
           <Button asChild variant="secondary" size="sm">
             <Link href="/money/transactions?create=true">
               <CircleDollarSign aria-hidden="true" className="size-4" />

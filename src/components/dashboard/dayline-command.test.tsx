@@ -58,4 +58,29 @@ describe("DaylineCommand", () => {
       screen.getByRole("link", { name: "Tune Dayline planning" }),
     ).toHaveAttribute("href", "/settings");
   });
+
+  it("allows long primary content to wrap without forcing a fixed action width", () => {
+    render(
+      <DaylineCommand
+        items={[
+          {
+            ...items[0]!,
+            title:
+              "Prepare complete final documentation for the client onboarding and production handoff",
+            reason:
+              "Why this is here: the translated client requirements need a final accessibility review",
+          },
+        ]}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /Prepare complete final/ }),
+    ).toHaveClass("break-words", "min-w-0");
+    expect(screen.getByRole("link", { name: /Open this next/ })).toHaveClass(
+      "w-full",
+      "min-w-0",
+      "min-[360px]:w-auto",
+    );
+  });
 });

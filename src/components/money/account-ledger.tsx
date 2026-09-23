@@ -40,7 +40,7 @@ export function AccountLedger({
               Manage accounts
             </summary>
           </Button>
-          <div className="border-border bg-background absolute top-full right-0 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-2xl border p-3 shadow-xl">
+          <div className="border-border bg-background absolute top-full right-0 mt-2 max-h-[calc(100dvh-6rem-env(safe-area-inset-bottom))] w-[min(18rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border p-3 shadow-xl">
             <label className="text-muted-foreground text-xs font-medium">
               Choose an account
               <select
@@ -56,7 +56,7 @@ export function AccountLedger({
                 ))}
               </select>
             </label>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-3 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
               <Button
                 type="button"
                 variant="secondary"
@@ -86,7 +86,7 @@ export function AccountLedger({
         </details>
       </div>
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+      <div className="grid grid-cols-1 gap-2.5 min-[400px]:grid-cols-2 sm:grid-cols-3 sm:gap-3">
         {accounts.map((account) => (
           <AccountCard
             key={account.id}

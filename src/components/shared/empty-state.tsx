@@ -13,7 +13,7 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="border-border bg-card/40 grid min-h-72 place-items-center rounded-2xl border border-dashed p-8 text-center">
+    <div className="border-border bg-card/40 grid min-h-56 place-items-center rounded-2xl border border-dashed p-6 text-center sm:min-h-72 sm:p-8">
       <div className="max-w-sm">
         <div className="border-primary/20 bg-primary/10 text-primary mx-auto grid size-11 place-items-center rounded-xl border">
           <Icon className="size-5" />

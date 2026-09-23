@@ -85,6 +85,23 @@ describe("SignalsPanel", () => {
     expect(screen.getAllByRole("link", { name: /View money/ })).toHaveLength(3);
   });
 
+  it("wraps long compact signal content instead of truncating it", () => {
+    const longSignal = {
+      ...signal(1, "critical"),
+      title:
+        "Monthly expense trend increased significantly compared with the previous three-month baseline",
+      message:
+        "Monthly spending has exceeded your average spending baseline for three consecutive weeks.",
+    };
+
+    render(<SignalsPanel signals={[longSignal]} />);
+
+    expect(screen.getByText(longSignal.title)).toHaveClass("break-words");
+    expect(screen.getByText(longSignal.title)).not.toHaveClass("truncate");
+    expect(screen.getByText(longSignal.message)).toHaveClass("break-words");
+    expect(screen.getByText(longSignal.message)).not.toHaveClass("truncate");
+  });
+
   it("explains an empty result without manufacturing a signal", () => {
     render(<SignalsPanel signals={[]} />);
     expect(screen.getByText("Nothing needs attention.")).toBeInTheDocument();

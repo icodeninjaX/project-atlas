@@ -49,13 +49,15 @@ export function AppHeaderActions() {
       <div className="hidden xl:block">
         <SyncStatus />
       </div>
-      <TooltipHint label="Search ATLAS">
-        <Button asChild variant="ghost" size="icon">
-          <Link href="/search" aria-label="Search ATLAS">
-            <Search className="size-4" />
-          </Link>
-        </Button>
-      </TooltipHint>
+      <div className="hidden min-[360px]:block">
+        <TooltipHint label="Search ATLAS">
+          <Button asChild variant="ghost" size="icon">
+            <Link href="/search" aria-label="Search ATLAS">
+              <Search className="size-4" />
+            </Link>
+          </Button>
+        </TooltipHint>
+      </div>
 
       <div className="hidden lg:block">
         <Button asChild size="sm">
@@ -87,8 +89,18 @@ export function AppHeaderActions() {
             id="mobile-account-menu"
             role="dialog"
             aria-label="Account controls"
-            className="border-border bg-card text-card-foreground absolute top-12 right-0 z-50 w-60 rounded-2xl border p-2 shadow-xl"
+            className="border-border bg-card text-card-foreground absolute top-12 right-0 z-50 max-h-[calc(100dvh-5rem-env(safe-area-inset-top))] w-[min(15rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border p-2 shadow-xl"
           >
+            <Button
+              asChild
+              variant="ghost"
+              className="w-full justify-start min-[360px]:hidden"
+            >
+              <Link href="/search" onClick={() => setMenuOpen(false)}>
+                <Search className="size-4" />
+                Search ATLAS
+              </Link>
+            </Button>
             <div className="border-border mb-1 border-b px-2 py-2 xl:hidden">
               <SyncStatus showLabel />
             </div>

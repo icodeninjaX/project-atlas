@@ -25,7 +25,7 @@ export function SituationStrip({ items }: { items: SituationItem[] }) {
           The rest of your system, at a glance
         </p>
       </div>
-      <div className="border-border bg-card grid grid-cols-2 overflow-hidden rounded-2xl border xl:grid-cols-4">
+      <div className="border-border bg-card grid grid-cols-1 overflow-hidden rounded-2xl border min-[360px]:grid-cols-2 xl:grid-cols-4">
         {items.map((item, index) => {
           const Icon = item.icon;
           const value = item.sensitive ? (
@@ -39,29 +39,30 @@ export function SituationStrip({ items }: { items: SituationItem[] }) {
               key={item.label}
               href={item.href}
               className={cn(
-                "hover:bg-muted/45 focus-visible:ring-ring grid min-h-[84px] grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5 px-3 py-2.5 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset xl:min-h-24 xl:border-t-0 xl:px-4 xl:py-4",
-                index % 2 === 1 && "border-border border-l",
-                index >= 2 && "border-border border-t",
+                "hover:bg-muted/45 focus-visible:ring-ring grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-3 px-4 py-3.5 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset min-[360px]:min-h-24 min-[360px]:items-center xl:border-t-0 xl:px-4 xl:py-4",
+                index > 0 && "border-border border-t",
+                index % 2 === 1 && "min-[360px]:border-l",
+                index === 1 && "min-[360px]:border-t-0",
                 index > 0 && "xl:border-l",
                 item.urgent && "bg-destructive/[0.035]",
               )}
             >
               <span
                 className={cn(
-                  "bg-muted text-muted-foreground grid size-7 place-items-center rounded-lg xl:size-8",
+                  "bg-muted text-muted-foreground grid size-8 shrink-0 place-items-center rounded-lg",
                   item.urgent && "bg-destructive/10 text-destructive",
                 )}
               >
                 <Icon aria-hidden="true" className="size-3.5" />
               </span>
               <span className="min-w-0">
-                <span className="text-muted-foreground block truncate text-[10px] leading-4 min-[360px]:text-[11px]">
+                <span className="text-muted-foreground block text-xs leading-4 break-words">
                   {item.label}
                 </span>
-                <span className="block truncate text-[13px] leading-5 font-semibold min-[360px]:text-sm">
+                <span className="block text-sm leading-5 font-semibold [overflow-wrap:anywhere] break-words">
                   {value}
                 </span>
-                <span className="text-muted-foreground block truncate text-[10px] leading-4 min-[360px]:text-[11px]">
+                <span className="text-muted-foreground block text-xs leading-4 break-words">
                   {item.detail}
                 </span>
               </span>

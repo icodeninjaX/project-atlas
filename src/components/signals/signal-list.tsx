@@ -101,7 +101,7 @@ function SignalContent({
       <Link
         href={signal.href as Route}
         className={cn(
-          "hover:bg-muted/45 focus-visible:ring-ring group flex min-h-16 flex-col justify-center px-3 py-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:px-4",
+          "hover:bg-muted/45 focus-visible:ring-ring group flex min-w-0 flex-col px-3 py-3 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:px-4",
           signal.severity === "critical" &&
             "border-destructive bg-destructive/[0.035] border-l-2",
           signal.severity === "warning" && "border-l-2 border-l-amber-500/70",
@@ -124,7 +124,7 @@ function SignalContent({
           </span>
           <p
             className={cn(
-              "min-w-0 truncate text-[13px] leading-5 font-medium",
+              "min-w-0 text-sm leading-5 font-medium break-words",
               (signal.severity === "critical" ||
                 signal.severity === "warning") &&
                 "font-semibold",
@@ -133,11 +133,11 @@ function SignalContent({
             {signal.title}
           </p>
         </div>
-        <div className="mt-0.5 flex min-w-0 items-center gap-3 pl-6">
-          <p className="text-muted-foreground min-w-0 flex-1 truncate text-[11px] leading-4">
+        <div className="mt-1 min-w-0 pl-6">
+          <p className="text-muted-foreground min-w-0 text-xs leading-5 break-words">
             <MaybeSensitive signal={signal}>{signal.message}</MaybeSensitive>
           </p>
-          <span className="text-primary inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold">
+          <span className="text-primary mt-2 inline-flex min-h-11 items-center gap-1 text-xs font-semibold">
             View {signal.category.toLowerCase()}
             <ArrowRight aria-hidden="true" className="size-3" />
           </span>
@@ -160,12 +160,12 @@ function SignalContent({
           className={cn(
             "border-border/70 bg-muted/40 mt-2.5 grid gap-2 rounded-xl border px-2.5 py-2 sm:mt-3 sm:gap-3 sm:px-3 sm:py-2.5",
             hasBothMetrics
-              ? "grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)]"
-              : "grid-cols-[4.5rem_minmax(0,1fr)]",
+              ? "grid-cols-1 min-[420px]:grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)]"
+              : "grid-cols-1 min-[420px]:grid-cols-[4.5rem_minmax(0,1fr)]",
           )}
         >
           <div className="min-w-0">
-            <dt className="text-muted-foreground truncate text-[10px] leading-none font-medium sm:text-[11px]">
+            <dt className="text-muted-foreground text-xs leading-4 font-medium break-words">
               Status
             </dt>
             <dd className="mt-1">
@@ -183,12 +183,12 @@ function SignalContent({
             <div className="min-w-0">
               <dt
                 aria-label={signal.metric.label}
-                className="text-muted-foreground truncate text-[10px] leading-none font-medium sm:text-[11px]"
+                className="text-muted-foreground text-xs leading-4 font-medium break-words"
                 title={signal.metric.label}
               >
                 {displayMetricLabel(signal.metric.label, compact)}
               </dt>
-              <dd className="mt-1 truncate font-mono text-xs font-semibold">
+              <dd className="mt-1 font-mono text-xs leading-5 font-semibold [overflow-wrap:anywhere] break-words">
                 <MaybeSensitive signal={signal}>
                   {signal.metric.value}
                 </MaybeSensitive>
@@ -199,12 +199,12 @@ function SignalContent({
             <div className="min-w-0">
               <dt
                 aria-label={signal.comparison.label}
-                className="text-muted-foreground truncate text-[10px] leading-none font-medium sm:text-[11px]"
+                className="text-muted-foreground text-xs leading-4 font-medium break-words"
                 title={signal.comparison.label}
               >
                 {displayMetricLabel(signal.comparison.label, compact)}
               </dt>
-              <dd className="mt-1 truncate font-mono text-xs font-semibold">
+              <dd className="mt-1 font-mono text-xs leading-5 font-semibold [overflow-wrap:anywhere] break-words">
                 <MaybeSensitive signal={signal}>
                   {signal.comparison.value}
                 </MaybeSensitive>
@@ -215,7 +215,7 @@ function SignalContent({
 
         <div className="mt-2.5 flex flex-wrap items-start justify-between gap-x-2 gap-y-1 sm:mt-3 sm:gap-3">
           <details className="group min-w-0 flex-1">
-            <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring w-fit cursor-pointer rounded-md text-[11px] font-medium focus-visible:ring-2 focus-visible:outline-none">
+            <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring flex min-h-11 w-fit cursor-pointer items-center rounded-md px-1 text-xs font-medium focus-visible:ring-2 focus-visible:outline-none">
               Why am I seeing this?
             </summary>
             <p className="text-muted-foreground mt-2 max-w-2xl text-xs leading-5">
@@ -224,7 +224,7 @@ function SignalContent({
           </details>
           <Link
             href={signal.href as Route}
-            className="text-primary hover:bg-primary/10 focus-visible:ring-ring inline-flex min-h-8 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+            className="text-primary hover:bg-primary/10 focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
           >
             View {signal.category.toLowerCase()}
             <ArrowRight className="size-3" />
@@ -272,7 +272,7 @@ export function SignalList({
               attentionSignals.length > 0 && "border-border border-t",
             )}
           >
-            <p className="bg-muted/35 text-muted-foreground px-3 py-1.5 text-[10px] leading-4 font-semibold tracking-[0.12em] uppercase sm:px-4">
+            <p className="bg-muted/35 text-muted-foreground px-3 py-2 text-xs leading-4 font-semibold tracking-[0.12em] uppercase sm:px-4">
               {quieterLabel}
             </p>
             <ol aria-label={quieterLabel} className="divide-border divide-y">

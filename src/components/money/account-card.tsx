@@ -117,10 +117,10 @@ export function AccountCard({
                 )}
               </div>
               <div className="min-w-0 pt-0.5">
-                <p className="truncate text-sm font-semibold tracking-[-0.01em] sm:text-[15px]">
+                <p className="text-sm font-semibold tracking-[-0.01em] break-words sm:text-[15px]">
                   {account.name}
                 </p>
-                <p className="mt-0.5 truncate text-[10px] font-medium text-white/70 capitalize sm:text-[11px]">
+                <p className="mt-0.5 text-xs leading-4 font-medium break-words text-white/75 capitalize">
                   {account.account_type.replaceAll("_", " ")}
                   {account.institution ? ` · ${account.institution}` : ""}
                 </p>
@@ -128,10 +128,10 @@ export function AccountCard({
             </div>
 
             <div className="mt-auto pt-5">
-              <p className="text-[9px] font-semibold tracking-[0.16em] text-white/65 uppercase">
+              <p className="text-xs font-semibold tracking-[0.12em] text-white/70 uppercase">
                 Balance
               </p>
-              <p className="mt-1 truncate font-mono text-lg font-bold tracking-[-0.045em] tabular-nums sm:text-xl">
+              <p className="mt-1 min-w-0 font-mono text-lg leading-tight font-bold tracking-[-0.045em] [overflow-wrap:anywhere] break-words tabular-nums sm:text-xl">
                 <SensitiveValue>
                   {formatCentavos(balanceCentavos)}
                 </SensitiveValue>
@@ -176,10 +176,10 @@ export function AccountCard({
       <CardContent className="relative p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold tracking-[-0.01em] sm:text-[15px]">
+            <p className="text-sm font-semibold tracking-[-0.01em] break-words sm:text-[15px]">
               {account.name}
             </p>
-            <p className="text-muted-foreground mt-0.5 truncate text-xs capitalize">
+            <p className="text-muted-foreground mt-0.5 text-xs break-words capitalize">
               {account.account_type.replaceAll("_", " ")}
               {account.institution ? ` · ${account.institution}` : ""}
             </p>
@@ -187,7 +187,7 @@ export function AccountCard({
         </div>
 
         <div className="border-border/80 mt-3 border-t" />
-        <p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.035em] tabular-nums">
+        <p className="mt-3 min-w-0 font-mono text-2xl font-semibold tracking-[-0.035em] [overflow-wrap:anywhere] break-words tabular-nums">
           <SensitiveValue>{formatCentavos(balanceCentavos)}</SensitiveValue>
         </p>
 

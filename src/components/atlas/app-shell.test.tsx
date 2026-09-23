@@ -37,6 +37,20 @@ describe("AppShell", () => {
         .getAllByRole("link", { name: "Money" })
         .every((link) => link.getAttribute("aria-current") === "page"),
     ).toBe(true);
+    expect(document.querySelector("#main-content")?.parentElement).toHaveClass(
+      "w-full",
+      "min-w-0",
+      "max-w-full",
+    );
+    expect(document.querySelector("#main-content")).toHaveClass(
+      "w-full",
+      "min-w-0",
+      "max-w-full",
+      "lg:w-auto",
+    );
+    expect(
+      screen.getAllByRole("navigation", { name: "Primary navigation" })[1],
+    ).toHaveClass("w-full", "max-w-full");
   });
 
   it("keeps secondary destinations reachable from the mobile More sheet", () => {
@@ -49,7 +63,14 @@ describe("AppShell", () => {
     fireEvent.click(screen.getByRole("button", { name: "More navigation" }));
 
     const sheet = screen.getByRole("dialog", { name: "More destinations" });
-    expect(sheet).toHaveClass("bg-card");
+    expect(sheet).toHaveClass(
+      "bg-card",
+      "max-h-[calc(100dvh-env(safe-area-inset-top)-0.75rem)]",
+      "overflow-y-auto",
+    );
+    expect(
+      within(sheet).getByRole("navigation", { name: "More destinations" }),
+    ).toHaveClass("grid-cols-1", "min-[360px]:grid-cols-2");
     expect(
       within(sheet).getByRole("link", { name: "Signals" }),
     ).toBeInTheDocument();

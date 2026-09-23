@@ -42,19 +42,27 @@ const items: SituationItem[] = [
 afterEach(cleanup);
 
 describe("SituationStrip", () => {
-  it("uses one compact two-column surface while keeping every cell navigable", () => {
+  it("starts as one readable column and progressively enhances to a compact grid", () => {
     render(<SituationStrip items={items} />);
 
     const heading = screen.getByRole("heading", { name: "Situation" });
     const grid = heading.parentElement?.nextElementSibling;
 
-    expect(grid).toHaveClass("grid-cols-2", "xl:grid-cols-4");
+    expect(grid).toHaveClass(
+      "grid-cols-1",
+      "min-[360px]:grid-cols-2",
+      "xl:grid-cols-4",
+    );
     expect(screen.getAllByRole("link")).toHaveLength(4);
     expect(
       screen.getByRole("link", { name: /Available cash/ }),
     ).toHaveAttribute("href", "/money/accounts");
     expect(screen.getByRole("link", { name: /Tasks/ })).toHaveClass(
-      "min-h-[84px]",
+      "min-w-0",
+      "min-[360px]:min-h-24",
     );
+    expect(screen.getByText("Available cash")).not.toHaveClass("truncate");
+    expect(screen.getByText("₱13,218.00")).not.toHaveClass("truncate");
+    expect(screen.getByText("Active accounts")).not.toHaveClass("truncate");
   });
 });

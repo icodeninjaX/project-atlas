@@ -36,12 +36,16 @@ describe("FinancialOverview", () => {
 
     expect(screen.getByText("Available balance")).toBeInTheDocument();
     expect(screen.getByText("₱13,043").closest("dd")).toHaveClass(
-      "text-[2rem]",
+      "text-[clamp(1.75rem,9vw,2.25rem)]",
+      "[overflow-wrap:anywhere]",
     );
     expect(screen.queryByText("₱13,043.00")).not.toBeInTheDocument();
     expect(screen.getByText("₱40,975").closest("dd")).toHaveClass("text-sm");
     expect(screen.getByText("₱9,525 budget left")).toBeInTheDocument();
     expect(screen.getByText("Next due Oct 16")).toBeInTheDocument();
+    expect(screen.getByText("Next due Oct 16").closest("dd")).not.toHaveClass(
+      "truncate",
+    );
 
     expect(screen.getByRole("link", { name: "Money" })).toHaveAttribute(
       "href",
@@ -52,5 +56,28 @@ describe("FinancialOverview", () => {
       "/money/runway",
     );
     expect(screen.queryByText("Money timeline")).not.toBeInTheDocument();
+  });
+
+  it("keeps large balances and long metadata visible", () => {
+    render(
+      <FinancialOverview
+        metrics={[
+          {
+            label: "Available",
+            value: "₱12,345,678.50",
+            note: "Across active accounts",
+          },
+          {
+            label: "Debt remaining",
+            value: "₱12,345,678.50",
+            note: "Next due 2026-10-16",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getAllByText("₱12,345,678.50")).toHaveLength(2);
+    expect(screen.getByText("Next due 2026-10-16")).toBeInTheDocument();
+    expect(screen.getByText("Next due 2026-10-16")).not.toHaveClass("truncate");
   });
 });

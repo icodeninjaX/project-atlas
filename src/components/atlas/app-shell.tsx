@@ -182,7 +182,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="bg-background text-foreground min-h-dvh">
+    <div className="bg-background text-foreground min-h-dvh w-full max-w-full min-w-0">
       <a
         href="#main-content"
         className="bg-primary text-primary-foreground sr-only z-50 rounded-lg px-4 py-2 focus:not-sr-only focus:fixed focus:top-4 focus:left-4"
@@ -270,7 +270,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main
         id="main-content"
         className={cn(
-          "min-h-dvh lg:ml-64 lg:pb-0",
+          "min-h-dvh w-full max-w-full min-w-0 lg:ml-64 lg:w-auto lg:pb-0",
           keyboardOpen
             ? "pb-0"
             : "pb-[calc(5.5rem+env(safe-area-inset-bottom))]",
@@ -281,7 +281,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav
         aria-label="Primary navigation"
         className={cn(
-          "border-border bg-background/97 fixed inset-x-0 bottom-0 z-40 h-[calc(4.75rem+env(safe-area-inset-bottom))] grid-cols-5 items-start border-t px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgb(0_0_0/0.08)] backdrop-blur lg:hidden",
+          "border-border bg-background/97 fixed inset-x-0 bottom-0 z-40 h-[calc(4.75rem+env(safe-area-inset-bottom))] w-full max-w-full grid-cols-5 items-start border-t px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgb(0_0_0/0.08)] backdrop-blur lg:hidden",
           keyboardOpen ? "hidden" : "grid",
         )}
       >
@@ -351,7 +351,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="mobile-more-title"
-            className="border-border bg-card text-card-foreground absolute inset-x-0 bottom-0 rounded-t-[1.75rem] border-t px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl"
+            className="border-border bg-card text-card-foreground absolute inset-x-0 bottom-0 max-h-[calc(100dvh-env(safe-area-inset-top)-0.75rem)] overflow-y-auto overscroll-contain rounded-t-[1.75rem] border-t px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl"
           >
             <div className="bg-border mx-auto mb-3 h-1 w-10 rounded-full" />
             <div className="flex min-h-11 items-center justify-between">
@@ -383,7 +383,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <nav
               aria-label="More destinations"
-              className="border-border mt-4 grid grid-cols-2 overflow-hidden rounded-2xl border"
+              className="border-border mt-4 grid grid-cols-1 overflow-hidden rounded-2xl border min-[360px]:grid-cols-2"
             >
               {mobileMoreNavigation.map(({ href, label, icon: Icon }) => (
                 <Link
@@ -392,7 +392,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={() => setMoreOpen(false)}
                   aria-current={isActive(href) ? "page" : undefined}
                   className={cn(
-                    "border-border hover:bg-muted/60 focus-visible:ring-ring flex min-h-16 items-center gap-3 border-b px-3 text-sm font-medium transition-colors odd:border-r focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
+                    "border-border hover:bg-muted/60 focus-visible:ring-ring flex min-h-16 min-w-0 items-center gap-3 border-b px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset min-[360px]:odd:border-r",
                     isActive(href) && "bg-primary/10 text-primary",
                   )}
                 >

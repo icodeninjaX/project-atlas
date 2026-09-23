@@ -29,21 +29,21 @@ export function SignalsPanel({
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-2.5">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 items-start gap-2.5">
           <span
             className={cn(
-              "bg-muted text-muted-foreground grid size-8 place-items-center rounded-lg",
+              "bg-muted text-muted-foreground grid size-8 shrink-0 place-items-center rounded-lg",
               importantCount > 0 && "bg-destructive/10 text-destructive",
             )}
           >
             <Radar aria-hidden="true" className="size-3.5" />
           </span>
-          <div>
+          <div className="min-w-0">
             <h2 id="dashboard-signals" className="text-sm font-semibold">
               Signals
             </h2>
-            <p className="text-muted-foreground mt-0.5 text-xs">
+            <p className="text-muted-foreground mt-0.5 text-xs break-words">
               {visibleSignals
                 ? importantCount > 0
                   ? `${importantCount} need attention`

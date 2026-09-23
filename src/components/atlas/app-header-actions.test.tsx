@@ -48,6 +48,13 @@ describe("AppHeaderActions", () => {
     const menu = screen.getByRole("dialog", { name: "Account controls" });
     const controls = within(menu);
     expect(menu).toHaveClass("bg-card", "text-card-foreground");
+    expect(menu).toHaveClass(
+      "w-[min(15rem,calc(100vw-2rem))]",
+      "overflow-y-auto",
+    );
+    expect(
+      controls.getByRole("link", { name: "Search ATLAS" }),
+    ).toHaveAttribute("href", "/search");
     expect(menu).not.toHaveClass("bg-transparent");
     expect(controls.getByText("Synced")).toBeInTheDocument();
     expect(

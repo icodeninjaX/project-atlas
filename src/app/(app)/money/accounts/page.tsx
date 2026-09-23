@@ -61,7 +61,7 @@ export default async function AccountsPage() {
         <p className="text-muted-foreground text-xs">
           Total available across active accounts
         </p>
-        <p className="mt-2 font-mono text-3xl font-semibold">
+        <p className="mt-2 min-w-0 font-mono text-3xl font-semibold [overflow-wrap:anywhere] break-words">
           <SensitiveValue>{formatCentavos(total)}</SensitiveValue>
         </p>
       </div>

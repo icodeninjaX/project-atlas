@@ -330,17 +330,17 @@ function AccountCreateForm({
                 )}
               </span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-bold">{previewLabel}</p>
-                <p className="truncate text-[11px] font-medium opacity-75">
+                <p className="text-sm font-bold break-words">{previewLabel}</p>
+                <p className="text-xs leading-4 font-medium break-words opacity-75">
                   {previewInstitution}
                 </p>
               </div>
             </div>
             <div className="mt-auto pt-6">
-              <p className="text-[9px] font-semibold tracking-[0.16em] uppercase opacity-70">
+              <p className="text-xs font-semibold tracking-[0.12em] uppercase opacity-70">
                 Opening balance
               </p>
-              <p className="mt-1 truncate font-mono text-xl font-bold tracking-[-0.04em] tabular-nums">
+              <p className="mt-1 min-w-0 font-mono text-xl leading-tight font-bold tracking-[-0.04em] [overflow-wrap:anywhere] break-words tabular-nums">
                 {formatPreviewBalance(openingBalance)}
               </p>
             </div>

@@ -98,7 +98,7 @@ export default async function SignalsPage({
         )}
         <form
           method="get"
-          className="order-1 flex w-full items-end gap-2.5 sm:order-2 sm:ml-auto sm:w-auto"
+          className="order-1 flex w-full flex-col items-stretch gap-2.5 min-[360px]:flex-row min-[360px]:items-end sm:order-2 sm:ml-auto sm:w-auto"
         >
           {category && (
             <input
@@ -107,7 +107,7 @@ export default async function SignalsPage({
               value={category.toLowerCase()}
             />
           )}
-          <label className="text-muted-foreground min-w-0 flex-1 text-xs sm:w-48 sm:flex-none">
+          <label className="text-muted-foreground min-w-0 flex-1 text-xs min-[360px]:w-48 min-[360px]:flex-none">
             Severity
             <select
               name="severity"
@@ -126,7 +126,7 @@ export default async function SignalsPage({
             type="submit"
             variant="secondary"
             size="sm"
-            className="shrink-0"
+            className="w-full shrink-0 min-[360px]:w-auto"
           >
             Apply
           </Button>

@@ -37,11 +37,11 @@ export function FinancialOverview({ metrics }: { metrics: FinancialMetric[] }) {
   return (
     <section aria-labelledby="financial-snapshot" className="min-w-0">
       <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <span className="bg-primary/10 text-primary grid size-9 place-items-center rounded-xl">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="bg-primary/10 text-primary grid size-9 shrink-0 place-items-center rounded-xl">
             <CreditCard aria-hidden="true" className="size-4" />
           </span>
-          <div>
+          <div className="min-w-0">
             <h2 id="financial-snapshot" className="text-sm font-semibold">
               Financial position
             </h2>
@@ -63,7 +63,7 @@ export function FinancialOverview({ metrics }: { metrics: FinancialMetric[] }) {
             <dt className="text-muted-foreground text-[11px] font-medium">
               Available balance
             </dt>
-            <dd className="mt-1 font-mono text-[2rem] leading-9 font-semibold tracking-[-0.04em] sm:text-4xl">
+            <dd className="mt-1 min-w-0 font-mono text-[clamp(1.75rem,9vw,2.25rem)] leading-tight font-semibold tracking-[-0.04em] [overflow-wrap:anywhere] break-words sm:text-4xl">
               <SensitiveValue>{dashboardPeso(available.value)}</SensitiveValue>
             </dd>
             <dd className="text-muted-foreground mt-1 text-xs leading-4">
@@ -76,15 +76,15 @@ export function FinancialOverview({ metrics }: { metrics: FinancialMetric[] }) {
           {supportingMetrics.map((metric) => (
             <div
               key={metric.label}
-              className="grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 py-1.5"
+              className="grid min-w-0 gap-x-3 gap-y-1 py-3 min-[360px]:grid-cols-[minmax(0,1fr)_auto] min-[360px]:items-start"
             >
-              <dt className="text-muted-foreground min-w-0 truncate text-xs">
+              <dt className="text-muted-foreground min-w-0 text-xs leading-5 break-words">
                 {metric.label}
               </dt>
-              <dd className="font-mono text-sm font-semibold tracking-tight">
+              <dd className="min-w-0 font-mono text-sm leading-5 font-semibold tracking-tight [overflow-wrap:anywhere] break-words min-[360px]:text-right">
                 <SensitiveValue>{dashboardPeso(metric.value)}</SensitiveValue>
               </dd>
-              <dd className="text-muted-foreground col-span-2 truncate text-[10px] leading-4">
+              <dd className="text-muted-foreground min-w-0 text-xs leading-4 break-words min-[360px]:col-span-2">
                 <MetricNote metric={metric} />
               </dd>
             </div>
