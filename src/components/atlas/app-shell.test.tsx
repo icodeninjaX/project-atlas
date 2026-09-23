@@ -74,7 +74,7 @@ describe("AppShell", () => {
     expect(
       within(sheet)
         .getAllByRole("link")
-        .every((link) => link.classList.contains("bg-background")),
+        .every((link) => !link.classList.contains("shadow-sm")),
     ).toBe(true);
   });
 

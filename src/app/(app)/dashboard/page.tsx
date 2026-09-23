@@ -4,26 +4,24 @@ import {
   CalendarClock,
   CheckCircle2,
   CircleDollarSign,
-  CreditCard,
-  Landmark,
+  Goal,
   Plus,
-  Target,
+  WalletCards,
 } from "lucide-react";
-import type { Route } from "next";
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TooltipHint } from "@/components/ui/tooltip";
-import { SensitiveValue } from "@/components/privacy/privacy-provider";
+import { DaylineCommand } from "@/components/dashboard/dayline-command";
+import { FinancialOverview } from "@/components/dashboard/financial-overview";
 import { GratitudeCard } from "@/components/dashboard/gratitude-card";
+import { SituationStrip } from "@/components/dashboard/situation-strip";
 import { SignalsPanel } from "@/components/signals/signals-panel";
+import { Button } from "@/components/ui/button";
 import { manilaDateLabel } from "@/lib/dates/dates";
 import { loadDayline } from "@/lib/dayline/server";
+import { getRandomWisdomQuote } from "@/lib/gratitude/gratitude-reflections";
 import { formatCentavos } from "@/lib/money/money";
 import { selectDashboardSignals } from "@/lib/signals/engine";
 import { loadSignals } from "@/lib/signals/server";
 import { createClient } from "@/lib/supabase/server";
-import { getRandomWisdomQuote } from "@/lib/gratitude/gratitude-reflections";
 
 type DashboardData = {
   financial: {
@@ -96,10 +94,6 @@ function manilaIsoDate(date: Date): string {
   }).format(date);
 }
 
-function prioritySummary(reason: string) {
-  return reason.split(" · ").slice(0, 2).filter(Boolean).join(" · ");
-}
-
 export const metadata = { title: "Today" };
 
 export default async function DashboardPage() {
@@ -142,22 +136,23 @@ export default async function DashboardPage() {
 
   const metrics = [
     {
-      label: "Available balance",
+      label: "Available",
       value: formatCentavos(dashboard.financial.total_balance_centavos),
       note: "Across active accounts",
     },
     {
-      label: "Income this month",
+      label: "Income",
       value: formatCentavos(dashboard.financial.income_month_centavos),
       note: "Transfers excluded",
     },
     {
-      label: "Expenses this month",
+      label: "Expenses",
       value: formatCentavos(dashboard.financial.expense_month_centavos),
       note:
         dashboard.financial.remaining_budget_centavos == null
           ? "No budget set"
           : `${formatCentavos(dashboard.financial.remaining_budget_centavos)} budget left`,
+      sensitiveNote: dashboard.financial.remaining_budget_centavos != null,
     },
     {
       label: "Debt remaining",
@@ -167,294 +162,121 @@ export default async function DashboardPage() {
         : "No active deadline",
     },
   ];
-  const moduleSnapshots = [
+
+  const situation = [
     {
-      title: "Tasks",
+      label: "Available cash",
+      value: formatCentavos(dashboard.financial.total_balance_centavos),
+      detail: "Active accounts",
+      href: "/money/accounts" as const,
+      icon: WalletCards,
+      sensitive: true,
+    },
+    {
+      label: "Tasks",
+      value: `${dashboard.tasks.overdue} overdue`,
+      detail: `${dashboard.tasks.today} due today`,
+      href: "/tasks?view=overdue" as const,
       icon: CheckCircle2,
-      value: `${dashboard.tasks.today} due today`,
-      href: "/tasks" as const,
-      detail: `${dashboard.tasks.overdue} overdue · ${dashboard.tasks.completed_today} completed`,
+      urgent: dashboard.tasks.overdue > 0,
     },
     {
-      title: "Career",
-      icon: BriefcaseBusiness,
-      value: `${dashboard.career.active} active`,
+      label: "Career",
+      value: `${dashboard.career.follow_up} follow-ups`,
+      detail: `${dashboard.career.active} active applications`,
       href: "/career" as const,
-      detail: `${dashboard.career.follow_up} follow-ups waiting`,
+      icon: BriefcaseBusiness,
+      urgent: dashboard.career.follow_up > 0,
     },
     {
-      title: "Goals",
-      icon: Landmark,
+      label: "Goals",
       value: `${dashboard.goals.length} active`,
+      detail: dashboard.goals[0]?.title ?? "Define an outcome",
       href: "/goals" as const,
-      detail: dashboard.goals[0]?.title ?? "Define the outcome you want",
+      icon: Goal,
     },
   ];
 
   return (
-    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
-      <div className="grid lg:grid-cols-[0.88fr_1.12fr] lg:items-stretch lg:gap-8">
-        <header className="contents min-w-0 lg:flex lg:flex-col lg:justify-center">
-          <p className="text-primary font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
+    <div className="mx-auto max-w-[1240px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-2xl">
+          <p className="text-primary text-xs font-semibold tracking-[0.1em] uppercase">
             {manilaDateLabel(now)}
           </p>
-          <div className="order-3 lg:order-none">
-            <h1 className="mt-4 text-[1.75rem] font-semibold tracking-[-0.04em] sm:mt-6 sm:text-[2rem] lg:mt-3">
-              {daylineItems.length
-                ? "Your Day, Mapped."
-                : "Your route is clear."}
-            </h1>
-            <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-6">
-              {daylineItems.length
-                ? "Start with the work that needs your attention most."
-                : "Add what matters and ATLAS will surface the next useful move."}
-            </p>
-            <div className="mt-5 grid max-w-md grid-cols-2 gap-2">
-              <Button asChild variant="secondary" size="sm" className="w-full">
-                <Link href="/money/transactions?create=true">
-                  <CircleDollarSign className="size-4" />
-                  Record expense
-                </Link>
-              </Button>
-              <Button asChild size="sm" className="w-full">
-                <Link href="/tasks?create=true">
-                  <Plus className="size-4" />
-                  Add task
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </header>
+          <h1 className="mt-3 text-[2rem] leading-none font-semibold tracking-[-0.05em] sm:text-[2.5rem] lg:text-[2.75rem]">
+            {daylineItems.length ? "Your Day, Mapped." : "Your route is clear."}
+          </h1>
+          <p className="text-muted-foreground mt-3 text-sm leading-6 sm:text-[0.9375rem]">
+            {daylineItems.length
+              ? "One clear move now. The rest of your system stays within reach."
+              : "Add what matters and ATLAS will surface the next useful move."}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:flex">
+          <Button asChild variant="secondary" size="sm">
+            <Link href="/money/transactions?create=true">
+              <CircleDollarSign aria-hidden="true" className="size-4" />
+              Record expense
+            </Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link href="/tasks?create=true">
+              <Plus aria-hidden="true" className="size-4" />
+              Add task
+            </Link>
+          </Button>
+        </div>
+      </header>
 
-        <GratitudeCard
-          initialQuote={wisdomQuote}
-          className="order-2 mt-3 lg:order-none lg:mt-0"
+      <div className="mt-8">
+        <DaylineCommand
+          items={daylineItems}
+          plannedMinutes={daylineResult?.plannedMinutes}
+          capacityMinutes={daylineResult?.capacityMinutes}
+          energyLevel={daylineResult?.energyLevel}
         />
       </div>
 
-      <div className="mt-6 grid items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <p className="text-primary font-mono text-[10px] font-semibold tracking-widest uppercase">
-                Dayline
-              </p>
-              <CardTitle className="mt-1">Today’s priorities</CardTitle>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="border-border text-muted-foreground rounded-full border px-2.5 py-1 font-mono text-[10px]">
-                {daylineResult
-                  ? `${daylineResult.plannedMinutes}/${daylineResult.capacityMinutes} min · ${daylineResult.energyLevel} energy`
-                  : `${daylineItems.length} of 3`}
-              </span>
-              <Link
-                href="/settings"
-                aria-label="Tune Dayline planning"
-                className="text-primary text-[11px] font-semibold"
-              >
-                Tune
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {daylineItems.length === 0 ? (
-              <div className="border-border bg-background/45 grid min-h-44 place-items-center rounded-xl border border-dashed p-5 text-center sm:min-h-56 sm:p-6">
-                <div className="max-w-sm">
-                  <Target className="text-primary mx-auto size-6" />
-                  <p className="mt-4 text-sm font-semibold">
-                    Nothing urgent is competing for attention.
-                  </p>
-                  <p className="text-muted-foreground mt-2 text-xs leading-5">
-                    Scheduled tasks, deadlines, follow-ups, and milestones will
-                    appear when they fit your plan or need urgent attention.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <ol>
-                {daylineItems.map((priority, index) => (
-                  <li
-                    key={`${priority.kind}-${priority.id}`}
-                    className="relative grid grid-cols-[18px_minmax(0,1fr)_auto] gap-2.5 pb-5 last:pb-0 sm:grid-cols-[22px_minmax(0,1fr)_auto] sm:gap-3 sm:pb-6"
-                  >
-                    {index < daylineItems.length - 1 && (
-                      <span className="bg-border absolute top-3 bottom-0 left-[6px] w-px" />
-                    )}
-                    <span
-                      className={`relative mt-1 size-[13px] rounded-full border-2 ${
-                        index === 0
-                          ? "border-primary bg-primary ring-primary/15 ring-4"
-                          : "border-muted-foreground bg-card"
-                      }`}
-                    />
-                    <div>
-                      <p className="text-primary font-mono text-[10px] font-semibold tracking-widest">
-                        {priority.position}
-                      </p>
-                      <p className="text-sm font-semibold">{priority.title}</p>
-                      <div className="text-muted-foreground mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-xs leading-5">
-                        <span>{prioritySummary(priority.reason)}</span>
-                        {priority.durationMinutes ? (
-                          <span className="font-mono">
-                            {priority.durationMinutes} min
-                          </span>
-                        ) : null}
-                      </div>
-                      <details className="mt-2">
-                        <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring w-fit cursor-pointer rounded-md text-[11px] focus-visible:ring-2 focus-visible:outline-none">
-                          Why this is here
-                        </summary>
-                        <p className="text-muted-foreground mt-2 text-xs leading-5">
-                          {priority.reason}
-                        </p>
-                      </details>
-                    </div>
-                    <TooltipHint label={`Open ${priority.title}`} side="left">
-                      <Link
-                        href={priority.href as Route}
-                        aria-label={`Open ${priority.title}`}
-                        className={buttonVariants({
-                          variant: "ghost",
-                          size: "icon",
-                        })}
-                      >
-                        <ArrowRight className="size-4" />
-                      </Link>
-                    </TooltipHint>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </CardContent>
-        </Card>
+      <SituationStrip items={situation} />
 
-        <SignalsPanel signals={dashboardSignals} className="mt-0 sm:mt-0" />
+      <div className="mt-10 grid items-start gap-8 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.8fr)] xl:gap-10">
+        <FinancialOverview metrics={metrics} />
+        <SignalsPanel signals={dashboardSignals} className="mt-0" />
       </div>
 
-      <section aria-labelledby="financial-snapshot" className="mt-3 sm:mt-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-2">
-              <CreditCard
-                aria-hidden="true"
-                className="text-primary size-4 shrink-0"
-              />
-              <CardTitle id="financial-snapshot">Financial snapshot</CardTitle>
+      <div className="border-border mt-10 grid gap-8 border-t pt-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] lg:items-stretch">
+        <GratitudeCard initialQuote={wisdomQuote} compact />
+        <section
+          aria-labelledby="week-position"
+          className="flex min-h-36 flex-col justify-between px-1 py-1"
+        >
+          <div>
+            <div className="flex items-center gap-2.5">
+              <span className="bg-muted text-muted-foreground grid size-9 place-items-center rounded-xl">
+                <CalendarClock aria-hidden="true" className="size-4" />
+              </span>
+              <h2 id="week-position" className="text-sm font-semibold">
+                Week position
+              </h2>
             </div>
-            <div className="hidden items-center gap-3 sm:flex">
-              <Link
-                href="/money/runway"
-                className="text-primary focus-visible:ring-ring rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
-              >
-                Runway
-              </Link>
-              <Link
-                href="/money/accounts"
-                className="text-primary focus-visible:ring-ring rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
-              >
-                View money
-              </Link>
-              <Link
-                href="/timeline?module=money"
-                className="text-primary focus-visible:ring-ring rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
-              >
-                Timeline
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-4 sm:pt-5">
-            <div className="border-border grid grid-cols-2 overflow-hidden rounded-xl border xl:grid-cols-4">
-              {metrics.map((metric, index) => (
-                <div
-                  key={metric.label}
-                  className={`min-h-24 min-w-0 p-2.5 min-[360px]:p-3 sm:p-4 ${
-                    index >= 2 ? "border-border border-t xl:border-t-0" : ""
-                  } ${index % 2 === 1 ? "border-border border-l" : ""} ${
-                    index === 2 ? "xl:border-border xl:border-l" : ""
-                  }`}
-                >
-                  <p className="text-muted-foreground text-[clamp(0.625rem,3vw,0.75rem)] sm:text-xs">
-                    {metric.label}
-                  </p>
-                  <p className="mt-2 font-mono text-[clamp(0.875rem,4.6vw,1.125rem)] leading-6 font-semibold tracking-tight break-words sm:text-xl">
-                    <SensitiveValue>{metric.value}</SensitiveValue>
-                  </p>
-                  <p className="text-muted-foreground mt-1.5 text-[clamp(0.625rem,2.8vw,0.6875rem)] leading-4 sm:text-[11px]">
-                    {metric.label === "Expenses this month" &&
-                    dashboard.financial.remaining_budget_centavos != null ? (
-                      <SensitiveValue>{metric.note}</SensitiveValue>
-                    ) : (
-                      metric.note
-                    )}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      <Card className="mt-3 overflow-hidden sm:mt-4">
-        <CardHeader>
-          <CardTitle>Workspace pulse</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 pt-4 sm:p-0 sm:pt-5">
-          <div className="border-border divide-border divide-y border-t">
-            {moduleSnapshots.map(
-              ({ title, icon: Icon, value, href, detail }) => (
-                <Link
-                  key={title}
-                  href={href}
-                  aria-label={`View ${title}`}
-                  className="hover:bg-muted/70 focus-visible:ring-ring grid min-h-20 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:px-5"
-                >
-                  <span className="bg-muted text-muted-foreground grid size-10 place-items-center rounded-xl">
-                    <Icon className="size-[18px]" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                      <span className="text-sm font-semibold">{title}</span>
-                      <span className="font-mono text-sm font-semibold">
-                        {value}
-                      </span>
-                    </span>
-                    <span className="text-muted-foreground mt-1 block truncate text-xs">
-                      {detail}
-                    </span>
-                  </span>
-                  <ArrowRight className="text-muted-foreground size-4" />
-                </Link>
-              ),
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="mt-4">
-        <Card>
-          <CardHeader className="flex items-start justify-between gap-4">
-            <CardTitle>Week position</CardTitle>
-            <div className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-xl">
-              <CalendarClock aria-hidden="true" className="size-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm font-semibold">
+            <p className="mt-4 text-base font-semibold">
               {dashboard.review_complete
                 ? "This week is reviewed"
                 : "Review when the week closes"}
             </p>
             <p className="text-muted-foreground mt-1 text-xs leading-5">
-              ATLAS keeps the facts beside your weekly reflection.
+              The facts stay beside your reflection, without interrupting today.
             </p>
-            <Link
-              href="/reviews"
-              className="text-primary focus-visible:ring-ring mt-4 inline-flex min-h-8 items-center gap-1 rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
-            >
-              Open weekly reviews <ArrowRight className="size-3" />
-            </Link>
-          </CardContent>
-        </Card>
+          </div>
+          <Link
+            href="/reviews"
+            className="text-primary focus-visible:ring-ring mt-4 inline-flex min-h-9 w-fit items-center gap-1 rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+          >
+            Open weekly reviews{" "}
+            <ArrowRight aria-hidden="true" className="size-3" />
+          </Link>
+        </section>
       </div>
     </div>
   );

@@ -75,23 +75,30 @@ export function GratitudeCard({
   return (
     <Card
       aria-label="Daily wisdom"
-      className={`relative overflow-hidden border-[#9a795f]/80 bg-[#172236] text-white ${className}`}
+      className={`relative overflow-hidden text-white ${
+        compact
+          ? "border-border/80 bg-[#111a29] shadow-none"
+          : "border-[#9a795f]/80 bg-[#172236]"
+      } ${className}`}
       style={{
         backgroundImage: 'url("/gratitude/atlas-gratitude-card-surface.webp")',
         backgroundPosition: "center",
         backgroundSize: "cover",
+        backgroundBlendMode: compact ? "soft-light" : undefined,
       }}
     >
       <CardContent
         className={`relative flex h-full flex-col justify-between ${
           compact
-            ? "min-h-36 p-4 sm:min-h-40 sm:p-5"
+            ? "min-h-36 p-5 sm:min-h-40 sm:p-6"
             : "min-h-44 p-4 sm:min-h-52 sm:p-6 lg:min-h-56 lg:p-7"
         }`}
       >
         <div className={compact ? "pr-12" : "pr-16 sm:pr-20 lg:pr-24"}>
-          <p className="font-mono text-[10px] font-semibold tracking-[0.2em] text-[#a9c5ff] uppercase">
-            {quote.category}
+          <p className="text-[11px] font-semibold tracking-[0.12em] text-[#a9c5ff] uppercase">
+            <span>Daily reflection</span>
+            <span aria-hidden="true"> · </span>
+            <span>{quote.category}</span>
           </p>
           <blockquote
             aria-live="polite"
@@ -100,7 +107,7 @@ export function GratitudeCard({
             <p
               className={`max-w-xl font-serif text-[#f8fafc] ${
                 compact
-                  ? "text-base leading-6 sm:text-lg"
+                  ? "text-base leading-6 text-[#eef3fa] sm:text-lg"
                   : "text-lg leading-6 sm:text-2xl sm:leading-[1.45] lg:text-[1.7rem] lg:leading-[1.35]"
               }`}
             >
@@ -123,7 +130,7 @@ export function GratitudeCard({
           aria-hidden="true"
           className={`absolute text-[#dce6f5]/85 ${
             compact
-              ? "top-4 right-4 size-8"
+              ? "top-5 right-5 size-7 opacity-60"
               : "top-5 right-5 size-11 sm:top-6 sm:right-6 sm:size-14 lg:top-1/2 lg:right-7 lg:size-16 lg:-translate-y-1/2"
           }`}
           strokeWidth={1.25}

@@ -50,12 +50,12 @@ export default async function GoalsPage({
   }
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
-      <p className="text-primary mb-2 font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
+      <p className="text-primary mb-3 text-xs font-semibold tracking-[0.1em] uppercase">
         Direction
       </p>
       <GoalCreatePanel
         heading={
-          <h1 className="text-[1.75rem] font-semibold tracking-[-0.035em] sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-none font-semibold tracking-[-0.045em] sm:text-[2.4rem]">
             Goals
           </h1>
         }

@@ -11,7 +11,11 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-export function InstallAppButton() {
+export function InstallAppButton({
+  showLabel = false,
+}: {
+  showLabel?: boolean;
+}) {
   const [prompt, setPrompt] = useState<InstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [installed, setInstalled] = useState(true);
@@ -51,7 +55,8 @@ export function InstallAppButton() {
       <Button
         type="button"
         variant="ghost"
-        size="icon"
+        size={showLabel ? "default" : "icon"}
+        className={showLabel ? "w-full justify-start" : undefined}
         aria-label="Install ATLAS"
         pending={installing}
         onClick={async () => {
@@ -74,6 +79,7 @@ export function InstallAppButton() {
         }}
       >
         <Download className="size-4" />
+        {showLabel && "Install ATLAS"}
       </Button>
     </TooltipHint>
   );

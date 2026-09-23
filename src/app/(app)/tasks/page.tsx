@@ -169,12 +169,12 @@ export default async function TasksPage({
 
   return (
     <div className="mx-auto max-w-[1200px] px-3 py-4 sm:p-6 lg:p-8">
-      <p className="text-primary font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
+      <p className="text-primary text-xs font-semibold tracking-[0.1em] uppercase">
         {manilaDateLabel(new Date())}
       </p>
       <TaskCreatePanel
         heading={
-          <h1 className="text-[1.75rem] font-semibold tracking-[-0.04em] sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-none font-semibold tracking-[-0.045em] sm:text-[2.4rem]">
             Tasks
           </h1>
         }

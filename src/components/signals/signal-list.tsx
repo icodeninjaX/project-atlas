@@ -1,4 +1,11 @@
-import { ArrowRight } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  CircleAlert,
+  CircleCheck,
+  Info,
+  TriangleAlert,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
@@ -31,6 +38,13 @@ const severityPresentation: Record<
     label: "Critical",
     badgeClass: "border-destructive/25 bg-destructive/10 text-destructive",
   },
+};
+
+const compactSeverityIcon: Record<SignalSeverity, LucideIcon> = {
+  critical: CircleAlert,
+  warning: TriangleAlert,
+  positive: CircleCheck,
+  info: Info,
 };
 
 const compactMetricLabels: Record<string, string> = {
@@ -81,44 +95,54 @@ function SignalContent({
   const hasBothMetrics = Boolean(signal.metric && signal.comparison);
 
   if (compact) {
+    const SeverityIcon = compactSeverityIcon[signal.severity];
+
     return (
-      <div className="p-3.5 sm:p-4">
-        <div className="flex items-start gap-3">
+      <Link
+        href={signal.href as Route}
+        className={cn(
+          "hover:bg-muted/45 focus-visible:ring-ring group flex min-h-16 flex-col justify-center px-3 py-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:px-4",
+          signal.severity === "critical" &&
+            "border-destructive bg-destructive/[0.035] border-l-2",
+          signal.severity === "warning" && "border-l-2 border-l-amber-500/70",
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-2">
           <span
+            role="img"
+            aria-label={presentation.label}
             className={cn(
-              "mt-0.5 inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
-              presentation.badgeClass,
+              "text-muted-foreground inline-flex size-4 shrink-0 items-center justify-center",
+              signal.severity === "critical" && "text-destructive",
+              signal.severity === "warning" &&
+                "text-amber-700 dark:text-amber-300",
+              signal.severity === "positive" &&
+                "text-emerald-700 dark:text-emerald-300",
             )}
           >
-            {presentation.label}
+            <SeverityIcon aria-hidden="true" className="size-3.5" />
           </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm leading-5 font-semibold">{signal.title}</p>
-            <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-              <MaybeSensitive signal={signal}>{signal.message}</MaybeSensitive>
-            </p>
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-              <details>
-                <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring w-fit cursor-pointer rounded-md text-[11px] focus-visible:ring-2 focus-visible:outline-none">
-                  Why this is here
-                </summary>
-                <p className="text-muted-foreground mt-2 text-xs leading-5">
-                  <MaybeSensitive signal={signal}>
-                    {signal.reason}
-                  </MaybeSensitive>
-                </p>
-              </details>
-              <Link
-                href={signal.href as Route}
-                className="text-primary focus-visible:ring-ring inline-flex min-h-8 items-center gap-1 rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
-              >
-                View {signal.category.toLowerCase()}
-                <ArrowRight className="size-3" />
-              </Link>
-            </div>
-          </div>
+          <p
+            className={cn(
+              "min-w-0 truncate text-[13px] leading-5 font-medium",
+              (signal.severity === "critical" ||
+                signal.severity === "warning") &&
+                "font-semibold",
+            )}
+          >
+            {signal.title}
+          </p>
         </div>
-      </div>
+        <div className="mt-0.5 flex min-w-0 items-center gap-3 pl-6">
+          <p className="text-muted-foreground min-w-0 flex-1 truncate text-[11px] leading-4">
+            <MaybeSensitive signal={signal}>{signal.message}</MaybeSensitive>
+          </p>
+          <span className="text-primary inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold">
+            View {signal.category.toLowerCase()}
+            <ArrowRight aria-hidden="true" className="size-3" />
+          </span>
+        </div>
+      </Link>
     );
   }
 
@@ -218,22 +242,61 @@ export function SignalList({
   signals: Signal[];
   compact?: boolean;
 }) {
+  if (compact) {
+    const attentionSignals = signals.filter(
+      ({ severity }) => severity === "critical" || severity === "warning",
+    );
+    const quieterSignals = signals.filter(
+      ({ severity }) => severity === "info" || severity === "positive",
+    );
+    const quieterLabel = quieterSignals.some(
+      ({ severity }) => severity === "positive",
+    )
+      ? "Progress"
+      : "Updates";
+
+    return (
+      <div aria-label="Signals">
+        {attentionSignals.length > 0 && (
+          <ol aria-label="Needs attention" className="divide-border divide-y">
+            {attentionSignals.map((signal) => (
+              <li key={signal.id}>
+                <SignalContent signal={signal} compact />
+              </li>
+            ))}
+          </ol>
+        )}
+        {quieterSignals.length > 0 && (
+          <div
+            className={cn(
+              attentionSignals.length > 0 && "border-border border-t",
+            )}
+          >
+            <p className="bg-muted/35 text-muted-foreground px-3 py-1.5 text-[10px] leading-4 font-semibold tracking-[0.12em] uppercase sm:px-4">
+              {quieterLabel}
+            </p>
+            <ol aria-label={quieterLabel} className="divide-border divide-y">
+              {quieterSignals.map((signal) => (
+                <li key={signal.id}>
+                  <SignalContent signal={signal} compact />
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <ol
-      aria-label="Signals"
-      className={compact ? "divide-border divide-y" : "space-y-3"}
-    >
+    <ol aria-label="Signals" className="space-y-3">
       {signals.map((signal) => (
         <li key={signal.id}>
-          {compact ? (
-            <SignalContent signal={signal} compact />
-          ) : (
-            <Card>
-              <CardContent className="p-0">
-                <SignalContent signal={signal} compact={false} />
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardContent className="p-0">
+              <SignalContent signal={signal} compact={false} />
+            </CardContent>
+          </Card>
         </li>
       ))}
     </ol>

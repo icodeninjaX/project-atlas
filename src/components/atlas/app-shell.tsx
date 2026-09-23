@@ -36,23 +36,35 @@ const destinations = {
   knowledge: { href: "/knowledge", label: "Knowledge", icon: BookOpen },
 } as const;
 
-const navigation = [
-  destinations.today,
-  destinations.signals,
-  destinations.money,
-  destinations.debts,
-  destinations.tasks,
-  destinations.goals,
-  destinations.career,
-  destinations.reviews,
-  destinations.timeline,
-  destinations.knowledge,
+const navigationGroups = [
+  {
+    label: "Daily",
+    destinations: [destinations.today, destinations.tasks],
+  },
+  {
+    label: "Plan",
+    destinations: [
+      destinations.money,
+      destinations.debts,
+      destinations.goals,
+      destinations.career,
+    ],
+  },
+  {
+    label: "Reflect",
+    destinations: [
+      destinations.reviews,
+      destinations.timeline,
+      destinations.knowledge,
+      destinations.signals,
+    ],
+  },
 ] as const;
 
 const mobilePrimaryNavigation = [
   destinations.today,
-  destinations.tasks,
   destinations.money,
+  destinations.tasks,
   destinations.goals,
 ] as const;
 
@@ -190,26 +202,39 @@ export function AppShell({ children }: { children: ReactNode }) {
             </p>
           </div>
         </Link>
-        <nav aria-label="Primary navigation" className="flex-1 space-y-1 p-3">
-          {navigation.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              aria-current={isActive(href) ? "page" : undefined}
-              className={cn(
-                "group text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
-                isActive(href) &&
-                  "bg-primary/10 text-primary hover:bg-primary/15",
-              )}
-            >
-              <Icon
-                className={cn(
-                  "text-muted-foreground group-hover:text-primary size-[18px]",
-                  isActive(href) && "text-primary",
-                )}
-              />
-              {label}
-            </Link>
+        <nav
+          aria-label="Primary navigation"
+          className="flex-1 space-y-5 overflow-y-auto px-3 py-5"
+        >
+          {navigationGroups.map((group) => (
+            <div key={group.label}>
+              <p className="text-muted-foreground/75 mb-1.5 px-3 text-[10px] font-semibold tracking-[0.14em] uppercase">
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.destinations.map(({ href, label, icon: Icon }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    aria-current={isActive(href) ? "page" : undefined}
+                    className={cn(
+                      "group text-muted-foreground hover:bg-muted/70 hover:text-foreground focus-visible:ring-ring relative flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                      isActive(href) &&
+                        "bg-primary/10 text-foreground hover:bg-primary/12 before:bg-primary before:absolute before:inset-y-2.5 before:left-0 before:w-0.5 before:rounded-full",
+                    )}
+                  >
+                    <Icon
+                      aria-hidden="true"
+                      className={cn(
+                        "text-muted-foreground group-hover:text-primary size-[17px]",
+                        isActive(href) && "text-primary",
+                      )}
+                    />
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
         <div className="border-border border-t p-3">
@@ -256,7 +281,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav
         aria-label="Primary navigation"
         className={cn(
-          "border-border bg-background fixed inset-x-0 bottom-0 z-40 h-[calc(4.75rem+env(safe-area-inset-bottom))] grid-cols-5 items-start border-t px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgb(0_0_0/0.08)] lg:hidden",
+          "border-border bg-background/97 fixed inset-x-0 bottom-0 z-40 h-[calc(4.75rem+env(safe-area-inset-bottom))] grid-cols-5 items-start border-t px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgb(0_0_0/0.08)] backdrop-blur lg:hidden",
           keyboardOpen ? "hidden" : "grid",
         )}
       >
@@ -266,14 +291,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             href={href}
             aria-current={isActive(href) ? "page" : undefined}
             className={cn(
-              "text-muted-foreground focus-visible:ring-ring flex min-h-[4.5rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[10px] font-medium focus-visible:ring-2 focus-visible:outline-none min-[360px]:text-[11px]",
-              isActive(href) && "text-primary",
+              "text-muted-foreground focus-visible:ring-ring relative flex min-h-[4.5rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[11px] font-medium focus-visible:ring-2 focus-visible:outline-none",
+              isActive(href) && "text-primary font-semibold",
             )}
           >
             <span
               className={cn(
                 "grid size-8 place-items-center rounded-xl transition-colors",
-                isActive(href) && "bg-primary/10",
+                isActive(href) && "bg-primary/12",
               )}
             >
               <Icon className="size-5" />
@@ -291,15 +316,16 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-label="More navigation"
             onClick={() => setMoreOpen((open) => !open)}
             className={cn(
-              "text-muted-foreground focus-visible:ring-ring flex min-h-[4.5rem] w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[10px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none min-[360px]:text-[11px]",
-              (moreOpen || moreDestinationActive) && "text-primary",
+              "text-muted-foreground focus-visible:ring-ring flex min-h-[4.5rem] w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
+              (moreOpen || moreDestinationActive) &&
+                "text-primary font-semibold",
             )}
           >
             <span
               className={cn(
                 "grid size-8 place-items-center rounded-xl border border-transparent transition-colors",
                 (moreOpen || moreDestinationActive) &&
-                  "border-primary bg-primary text-primary-foreground shadow-sm",
+                  "bg-primary/12 text-primary",
               )}
             >
               <Menu className="size-5" />
@@ -330,9 +356,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="bg-border mx-auto mb-3 h-1 w-10 rounded-full" />
             <div className="flex min-h-11 items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="bg-primary text-primary-foreground grid size-10 shrink-0 place-items-center rounded-xl shadow-sm">
-                  <Menu className="size-5" aria-hidden="true" />
-                </span>
                 <div>
                   <p
                     id="mobile-more-title"
@@ -341,7 +364,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     More destinations
                   </p>
                   <p className="text-muted-foreground mt-0.5 text-xs">
-                    Jump to the rest of your ATLAS workspace.
+                    Everything beyond today’s core route.
                   </p>
                 </div>
               </div>
@@ -360,7 +383,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <nav
               aria-label="More destinations"
-              className="mt-4 grid grid-cols-2 gap-2"
+              className="border-border mt-4 grid grid-cols-2 overflow-hidden rounded-2xl border"
             >
               {mobileMoreNavigation.map(({ href, label, icon: Icon }) => (
                 <Link
@@ -369,15 +392,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={() => setMoreOpen(false)}
                   aria-current={isActive(href) ? "page" : undefined}
                   className={cn(
-                    "border-border bg-background hover:border-primary hover:bg-secondary focus-visible:ring-ring flex min-h-16 items-center gap-3 rounded-xl border px-3 text-sm font-medium shadow-sm transition-colors focus-visible:ring-2 focus-visible:outline-none",
-                    isActive(href) &&
-                      "border-primary bg-primary text-primary-foreground hover:bg-primary",
+                    "border-border hover:bg-muted/60 focus-visible:ring-ring flex min-h-16 items-center gap-3 border-b px-3 text-sm font-medium transition-colors odd:border-r focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
+                    isActive(href) && "bg-primary/10 text-primary",
                   )}
                 >
                   <span
                     className={cn(
-                      "bg-secondary text-secondary-foreground grid size-10 shrink-0 place-items-center rounded-xl",
-                      isActive(href) && "bg-primary-foreground text-primary",
+                      "bg-muted text-muted-foreground grid size-9 shrink-0 place-items-center rounded-xl",
+                      isActive(href) && "bg-primary/15 text-primary",
                     )}
                   >
                     <Icon className="size-[18px]" />
