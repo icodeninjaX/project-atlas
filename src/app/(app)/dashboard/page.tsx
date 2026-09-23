@@ -1,12 +1,8 @@
 import {
   ArrowRight,
-  BriefcaseBusiness,
   CalendarClock,
-  CheckCircle2,
   CircleDollarSign,
-  Goal,
   Plus,
-  WalletCards,
 } from "lucide-react";
 import Link from "next/link";
 import { DaylineCommand } from "@/components/dashboard/dayline-command";
@@ -169,7 +165,6 @@ export default async function DashboardPage() {
       value: formatCentavos(dashboard.financial.total_balance_centavos),
       detail: "Active accounts",
       href: "/money/accounts" as const,
-      icon: WalletCards,
       sensitive: true,
     },
     {
@@ -177,7 +172,6 @@ export default async function DashboardPage() {
       value: `${dashboard.tasks.overdue} overdue`,
       detail: `${dashboard.tasks.today} due today`,
       href: "/tasks?view=overdue" as const,
-      icon: CheckCircle2,
       urgent: dashboard.tasks.overdue > 0,
     },
     {
@@ -185,7 +179,6 @@ export default async function DashboardPage() {
       value: `${dashboard.career.follow_up} follow-ups`,
       detail: `${dashboard.career.active} active applications`,
       href: "/career" as const,
-      icon: BriefcaseBusiness,
       urgent: dashboard.career.follow_up > 0,
     },
     {
@@ -193,7 +186,6 @@ export default async function DashboardPage() {
       value: `${dashboard.goals.length} active`,
       detail: dashboard.goals[0]?.title ?? "Define an outcome",
       href: "/goals" as const,
-      icon: Goal,
     },
   ];
 

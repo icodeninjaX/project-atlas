@@ -1,4 +1,3 @@
-import type { LucideIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
@@ -9,7 +8,6 @@ export type SituationItem = {
   value: string;
   detail: string;
   href: Route;
-  icon: LucideIcon;
   sensitive?: boolean;
   urgent?: boolean;
 };
@@ -27,7 +25,6 @@ export function SituationStrip({ items }: { items: SituationItem[] }) {
       </div>
       <div className="border-border bg-card grid grid-cols-1 overflow-hidden rounded-2xl border min-[360px]:grid-cols-2 xl:grid-cols-4">
         {items.map((item, index) => {
-          const Icon = item.icon;
           const value = item.sensitive ? (
             <SensitiveValue>{item.value}</SensitiveValue>
           ) : (
@@ -39,7 +36,7 @@ export function SituationStrip({ items }: { items: SituationItem[] }) {
               key={item.label}
               href={item.href}
               className={cn(
-                "hover:bg-muted/45 focus-visible:ring-ring grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-3 px-4 py-3.5 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset min-[360px]:min-h-24 min-[360px]:items-center xl:border-t-0 xl:px-4 xl:py-4",
+                "hover:bg-muted/45 focus-visible:ring-ring flex min-w-0 items-center px-4 py-3.5 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset min-[360px]:min-h-24 xl:border-t-0 xl:px-4 xl:py-4",
                 index > 0 && "border-border border-t",
                 index % 2 === 1 && "min-[360px]:border-l",
                 index === 1 && "min-[360px]:border-t-0",
@@ -47,14 +44,6 @@ export function SituationStrip({ items }: { items: SituationItem[] }) {
                 item.urgent && "bg-destructive/[0.035]",
               )}
             >
-              <span
-                className={cn(
-                  "bg-muted text-muted-foreground grid size-8 shrink-0 place-items-center rounded-lg",
-                  item.urgent && "bg-destructive/10 text-destructive",
-                )}
-              >
-                <Icon aria-hidden="true" className="size-3.5" />
-              </span>
               <span className="min-w-0">
                 <span className="text-muted-foreground block text-xs leading-4 break-words">
                   {item.label}

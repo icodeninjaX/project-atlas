@@ -1,9 +1,3 @@
-import {
-  BriefcaseBusiness,
-  CheckCircle2,
-  Goal,
-  WalletCards,
-} from "lucide-react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { SituationStrip, type SituationItem } from "./situation-strip";
@@ -14,28 +8,24 @@ const items: SituationItem[] = [
     value: "₱13,218.00",
     detail: "Active accounts",
     href: "/money/accounts",
-    icon: WalletCards,
   },
   {
     label: "Tasks",
     value: "7 overdue",
     detail: "2 due today",
     href: "/tasks?view=overdue",
-    icon: CheckCircle2,
   },
   {
     label: "Career",
     value: "2 follow-ups",
     detail: "4 active applications",
     href: "/career",
-    icon: BriefcaseBusiness,
   },
   {
     label: "Goals",
     value: "4 active",
     detail: "Learn Sales",
     href: "/goals",
-    icon: Goal,
   },
 ];
 
@@ -64,5 +54,6 @@ describe("SituationStrip", () => {
     expect(screen.getByText("Available cash")).not.toHaveClass("truncate");
     expect(screen.getByText("₱13,218.00")).not.toHaveClass("truncate");
     expect(screen.getByText("Active accounts")).not.toHaveClass("truncate");
+    expect(heading.closest("section")?.querySelector("svg")).toBeNull();
   });
 });
