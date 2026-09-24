@@ -164,7 +164,7 @@ or evidence reconciliation, not an assumption of failure.
       [the local acceptance matrix](atlas-graph.md#acceptance-and-validation--2026-09-24).
       Preserve native task/milestone links, owner integrity, deletion cleanup,
       one-hop bounds, Search/export and user-controlled links. Verify migration
-      `20260924100951_atlas_graph_relationships.sql`, RLS, triggers, grants and count
+      `20260924161626_atlas_graph_relationships.sql`, RLS, triggers, grants and count
       RPC in the required environment before dependent application rollout; record
       hosted deployment and authenticated responsive verification separately.
       Hosted state not verified. Do not rebuild Graph or infer deployment from SQL files.
@@ -2674,7 +2674,7 @@ model call. Structured claims cite approved evidence, while ATLAS renders the
 authoritative figures, periods, completeness and source links. Invalid or
 incomplete explanations fall back to the retrieved facts; the seven preset
 questions retain their original path. Migration
-`20260924154545_analyst_freeform_quota.sql` extends the existing typed
+`20260924161640_analyst_freeform_quota.sql` extends the existing typed
 reservation contract without adding an unbounded model or tool capability.
 
 Local acceptance is recorded in [analyst-freeform.md](analyst-freeform.md):

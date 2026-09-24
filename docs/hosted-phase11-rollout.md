@@ -10,25 +10,21 @@ Vercel with the production alias.
 ## Migration history
 
 The Supabase connector applied the committed Graph SQL first, then the
-freeform quota SQL. It assigned new online version numbers. The stored SQL and
-repository files have matching MD5 hashes after whitespace normalization:
+freeform quota SQL. It assigned new online version numbers. Two earlier
+migrations also had different repository and online version numbers. On
+2026-09-25, the four repository files were renamed to match the hosted history:
 
-| Repository migration                           | Online version   | Normalized SQL MD5                 |
-| ---------------------------------------------- | ---------------- | ---------------------------------- |
-| `20260924100951_atlas_graph_relationships.sql` | `20260924161626` | `cf52053be905e99dc0ad5a2d3c81f94b` |
-| `20260924154545_analyst_freeform_quota.sql`    | `20260924161640` | `487df8193133553810d4d0b6a3b8546d` |
+| Original repository version | Repository and online version | Migration                         | Normalized SQL MD5                 |
+| --------------------------- | ----------------------------- | --------------------------------- | ---------------------------------- |
+| `20260906104326`            | `20260906104334`              | `index_knowledge_review_owner_fk` | `0d7e318cc7da89a82d5fbf43e093b3df` |
+| `20260906104433`            | `20260906134905`              | `normalize_knowledge_activity`    | `f3417446bb2004823e4fe91baa419e2e` |
+| `20260924100951`            | `20260924161626`              | `atlas_graph_relationships`       | `cf52053be905e99dc0ad5a2d3c81f94b` |
+| `20260924154545`            | `20260924161640`              | `analyst_freeform_quota`          | `487df8193133553810d4d0b6a3b8546d` |
 
-Two older migration filename/version differences were also checked against
-the online history. `20260906104326_index_knowledge_review_owner_fk.sql`
-corresponds to online `20260906104334` (normalized SQL MD5
-`0d7e318cc7da89a82d5fbf43e093b3df`), and
-`20260906104433_normalize_knowledge_activity.sql` corresponds to online
-`20260906134905` (normalized SQL MD5
-`f3417446bb2004823e4fe91baa419e2e`). Their SQL was already applied;
-neither was replayed. The repository filenames were left in place while other
-local migration work is in progress. Before a future CLI push, reconcile these
-four version mappings in a coordinated migration-history cleanup rather than
-reapplying their SQL.
+The SQL in each renamed file is unchanged. Each matches its hosted copy after
+trimming trailing whitespace. Local migration history was updated to the same
+versions while retaining its recorded SQL statements. No migration SQL was
+replayed.
 
 ## Hosted checks
 
@@ -78,6 +74,6 @@ main-account run provided the hosted browser evidence instead. The local
 authenticated browser checks and synthetic live model evaluation remain
 recorded in the Phase 8 and Phase 11 contracts.
 
-Before a future CLI database push, align the four equivalent migration version
-mappings above with the repository history. The later Phase 12 migration and
-application release are separate from this Phase 8/11 closeout.
+The four equivalent migration versions now match the hosted history. The later
+Phase 12 migration and application release are separate from this Phase 8/11
+closeout.

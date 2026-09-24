@@ -10,7 +10,7 @@ Phase 9 read-only tools. It cannot execute actions or arbitrary queries.
 The route requires a signed-in user, a question of 8–500 characters and explicit
 data-sharing acknowledgement. It reserves one request from the existing Analyst
 allowance before any planner or answer model call. Migration
-`20260924154545_analyst_freeform_quota.sql` adds `freeform` to the ledger's
+`20260924161640_analyst_freeform_quota.sql` adds `freeform` to the ledger's
 analysis types and typed reservation RPC; the same hourly, daily and site-wide
 limits apply. The reservation model is the pinned `gpt-4o-mini-2024-07-18` used
 by both planner and answer generation. No prompt, question, evidence or answer is
