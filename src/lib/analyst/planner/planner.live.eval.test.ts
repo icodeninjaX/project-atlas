@@ -56,6 +56,50 @@ const cases: PlannerEvaluationCase[] = [
 ];
 
 suite("live synthetic Analyst planner evaluation", () => {
+  it("selects bounded history for a two-domain longitudinal question", async () => {
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Manila",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    const year = Number(today.slice(0, 4));
+    const monthIndex = Number(today.slice(5, 7)) - 1;
+    const from = new Date(Date.UTC(year, monthIndex - 3, 1))
+      .toISOString()
+      .slice(0, 10);
+    const through = new Date(Date.UTC(year, monthIndex, 0))
+      .toISOString()
+      .slice(0, 10);
+    const result = await requestAnalystPlan(
+      `From ${from} through ${through}, show my recorded income and task completions by month. Include missing-history coverage; do not infer account balances or past overdue tasks.`,
+    );
+    expect(result.status, JSON.stringify(result)).toBe("planned");
+    if (result.status !== "planned") return;
+    expect(result.plan.calls).toHaveLength(2);
+    expect(
+      result.plan.calls.every(
+        (call) => call.tool === "getHistoricalMetricSeries",
+      ),
+    ).toBe(true);
+    expect(
+      result.plan.calls
+        .map((call) => (call.input as { metric: string }).metric)
+        .sort(),
+    ).toEqual(["income_centavos", "task_completions"]);
+    expect(
+      result.plan.calls.every(
+        (call) => (call.input as { grain: string }).grain === "month",
+      ),
+    ).toBe(true);
+    expect(
+      result.plan.calls.every(
+        (call) =>
+          (call.input as { from: string; through: string }).from === from &&
+          (call.input as { through: string }).through === through,
+      ),
+    ).toBe(true);
+  }, 20000);
   it.each(cases)(
     "passes $id",
     async (fixture) => {

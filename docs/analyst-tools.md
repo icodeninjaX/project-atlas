@@ -1,8 +1,10 @@
 # Analyst Retrieval / Tool Layer — Phase 9
 
 Implemented locally on 2026-09-24. This is an independent, server-only read layer.
-It does not change the seven-question Analyst interface, run a model, plan queries,
-write domain records, or expose a new route. Phase 10 is the Query Planner.
+The Phase 9 acceptance record below describes its original thirteen-tool scope.
+Phase 12 subsequently added a bounded historical metric tool; see the
+[metric contract](historical-metrics.md). The layer does not write domain records
+or accept arbitrary queries.
 
 ## Invocation and approved scope
 
@@ -12,21 +14,22 @@ The registry supplies JSON input schemas, descriptions and limits; the server
 always runs the stricter Zod schemas, including period refinements. No caller
 supplies an owner, database client, SQL, table name, execution budget or clock.
 
-| Tool                     | Accepted input                                                   | Source and scope                                                                      |
-| ------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `getSpendingChange`      | `{}`                                                             | Existing Analyst month comparison, including its unequal-month/missing-baseline rules |
-| `getDebtProgress`        | `{}`                                                             | Current debts and reduction from original principal; no past balance reconstruction   |
-| `getTaskFocus`           | `{}`                                                             | Existing priority/date focus ranking and open-task counts                             |
-| `getGoalProgress`        | `{}`                                                             | Current active goals and milestone-derived progress                                   |
-| `getCareerPipeline`      | `{}`                                                             | Current stages and overdue next actions, not conversions                              |
-| `getWeeklyReviewMetrics` | `{}`                                                             | Latest twelve completed numeric reviews; written reflections excluded                 |
-| `getSignals`             | `{}`                                                             | Existing deterministic Signals engine; type/severity evidence                         |
-| `getMoneySummary`        | `from`, `through`, `kind: expense/income`, optional `categoryId` | Surviving recorded transactions; transfers excluded                                   |
-| `getDebtPayments`        | `from`, `through`, optional `debtId`                             | Recorded payment amounts, not historical balances                                     |
-| `getRelatedEntities`     | `entityType`, `entityId`, optional `limit` (1–20)                | Existing one-hop Graph helper; native/manual provenance preserved                     |
-| `getTimelineEvents`      | `from`, `through`, optional `module`                             | One existing Timeline page, at most thirty events; no cursor recursion                |
-| `getRunway`              | `{}`                                                             | Existing workspace loader and runway engine                                           |
-| `runFinancialScenario`   | Explicit scenario fields below                                   | Existing scenario engine, with current owner-scoped runway sources                    |
+| Tool                        | Accepted input                                                   | Source and scope                                                                                             |
+| --------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `getSpendingChange`         | `{}`                                                             | Existing Analyst month comparison, including its unequal-month/missing-baseline rules                        |
+| `getDebtProgress`           | `{}`                                                             | Current debts and reduction from original principal; no past balance reconstruction                          |
+| `getTaskFocus`              | `{}`                                                             | Existing priority/date focus ranking and open-task counts                                                    |
+| `getGoalProgress`           | `{}`                                                             | Current active goals and milestone-derived progress                                                          |
+| `getCareerPipeline`         | `{}`                                                             | Current stages and overdue next actions, not conversions                                                     |
+| `getWeeklyReviewMetrics`    | `{}`                                                             | Latest twelve completed numeric reviews; written reflections excluded                                        |
+| `getSignals`                | `{}`                                                             | Existing deterministic Signals engine; type/severity evidence                                                |
+| `getMoneySummary`           | `from`, `through`, `kind: expense/income`, optional `categoryId` | Surviving recorded transactions; transfers excluded                                                          |
+| `getDebtPayments`           | `from`, `through`, optional `debtId`                             | Recorded payment amounts, not historical balances                                                            |
+| `getHistoricalMetricSeries` | `from`, `through`, `grain`, `metric`                             | One of six versioned recorded metrics, at most twelve calendar buckets; coverage and source counts preserved |
+| `getRelatedEntities`        | `entityType`, `entityId`, optional `limit` (1–20)                | Existing one-hop Graph helper; native/manual provenance preserved                                            |
+| `getTimelineEvents`         | `from`, `through`, optional `module`                             | One existing Timeline page, at most thirty events; no cursor recursion                                       |
+| `getRunway`                 | `{}`                                                             | Existing workspace loader and runway engine                                                                  |
+| `runFinancialScenario`      | Explicit scenario fields below                                   | Existing scenario engine, with current owner-scoped runway sources                                           |
 
 Scenario input requires `monthlyIncomeCentavos` (integer or null to retain the
 baseline), `monthlyExpenseChangeCentavos` (signed integer),
@@ -39,17 +42,19 @@ reserve targets. Debt payoff projections are not included in this initial output
 
 Dates are real ISO calendar dates in Asia/Manila, inclusive, ordered, no later
 than today, and span at most 366 days. Snapshot tools accept no historical date
-filter. Unsupported history tools are not registered. Historical task trends,
-career conversion histories, general period comparisons and Knowledge metrics
-remain candidate extensions, not claims of implemented history.
+filter. The Phase 12 series has its own twelve-bucket limit and daily/annual
+database limits. Recorded task completions and Knowledge review counts are
+supported; historical overdue counts, career conversions and past balances remain
+unavailable.
 
 ## Ownership, limits and failures
 
 Every invocation creates a cookie-authenticated Supabase client, verifies identity
 with `getUser`, and derives the owner on the server. Ordinary authentication token
 refresh remains permitted. The dedicated tool transport permits only approved
-table reads with explicit owner predicates and two existing invoker-secured RPCs:
-`life_timeline` and `runway_monthly_totals`. RLS remains the final boundary.
+table reads with explicit owner predicates and three invoker-secured RPCs:
+`life_timeline`, `runway_monthly_totals` and Phase 12's
+`atlas_historical_metrics`. RLS remains the final boundary.
 There is no service-role client, arbitrary SQL, domain write or model request.
 
 Existing Graph, Timeline and runway loaders accept an optional server-only client

@@ -65,6 +65,7 @@ beforeEach(() => {
   });
   mocks.plan.mockResolvedValue({
     status: "ready",
+    calls: [],
     evidence: [item],
     limitations: [],
     metadata: { planner: { inputTokens: 90, outputTokens: 20 } },
@@ -129,6 +130,7 @@ describe("freeform Analyst route", () => {
   it("shows deterministic evidence when a tool or answer fails", async () => {
     mocks.plan.mockResolvedValueOnce({
       status: "partial",
+      calls: [],
       evidence: [item],
       limitations: ["Missing source"],
       metadata: {},

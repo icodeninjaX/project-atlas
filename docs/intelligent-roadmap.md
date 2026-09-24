@@ -129,6 +129,7 @@ summary takes precedence for current next-action guidance.
 | 9. Analyst Retrieval / Tool Layer           | Implemented locally, 2026-09-24                                            | Fresh local application, contract and two-owner REST/RPC integration checks; see [acceptance record](analyst-tools.md#acceptance-and-validation--2026-09-24)                          | No hosted adoption or deployment verified; no new route/UI                                                                                                                        |
 | 10. Analyst Query Planner                   | Implemented locally, 2026-09-24                                            | Strict plan/provider/execution tests, synthetic live evaluation and two-owner tool execution; see [acceptance record](analyst-query-planner.md#acceptance-and-validation--2026-09-24) | No hosted adoption or deployment verified; no new route/UI                                                                                                                        |
 | 11. Analyst 2.0: Freeform Grounded Analysis | Implemented locally, 2026-09-25                                            | Grounding, quota, browser and synthetic live evaluation; see [Phase 11 contract](analyst-freeform.md#local-acceptance-and-release-boundary--2026-09-25)                               | Hosted migration, deployment and authenticated flow not verified                                                                                                                  |
+| 12. Historical / Longitudinal Metrics Layer | Implemented locally, 2026-09-25                                            | 464 application tests, 159 local DB assertions, authenticated desktop/mobile browser checks and build; see [Phase 12 contract](historical-metrics.md)                                 | Hosted migration and owner isolation verified 2026-09-25; application deployment and authenticated flow pending                                                                   |
 
 Repository health is independent: [formatting debt](repository-formatting-debt.md)
 records 45 historical failures and their local cleanup to zero on 2026-09-24.
@@ -181,10 +182,12 @@ hosted unknowns remain hosted release gates, but need not block independently
 testable local tools whose dependencies are locally validated. Do not turn this
 into endless cleanup or waive mandatory CI policy.
 
-**Phase 11 Freeform Grounded Analysis is implemented and accepted locally.** Its
+**Phase 12 Historical Metrics is implemented locally, with the hosted migration verified.** Its
+[contract](historical-metrics.md) defines source/date/coverage semantics and
+release boundaries. Phase 11's
 [contract](analyst-freeform.md) records the quota migration, grounded claims,
 fallback and validation. Hosted release gates above remain open. Next planned
-implementation: **Phase 12 — Historical / Longitudinal Metrics Layer**.
+implementation: **Phase 13 — Cross-domain and Longitudinal Analyst**.
 
 The delivered AI surfaces are intentionally narrow. Universal Capture currently
 produces **one** previewable proposal from five kinds (expense, income, task,
@@ -1893,9 +1896,9 @@ A strong deterministic foundation will make every future AI capability safer, ch
 
 # 10. Next-Generation ATLAS Intelligence
 
-**Status:** Phases 9–11 are implemented and accepted locally. Phases 12–19 remain
+**Status:** Phases 9–12 are implemented locally. Phases 13–19 remain
 planned. Preserve required release-environment gates; the next scoped phase is
-the Historical / Longitudinal Metrics Layer.
+the Cross-domain and Longitudinal Analyst.
 
 ## Dependency map and sequencing decision
 
@@ -1905,7 +1908,7 @@ the Historical / Longitudinal Metrics Layer.
 
 Phases 1–8 retain their original numbering. Phases 9–19 are numbered in delivery
 order. The Tool Layer, Query Planner and Freeform Analyst are implemented locally;
-the next implementation is Phase 12, Historical Metrics. References, dependencies
+the next implementation is Phase 13, Cross-domain Analyst. References, dependencies
 and handoffs use this numbering. Phase
 numbers express delivery order; hard prerequisites remain separately defined below.
 Legacy section anchors are retained for existing links.
@@ -1915,7 +1918,7 @@ Legacy section anchors are retained for existing links.
 | 9                 | 9     | Analyst Retrieval / Tool Layer          | Implemented and accepted locally           |
 | 10                | 10    | Analyst Query Planner                   | Implemented and accepted locally           |
 | 11                | 11    | Analyst 2.0: Freeform Grounded Analysis | Implemented and accepted locally           |
-| 12                | 12    | Historical / Longitudinal Metrics Layer | Planned                                    |
+| 12                | 12    | Historical / Longitudinal Metrics Layer | Implemented locally                        |
 | 13                | 13    | Cross-domain and Longitudinal Analyst   | Planned                                    |
 | 14                | 14    | Pattern and Association Discovery       | Planned                                    |
 | 15                | 15    | Scenario Intelligence                   | Planned                                    |
@@ -2108,7 +2111,7 @@ flow, evidence validation, local acceptance and hosted release limits.
 
 ## Phase 12 — Deterministic historical metrics
 
-**Status:** Planned; delivery priority 12.
+**Status:** Implemented locally and hosted migration verified; application release pending. Delivery priority 12. See [metric contract](historical-metrics.md).
 
 - **Goal:** Provide inspectable daily, weekly, and monthly history for Analyst,
   Signals, Graph paths, and decision reviews.
@@ -2682,4 +2685,6 @@ grounding and route tests, three synthetic live answer evaluations, the accepted
 planner's two-owner tool checks, 132 local database assertions, the local security
 advisor, authenticated desktop/mobile browser checks and production build.
 Hosted migration and deployed authenticated flow remain separate release gates.
-Next planned phase: Historical / Longitudinal Metrics (Phase 12).
+Phase 12's request-time historical metrics, History page and bounded Analyst tool
+are described in [historical-metrics.md](historical-metrics.md). Next planned phase:
+Cross-domain and Longitudinal Analyst (Phase 13).

@@ -2,6 +2,10 @@ import { z } from "zod";
 import { graphEntityTypes } from "@/lib/graph/registry";
 import { timelineModules, validTimelineDate } from "@/lib/timeline/timeline";
 import type { Evidence } from "@/lib/analyst/evidence";
+import {
+  historicalBucketCount,
+  metricDefinitions,
+} from "@/lib/history/metrics";
 
 export const TOOL_LIMITS = Object.freeze({
   queries: 24,
@@ -82,6 +86,24 @@ export const toolInputs = {
     .object({ ...periodShape, debtId: z.uuid().optional() })
     .strict()
     .refine(boundedPeriod),
+  getHistoricalMetricSeries: z
+    .object({
+      ...periodShape,
+      metric: z.enum(
+        Object.keys(metricDefinitions) as [
+          keyof typeof metricDefinitions,
+          ...(keyof typeof metricDefinitions)[],
+        ],
+      ),
+      grain: z.enum(["day", "week", "month"]),
+    })
+    .strict()
+    .refine((value) => {
+      if (!boundedPeriod(value)) return false;
+      return (
+        historicalBucketCount(value.from, value.through, value.grain) <= 12
+      );
+    }, "Use at most twelve calendar periods within a year."),
   getRelatedEntities: z
     .object({
       entityType: z.enum(graphEntityTypes),
@@ -157,6 +179,8 @@ export const toolDescriptions: Record<ToolName, string> = {
     "Recorded income or expense sum for an explicit Manila date period; excludes transfers.",
   getDebtPayments:
     "Recorded debt payments for an explicit Manila date period; not historical balances.",
+  getHistoricalMetricSeries:
+    "Versioned whole-domain historical series. Metric must be one of income_centavos, expense_centavos, debt_payments_centavos, task_completions, knowledge_reviews, review_overall_score. Supply inclusive from/through dates and grain day/week/month, up to twelve buckets. Call once per metric; two calls with the same dates compare two domains. Includes source counts and coverage. No past balances, overdue counts or goal progress. No category or entity ID is needed.",
   getRelatedEntities:
     "One-hop native and manual Graph relationships with source references.",
   getTimelineEvents:

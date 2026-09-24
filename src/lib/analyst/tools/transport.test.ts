@@ -58,6 +58,35 @@ describe("tool read transport", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("permits only bounded historical aggregate RPC arguments", async () => {
+    const endpoint = `${root}rpc/atlas_historical_metrics`;
+    const allowed = setup([]);
+    await expect(
+      allowed.transport.fetch(endpoint, {
+        method: "POST",
+        body: JSON.stringify({
+          p_from: "2026-09-01",
+          p_through: "2026-09-24",
+          p_grain: "month",
+        }),
+      }),
+    ).resolves.toBeInstanceOf(Response);
+    expect(allowed.fetch).toHaveBeenCalledOnce();
+    const rejected = setup([]);
+    await expect(
+      rejected.transport.fetch(endpoint, {
+        method: "POST",
+        body: JSON.stringify({
+          p_from: "2026-01-01",
+          p_through: "2026-09-24",
+          p_grain: "day",
+          user_id: ownerId,
+        }),
+      }),
+    ).rejects.toMatchObject({ code: "invalid_input" });
+    expect(rejected.fetch).not.toHaveBeenCalled();
+  });
+
   it("retains typed failure when Supabase converts the thrown exception to its error result", async () => {
     const { transport } = setup({ code: "42P01" }, 400);
     const client = createClient("https://local.example", "public-key", {

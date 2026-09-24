@@ -94,7 +94,7 @@ afterEach(() => {
 
 describe("independent Analyst tools", () => {
   it("exposes only named read tools with strict schemas", () => {
-    expect(listAnalystTools()).toHaveLength(13);
+    expect(listAnalystTools()).toHaveLength(14);
     expect(listAnalystTools().every((tool) => tool.readOnly)).toBe(true);
   });
   it("rejects unknown tools and owner/SQL injection before reading", async () => {

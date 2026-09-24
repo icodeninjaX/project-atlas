@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import {
   existingEvidence,
+  historicalSeries,
   paymentSummary,
   related,
   runway,
@@ -203,6 +204,11 @@ export async function invokeAnalystTool(
           return paymentSummary(
             tool,
             toolInputs.getDebtPayments.parse(rawInput),
+            context,
+          );
+        case "getHistoricalMetricSeries":
+          return historicalSeries(
+            toolInputs.getHistoricalMetricSeries.parse(rawInput),
             context,
           );
         case "getRelatedEntities":

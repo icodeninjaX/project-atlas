@@ -1,5 +1,6 @@
 import "server-only";
 import { ToolFailure, TOOL_LIMITS } from "./contracts";
+import { historicalBucketCount, type MetricGrain } from "@/lib/history/metrics";
 
 const tables = new Set([
   "transactions",
@@ -134,12 +135,33 @@ export function createToolTransport(options: {
         } else if (
           rpc &&
           request.method === "POST" &&
-          ["life_timeline", "runway_monthly_totals"].includes(rpc)
+          [
+            "life_timeline",
+            "runway_monthly_totals",
+            "atlas_historical_metrics",
+          ].includes(rpc)
         ) {
           const body: Record<string, unknown> = await request.clone().json();
           if (!body || Array.isArray(body) || typeof body !== "object")
             fail("invalid_input", "Invalid read parameters.");
-          if (rpc === "runway_monthly_totals") {
+          if (rpc === "atlas_historical_metrics") {
+            const span = date(body.p_through) - date(body.p_from);
+            if (
+              Object.keys(body).some(
+                (key) => !["p_from", "p_through", "p_grain"].includes(key),
+              ) ||
+              !["day", "week", "month"].includes(String(body.p_grain)) ||
+              !Number.isFinite(span) ||
+              span < 0 ||
+              span >= 366 * 86400000 ||
+              historicalBucketCount(
+                String(body.p_from),
+                String(body.p_through),
+                body.p_grain as MetricGrain,
+              ) > 12
+            )
+              fail("invalid_input", "Historical period is invalid.");
+          } else if (rpc === "runway_monthly_totals") {
             const span = date(body.p_end_date) - date(body.p_start_date);
             if (
               Object.keys(body).some(

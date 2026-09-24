@@ -1376,6 +1376,18 @@ export type Database = {
         };
         Returns: string;
       };
+      atlas_historical_metrics: {
+        Args: { p_from: string; p_through: string; p_grain: string };
+        Returns: {
+          metric_key: string;
+          period_start: string;
+          period_end: string;
+          value: number | null;
+          source_count: number;
+          coverage: string;
+          first_recorded_on: string | null;
+        }[];
+      };
       atlas_goal_relationship_counts: {
         Args: { p_goal_ids: string[] };
         Returns: {

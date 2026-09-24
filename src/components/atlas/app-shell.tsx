@@ -33,6 +33,7 @@ const destinations = {
   debts: { href: "/debts", label: "Debts", icon: Landmark },
   tasks: { href: "/tasks", label: "Tasks", icon: ClipboardCheck },
   goals: { href: "/goals", label: "Goals", icon: Goal },
+  history: { href: "/history", label: "History", icon: History },
   career: { href: "/career", label: "Career", icon: BriefcaseBusiness },
   reviews: { href: "/reviews", label: "Reviews", icon: CircleDollarSign },
   timeline: { href: "/timeline", label: "Timeline", icon: History },
@@ -62,6 +63,7 @@ const navigationGroups = [
     label: "Reflect",
     destinations: [
       destinations.reviews,
+      destinations.history,
       destinations.timeline,
       destinations.knowledge,
       destinations.signals,
@@ -83,6 +85,7 @@ const mobileMoreNavigation = [
   destinations.signals,
   destinations.career,
   destinations.reviews,
+  destinations.history,
   destinations.timeline,
   destinations.knowledge,
   { href: "/search", label: "Search", icon: Search },

@@ -12,6 +12,10 @@ import { calculateScenario } from "@/lib/runway/engine";
 import { loadRunwayWorkspace } from "@/lib/runway/server";
 import { loadTimelinePage } from "@/lib/timeline/server";
 import {
+  metricDefinitions,
+  parseHistoricalMetrics,
+} from "@/lib/history/metrics";
+import {
   ToolFailure,
   type ToolEvidence,
   type ToolInput,
@@ -195,6 +199,72 @@ export async function paymentSummary(
         completeness: "complete",
       }),
     ],
+  };
+}
+
+export async function historicalSeries(
+  input: ToolInput<"getHistoricalMetricSeries">,
+  { client, now }: Context,
+): Promise<ToolPayload> {
+  const today = manilaToday(now);
+  const earliest = new Date(Date.parse(today) - 365 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  if (input.through > today || input.from < earliest)
+    throw new ToolFailure("invalid_input");
+  const { data, error } = await client.rpc("atlas_historical_metrics", {
+    p_from: input.from,
+    p_through: input.through,
+    p_grain: input.grain,
+  });
+  if (error) throw new ToolFailure("unavailable_source");
+  let rows;
+  try {
+    rows = parseHistoricalMetrics(data, input).filter(
+      (row) => row.metric === input.metric,
+    );
+  } catch {
+    throw new ToolFailure("invalid_output");
+  }
+  if (rows.length === 0) throw new ToolFailure("invalid_output");
+  if (rows.length > 12) throw new ToolFailure("budget_exceeded");
+  const definition = metricDefinitions[input.metric];
+  const available = rows.filter((row) => row.coverage !== "insufficient");
+  return {
+    status:
+      available.length === 0
+        ? "insufficient"
+        : available.length < rows.length
+          ? "partial"
+          : "ready",
+    limitations: [
+      definition.source,
+      "Request-time aggregation uses surviving owner records. Deleted, unrecorded and pre-first-record activity cannot be reconstructed. A zero means zero recorded events in a covered period, not proof of no real activity.",
+      ...(available.length < rows.length
+        ? ["One or more periods have insufficient history and were omitted."]
+        : []),
+    ],
+    evidence: available.map((row) => {
+      const countedFrom = [row.period.from, input.from, row.firstRecordedOn!]
+        .sort()
+        .at(-1)!;
+      const countedThrough =
+        row.period.through < input.through ? row.period.through : input.through;
+      return makeFact("getHistoricalMetricSeries", now, {
+        id: `${input.metric}.${row.period.from}`,
+        metric: definition.label,
+        value: row.value!,
+        unit: definition.unit,
+        period: { from: countedFrom, through: countedThrough },
+        comparisonBasis: `Calendar bucket ${row.period.from} through ${row.period.through}; version 1 ${input.grain} aggregation; ${row.sourceCount} contributing surviving records; first recorded ${row.firstRecordedOn}; coverage ${row.coverage}.`,
+        source: {
+          description: definition.source,
+          recordIds: [],
+          href: definition.href,
+        },
+        completeness: row.coverage === "recorded" ? "complete" : "partial",
+      });
+    }),
   };
 }
 
