@@ -1,6 +1,7 @@
 # Shared UI Components
 
 ## Button
+
 - Path: `src/components/ui/button.tsx`
 - Description: CVA-powered button primitive with default, secondary, ghost, and destructive variants.
 - Key props: native button props, `variant`, `size`, `asChild`
@@ -60,6 +61,7 @@ export { buttonVariants };
 ```
 
 ## Card
+
 - Path: `src/components/ui/card.tsx`
 - Description: Bordered surface primitive with header, title, and content helpers.
 - Key props: native `section`, `div`, and `h2` props
@@ -105,6 +107,7 @@ export function CardContent({
 ```
 
 ## Input
+
 - Path: `src/components/ui/input.tsx`
 - Description: Full-width form input with a mobile-friendly 44px minimum touch height.
 - Key props: native input props
@@ -127,6 +130,7 @@ export function Input({ className, ...props }: React.ComponentProps<"input">) {
 ```
 
 ## PageHeading
+
 - Path: `src/components/shared/page-heading.tsx`
 - Description: Responsive page heading with optional eyebrow and action group.
 - Key props: `eyebrow`, `title`, `description`, `actions`
@@ -167,6 +171,7 @@ export function PageHeading({
 ```
 
 ## EmptyState
+
 - Path: `src/components/shared/empty-state.tsx`
 - Description: Reusable dashed empty-state panel with icon, copy, and optional action.
 - Key props: `icon`, `title`, `description`, `action`
@@ -204,6 +209,7 @@ export function EmptyState({
 ```
 
 ## ModuleEmptyPage
+
 - Path: `src/components/shared/module-empty-page.tsx`
 - Description: Standard empty feature page composed from PageHeading, EmptyState, and Button.
 - Key props: eyebrow, title, description, icon, empty-state copy, action label
@@ -253,6 +259,7 @@ export function ModuleEmptyPage({
 ```
 
 ## AuthCard
+
 - Path: `src/components/auth/auth-card.tsx`
 - Description: Centered public authentication container with explanatory copy and footer.
 - Key props: `eyebrow`, `title`, `description`, `children`, `footer`

@@ -1,6 +1,7 @@
 # Shared Layouts
 
 ## Root layout
+
 - Path: `src/app/layout.tsx`
 - Description: Global HTML/body shell, Geist fonts, theme provider, PWA registration, and toast host.
 
@@ -80,6 +81,7 @@ export default function RootLayout({
 ```
 
 ## Public layout
+
 - Path: `src/app/(public)/layout.tsx`
 - Description: Public-site header with ATLAS identity, theme toggle, and login link.
 
@@ -120,6 +122,7 @@ export default function PublicLayout({
 ```
 
 ## Authenticated layout
+
 - Path: `src/app/(app)/layout.tsx`
 - Description: Authenticated route guard and shared ATLAS application shell/header.
 
@@ -161,6 +164,7 @@ export default async function AuthenticatedLayout({
 ```
 
 ## AppShell
+
 - Path: `src/components/atlas/app-shell.tsx`
 - Description: Responsive application chrome: desktop left sidebar, content offset, mobile safe-area bottom nav, and More popover.
 
@@ -387,6 +391,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 ```
 
 ## AppHeader
+
 - Path: `src/components/atlas/app-header.tsx`
 - Description: Shared authenticated top bar with identity, sync/install/search/theme, quick task, and sign-out actions.
 
@@ -431,6 +436,7 @@ export function AppHeader({ displayName }: { displayName?: string | null }) {
 ```
 
 ## AtlasMark
+
 - Path: `src/components/atlas/atlas-mark.tsx`
 - Description: Code-rendered ATLAS brand mark used in public and desktop application chrome.
 
@@ -455,6 +461,7 @@ export function AtlasMark({ className }: { className?: string }) {
 ```
 
 ## ThemeToggle
+
 - Path: `src/components/atlas/theme-toggle.tsx`
 - Description: Shared icon button for switching between light and dark themes.
 
@@ -485,6 +492,7 @@ export function ThemeToggle() {
 ```
 
 ## ThemeProvider
+
 - Path: `src/components/atlas/theme-provider.tsx`
 - Description: Thin application wrapper around next-themes.
 

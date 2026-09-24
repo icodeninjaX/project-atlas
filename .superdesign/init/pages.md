@@ -3,6 +3,7 @@
 Authenticated pages also render through `src/app/(app)/layout.tsx`, which depends on `AppShell`, `AppHeader`, offline infrastructure, and Supabase server auth. The trees below start at each page entry and recursively trace local imports; repeated imports remain noted where they clarify a component's visual dependencies.
 
 ## `/` — Landing page
+
 Entry: `src/app/(public)/page.tsx`
 
 - `src/app/(public)/page.tsx`
@@ -10,6 +11,7 @@ Entry: `src/app/(public)/page.tsx`
     - `src/lib/utils.ts`
 
 ## `/dashboard` — Today dashboard
+
 Entry: `src/app/(app)/dashboard/page.tsx`
 
 - `src/app/(app)/dashboard/page.tsx`
@@ -23,6 +25,7 @@ Entry: `src/app/(app)/dashboard/page.tsx`
     - `src/lib/env.ts`
 
 ## `/money/accounts` — Accounts
+
 Entry: `src/app/(app)/money/accounts/page.tsx`
 
 - `src/app/(app)/money/accounts/page.tsx`
@@ -68,6 +71,7 @@ Entry: `src/app/(app)/money/accounts/page.tsx`
   - `src/lib/supabase/server.ts`
 
 ## `/debts` — Debts
+
 Entry: `src/app/(app)/debts/page.tsx`
 
 - `src/app/(app)/debts/page.tsx`
@@ -96,6 +100,7 @@ Entry: `src/app/(app)/debts/page.tsx`
   - `src/lib/supabase/server.ts`
 
 ## `/tasks` — Tasks
+
 Entry: `src/app/(app)/tasks/page.tsx`
 
 - `src/app/(app)/tasks/page.tsx`
@@ -132,6 +137,7 @@ Entry: `src/app/(app)/tasks/page.tsx`
   - `src/lib/tasks/task-time.ts`
 
 ## `/goals` — Goals
+
 Entry: `src/app/(app)/goals/page.tsx`
 
 - `src/app/(app)/goals/page.tsx`
@@ -162,6 +168,7 @@ Entry: `src/app/(app)/goals/page.tsx`
   - `src/lib/supabase/server.ts`
 
 ## `/career` — Career pipeline
+
 Entry: `src/app/(app)/career/page.tsx`
 
 - `src/app/(app)/career/page.tsx`
@@ -208,6 +215,7 @@ Entry: `src/app/(app)/career/page.tsx`
   - `src/lib/supabase/server.ts`
 
 ## `/reviews` — Weekly reviews
+
 Entry: `src/app/(app)/reviews/page.tsx`
 
 - `src/app/(app)/reviews/page.tsx`
@@ -232,6 +240,7 @@ Entry: `src/app/(app)/reviews/page.tsx`
     - `src/lib/env.ts`
 
 ## `/search` — Global search
+
 Entry: `src/app/(app)/search/page.tsx`
 
 - `src/app/(app)/search/page.tsx`
@@ -244,6 +253,7 @@ Entry: `src/app/(app)/search/page.tsx`
     - `src/lib/env.ts`
 
 ## `/settings` — Settings
+
 Entry: `src/app/(app)/settings/page.tsx`
 
 - `src/app/(app)/settings/page.tsx`

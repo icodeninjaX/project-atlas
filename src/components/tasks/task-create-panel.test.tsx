@@ -40,7 +40,10 @@ describe("TaskCreatePanel", () => {
   it("opens from the empty-state Add task control", () => {
     render(
       <>
-        <TaskCreatePanel heading={<h1>Tasks</h1>} description={<p>Capture quickly.</p>} />
+        <TaskCreatePanel
+          heading={<h1>Tasks</h1>}
+          description={<p>Capture quickly.</p>}
+        />
         <TaskCreateTrigger />
       </>,
     );

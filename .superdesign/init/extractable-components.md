@@ -3,6 +3,7 @@
 ## Layout Components
 
 ## AppShell
+
 - Source: `src/components/atlas/app-shell.tsx`
 - Category: layout
 - Description: Desktop sidebar and mobile bottom navigation wrapping authenticated content.
@@ -10,6 +11,7 @@
 - Hardcoded: ATLAS mark, navigation labels and hrefs, Lucide icon names, sidebar width, bottom-nav layout, safe-area spacing, utility classes
 
 ## AppHeader
+
 - Source: `src/components/atlas/app-header.tsx`
 - Category: layout
 - Description: Authenticated top bar with user identity and global actions.
@@ -17,6 +19,7 @@
 - Hardcoded: Search, theme, quick-task, and sign-out actions; icon names; button variants; utility classes
 
 ## PublicHeader
+
 - Source: `src/app/(public)/layout.tsx`
 - Category: layout
 - Description: Public header with ATLAS identity, theme control, and login action.
@@ -24,6 +27,7 @@
 - Hardcoded: ATLAS mark, ATLAS label, login href/text, height, spacing, utility classes
 
 ## AuthCard
+
 - Source: `src/components/auth/auth-card.tsx`
 - Category: layout
 - Description: Centered public authentication content wrapper.
@@ -33,6 +37,7 @@
 ## Basic Components
 
 ## PageHeading
+
 - Source: `src/components/shared/page-heading.tsx`
 - Category: basic
 - Description: Responsive page title block with optional action group.
@@ -40,6 +45,7 @@
 - Hardcoded: heading type scale, responsive stacking breakpoint, spacing, utility classes
 
 ## EmptyState
+
 - Source: `src/components/shared/empty-state.tsx`
 - Category: basic
 - Description: Dashed empty-state panel with icon, copy, and optional action.
@@ -47,6 +53,7 @@
 - Hardcoded: icon treatment, min height, border style, spacing, utility classes
 
 ## AtlasMark
+
 - Source: `src/components/atlas/atlas-mark.tsx`
 - Category: basic
 - Description: Code-rendered ATLAS brand mark built from the actual source spans and theme tokens.
@@ -54,6 +61,7 @@
 - Hardcoded: three mark strokes/dot, 36px container, primary color treatments, rounded shape
 
 ## AccountCard
+
 - Source: `src/components/money/account-card.tsx`
 - Category: basic
 - Description: Financial account summary with balance and expandable account actions.
@@ -61,6 +69,7 @@
 - Hardcoded: money typography, action labels, card shape, icon names, utility classes
 
 ## Button
+
 - Source: `src/components/ui/button.tsx`
 - Category: basic
 - Description: Shared button family.
@@ -68,6 +77,7 @@
 - Hardcoded: style variants, dimensions, radii, focus rings, utility classes
 
 ## Card
+
 - Source: `src/components/ui/card.tsx`
 - Category: basic
 - Description: Shared bordered content surface.
@@ -75,6 +85,7 @@
 - Hardcoded: background/border tokens, 16px radius, header/content spacing
 
 ## Input
+
 - Source: `src/components/ui/input.tsx`
 - Category: basic
 - Description: Shared text input with mobile touch sizing.

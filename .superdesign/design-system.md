@@ -5,6 +5,7 @@
 ATLAS is a private personal operating system that joins money, debts, tasks, goals, career activity, and weekly reviews into one daily route. Its primary job is to reduce cognitive load: show the user's present position, highlight the next useful action, and keep every value traceable. Philippine-peso amounts and Manila dates are first-class content.
 
 Primary surfaces:
+
 - Public landing and authentication.
 - Today dashboard with ranked priorities and compact cross-module summaries.
 - Operational modules for money, debt, tasks, goals, career, weekly reviews, search, settings, and onboarding.
