@@ -118,9 +118,9 @@ ATLAS should first become better at **detecting**, then **prioritizing**, then *
 | 3. Personal Runway & Financial Scenarios | Complete    | Implemented on 2026-09-05 with deterministic runway, saved assumptions, and non-destructive scenarios.                                       |
 | 4. Life Timeline                         | Complete    | Implemented on 2026-09-05 with durable owner-scoped timeline snapshots, filters, pagination, and source links.                               |
 | 5. Knowledge & Spaced Repetition         | Complete    | Implemented on 2026-09-06 with concept lifecycle, active recall, review history, deterministic scheduling, search, and activity integration. |
-| 6. Universal Capture                     | In progress | Local implementation, live structured-output smoke, and local pgTAP passed on 2026-09-24; release checks remain.                            |
-| 7. ATLAS Analyst                         | Planned     | Evidence-backed analysis follows Universal Capture.                                                                                          |
-| 8. ATLAS Graph                           | Planned     | Cross-domain relationships follow the preceding phases.                                                                                       |
+| 6. Universal Capture                     | In progress | Local implementation, live structured-output smoke, and local pgTAP passed on 2026-09-24; release checks remain.                             |
+| 7. ATLAS Analyst                         | Complete    | Read-only analysis for seven bounded question types; see [Analyst contract](atlas-analyst.md).                                               |
+| 8. ATLAS Graph                           | Planned     | Cross-domain relationships follow the preceding phases.                                                                                      |
 
 The current product priority is finishing and validating Universal Capture.
 Authenticated mobile checks and database integration testing for delivered
@@ -1130,7 +1130,7 @@ Final response:
 
 # Phase 7 — ATLAS Analyst
 
-**Status:** Planned after Universal Capture.
+**Status:** Implemented for seven bounded, read-only question types. Analyst has a separate six-model allowlist. The separate Analyst quota migrations were applied to hosted ProjectAtlas on 2026-09-24. Open-ended analysis remains unsupported.
 
 ## Goal
 

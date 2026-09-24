@@ -1,7 +1,25 @@
 /** Model selected for each server-side ATLAS feature. */
 export const AI_MODELS = {
   capture: "gpt-5.4-nano-2026-03-17",
+  analyst: "gpt-4o-mini-2024-07-18",
 } as const;
+
+/** Independently allowed for Analyst's strict JSON Chat Completions response. */
+export const ANALYST_MODEL_OPTIONS = [
+  { id: AI_MODELS.analyst, label: "GPT-4o mini" },
+  { id: "gpt-4.1-mini", label: "GPT-4.1 mini" },
+  { id: "gpt-5.4-nano", label: "GPT-5.4 nano" },
+  { id: "gpt-5.4-mini", label: "GPT-5.4 mini" },
+  { id: "gpt-4o", label: "GPT-4o" },
+  { id: "gpt-5.4", label: "GPT-5.4" },
+] as const;
+
+export function resolveAnalystModel(value: unknown) {
+  if (value === undefined || value === null) return AI_MODELS.analyst;
+  return (
+    ANALYST_MODEL_OPTIONS.find((option) => option.id === value)?.id ?? null
+  );
+}
 
 /** Capture models allowed for Chat Completions strict JSON output. */
 export const CAPTURE_MODEL_OPTIONS = [

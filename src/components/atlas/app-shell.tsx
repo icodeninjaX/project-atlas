@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 const destinations = {
   today: { href: "/dashboard", label: "Today", icon: Gauge },
   capture: { href: "/capture", label: "Capture", icon: Sparkles },
+  analyst: { href: "/analyst", label: "Analyst", icon: Sparkles },
   signals: { href: "/signals", label: "Signals", icon: Radar },
   money: { href: "/money/accounts", label: "Money", icon: WalletCards },
   debts: { href: "/debts", label: "Debts", icon: Landmark },
@@ -44,6 +45,7 @@ const navigationGroups = [
     destinations: [
       destinations.today,
       destinations.capture,
+      destinations.analyst,
       destinations.tasks,
     ],
   },
@@ -76,6 +78,7 @@ const mobilePrimaryNavigation = [
 
 const mobileMoreNavigation = [
   destinations.capture,
+  destinations.analyst,
   destinations.debts,
   destinations.signals,
   destinations.career,
