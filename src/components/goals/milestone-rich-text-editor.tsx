@@ -15,7 +15,7 @@ import {
   Underline,
   Undo2,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   normalizeMilestoneDescription,
   type MilestoneRichTextDocument,
@@ -85,6 +85,13 @@ export function MilestoneRichTextEditor({
   );
   const descriptionInputRef = useRef<HTMLInputElement>(null);
   const [initialSerialized] = useState(() => JSON.stringify(initialDocument));
+  const syncDescriptionInput = (currentEditor: { getJSON: () => unknown }) => {
+    if (descriptionInputRef.current) {
+      descriptionInputRef.current.value = JSON.stringify(
+        currentEditor.getJSON(),
+      );
+    }
+  };
   const editor = useEditor(
     {
       extensions,
@@ -103,15 +110,22 @@ export function MilestoneRichTextEditor({
         },
       },
       onUpdate: ({ editor: currentEditor }) => {
-        if (descriptionInputRef.current) {
-          descriptionInputRef.current.value = JSON.stringify(
-            currentEditor.getJSON(),
-          );
-        }
+        syncDescriptionInput(currentEditor);
       },
     },
     [],
   );
+
+  useEffect(() => {
+    if (!editor) return;
+    const form = descriptionInputRef.current?.form;
+    if (!form) return;
+
+    const syncBeforeSubmit = () => syncDescriptionInput(editor);
+    form.addEventListener("submit", syncBeforeSubmit, true);
+    return () => form.removeEventListener("submit", syncBeforeSubmit, true);
+  }, [editor]);
+
   const toolbar = useEditorState({
     editor,
     selector: ({ editor: currentEditor }) => ({
