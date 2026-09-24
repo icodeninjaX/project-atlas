@@ -67,8 +67,11 @@ skipped across 94 files. Lint, typecheck, repository formatting and the
 production build passed. The separate three-case synthetic live
 evaluation passed.
 
-The hosted migration, deployed app compatibility, and a full authenticated hosted
-flow have not been verified. Browser checks use mocked API responses; they prove
+The hosted quota migration, database permissions and shared allowance, production
+commit, and rendered signed-in question box were verified on 2026-09-25. The
+complete authenticated hosted flow with a disposable login remains open; see
+the [hosted rollout record](hosted-phase11-rollout.md). Browser checks use
+mocked API responses; they prove
 consent, citation/source interaction and responsive layout, while the synthetic
 live evaluation proves the answer provider path. Freeform remains limited to
 approved current evidence and available history. The later Historical Metrics

@@ -79,3 +79,13 @@ and accessibility E2E checks also pass after the separate formatting cleanup.
 The original 45 repository formatting failures were unrelated to Graph; all
 were resolved in a separate mechanical cleanup. See the exact historical file
 list and attribution in [repository formatting debt](repository-formatting-debt.md).
+
+## Hosted rollout — 2026-09-25
+
+The Graph migration was applied to ProjectAtlas before the Phase 11 freeform
+quota migration. Hosted checks verified the table, RLS, grants, count RPC,
+endpoint cleanup triggers, two-owner visibility, and cleanup after endpoint
+deletion. The temporary checks were rolled back. The production app serves
+commit `d5cbed2`; a complete authenticated hosted Graph browser flow with a
+disposable account remains open. See the [hosted rollout record](hosted-phase11-rollout.md)
+for version mapping, exact checks, and the remaining release check.
