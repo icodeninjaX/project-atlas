@@ -128,8 +128,8 @@ summary takes precedence for current next-action guidance.
 | 8. ATLAS Graph                              | Implemented locally, 2026-09-24                                            | Local acceptance recorded: 358 unit/component tests, 131 DB assertions, Graph mobile/desktop E2E and static/build checks                                                              | Hosted state not verified; local migration is not hosted deployment proof                                                                                                         |
 | 9. Analyst Retrieval / Tool Layer           | Implemented locally, 2026-09-24                                            | Fresh local application, contract and two-owner REST/RPC integration checks; see [acceptance record](analyst-tools.md#acceptance-and-validation--2026-09-24)                          | No hosted adoption or deployment verified; no new route/UI                                                                                                                        |
 | 10. Analyst Query Planner                   | Implemented locally, 2026-09-24                                            | Strict plan/provider/execution tests, synthetic live evaluation and two-owner tool execution; see [acceptance record](analyst-query-planner.md#acceptance-and-validation--2026-09-24) | No hosted adoption or deployment verified; no new route/UI                                                                                                                        |
-| 11. Analyst 2.0: Freeform Grounded Analysis | Implemented locally, 2026-09-25                                            | Grounding, quota, browser and synthetic live evaluation; see [Phase 11 contract](analyst-freeform.md#local-acceptance-and-release-boundary--2026-09-25)                               | Hosted migration, deployment and authenticated flow not verified                                                                                                                  |
-| 12. Historical / Longitudinal Metrics Layer | Implemented locally, 2026-09-25                                            | 464 application tests, 159 local DB assertions, authenticated desktop/mobile browser checks and build; see [Phase 12 contract](historical-metrics.md)                                 | Hosted migration and owner isolation verified 2026-09-25; application deployment and authenticated flow pending                                                                   |
+| 11. Analyst 2.0: Freeform Grounded Analysis | Implemented locally, 2026-09-25                                            | Grounding, quota, browser and synthetic live evaluation; see [Phase 11 contract](analyst-freeform.md#local-acceptance-and-release-boundary--2026-09-25)                               | Current deployment and one signed-in insufficient-history fallback verified with Phase 12; complete Phase 11 hosted acceptance remains open                                       |
+| 12. Historical / Longitudinal Metrics Layer | Implemented and deployed, 2026-09-25                                       | 464 application tests, 159 local DB assertions, authenticated desktop/mobile browser checks and build; see [Phase 12 contract](historical-metrics.md)                                 | Hosted migration, owner isolation, ready deployment, signed-in History views and one consented Analyst fallback verified 2026-09-25                                               |
 
 Repository health is independent: [formatting debt](repository-formatting-debt.md)
 records 45 historical failures and their local cleanup to zero on 2026-09-24.
@@ -182,11 +182,11 @@ hosted unknowns remain hosted release gates, but need not block independently
 testable local tools whose dependencies are locally validated. Do not turn this
 into endless cleanup or waive mandatory CI policy.
 
-**Phase 12 Historical Metrics is implemented locally, with the hosted migration verified.** Its
+**Phase 12 Historical Metrics is implemented, deployed and verified in the hosted environment.** Its
 [contract](historical-metrics.md) defines source/date/coverage semantics and
-release boundaries. Phase 11's
+release boundaries. The live Analyst check showed the expected insufficient-history fallback for the current account. Phase 11's
 [contract](analyst-freeform.md) records the quota migration, grounded claims,
-fallback and validation. Hosted release gates above remain open. Next planned
+fallback and validation. Other hosted release gates above remain open. Next planned
 implementation: **Phase 13 — Cross-domain and Longitudinal Analyst**.
 
 The delivered AI surfaces are intentionally narrow. Universal Capture currently
@@ -2111,7 +2111,7 @@ flow, evidence validation, local acceptance and hosted release limits.
 
 ## Phase 12 — Deterministic historical metrics
 
-**Status:** Implemented locally and hosted migration verified; application release pending. Delivery priority 12. See [metric contract](historical-metrics.md).
+**Status:** Implemented, deployed and verified in the hosted environment on 2026-09-25; delivery priority 12. See [metric contract](historical-metrics.md).
 
 - **Goal:** Provide inspectable daily, weekly, and monthly history for Analyst,
   Signals, Graph paths, and decision reviews.

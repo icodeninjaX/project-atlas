@@ -27,7 +27,7 @@ The UI displays each metric's source, calendar bucket, actual counted dates when
 
 The RPC has no materialized cache. A backfilled source record, date or amount correction, reopened task, and deletion changes the next read deterministically. Source aggregation is limited to the requested dates; indexed owner-scoped lookups separately find each metric's earliest surviving record. It rejects unauthenticated callers, future periods, lookbacks beyond one year, unsupported grains and daily requests over 90 days. The Analyst tool additionally permits at most twelve calendar buckets per call. Client boundary validation rejects unsafe centavo integers and malformed aggregate responses.
 
-Current account and debt balances, prior overdue counts, past goal progress, career stage conversion, Signal counts and cross-domain causal claims are outside this version. They require genuine event/snapshot coverage and separate definitions before any historical comparison. Hosted deployment and a hosted authenticated responsive browser flow remain separate release checks.
+Current account and debt balances, prior overdue counts, past goal progress, career stage conversion, Signal counts and cross-domain causal claims are outside this version. They require genuine event/snapshot coverage and separate definitions before any historical comparison.
 
 ## Local acceptance — 2026-09-25
 
@@ -42,4 +42,8 @@ The local browser checks used a production build pointed at the local Supabase s
 
 The `add_historical_metrics` migration is applied to the ProjectAtlas Supabase project as version `20260924170800`. The repository migration file was renamed to the connector-assigned version, and a clean local database reset reapplied that exact file. Hosted catalog checks confirmed the invoker RPC, signed-in execute grant, anonymous denial, three indexes and dedicated review trigger. A transaction-only two-owner check reconciled income, expense and a completed review score while excluding the other owner's records. The transaction was rolled back, and all synthetic users and rows were confirmed absent. The hosted security advisor reported the same pre-existing notices recorded in the [Phase 11 rollout](hosted-phase11-rollout.md); it introduced no new Phase 12 finding.
 
-The application deployment and authenticated hosted History page remain to be verified after the repository push. A real hosted freeform Analyst question consumes quota and sends user evidence to the model, so local synthetic evaluation and the hosted database checks are the current Analyst evidence without a disposable hosted account.
+## Hosted application verification — 2026-09-25
+
+Commit `ca80a251834b379bee15bb5d516536499c957c96` was pushed to `main`, GitHub CI run `36032625913` passed, and Vercel deployment `dpl_Fp3kXA5chXB1ao658qGGP4u25qUm` became ready at `atlas.kdvwebsiteservices.com`. The signed-in History page loaded all six metric tables and source links. Weekly grouping with a three-month lookback worked at desktop and narrow-mobile widths without page-level horizontal overflow. The hosted History route had no runtime errors in the checked hour.
+
+One user-approved live freeform Analyst question asked how recorded income and task completions changed from April 1 through September 25, 2026. The hosted response displayed five source-linked facts with bucket coverage. Because surviving records begin later than the requested start, it explicitly identified omitted periods and withheld an AI trend explanation. This verifies the hosted request, evidence display and insufficient-history fallback for the current account. The synthetic planner evaluation above covers full-data planning; this live request does not establish a complete six-month comparison for this account.
