@@ -69,6 +69,17 @@ afterEach(() => {
 describe("Analyst request", () => {
   it("keeps Analyst's allowlist independent of Capture's pinned snapshots", () => {
     expect(ANALYST_MODEL_OPTIONS.map(({ id }) => id)).toContain("gpt-5.4-mini");
+    expect(ANALYST_MODEL_OPTIONS.map(({ id }) => id)).toEqual([
+      "gpt-4o-mini-2024-07-18",
+      "gpt-4.1-mini",
+      "gpt-5.4-nano",
+      "gpt-5.4-mini",
+      "gpt-4o",
+      "gpt-5.4",
+      "gpt-6-astra",
+      "gpt-6-sol",
+      "gpt-6-luna",
+    ]);
     expect(CAPTURE_MODEL_OPTIONS.map(({ id }) => id)).toContain(
       "gpt-5.4-mini-2026-03-17",
     );
@@ -133,6 +144,48 @@ describe("Analyst request", () => {
       (await POST(ask({ ...valid, question: "x".repeat(201) }))).status,
     ).toBe(400);
     expect(mocks.retrieve).not.toHaveBeenCalled();
+  });
+  it.each([
+    ["gpt-6-astra", "low"],
+    ["gpt-6-sol", "none"],
+    ["gpt-6-luna", "none"],
+    ["gpt-4o-mini-2024-07-18", undefined],
+  ])("sends %s with its supported reasoning setting", async (model, effort) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              finish_reason: "stop",
+              message: {
+                content: JSON.stringify({
+                  explanation: "Recorded spending changed.",
+                  evidenceIds: ["spending.current"],
+                  uncertainty: "",
+                }),
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const response = await POST(ask({ ...valid, model }));
+    expect((await response.json()).providerStatus).toBe("success");
+    expect(mocks.rpc).toHaveBeenCalledWith("reserve_ai_analyst_request", {
+      p_type: "spending_change",
+      p_model: model,
+    });
+    const payload = JSON.parse(
+      String(vi.mocked(fetch).mock.calls[0]?.[1]?.body),
+    );
+    expect(payload.model).toBe(model);
+    expect(payload.reasoning_effort).toBe(effort);
+    expect(payload.store).toBe(false);
+    expect(payload.max_completion_tokens).toBe(350);
+    expect(payload.response_format.type).toBe("json_schema");
+    expect(payload.response_format.json_schema.strict).toBe(true);
   });
   it("falls back to server evidence on invalid IDs and provider failure", async () => {
     vi.stubGlobal(

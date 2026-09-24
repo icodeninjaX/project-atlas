@@ -12,6 +12,9 @@ export const ANALYST_MODEL_OPTIONS = [
   { id: "gpt-5.4-mini", label: "GPT-5.4 mini" },
   { id: "gpt-4o", label: "GPT-4o" },
   { id: "gpt-5.4", label: "GPT-5.4" },
+  { id: "gpt-6-astra", label: "GPT-6 Astra" },
+  { id: "gpt-6-sol", label: "GPT-6 Sol" },
+  { id: "gpt-6-luna", label: "GPT-6 Luna" },
 ] as const;
 
 export function resolveAnalystModel(value: unknown) {

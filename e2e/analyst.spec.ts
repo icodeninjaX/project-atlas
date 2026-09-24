@@ -25,6 +25,10 @@ for (const width of [390, 1280]) {
     await expect(
       page.getByRole("heading", { name: "ATLAS Analyst" }),
     ).toBeVisible();
+    await expect(page.getByLabel("AI model").locator("option")).toHaveCount(9);
+    await expect(page.getByRole("option", { name: "GPT-6 Astra" })).toHaveCount(
+      1,
+    );
     const analyze = page.getByRole("button", { name: "Analyze" });
     await expect(analyze).toBeDisabled();
     await page.getByRole("checkbox").check();

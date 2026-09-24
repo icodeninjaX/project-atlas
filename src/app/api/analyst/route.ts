@@ -21,6 +21,12 @@ const headers = { "Cache-Control": "private, no-store" };
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status, headers });
 
+function analystReasoningEffort(model: string) {
+  if (model === "gpt-6-astra") return "low";
+  if (model === "gpt-6-sol" || model === "gpt-6-luna") return "none";
+  return null;
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   if (!supabase) return json({ error: "Service unavailable." }, 503);
@@ -161,6 +167,7 @@ export async function POST(request: Request) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
   try {
+    const reasoningEffort = analystReasoningEffort(model);
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       signal: controller.signal,
@@ -171,6 +178,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         model,
         store: false,
+        ...(reasoningEffort && { reasoning_effort: reasoningEffort }),
         max_completion_tokens: 350,
         response_format: {
           type: "json_schema",

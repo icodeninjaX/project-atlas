@@ -121,6 +121,10 @@ export function AnalystWorkspace({
               </option>
             ))}
           </select>
+          <p className="text-muted-foreground mt-2 text-xs">
+            Model usage may be billed by OpenAI unless your API project
+            qualifies for complimentary tokens.
+          </p>
         </div>
         <label className="flex items-start gap-3 text-sm">
           <input
