@@ -20,9 +20,55 @@ const initialInterpret: InterpretCaptureState = {
 };
 const initialConfirm: ConfirmCaptureState = { success: false, message: "" };
 
-type Account = { id: string; name: string };
+type Account = { id: string; name: string; account_type: string };
 type Category = { id: string; name: string; category_type: string };
 type ModelOption = { id: string; label: string; pool: string };
+
+function uniqueMatch<T>(items: T[], matches: (item: T) => boolean) {
+  const found = items.filter(matches);
+  return found.length === 1 ? found[0] : undefined;
+}
+
+function suggestedAccount(accounts: Account[], hint: string | null) {
+  if (!hint) return undefined;
+  const normalized = hint.trim().toLowerCase();
+  return (
+    uniqueMatch(
+      accounts,
+      (account) => account.name.toLowerCase() === normalized,
+    ) ??
+    (normalized === "cash"
+      ? uniqueMatch(accounts, (account) => account.account_type === "cash")
+      : undefined)
+  );
+}
+
+function suggestedCategory(categories: Category[], proposal: CaptureProposal) {
+  const available = categories.filter(
+    (category) => category.category_type === proposal.kind,
+  );
+  const suggestion = proposal.categorySuggestion?.trim().toLowerCase();
+  const direct = suggestion
+    ? uniqueMatch(
+        available,
+        (category) => category.name.toLowerCase() === suggestion,
+      )
+    : undefined;
+  if (direct) return direct;
+  const context = [proposal.categorySuggestion, proposal.description]
+    .filter(Boolean)
+    .join(" ");
+  if (
+    proposal.kind === "expense" &&
+    /\b(?:medicine|medication|medical|pharmacy|healthcare)\b/i.test(context)
+  ) {
+    return uniqueMatch(
+      available,
+      (category) => category.name.toLowerCase() === "health",
+    );
+  }
+  return undefined;
+}
 
 function Field({
   label,
@@ -208,13 +254,11 @@ function CapturePreview({
     else toast.error(confirmState.message);
   }, [confirmState]);
   const money = proposal.kind === "expense" || proposal.kind === "income";
+  const matchingAccount = money
+    ? suggestedAccount(accounts, proposal.accountHint)
+    : undefined;
   const matchingCategory = money
-    ? categories.find(
-        (category) =>
-          category.category_type === proposal.kind &&
-          category.name.toLowerCase() ===
-            proposal.categorySuggestion?.toLowerCase(),
-      )
+    ? suggestedCategory(categories, proposal)
     : undefined;
 
   if (confirmState.success) {
@@ -272,7 +316,7 @@ function CapturePreview({
               <select
                 name="accountId"
                 required
-                defaultValue=""
+                defaultValue={matchingAccount?.id ?? ""}
                 className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
               >
                 <option value="">Choose account</option>
@@ -323,7 +367,7 @@ function CapturePreview({
               required
             />
             <Field
-              label="Merchant or source"
+              label="Merchant or source (optional)"
               name="merchantOrSource"
               value={proposal.merchantOrSource}
               maxLength={160}

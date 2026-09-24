@@ -25,6 +25,58 @@ afterEach(() => {
 });
 
 describe("CaptureWorkspace", () => {
+  it("prefills a unique cash account and Health for medicine without requiring a merchant", async () => {
+    mocks.interpret.mockResolvedValue({
+      message: "Review fields.",
+      previewId: "preview-money",
+      proposal: {
+        kind: "expense",
+        confidence: "high",
+        amountText: "60",
+        amount: "60.00",
+        currency: "PHP",
+        dateText: "today",
+        date: "2026-09-24",
+        dateRole: "transaction",
+        title: null,
+        description: "medicine",
+        accountText: "cash",
+        accountHint: "cash",
+        merchantOrSource: null,
+        categorySuggestion: "Medicine",
+        companyName: null,
+        roleTitle: null,
+        notes: null,
+        ambiguities: [],
+        warnings: [],
+      },
+    });
+    render(
+      <CaptureWorkspace
+        accounts={[
+          { id: "cash-id", name: "Wallet", account_type: "cash" },
+          { id: "bank-id", name: "Bank", account_type: "bank" },
+        ]}
+        categories={[
+          { id: "health-id", name: "Health", category_type: "expense" },
+          { id: "food-id", name: "Food", category_type: "expense" },
+        ]}
+        models={models}
+        defaultModel={defaultModel}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("One thing to capture"), {
+      target: { value: "I paid 60 for medicine using cash today" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Preview capture" }));
+    await screen.findByRole("region", { name: "Capture preview" });
+    expect(screen.getByLabelText("Account")).toHaveValue("cash-id");
+    expect(screen.getByLabelText("Category")).toHaveValue("health-id");
+    expect(
+      screen.getByLabelText("Merchant or source (optional)"),
+    ).not.toBeRequired();
+  });
+
   it("cancels a preview without saving", async () => {
     mocks.interpret.mockResolvedValue({
       message: "Review fields.",
@@ -39,6 +91,8 @@ describe("CaptureWorkspace", () => {
         dateRole: null,
         title: "Call Alex",
         description: null,
+        accountText: null,
+        accountHint: null,
         merchantOrSource: null,
         categorySuggestion: null,
         companyName: null,
@@ -84,6 +138,8 @@ describe("CaptureWorkspace", () => {
         dateRole: null,
         title: "Call Alex",
         description: null,
+        accountText: null,
+        accountHint: null,
         merchantOrSource: null,
         categorySuggestion: null,
         companyName: null,

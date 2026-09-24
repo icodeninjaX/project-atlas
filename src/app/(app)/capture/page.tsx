@@ -11,7 +11,7 @@ export default async function CapturePage() {
     ? await Promise.all([
         supabase
           .from("financial_accounts")
-          .select("id,name")
+          .select("id,name,account_type")
           .eq("is_archived", false)
           .order("name"),
         supabase

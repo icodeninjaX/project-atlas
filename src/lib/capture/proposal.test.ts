@@ -12,6 +12,7 @@ function response(overrides: Record<string, unknown> = {}) {
     dateRole: "transaction",
     title: null,
     description: "gas",
+    accountText: null,
     merchantOrSource: null,
     categorySuggestion: "Transport",
     companyName: null,
@@ -72,6 +73,42 @@ describe("capture proposal validation", () => {
     expect(proposal.warnings).toContain(
       "Choose the transaction date before saving.",
     );
+  });
+
+  it("keeps a stated cash payment method and rejects an invented account", () => {
+    const proposal = prepareCaptureProposal(
+      "I paid 60 for medicine using cash",
+      response({
+        amountText: "60",
+        dateText: null,
+        date: null,
+        description: "medicine",
+        accountText: "cash",
+        categorySuggestion: "Medicine",
+      }),
+      "2026-09-24",
+    );
+    expect(proposal.amount).toBe("60.00");
+    expect(proposal.accountHint).toBe("cash");
+    expect(proposal.merchantOrSource).toBeNull();
+    expect(
+      prepareCaptureProposal(
+        "I paid 60 for medicine",
+        response({ amountText: "60", accountText: "Cash" }),
+        "2026-09-24",
+      ).accountHint,
+    ).toBeNull();
+    expect(
+      prepareCaptureProposal(
+        "I paid 60 using GCash today",
+        response({
+          amountText: "60",
+          dateText: "today",
+          accountText: "cash",
+        }),
+        "2026-09-24",
+      ).accountHint,
+    ).toBeNull();
   });
 
   it("resolves relative dates independently and rejects vague earlier periods", () => {

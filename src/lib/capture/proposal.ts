@@ -24,6 +24,7 @@ export const modelCaptureSchema = z.strictObject({
     .nullable(),
   title: nullableText,
   description: nullableText,
+  accountText: nullableText,
   merchantOrSource: nullableText,
   categorySuggestion: nullableText,
   companyName: nullableText,
@@ -35,6 +36,7 @@ export const modelCaptureSchema = z.strictObject({
 export type ModelCapture = z.infer<typeof modelCaptureSchema>;
 export type CaptureProposal = ModelCapture & {
   amount: string | null;
+  accountHint: string | null;
   warnings: string[];
 };
 
@@ -51,6 +53,7 @@ export const captureJsonSchema = {
     "dateRole",
     "title",
     "description",
+    "accountText",
     "merchantOrSource",
     "categorySuggestion",
     "companyName",
@@ -81,6 +84,7 @@ export const captureJsonSchema = {
     },
     title: { type: ["string", "null"] },
     description: { type: ["string", "null"] },
+    accountText: { type: ["string", "null"] },
     merchantOrSource: { type: ["string", "null"] },
     categorySuggestion: { type: ["string", "null"] },
     companyName: { type: ["string", "null"] },
@@ -105,6 +109,14 @@ function groundedSpan(source: string, phrase: string): boolean {
     index = haystack.indexOf(needle, index + 1);
   }
   return false;
+}
+
+function isGroundedAccount(source: string, phrase: string): boolean {
+  const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(
+    `(^|[^\\p{L}\\p{N}])${escaped}(?=$|[^\\p{L}\\p{N}])`,
+    "iu",
+  ).test(source);
 }
 
 function groundedDate(
@@ -215,6 +227,15 @@ export function prepareCaptureProposal(
       "Review the merchant or source; the suggestion was not in your text.",
     );
   }
+  const groundedAccount =
+    value.accountText && isGroundedAccount(sourceText, value.accountText)
+      ? value.accountText
+      : null;
+  const accountHint =
+    groundedAccount ??
+    (/(?:\busing|\bwith|\bvia|\bfrom|\bout of)\s+cash\b/i.test(sourceText)
+      ? "cash"
+      : null);
   let notes = value.notes;
   if (notes && !groundedSpan(sourceText, notes)) {
     notes = null;
@@ -240,6 +261,7 @@ export function prepareCaptureProposal(
     date,
     companyName,
     merchantOrSource,
+    accountHint,
     notes,
     roleTitle,
     title,

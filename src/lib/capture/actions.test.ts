@@ -43,6 +43,7 @@ function modelResponse(overrides: Record<string, unknown> = {}) {
     dateRole: "transaction",
     title: null,
     description: "gas",
+    accountText: null,
     merchantOrSource: null,
     categorySuggestion: "Transport",
     companyName: null,
