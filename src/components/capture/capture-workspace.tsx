@@ -22,7 +22,7 @@ const initialConfirm: ConfirmCaptureState = { success: false, message: "" };
 
 type Account = { id: string; name: string; account_type: string };
 type Category = { id: string; name: string; category_type: string };
-type ModelOption = { id: string; label: string; pool: string };
+type ModelOption = { id: string; label: string; pool: "small" | "large" };
 
 function uniqueMatch<T>(items: T[], matches: (item: T) => boolean) {
   const found = items.filter(matches);
@@ -161,13 +161,15 @@ export function CaptureWorkspace({
           >
             {models.map((option) => (
               <option key={option.id} value={option.id}>
-                {`${option.label}${option.id === defaultModel ? " (default)" : ""} · ${option.pool} shared daily tokens`}
+                {`${option.label}${option.id === defaultModel ? " (default)" : ""} · ${option.pool === "small" ? "Small" : "Large"}-model complimentary pool`}
               </option>
             ))}
           </select>
           <p className="text-muted-foreground mt-2 text-xs">
-            The daily token pools are shared across models. Usage beyond the
-            offer can be billed by OpenAI.
+            Eligible models may share complimentary token pools depending on
+            your OpenAI API account and data-sharing settings. Standard API
+            charges may apply when complimentary usage is unavailable or
+            exhausted.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -179,8 +181,10 @@ export function CaptureWorkspace({
             Preview capture
           </Button>
           <p className="text-muted-foreground text-xs">
-            One item at a time. Your text is sent to the AI provider only when
-            you request a preview.
+            One item at a time. Your text is sent to OpenAI only when you
+            request a preview. Depending on your OpenAI API project&apos;s
+            data-sharing settings, eligible API inputs and outputs may also be
+            shared with OpenAI.
           </p>
         </div>
         {interpretState.message && !interpretState.proposal && (

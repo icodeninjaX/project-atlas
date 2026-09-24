@@ -59,7 +59,11 @@ function respond(content: string) {
     "fetch",
     vi.fn().mockResolvedValue({
       ok: true,
+      headers: new Headers({ "x-request-id": "req_capture_1" }),
       json: async () => ({
+        model: "gpt-5.4-nano-2026-03-17",
+        service_tier: "default",
+        usage: { prompt_tokens: 40, completion_tokens: 20, total_tokens: 60 },
         choices: [{ finish_reason: "stop", message: { content } }],
       }),
     }),
@@ -77,6 +81,7 @@ beforeEach(() => {
     rpc: mocks.rpc,
   });
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "info").mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -99,21 +104,105 @@ describe("Universal Capture actions", () => {
     expect(mocks.transaction).not.toHaveBeenCalled();
   });
 
-  it("uses an allowed model and rejects an arbitrary model before reserving quota", async () => {
+  it("defaults to the pinned GPT-5.4 Nano snapshot with strict output and no storage", async () => {
+    respond(JSON.stringify(modelResponse()));
+    await interpretCaptureAction(initial, input("Paid 450 for gas today"));
+    const request = vi.mocked(fetch).mock.calls[0]?.[1];
+    const body = JSON.parse(String(request?.body));
+    expect(body.model).toBe("gpt-5.4-nano-2026-03-17");
+    expect(body.reasoning_effort).toBe("none");
+    expect(body.store).toBe(false);
+    expect(body.max_completion_tokens).toBe(500);
+    expect(body.response_format.type).toBe("json_schema");
+    expect(body.response_format.json_schema.strict).toBe(true);
+    expect(console.info).toHaveBeenCalledWith("AI capture request succeeded", {
+      requestedModel: "gpt-5.4-nano-2026-03-17",
+      resolvedModel: "gpt-5.4-nano-2026-03-17",
+      requestId: "req_capture_1",
+      promptTokens: 40,
+      completionTokens: 20,
+      totalTokens: 60,
+      serviceTier: "default",
+    });
+  });
+
+  it("uses an allowed snapshot and rejects an arbitrary model before reserving quota", async () => {
     respond(JSON.stringify(modelResponse()));
     const chosen = input("Paid 450 for gas today");
-    chosen.set("model", "gpt-5.4-mini");
+    chosen.set("model", "gpt-5.4-mini-2026-03-17");
     await interpretCaptureAction(initial, chosen);
     const request = vi.mocked(fetch).mock.calls[0]?.[1];
-    expect(JSON.parse(String(request?.body)).model).toBe("gpt-5.4-mini");
+    expect(JSON.parse(String(request?.body)).model).toBe(
+      "gpt-5.4-mini-2026-03-17",
+    );
 
     mocks.rpc.mockClear();
     const invalid = input("Paid 450 for gas today");
-    invalid.set("model", "unlisted-model");
+    invalid.set("model", "gpt-random-model");
     expect((await interpretCaptureAction(initial, invalid)).message).toMatch(
       /available AI model/i,
     );
     expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    ["gpt-5.4-2026-03-05", "none"],
+    ["gpt-5.4-mini-2026-03-17", "none"],
+    ["gpt-5.4-nano-2026-03-17", "none"],
+    ["gpt-6-astra", "low"],
+    ["gpt-6-sol", "none"],
+    ["gpt-6-luna", "none"],
+    ["gpt-4o-mini-2024-07-18", undefined],
+    ["gpt-4.1-mini-2025-04-14", undefined],
+    ["gpt-4o-2024-11-20", undefined],
+  ])(
+    "sends %s with the appropriate reasoning setting",
+    async (model, reasoning) => {
+      respond(JSON.stringify(modelResponse()));
+      const form = input("Paid 450 for gas today");
+      form.set("model", model);
+      await interpretCaptureAction(initial, form);
+      const request = vi.mocked(fetch).mock.calls[0]?.[1];
+      const body = JSON.parse(String(request?.body));
+      expect(body.model).toBe(model);
+      expect(body.reasoning_effort).toBe(reasoning);
+      expect(body.store).toBe(false);
+      expect(body.response_format.type).toBe("json_schema");
+      expect(body.response_format.json_schema.strict).toBe(true);
+    },
+  );
+
+  it("logs safe OpenAI failure metadata without exposing the response message", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        headers: new Headers({ "x-request-id": "req_failure_1" }),
+        json: async () => ({
+          error: {
+            type: "invalid_request_error",
+            code: "model_not_found",
+            message: "private capture text",
+          },
+        }),
+      }),
+    );
+    expect(
+      (await interpretCaptureAction(initial, input("Paid 450 for gas today")))
+        .proposal,
+    ).toBeNull();
+    expect(console.error).toHaveBeenCalledWith("AI capture request failed", {
+      requestedModel: "gpt-5.4-nano-2026-03-17",
+      status: 404,
+      requestId: "req_failure_1",
+      errorType: "invalid_request_error",
+      errorCode: "model_not_found",
+    });
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain(
+      "private capture text",
+    );
     expect(fetch).toHaveBeenCalledOnce();
   });
 

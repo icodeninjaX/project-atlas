@@ -27,6 +27,35 @@ const failedInterpretation: InterpretCaptureState = {
   previewId: null,
 };
 
+type OpenAIChatCompletionResponse = {
+  model?: string;
+  service_tier?: string;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
+  choices?: Array<{
+    finish_reason?: string;
+    message?: { content?: string; refusal?: string };
+  }>;
+};
+
+type OpenAIErrorResponse = {
+  error?: { type?: string; code?: string };
+};
+
+function captureReasoningEffort(model: string) {
+  if (model === "gpt-6-astra") return "low";
+  if (
+    model.startsWith("gpt-5.4") ||
+    model === "gpt-6-sol" ||
+    model === "gpt-6-luna"
+  )
+    return "none";
+  return null;
+}
+
 export async function interpretCaptureAction(
   _state: InterpretCaptureState,
   formData: FormData,
@@ -92,6 +121,7 @@ export async function interpretCaptureAction(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
   try {
+    const reasoningEffort = captureReasoningEffort(model);
     const today = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Manila",
       year: "numeric",
@@ -108,6 +138,7 @@ export async function interpretCaptureAction(
       body: JSON.stringify({
         model,
         store: false,
+        ...(reasoningEffort && { reasoning_effort: reasoningEffort }),
         max_completion_tokens: 500,
         response_format: {
           type: "json_schema",
@@ -127,18 +158,35 @@ export async function interpretCaptureAction(
       }),
     });
     if (!response.ok) {
-      console.error("AI capture request failed", { status: response.status });
+      const errorBody: OpenAIErrorResponse | null = await response
+        .json()
+        .catch(() => null);
+      console.error("AI capture request failed", {
+        requestedModel: model,
+        status: response.status,
+        requestId: response.headers.get("x-request-id"),
+        errorType:
+          typeof errorBody?.error?.type === "string"
+            ? errorBody.error.type
+            : undefined,
+        errorCode:
+          typeof errorBody?.error?.code === "string"
+            ? errorBody.error.code
+            : undefined,
+      });
       return failedInterpretation;
     }
-    const body: unknown = await response.json();
-    const choice = (
-      body as {
-        choices?: Array<{
-          finish_reason?: string;
-          message?: { content?: string; refusal?: string };
-        }>;
-      }
-    ).choices?.[0];
+    const body: OpenAIChatCompletionResponse = await response.json();
+    console.info("AI capture request succeeded", {
+      requestedModel: model,
+      resolvedModel: body.model,
+      requestId: response.headers.get("x-request-id"),
+      promptTokens: body.usage?.prompt_tokens,
+      completionTokens: body.usage?.completion_tokens,
+      totalTokens: body.usage?.total_tokens,
+      serviceTier: body.service_tier,
+    });
+    const choice = body.choices?.[0];
     if (
       choice?.finish_reason !== "stop" ||
       choice.message?.refusal ||

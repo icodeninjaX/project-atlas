@@ -62,13 +62,13 @@ delivery worker. The VAPID private key and cron secret are server-only.
 capture page offers links to the manual forms. Apply the Universal Capture
 migration before enabling the key so its per-user request quota is enforced.
 Choose the OpenAI model for each AI feature in `src/lib/ai/models.ts`; only
-server-side code should import this list. Universal Capture currently uses the
-`gpt-4o-mini-2024-07-18` snapshot. That file also records the model aliases
-shown in the OpenAI data-sharing offer on September 24, 2026. The offer list is
-for reference; confirm model access and complimentary usage in OpenAI Usage and
-Costs before assigning a model to a feature.
-Universal Capture offers a model dropdown for each preview. Its choices are a
-server-validated subset of the offer list that supports the capture schema.
+server-side code should import this list. Universal Capture defaults to the
+`gpt-5.4-nano-2026-03-17` snapshot. Its GPT-4 and GPT-5 choices use pinned
+snapshots for predictable behavior; GPT-6 Astra, Sol, and Luna use their
+published API model IDs because dated snapshots are not listed. Every choice
+is validated on the server before each preview.
+Complimentary usage depends on OpenAI API account eligibility and data-sharing
+settings; check OpenAI Usage and Costs for the account's current usage.
 
 ## Supabase setup
 
