@@ -85,7 +85,9 @@ list and attribution in [repository formatting debt](repository-formatting-debt.
 The Graph migration was applied to ProjectAtlas before the Phase 11 freeform
 quota migration. Hosted checks verified the table, RLS, grants, count RPC,
 endpoint cleanup triggers, two-owner visibility, and cleanup after endpoint
-deletion. The temporary checks were rolled back. The production app serves
-commit `d5cbed2`; a complete authenticated hosted Graph browser flow with a
-disposable account remains open. See the [hosted rollout record](hosted-phase11-rollout.md)
-for version mapping, exact checks, and the remaining release check.
+deletion. The temporary database checks were rolled back. With explicit user
+approval, the production UI loaded and searched relationships, added one manual
+Knowledge link, then removed it. No test link remains; link and unlink activity
+entries remain as agreed. The mobile view had no horizontal overflow. See the
+[hosted rollout record](hosted-phase11-rollout.md) for version mapping and exact
+checks.

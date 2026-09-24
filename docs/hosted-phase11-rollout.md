@@ -2,9 +2,10 @@
 
 Environment: ProjectAtlas Supabase project `pcdrusgiwhezfodabchp` and
 `https://atlas.kdvwebsiteservices.com` (production). This record uses Asia/Manila
-dates. The live Vercel deployment is `dpl_CdnVSjsJj4mfqEH5QxmTiEnuLoTh`,
-`READY`, with the production alias and commit
-`d5cbed2987fd34b94c2820e9950a7aa3d43bdf2a` (Phase 11).
+dates. Phase 11 app code was deployed as
+`d5cbed2987fd34b94c2820e9950a7aa3d43bdf2a`. The documentation-only
+follow-up `fd4599a34319638822316f825860024e9642b935` reached `READY` on
+Vercel with the production alias.
 
 ## Migration history
 
@@ -45,9 +46,19 @@ reapplying their SQL.
   and one preset request; the ninth returned `hourly_quota`. The temporary user
   and ledger rows were confirmed absent after rollback.
 - Production `/api/health` returned 200, unsigned `/analyst` redirected to
-  `/login`, and unsigned `POST /api/analyst/freeform` returned 401. A refreshed
-  signed-in production page displayed the Phase 11 freeform question box and
-  consent control. No question was submitted from the existing personal account.
+  `/login`, and unsigned `POST /api/analyst/freeform` returned 401.
+- With explicit user approval, one freeform question about current goal progress
+  was submitted from the user's main account. The hosted route reserved one
+  `freeform` request and returned grounded claims citing four ATLAS facts. A
+  citation opened its calculated evidence, date, completeness label, and source
+  record link. The answer stated its historical-data limits. At a 390px test
+  viewport, the evidence view had no horizontal overflow.
+- The signed-in Graph page loaded the goal's native milestone relationships and
+  searched Knowledge records. With explicit approval, one manual Knowledge to
+  goal link was added, displayed as `Added manually`, and then removed through
+  the confirmation control. The page returned to its original relationships.
+  The link and unlink activity entries remain in the main account as agreed.
+  The Graph page had no horizontal overflow at a 390px test viewport.
 
 The hosted Supabase security advisor reports existing warnings on several
 signed-in `SECURITY DEFINER` RPCs and disabled leaked-password protection, plus
@@ -56,13 +67,17 @@ reported no new Graph RLS warning. See Supabase's
 [security advisor guidance](https://supabase.com/docs/guides/database/database-linter)
 and [password protection guidance](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
 
-## Open release check
+## Release outcome and follow-up
 
-A complete authenticated hosted Analyst and Graph browser flow with a
-disposable login remains unverified. The available Supabase connector has no
-Auth user creation operation. Creating a password through the hosted console
-requires a user handoff under the computer-use credential rule. Use a confirmed
-disposable account to test freeform consent, a real answer or grounded fallback,
-citations, Graph linking, and mobile layout; delete that account afterward.
-The local authenticated browser checks and synthetic live model evaluation are
+The authenticated Analyst and Graph flows passed in production using the main
+account after the user explicitly approved the data sharing and temporary link.
+No temporary Graph link remains. This used one real Analyst allowance and left
+the agreed link and unlink entries in activity history. The originally planned
+disposable login was unavailable through the connected Supabase tooling; the
+main-account run provided the hosted browser evidence instead. The local
+authenticated browser checks and synthetic live model evaluation remain
 recorded in the Phase 8 and Phase 11 contracts.
+
+Before a future CLI database push, align the four equivalent migration version
+mappings above with the repository history. The later Phase 12 migration and
+application release are separate from this Phase 8/11 closeout.
