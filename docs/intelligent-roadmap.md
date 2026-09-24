@@ -1130,7 +1130,7 @@ Final response:
 
 # Phase 7 — ATLAS Analyst
 
-**Status:** Implemented for seven bounded, read-only question types. Analyst has a separate nine-model allowlist. The initial Analyst quota migrations were applied to hosted ProjectAtlas on 2026-09-24; the GPT-6 allowlist migration is pending there. Open-ended analysis remains unsupported.
+**Status:** Implemented for seven bounded, read-only question types. Analyst has a separate nine-model allowlist, including hosted GPT-6 Astra, Sol, and Luna reservation support. Open-ended analysis remains unsupported.
 
 ## Goal
 

@@ -5,11 +5,13 @@ import {
   classifyQuestion,
   validateExplanation,
   type EvidencePackage,
+  type QuestionType,
 } from "@/lib/analyst/evidence";
 import { retrieveEvidence } from "@/lib/analyst/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
+
 const inputSchema = z
   .object({
     question: z.string().trim().min(8).max(200),
@@ -21,10 +23,159 @@ const headers = { "Cache-Control": "private, no-store" };
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status, headers });
 
+const reservationSchema = z.discriminatedUnion("status", [
+  z.object({
+    status: z.literal("reserved"),
+    request_id: z.number().int().positive(),
+  }),
+  z.object({ status: z.literal("unauthenticated") }),
+  z.object({ status: z.literal("invalid_type") }),
+  z.object({ status: z.literal("invalid_model") }),
+  z.object({ status: z.literal("hourly_quota") }),
+  z.object({ status: z.literal("daily_quota") }),
+  z.object({ status: z.literal("site_quota") }),
+]);
+
+type ProviderStatus =
+  | "success"
+  | "unauthenticated"
+  | "configuration_error"
+  | "setup_required"
+  | "quota_unavailable"
+  | "invalid_model"
+  | "invalid_type"
+  | "hourly_quota"
+  | "daily_quota"
+  | "site_quota"
+  | "context_limit"
+  | "openai_auth_error"
+  | "openai_model_access"
+  | "openai_rate_limit"
+  | "openai_invalid_request"
+  | "openai_provider_error"
+  | "timeout"
+  | "invalid_response";
+
+type AuditOutcome =
+  | "success"
+  | "context_limit"
+  | "openai_auth_error"
+  | "openai_model_access"
+  | "openai_rate_limit"
+  | "openai_invalid_request"
+  | "openai_provider_error"
+  | "timeout"
+  | "invalid_response";
+
 function analystReasoningEffort(model: string) {
   if (model === "gpt-6-astra") return "low";
   if (model === "gpt-6-sol" || model === "gpt-6-luna") return "none";
   return null;
+}
+
+function fallbackMessage(status: ProviderStatus) {
+  if (
+    status === "hourly_quota" ||
+    status === "daily_quota" ||
+    status === "site_quota"
+  )
+    return "Your Analyst usage limit has been reached. ATLAS's calculated evidence is still shown below.";
+  if (status === "invalid_model")
+    return "This AI model is not currently available for Analyst. ATLAS's calculated evidence is still shown below.";
+  if (status === "setup_required")
+    return "Analyst is not ready on this database yet. ATLAS's calculated evidence is shown below.";
+  if (status === "quota_unavailable")
+    return "Analyst quota is unavailable. ATLAS's calculated evidence is shown below.";
+  if (status === "configuration_error")
+    return "The AI explanation is not configured. ATLAS's calculated evidence is shown below.";
+  if (status === "unauthenticated")
+    return "Sign in to use Analyst. ATLAS's calculated evidence is shown below.";
+  return "The AI explanation could not be generated. ATLAS's calculated evidence is still shown below.";
+}
+
+function evidenceOnly(
+  evidence: EvidencePackage,
+  providerStatus: ProviderStatus,
+  status = 200,
+  error?: string,
+) {
+  return json(
+    {
+      ...(error ? { error } : {}),
+      evidence,
+      explanation: null,
+      fallbackMessage: fallbackMessage(providerStatus),
+      uncertainty: evidence.note,
+      providerStatus,
+    },
+    status,
+  );
+}
+
+function logAnalystEvent(event: {
+  requestedModel: string;
+  analysisType: QuestionType;
+  reservationStatus: string;
+  providerCalled: boolean;
+  providerStatus: ProviderStatus;
+  providerHttpStatus?: number;
+  providerRequestId?: string;
+  providerErrorType?: string;
+  providerErrorCode?: string;
+  resolvedModel?: string;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  latencyMs?: number;
+}) {
+  const method = event.providerStatus === "success" ? "info" : "warn";
+  console[method]("[analyst]", event);
+}
+
+function providerStatusForResponse(
+  status: number,
+  providerErrorType?: string,
+  providerErrorCode?: string,
+): AuditOutcome {
+  if (status === 401) return "openai_auth_error";
+  if (status === 403) return "openai_model_access";
+  if (status === 429) return "openai_rate_limit";
+  if (
+    status === 400 &&
+    (providerErrorCode === "context_length_exceeded" ||
+      providerErrorType === "context_length_exceeded")
+  )
+    return "context_limit";
+  if (status === 400) return "openai_invalid_request";
+  if (status >= 500) return "openai_provider_error";
+  return "openai_provider_error";
+}
+
+function providerRequestId(response: Response) {
+  return (
+    response.headers?.get("x-request-id") ??
+    response.headers?.get("request-id") ??
+    undefined
+  );
+}
+
+async function readProviderError(response: Response) {
+  let providerErrorType: string | undefined;
+  let providerErrorCode: string | undefined;
+  try {
+    const body: unknown = await response.json();
+    if (body && typeof body === "object" && "error" in body) {
+      const error = body.error;
+      if (error && typeof error === "object") {
+        if ("type" in error && typeof error.type === "string")
+          providerErrorType = error.type;
+        if ("code" in error && typeof error.code === "string")
+          providerErrorCode = error.code;
+      }
+    }
+  } catch {
+    // Provider error bodies are optional; status and request ID are enough.
+  }
+  return { providerErrorType, providerErrorCode };
 }
 
 export async function POST(request: Request) {
@@ -77,7 +228,7 @@ export async function POST(request: Request) {
       evidence,
       explanation: null,
       uncertainty: evidence.note,
-      providerStatus: "not_requested",
+      providerStatus: "insufficient",
     });
   const compactEvidence = evidence.evidence
     .slice(0, 12)
@@ -111,59 +262,90 @@ export async function POST(request: Request) {
     note: evidence.note,
     evidence: compactEvidence,
   });
-  if (payload.length > 10_000)
-    return json({
-      evidence,
-      explanation: null,
-      uncertainty:
-        "The evidence is too large for an AI explanation. ATLAS facts are shown below.",
-      providerStatus: "context_limit",
-    });
+  if (payload.length > 10_000) return evidenceOnly(evidence, "context_limit");
   const key = process.env.OPENAI_API_KEY;
-  if (!key)
-    return json({
-      evidence,
-      explanation: null,
-      uncertainty:
-        "AI explanation is unavailable; ATLAS evidence is shown below.",
-      providerStatus: "unavailable",
+  if (!key) {
+    logAnalystEvent({
+      requestedModel: model,
+      analysisType: type,
+      reservationStatus: "not_requested",
+      providerCalled: false,
+      providerStatus: "configuration_error",
     });
-  const { data: requestId, error: quotaError } = await supabase.rpc(
-    "reserve_ai_analyst_request",
+    return evidenceOnly(evidence, "configuration_error");
+  }
+
+  const { data: reservation, error: reservationError } = await supabase.rpc(
+    "reserve_ai_analyst_request_result",
     { p_type: type, p_model: model },
   );
-  if (quotaError)
-    return json(
-      {
-        error:
-          quotaError.code === "PGRST202"
-            ? "Analyst is not ready on this database yet. Your ATLAS facts are shown below."
-            : "Analyst quota is unavailable. Try again later.",
-        evidence,
-        explanation: null,
-        uncertainty: evidence.note,
-        providerStatus:
-          quotaError.code === "PGRST202"
-            ? "setup_required"
-            : "quota_unavailable",
-      },
+  if (reservationError) {
+    const setupRequired = reservationError.code === "PGRST202";
+    logAnalystEvent({
+      requestedModel: model,
+      analysisType: type,
+      reservationStatus: setupRequired ? "setup_required" : "error",
+      providerCalled: false,
+      providerStatus: setupRequired ? "setup_required" : "quota_unavailable",
+    });
+    return evidenceOnly(
+      evidence,
+      setupRequired ? "setup_required" : "quota_unavailable",
       503,
+      setupRequired
+        ? "Analyst is not ready on this database yet. ATLAS's calculated evidence is shown below."
+        : "Analyst quota is unavailable. ATLAS's calculated evidence is shown below.",
     );
-  if (!requestId)
-    return json(
-      {
-        error: "Analyst limit reached. Try again later.",
-        evidence,
-        explanation: null,
-        uncertainty: evidence.note,
-        providerStatus: "quota",
-      },
-      429,
+  }
+  const parsedReservation = reservationSchema.safeParse(reservation);
+  if (!parsedReservation.success) {
+    logAnalystEvent({
+      requestedModel: model,
+      analysisType: type,
+      reservationStatus: "invalid_result",
+      providerCalled: false,
+      providerStatus: "quota_unavailable",
+    });
+    return evidenceOnly(evidence, "quota_unavailable", 503);
+  }
+  if (parsedReservation.data.status !== "reserved") {
+    const reservationStatus = parsedReservation.data.status;
+    const isQuota = ["hourly_quota", "daily_quota", "site_quota"].includes(
+      reservationStatus,
     );
+    logAnalystEvent({
+      requestedModel: model,
+      analysisType: type,
+      reservationStatus,
+      providerCalled: false,
+      providerStatus: reservationStatus,
+    });
+    return evidenceOnly(
+      evidence,
+      reservationStatus,
+      isQuota
+        ? 429
+        : reservationStatus === "invalid_type"
+          ? 422
+          : reservationStatus === "unauthenticated"
+            ? 401
+            : 503,
+      reservationStatus === "unauthenticated"
+        ? "Sign in to use Analyst."
+        : reservationStatus === "invalid_model"
+          ? "This AI model is not currently available for Analyst. ATLAS's calculated evidence is still shown below."
+          : reservationStatus === "invalid_type"
+            ? "This Analyst question type is not available. ATLAS's calculated evidence is shown below."
+            : undefined,
+    );
+  }
 
-  let outcome = "provider_error";
+  const requestId = parsedReservation.data.request_id;
+  let outcome: AuditOutcome = "openai_provider_error";
   let inputTokens: number | null = null;
   let outputTokens: number | null = null;
+  let providerRequestIdHeader: string | undefined;
+  const startedAt = Date.now();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
   try {
@@ -207,9 +389,31 @@ export async function POST(request: Request) {
         ],
       }),
     });
-    if (!response.ok) throw new Error("provider_error");
+    providerRequestIdHeader = providerRequestId(response);
+    if (!response.ok) {
+      const providerError = await readProviderError(response);
+      outcome = providerStatusForResponse(
+        response.status,
+        providerError.providerErrorType,
+        providerError.providerErrorCode,
+      );
+      logAnalystEvent({
+        requestedModel: model,
+        analysisType: type,
+        reservationStatus: "reserved",
+        providerCalled: true,
+        providerStatus: outcome,
+        providerHttpStatus: response.status,
+        providerRequestId: providerRequestIdHeader,
+        providerErrorType: providerError.providerErrorType,
+        providerErrorCode: providerError.providerErrorCode,
+        latencyMs: Date.now() - startedAt,
+      });
+      return evidenceOnly(evidence, outcome);
+    }
     const body: unknown = await response.json();
     const result = body as {
+      model?: string;
       usage?: { prompt_tokens?: number; completion_tokens?: number };
       choices?: Array<{
         finish_reason?: string;
@@ -236,6 +440,18 @@ export async function POST(request: Request) {
       throw new Error("invalid_response");
     }
     outcome = "success";
+    logAnalystEvent({
+      requestedModel: model,
+      analysisType: type,
+      reservationStatus: "reserved",
+      providerCalled: true,
+      providerStatus: "success",
+      providerRequestId: providerRequestIdHeader,
+      resolvedModel: result.model,
+      inputTokens,
+      outputTokens,
+      latencyMs: Date.now() - startedAt,
+    });
     return json({
       evidence,
       explanation: explanation.explanation,
@@ -247,13 +463,18 @@ export async function POST(request: Request) {
     if (error instanceof Error && error.name === "AbortError")
       outcome = "timeout";
     else if (error instanceof SyntaxError) outcome = "invalid_response";
-    return json({
-      evidence,
-      explanation: null,
-      uncertainty:
-        "The AI explanation was unavailable. ATLAS's calculated evidence is shown below.",
+    logAnalystEvent({
+      requestedModel: model,
+      analysisType: type,
+      reservationStatus: "reserved",
+      providerCalled: true,
       providerStatus: outcome,
+      providerRequestId: providerRequestIdHeader,
+      inputTokens,
+      outputTokens,
+      latencyMs: Date.now() - startedAt,
     });
+    return evidenceOnly(evidence, outcome);
   } finally {
     clearTimeout(timeout);
     try {

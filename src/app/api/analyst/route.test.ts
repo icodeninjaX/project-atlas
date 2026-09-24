@@ -53,7 +53,10 @@ beforeEach(() => {
     data: { user: { id: "owner-a" } },
     error: null,
   });
-  mocks.rpc.mockResolvedValue({ data: 1, error: null });
+  mocks.rpc.mockResolvedValue({
+    data: { status: "reserved", request_id: 1 },
+    error: null,
+  });
   mocks.createClient.mockResolvedValue({
     auth: { getUser: mocks.getUser },
     rpc: mocks.rpc,
@@ -106,14 +109,26 @@ describe("Analyst request", () => {
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
   it("enforces quota before contacting OpenAI", async () => {
-    mocks.rpc.mockResolvedValueOnce({ data: null, error: null });
+    const provider = vi.fn();
+    vi.stubGlobal("fetch", provider);
+    mocks.rpc.mockResolvedValueOnce({
+      data: { status: "hourly_quota" },
+      error: null,
+    });
     const response = await POST(ask(valid));
     expect(response.status).toBe(429);
-    expect((await response.json()).evidence).toEqual(evidence);
-    expect(mocks.rpc).toHaveBeenCalledWith("reserve_ai_analyst_request", {
-      p_type: "spending_change",
-      p_model: "gpt-4o-mini-2024-07-18",
-    });
+    const body = await response.json();
+    expect(body.providerStatus).toBe("hourly_quota");
+    expect(body.fallbackMessage).toMatch(/usage limit has been reached/);
+    expect(body.evidence).toEqual(evidence);
+    expect(provider).not.toHaveBeenCalled();
+    expect(mocks.rpc).toHaveBeenCalledWith(
+      "reserve_ai_analyst_request_result",
+      {
+        p_type: "spending_change",
+        p_model: "gpt-4o-mini-2024-07-18",
+      },
+    );
   });
   it("identifies a missing Analyst database function without contacting OpenAI", async () => {
     const provider = vi.fn();
@@ -127,6 +142,20 @@ describe("Analyst request", () => {
     const body = await response.json();
     expect(body.providerStatus).toBe("setup_required");
     expect(body.evidence).toEqual(evidence);
+    expect(provider).not.toHaveBeenCalled();
+  });
+  it("distinguishes a database model rejection from quota exhaustion", async () => {
+    const provider = vi.fn();
+    vi.stubGlobal("fetch", provider);
+    mocks.rpc.mockResolvedValueOnce({
+      data: { status: "invalid_model" },
+      error: null,
+    });
+    const response = await POST(ask({ ...valid, model: "gpt-6-sol" }));
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.providerStatus).toBe("invalid_model");
+    expect(body.error).toMatch(/not currently available/);
     expect(provider).not.toHaveBeenCalled();
   });
   it("caps the context before quota or provider use", async () => {
@@ -173,10 +202,13 @@ describe("Analyst request", () => {
     );
     const response = await POST(ask({ ...valid, model }));
     expect((await response.json()).providerStatus).toBe("success");
-    expect(mocks.rpc).toHaveBeenCalledWith("reserve_ai_analyst_request", {
-      p_type: "spending_change",
-      p_model: model,
-    });
+    expect(mocks.rpc).toHaveBeenCalledWith(
+      "reserve_ai_analyst_request_result",
+      {
+        p_type: "spending_change",
+        p_model: model,
+      },
+    );
     const payload = JSON.parse(
       String(vi.mocked(fetch).mock.calls[0]?.[1]?.body),
     );
@@ -217,7 +249,33 @@ describe("Analyst request", () => {
     );
     const failed = await (await POST(ask(valid))).json();
     expect(failed.explanation).toBeNull();
-    expect(failed.providerStatus).toBe("provider_error");
+    expect(failed.providerStatus).toBe("openai_provider_error");
+  });
+  it.each([
+    [401, "openai_auth_error"],
+    [403, "openai_model_access"],
+    [429, "openai_rate_limit"],
+    [400, "openai_invalid_request"],
+    [503, "openai_provider_error"],
+  ])("maps OpenAI HTTP %s to %s", async (httpStatus, providerStatus) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: httpStatus,
+        headers: new Headers({ "x-request-id": "req_test" }),
+        json: async () => ({
+          error: { type: "test_error", code: "test_code" },
+        }),
+      }),
+    );
+    const body = await (await POST(ask(valid))).json();
+    expect(body.providerStatus).toBe(providerStatus);
+    expect(body.explanation).toBeNull();
+    expect(mocks.rpc).toHaveBeenLastCalledWith(
+      "finish_ai_analyst_request",
+      expect.objectContaining({ p_outcome: providerStatus }),
+    );
   });
   it("sends bounded facts without record identifiers or stored notes", async () => {
     vi.stubGlobal(

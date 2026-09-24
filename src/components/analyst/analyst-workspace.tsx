@@ -20,6 +20,7 @@ const questions = [
 type Result = {
   evidence: EvidencePackage;
   explanation: string | null;
+  fallbackMessage?: string;
   uncertainty: string;
   citedEvidenceIds?: string[];
   providerStatus: string;
@@ -157,6 +158,7 @@ export function AnalystWorkspace({
             <h2 className="text-lg font-semibold">What ATLAS found</h2>
             <p className="mt-3 text-sm leading-relaxed">
               {result.explanation ??
+                result.fallbackMessage ??
                 "ATLAS calculated the facts below. An AI explanation is not available for this request."}
             </p>
             <p className="text-muted-foreground mt-3 text-sm">
