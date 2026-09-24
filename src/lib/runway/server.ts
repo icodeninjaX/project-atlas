@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import {
   calculateRunway,
   type RunwayBudget,
@@ -31,8 +33,9 @@ export type RunwayWorkspace = {
 
 export async function loadRunwayWorkspace(
   now = new Date(),
+  client?: SupabaseClient,
 ): Promise<RunwayWorkspace | null> {
-  const supabase = await createClient();
+  const supabase = client ?? (await createClient());
   if (!supabase) return null;
   const {
     data: { user },

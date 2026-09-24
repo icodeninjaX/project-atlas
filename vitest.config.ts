@@ -7,6 +7,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // Next resolves this marker at build time; Vitest needs its empty server implementation.
+      "server-only": path.resolve(
+        __dirname,
+        "./node_modules/next/dist/compiled/server-only/empty.js",
+      ),
     },
   },
   test: {

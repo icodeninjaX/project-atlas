@@ -2,13 +2,16 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getPublicSupabaseConfig } from "@/lib/env";
 
-export async function createClient() {
+export async function createClient(options?: {
+  fetch?: typeof globalThis.fetch;
+}) {
   const config = getPublicSupabaseConfig();
   if (!config) return null;
 
   const cookieStore = await cookies();
 
   return createServerClient(config.url, config.publishableKey, {
+    ...(options?.fetch ? { global: { fetch: options.fetch } } : {}),
     cookies: {
       getAll() {
         return cookieStore.getAll();

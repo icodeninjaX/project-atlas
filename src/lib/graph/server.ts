@@ -31,8 +31,8 @@ export type { RelatedEntity } from "@/lib/graph/model";
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-async function authorizedClient() {
-  const client = await createClient();
+async function authorizedClient(providedClient?: SupabaseClient) {
+  const client = providedClient ?? (await createClient());
   if (!client) throw new Error("Graph is unavailable.");
   const {
     data: { user },
@@ -74,19 +74,22 @@ async function resolveEntities(
 }
 
 /** One-hop, owner-scoped Graph read helper for product UI and future Analyst retrieval. */
-export async function getRelatedEntities({
-  entityType,
-  entityId,
-  limit = 40,
-}: {
-  entityType: GraphEntityType;
-  entityId: string;
-  limit?: number;
-}): Promise<{ items: RelatedEntity[]; hasMore: boolean }> {
+export async function getRelatedEntities(
+  {
+    entityType,
+    entityId,
+    limit = 40,
+  }: {
+    entityType: GraphEntityType;
+    entityId: string;
+    limit?: number;
+  },
+  clientOverride?: SupabaseClient,
+): Promise<{ items: RelatedEntity[]; hasMore: boolean }> {
   if (!isGraphEntityType(entityType) || !uuidPattern.test(entityId))
     throw new Error("Unsupported Graph entity.");
   const boundedLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
-  const { client, ownerId } = await authorizedClient();
+  const { client, ownerId } = await authorizedClient(clientOverride);
   const endpoint = await resolveEntities(client, ownerId, [
     { type: entityType, id: entityId },
   ]);

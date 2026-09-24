@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import {
   type TimelineCursor,
   type TimelineEvent,
@@ -88,8 +90,9 @@ export type TimelinePage = {
 export async function loadTimelinePage(
   filters: TimelineFilters,
   cursor: TimelineCursor | null,
+  client?: SupabaseClient,
 ): Promise<TimelinePage | null> {
-  const supabase = await createClient();
+  const supabase = client ?? (await createClient());
   if (!supabase) return null;
   const {
     data: { user },
