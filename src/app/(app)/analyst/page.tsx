@@ -1,4 +1,5 @@
 import { AnalystWorkspace } from "@/components/analyst/analyst-workspace";
+import { FreeformWorkspace } from "@/components/analyst/freeform-workspace";
 import { PageHeading } from "@/components/shared/page-heading";
 import { AI_MODELS, ANALYST_MODEL_OPTIONS } from "@/lib/ai/models";
 
@@ -9,8 +10,12 @@ export default function AnalystPage() {
       <PageHeading
         eyebrow="Evidence-based analysis"
         title="ATLAS Analyst"
-        description="Ask a supported question about your current ATLAS records. ATLAS calculates the facts; AI explains them."
+        description="Ask about supported ATLAS records. ATLAS calculates the facts and shows the sources behind each answer."
       />
+      <div className="mt-8">
+        <FreeformWorkspace />
+      </div>
+      <h2 className="mt-10 text-lg font-semibold">Suggested questions</h2>
       <AnalystWorkspace
         models={ANALYST_MODEL_OPTIONS}
         defaultModel={AI_MODELS.analyst}

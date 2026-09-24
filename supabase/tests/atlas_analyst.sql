@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(15);
+select plan(16);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
 values
@@ -20,6 +20,7 @@ select is((public.reserve_ai_analyst_request_result('spending_change','gpt-4o-mi
 select is((public.reserve_ai_analyst_request_result('spending_change','gpt-4o-mini-2024-07-18')->>'request_id') is not null, true, 'reservation returns a request ID');
 select is((select count(*) from (values ('gpt-4.1-mini'),('gpt-5.4-nano'),('gpt-5.4-mini'),('gpt-4o'),('gpt-5.4')) as models(model)
   where (public.reserve_ai_analyst_request_result('spending_change', models.model)->>'status') = 'reserved'), 5::bigint, 'existing Analyst models remain allowed');
+select is((public.reserve_ai_analyst_request_result('freeform','gpt-4o-mini-2024-07-18')->>'status'), 'reserved', 'freeform uses the existing Analyst allowance');
 select is((public.reserve_ai_analyst_request_result('unsupported','gpt-4o-mini-2024-07-18')->>'status'), 'invalid_type', 'unknown analysis is rejected without quota ambiguity');
 select is((public.reserve_ai_analyst_request_result('spending_change','unapproved')->>'status'), 'invalid_model', 'unknown model is rejected without quota ambiguity');
 select throws_ok($$select count(*) from public.ai_analyst_requests$$, '42501', null, 'private audit table cannot be selected');

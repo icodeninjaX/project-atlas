@@ -2,7 +2,7 @@
 
 **Project:** ATLAS — Personal Operating System\
 **Repository:** `icodeninjaX/project-atlas`\
-**Last reviewed:** 2026-09-24\
+**Last reviewed:** 2026-09-25\
 **Purpose:** Give an AI coding agent a clear, sequential roadmap for evolving ATLAS from a structured personal tracker into a connected and increasingly intelligent personal operating system.
 
 ---
@@ -116,18 +116,19 @@ states. “Recorded” means existing implementation reports, **not tests rerun 
 documentation task**. Earlier dated paragraphs preserve historical results; this
 summary takes precedence for current next-action guidance.
 
-| Phase                                    | Implementation                                                             | Local validation evidence                                                                                                                                                             | Hosted deployment / verification                                                                                                                                                  |
-| ---------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Signals                               | Implemented, 2026-08-26                                                    | Recorded verified on that date                                                                                                                                                        | Hosted state not verified in this review                                                                                                                                          |
-| 2. Capacity-Aware Dayline                | Implemented, 2026-09-04                                                    | Application checks recorded; original DB/mobile follow-ups need reconciliation with later full-suite records                                                                          | Hosted state not verified                                                                                                                                                         |
-| 3. Personal Runway & Financial Scenarios | Implemented, 2026-09-05                                                    | 242 tests and application checks recorded; later full-suite records exist                                                                                                             | Migration verified 2026-09-05 per phase record; full hosted flow verification pending                                                                                             |
-| 4. Life Timeline                         | Implemented, 2026-09-05                                                    | Application checks recorded; original DB/browser follow-ups need reconciliation with later records                                                                                    | Hosted state not verified                                                                                                                                                         |
-| 5. Knowledge & Spaced Repetition         | Implemented, 2026-09-06                                                    | Application and ownership checks recorded; later clean local reset recorded in Analyst validation                                                                                     | Hosted migration verification recorded 2026-09-06; full hosted flow verification pending                                                                                          |
-| 6. Universal Capture                     | Five single-action intents implemented locally; closeout open              | Live structured-output smoke and local pgTAP recorded 2026-09-24; release-flow verification pending                                                                                   | Hosted state not verified                                                                                                                                                         |
-| 7. ATLAS Analyst                         | Seven bounded questions and typed reservation handling implemented locally | 20 focused route / 343 full tests and local DB checks recorded 2026-09-24                                                                                                             | Two reservation migrations and synthetic live model smoke verified per Analyst record; deployed application revision and full hosted authenticated browser flow not verified here |
-| 8. ATLAS Graph                           | Implemented locally, 2026-09-24                                            | Local acceptance recorded: 358 unit/component tests, 131 DB assertions, Graph mobile/desktop E2E and static/build checks                                                              | Hosted state not verified; local migration is not hosted deployment proof                                                                                                         |
-| 9. Analyst Retrieval / Tool Layer        | Implemented locally, 2026-09-24                                            | Fresh local application, contract and two-owner REST/RPC integration checks; see [acceptance record](analyst-tools.md#acceptance-and-validation--2026-09-24)                          | No hosted adoption or deployment verified; no new route/UI                                                                                                                        |
-| 10. Analyst Query Planner                | Implemented locally, 2026-09-24                                            | Strict plan/provider/execution tests, synthetic live evaluation and two-owner tool execution; see [acceptance record](analyst-query-planner.md#acceptance-and-validation--2026-09-24) | No hosted adoption or deployment verified; no new route/UI                                                                                                                        |
+| Phase                                       | Implementation                                                             | Local validation evidence                                                                                                                                                             | Hosted deployment / verification                                                                                                                                                  |
+| ------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Signals                                  | Implemented, 2026-08-26                                                    | Recorded verified on that date                                                                                                                                                        | Hosted state not verified in this review                                                                                                                                          |
+| 2. Capacity-Aware Dayline                   | Implemented, 2026-09-04                                                    | Application checks recorded; original DB/mobile follow-ups need reconciliation with later full-suite records                                                                          | Hosted state not verified                                                                                                                                                         |
+| 3. Personal Runway & Financial Scenarios    | Implemented, 2026-09-05                                                    | 242 tests and application checks recorded; later full-suite records exist                                                                                                             | Migration verified 2026-09-05 per phase record; full hosted flow verification pending                                                                                             |
+| 4. Life Timeline                            | Implemented, 2026-09-05                                                    | Application checks recorded; original DB/browser follow-ups need reconciliation with later records                                                                                    | Hosted state not verified                                                                                                                                                         |
+| 5. Knowledge & Spaced Repetition            | Implemented, 2026-09-06                                                    | Application and ownership checks recorded; later clean local reset recorded in Analyst validation                                                                                     | Hosted migration verification recorded 2026-09-06; full hosted flow verification pending                                                                                          |
+| 6. Universal Capture                        | Five single-action intents implemented locally; closeout open              | Live structured-output smoke and local pgTAP recorded 2026-09-24; release-flow verification pending                                                                                   | Hosted state not verified                                                                                                                                                         |
+| 7. ATLAS Analyst                            | Seven bounded questions and typed reservation handling implemented locally | 20 focused route / 343 full tests and local DB checks recorded 2026-09-24                                                                                                             | Two reservation migrations and synthetic live model smoke verified per Analyst record; deployed application revision and full hosted authenticated browser flow not verified here |
+| 8. ATLAS Graph                              | Implemented locally, 2026-09-24                                            | Local acceptance recorded: 358 unit/component tests, 131 DB assertions, Graph mobile/desktop E2E and static/build checks                                                              | Hosted state not verified; local migration is not hosted deployment proof                                                                                                         |
+| 9. Analyst Retrieval / Tool Layer           | Implemented locally, 2026-09-24                                            | Fresh local application, contract and two-owner REST/RPC integration checks; see [acceptance record](analyst-tools.md#acceptance-and-validation--2026-09-24)                          | No hosted adoption or deployment verified; no new route/UI                                                                                                                        |
+| 10. Analyst Query Planner                   | Implemented locally, 2026-09-24                                            | Strict plan/provider/execution tests, synthetic live evaluation and two-owner tool execution; see [acceptance record](analyst-query-planner.md#acceptance-and-validation--2026-09-24) | No hosted adoption or deployment verified; no new route/UI                                                                                                                        |
+| 11. Analyst 2.0: Freeform Grounded Analysis | Implemented locally, 2026-09-25                                            | Grounding, quota, browser and synthetic live evaluation; see [Phase 11 contract](analyst-freeform.md#local-acceptance-and-release-boundary--2026-09-25)                               | Hosted migration, deployment and authenticated flow not verified                                                                                                                  |
 
 Repository health is independent: [formatting debt](repository-formatting-debt.md)
 records 45 historical failures and their local cleanup to zero on 2026-09-24.
@@ -180,20 +181,19 @@ hosted unknowns remain hosted release gates, but need not block independently
 testable local tools whose dependencies are locally validated. Do not turn this
 into endless cleanup or waive mandatory CI policy.
 
-**Phase 10 Query Planner is implemented and accepted locally.** Its
-[acceptance record](analyst-query-planner.md#acceptance-and-validation--2026-09-24)
-preserves the Phase 9 tool boundary; the hosted gates above remain open. Next
-implementation: **Phase 11 — Analyst 2.0: Freeform Grounded Analysis**. Section 10
-defines the remaining order.
+**Phase 11 Freeform Grounded Analysis is implemented and accepted locally.** Its
+[contract](analyst-freeform.md) records the quota migration, grounded claims,
+fallback and validation. Hosted release gates above remain open. Next planned
+implementation: **Phase 12 — Historical / Longitudinal Metrics Layer**.
 
 The delivered AI surfaces are intentionally narrow. Universal Capture currently
 produces **one** previewable proposal from five kinds (expense, income, task,
 career application, knowledge concept); multi-action requests are unsupported.
-Analyst accepts **seven predefined questions**, retrieves fixed owner-scoped
-facts, and falls back to evidence-only output on model failure. These are sound
-safety foundations, not the final limits of ATLAS intelligence. The approved retrieval and tool layer is now implemented locally; next comes
-bounded query planning, followed separately by freeform analysis. See [the implemented Analyst
-contract](atlas-analyst.md) for the current boundary.
+Analyst retains **seven predefined questions** and now also accepts bounded
+freeform questions through the approved planner and tool layer. Both flows show
+calculated evidence when an explanation fails. See the [preset Analyst
+contract](atlas-analyst.md) and [freeform contract](analyst-freeform.md) for
+their distinct boundaries.
 
 ---
 
@@ -1893,9 +1893,9 @@ A strong deterministic foundation will make every future AI capability safer, ch
 
 # 10. Next-Generation ATLAS Intelligence
 
-**Status:** Phases 9 and 10 are implemented and accepted locally. Phases 11–19
-remain planned. Preserve required release-environment gates; next implement only
-Freeform Grounded Analysis using the accepted Tool Layer and Query Planner.
+**Status:** Phases 9–11 are implemented and accepted locally. Phases 12–19 remain
+planned. Preserve required release-environment gates; the next scoped phase is
+the Historical / Longitudinal Metrics Layer.
 
 ## Dependency map and sequencing decision
 
@@ -1904,8 +1904,8 @@ Freeform Grounded Analysis using the accepted Tool Layer and Query Planner.
 ### Phase numbering and delivery order
 
 Phases 1–8 retain their original numbering. Phases 9–19 are numbered in delivery
-order. The Tool Layer and Query Planner are implemented locally; the next
-implementation is Phase 11, Freeform Grounded Analysis. References, dependencies
+order. The Tool Layer, Query Planner and Freeform Analyst are implemented locally;
+the next implementation is Phase 12, Historical Metrics. References, dependencies
 and handoffs use this numbering. Phase
 numbers express delivery order; hard prerequisites remain separately defined below.
 Legacy section anchors are retained for existing links.
@@ -1914,7 +1914,7 @@ Legacy section anchors are retained for existing links.
 | ----------------- | ----- | --------------------------------------- | ------------------------------------------ |
 | 9                 | 9     | Analyst Retrieval / Tool Layer          | Implemented and accepted locally           |
 | 10                | 10    | Analyst Query Planner                   | Implemented and accepted locally           |
-| 11                | 11    | Analyst 2.0: Freeform Grounded Analysis | Planned                                    |
+| 11                | 11    | Analyst 2.0: Freeform Grounded Analysis | Implemented and accepted locally           |
 | 12                | 12    | Historical / Longitudinal Metrics Layer | Planned                                    |
 | 13                | 13    | Cross-domain and Longitudinal Analyst   | Planned                                    |
 | 14                | 14    | Pattern and Association Discovery       | Planned                                    |
@@ -2058,7 +2058,10 @@ answer generation shipped.
 
 ## Phase 11 — Analyst 2.0: freeform grounded analysis
 
-**Status:** Planned; delivery priority 11.
+**Status:** Implemented and accepted locally, 2026-09-25; delivery priority 11.
+
+See [the Phase 11 contract](analyst-freeform.md) for the implemented bounded
+flow, evidence validation, local acceptance and hosted release limits.
 
 - **Goal:** Answer broader, multi-step questions using only approved evidence.
 - **User problem:** “Why does it feel like I am not making financial progress?”,
@@ -2616,10 +2619,10 @@ checks; and SHA-256 comparison confirming all 478 other pre-existing files were
 unchanged. Repository-wide health remains a separately dated baseline, not a claim
 from these documentation checks.
 
-**Current recommended next implementation:** **Phase 11 — Analyst 2.0: Freeform
-Grounded Analysis**, using the accepted Phase 9 registry and Phase 10 planner.
-The original documentation review recommended the Tool Layer, then the Query
-Planner; both are now implemented locally. Keep mutations out of the Analyst.
+**Recommendation at this documentation review:** **Phase 11 — Analyst 2.0:
+Freeform Grounded Analysis**, using the accepted Phase 9 registry and Phase 10
+planner. The current status table above supersedes this historical recommendation.
+Keep mutations out of the Analyst.
 
 ## Phase numbering update — 2026-09-24
 
@@ -2662,3 +2665,21 @@ five live synthetic planner evaluations, 131 database assertions, lint,
 typecheck, the 37-page production build, formatting and `git diff --check`. No
 route, UI, migration, dependency, deployment, commit or push was added. Next:
 Phase 11 Freeform Grounded Analysis only.
+
+## Phase 11 implementation closeout — 2026-09-25
+
+Added a separate freeform Analyst path using the approved planner and owner-scoped
+tools. The route requires consent and the existing Analyst quota before either
+model call. Structured claims cite approved evidence, while ATLAS renders the
+authoritative figures, periods, completeness and source links. Invalid or
+incomplete explanations fall back to the retrieved facts; the seven preset
+questions retain their original path. Migration
+`20260924154545_analyst_freeform_quota.sql` extends the existing typed
+reservation contract without adding an unbounded model or tool capability.
+
+Local acceptance is recorded in [analyst-freeform.md](analyst-freeform.md):
+grounding and route tests, three synthetic live answer evaluations, the accepted
+planner's two-owner tool checks, 132 local database assertions, the local security
+advisor, authenticated desktop/mobile browser checks and production build.
+Hosted migration and deployed authenticated flow remain separate release gates.
+Next planned phase: Historical / Longitudinal Metrics (Phase 12).

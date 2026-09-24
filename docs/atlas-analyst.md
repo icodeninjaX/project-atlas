@@ -1,6 +1,6 @@
 # ATLAS Analyst: implemented contract
 
-Analyst is a read-only, request-time retrieval feature at `/analyst`. The server authenticates every POST, accepts only a listed question template, and uses the signed-in Supabase client with an explicit `user_id` filter. RLS remains the final owner boundary. The model receives no database credentials, SQL facility, record mutation tool, or full record text.
+This document describes the original seven-question Analyst flow at `/analyst` and `POST /api/analyst`. That endpoint authenticates every POST, accepts only a listed question template, and uses the signed-in Supabase client with an explicit `user_id` filter. RLS remains the final owner boundary. The model receives no database credentials, SQL facility, record mutation tool, or full record text. The separate [Phase 11 freeform flow](analyst-freeform.md) uses the accepted planner and read-only tools on the same page.
 
 ## Questions and data
 

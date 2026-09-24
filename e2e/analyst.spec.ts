@@ -31,7 +31,7 @@ for (const width of [390, 1280]) {
     );
     const analyze = page.getByRole("button", { name: "Analyze" });
     await expect(analyze).toBeDisabled();
-    await page.getByRole("checkbox").check();
+    await page.getByRole("checkbox").nth(1).check();
     await expect(analyze).toBeEnabled();
     await page.route("**/api/analyst", async (route) =>
       route.fulfill({
@@ -70,6 +70,76 @@ for (const width of [390, 1280]) {
     await expect(
       page.getByText("2026-09-01 to 2026-09-24 · complete"),
     ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "View ATLAS records" }),
+    ).toHaveAttribute("href", "/money/transactions");
+    const dimensions = await page.evaluate(() => ({
+      width: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.width);
+  });
+}
+
+for (const width of [390, 1280]) {
+  test(`Freeform Analyst keeps citations and sources usable at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 850 });
+    await page.goto("/analyst");
+    const ask = page.getByRole("button", { name: "Ask Analyst" });
+    await expect(ask).toBeDisabled();
+    await page
+      .getByRole("textbox", { name: "Ask your own question" })
+      .fill("What needs attention in my finances?");
+    await page.getByRole("checkbox").first().check();
+    await page.route("**/api/analyst/freeform", async (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "answered",
+          claims: [
+            {
+              kind: "interpretation",
+              text: "This may warrant a closer look at recorded expenses.",
+              evidenceIds: ["money.current"],
+            },
+          ],
+          evidence: [
+            {
+              id: "money.current",
+              metric: "Recorded expenses",
+              value: 12345,
+              unit: "centavos",
+              period: { from: "2026-09-01", through: "2026-09-24" },
+              comparisonBasis: "Recorded transactions",
+              source: {
+                description: "Transactions",
+                recordIds: [],
+                href: "/money/transactions",
+              },
+              completeness: "complete",
+              claimType: "FACT",
+              provenance: {
+                tool: "getMoneySummary",
+                calculationVersion: "1",
+                retrievedAt: "2026-09-24T00:00:00Z",
+                textTrust: "untrusted_data",
+              },
+            },
+          ],
+          limitations: [],
+        }),
+      }),
+    );
+    await ask.click();
+    await expect(
+      page.getByText("This may warrant a closer look at recorded expenses."),
+    ).toBeVisible();
+    const citation = page.getByRole("link", { name: "Recorded expenses" });
+    await citation.click();
+    await expect(page.getByText("₱123.45")).toBeVisible();
     await expect(
       page.getByRole("link", { name: "View ATLAS records" }),
     ).toHaveAttribute("href", "/money/transactions");

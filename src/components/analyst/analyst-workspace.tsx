@@ -99,8 +99,7 @@ export function AnalystWorkspace({
             ))}
           </select>
           <p className="text-muted-foreground mt-2 text-xs">
-            Analyst currently supports these specific questions. Other requests
-            are rejected.
+            These questions use the original focused Analyst flow.
           </p>
         </div>
         <div>
