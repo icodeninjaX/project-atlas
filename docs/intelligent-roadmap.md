@@ -13,7 +13,7 @@ ATLAS should not become a collection of unrelated mini-apps.
 
 The long-term direction is:
 
-> **ATLAS observes what is happening, detects meaningful changes, prioritizes the next useful action, helps the user understand consequences, remembers history, connects knowledge, and eventually uses AI to explain and reason over structured facts.**
+> **ATLAS is a personal intelligence system that understands the user's structured reality, detects meaningful patterns, connects life domains, explains change, supports decisions, and proposes useful next actions while leaving the user in control.**
 
 The core rule is:
 
@@ -21,7 +21,7 @@ The core rule is:
 
 Deterministic calculations, balances, deadlines, trends, scoring rules, permissions, and source-of-truth records should remain normal application logic wherever possible.
 
-AI should be introduced only when natural-language understanding, summarization, interpretation, or cross-domain reasoning provides real value.
+AI should understand, classify, retrieve, connect, explain, compare, summarize, reason, and propose. Deterministic ATLAS services calculate, validate, mutate, enforce ownership and business rules, and execute confirmed actions. An LLM is never the source of truth for money, dates, budgets, goal progress, scenarios, task state, or other business facts.
 
 ---
 
@@ -71,7 +71,7 @@ Do not blindly trust roadmap documents if the codebase has already moved ahead o
 
 Every phase should follow these rules:
 
-1. **Finish the current phase before starting the next.**
+1. **Accept scoped work and clear required closeout blockers before the next delivery priority.** Delivery priority and hard prerequisites are defined separately below.
 2. **Do not introduce AI unless the phase explicitly requires it.**
 3. **Prefer deterministic, explainable logic.**
 4. **Avoid hidden scores and unexplained recommendations.**
@@ -94,7 +94,7 @@ Every phase should follow these rules:
 
 # 4. Phase Sequence
 
-The planned sequence is:
+The original foundation sequence is retained (Phases 1–8). Do not rebuild delivered phases:
 
 1. **Signals**
 2. **Capacity-Aware Dayline**
@@ -105,26 +105,91 @@ The planned sequence is:
 7. **ATLAS Analyst**
 8. **ATLAS Graph**
 
-The ordering is intentional.
+The foundation ordering is intentional. Remaining work follows the delivery-priority table in Section 10. Original phase briefs, examples and prompts below are retained as historical design context, not instructions to rebuild delivered modules. Their examples do not override implemented scope or justify unsupported historical claims.
 
 ATLAS should first become better at **detecting**, then **prioritizing**, then **simulating**, then **remembering**, then **teaching**, then **understanding natural language**, then **reasoning with AI**, and only after that become deeply **connected across domains**.
 
 ## Current Delivery Status
 
-| Phase                                    | Status      | Current note                                                                                                                                 |
-| ---------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Signals                               | Complete    | Implemented and verified on 2026-08-26.                                                                                                      |
-| 2. Capacity-Aware Dayline                | Complete    | Implemented on 2026-09-04; application validation passed, while local pgTAP execution remains pending until Docker is available.             |
-| 3. Personal Runway & Financial Scenarios | Complete    | Implemented on 2026-09-05 with deterministic runway, saved assumptions, and non-destructive scenarios.                                       |
-| 4. Life Timeline                         | Complete    | Implemented on 2026-09-05 with durable owner-scoped timeline snapshots, filters, pagination, and source links.                               |
-| 5. Knowledge & Spaced Repetition         | Complete    | Implemented on 2026-09-06 with concept lifecycle, active recall, review history, deterministic scheduling, search, and activity integration. |
-| 6. Universal Capture                     | In progress | Local implementation, live structured-output smoke, and local pgTAP passed on 2026-09-24; release checks remain.                             |
-| 7. ATLAS Analyst                         | Complete    | Read-only analysis for seven bounded question types; see [Analyst contract](atlas-analyst.md).                                               |
-| 8. ATLAS Graph                           | Planned     | Cross-domain relationships follow the preceding phases.                                                                                      |
+Implementation, local validation, deployment, and hosted verification are separate
+states. “Recorded” means existing implementation reports, **not tests rerun in this
+documentation task**. Earlier dated paragraphs preserve historical results; this
+summary takes precedence for current next-action guidance.
 
-The current product priority is finishing and validating Universal Capture.
-Authenticated mobile checks and database integration testing for delivered
-phases remain release gates.
+| Phase                                    | Implementation                                                             | Local validation evidence                                                                                                | Hosted deployment / verification                                                                                                                                                  |
+| ---------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Signals                               | Implemented, 2026-08-26                                                    | Recorded verified on that date                                                                                           | Hosted state not verified in this review                                                                                                                                          |
+| 2. Capacity-Aware Dayline                | Implemented, 2026-09-04                                                    | Application checks recorded; original DB/mobile follow-ups need reconciliation with later full-suite records             | Hosted state not verified                                                                                                                                                         |
+| 3. Personal Runway & Financial Scenarios | Implemented, 2026-09-05                                                    | 242 tests and application checks recorded; later full-suite records exist                                                | Migration verified 2026-09-05 per phase record; full hosted flow verification pending                                                                                             |
+| 4. Life Timeline                         | Implemented, 2026-09-05                                                    | Application checks recorded; original DB/browser follow-ups need reconciliation with later records                       | Hosted state not verified                                                                                                                                                         |
+| 5. Knowledge & Spaced Repetition         | Implemented, 2026-09-06                                                    | Application and ownership checks recorded; later clean local reset recorded in Analyst validation                        | Hosted migration verification recorded 2026-09-06; full hosted flow verification pending                                                                                          |
+| 6. Universal Capture                     | Five single-action intents implemented locally; closeout open              | Live structured-output smoke and local pgTAP recorded 2026-09-24; release-flow verification pending                      | Hosted state not verified                                                                                                                                                         |
+| 7. ATLAS Analyst                         | Seven bounded questions and typed reservation handling implemented locally | 20 focused route / 343 full tests and local DB checks recorded 2026-09-24                                                | Two reservation migrations and synthetic live model smoke verified per Analyst record; deployed application revision and full hosted authenticated browser flow not verified here |
+| 8. ATLAS Graph                           | Implemented locally, 2026-09-24                                            | Local acceptance recorded: 358 unit/component tests, 131 DB assertions, Graph mobile/desktop E2E and static/build checks | Hosted state not verified; local migration is not hosted deployment proof                                                                                                         |
+
+Repository health is independent: [formatting debt](repository-formatting-debt.md)
+records 45 historical failures and their local cleanup to zero on 2026-09-24.
+Older generic testing/database/security documents describe earlier snapshots, not
+fresh failures. No repository-wide application validation was rerun for this
+update; establish a fresh baseline before implementation.
+
+## Current release closeout
+
+This is bounded maintenance and verification, **not another intelligence phase**.
+Record pass, fail, or verification pending with date, environment, revision/change
+set and evidence. Reuse applicable recorded results; rerun when changes or
+environment differences make them insufficient. Unchecked items need resolution
+or evidence reconciliation, not an assumption of failure.
+
+- [ ] **Universal Capture:** Verify preview/corrections, explicit confirmation,
+      cancellation without writes, invalid/missing amount/date rejection, owner
+      isolation, stale/duplicate submission, provider failure/manual fallback, and
+      authenticated narrow-mobile/keyboard behavior. Reconcile existing action,
+      proposal and component coverage with release browser evidence. Confirm the
+      Capture quota migration and app compatibility in the required environment.
+- [ ] **Current Analyst:** Reconcile the frontier-model reservation and misleading
+      quota issue with the typed route and migrations
+      `20260924093543_add_gpt6_analyst_models.sql` and
+      `20260924094513_analyst_typed_reservation.sql`. The
+      [Analyst contract](atlas-analyst.md#validation) records hosted SQL reservations
+      and successful synthetic provider calls for Astra/Sol/Luna on 2026-09-24;
+      this supports the fix, not the current hosted application release. Verify
+      deployed route/schema compatibility and a full authenticated hosted browser
+      flow with a disposable account, including actual quota versus setup,
+      model-access/provider errors, and evidence-only fallback.
+- [ ] **Graph:** Reconcile all six Phase 8 acceptance criteria with
+      [the local acceptance matrix](atlas-graph.md#acceptance-and-validation--2026-09-24).
+      Preserve native task/milestone links, owner integrity, deletion cleanup,
+      one-hop bounds, Search/export and user-controlled links. Verify migration
+      `20260924100951_atlas_graph_relationships.sql`, RLS, triggers, grants and count
+      RPC in the required environment before dependent application rollout; record
+      hosted deployment and authenticated responsive verification separately.
+      Hosted state not verified. Do not rebuild Graph or infer deployment from SQL files.
+- [ ] **Repository baseline:** Record current revision plus local changes and
+      validation commands/configuration. Classify failures against consistent baseline
+      evidence; keep proven legacy debt separate from new regressions. Reconcile old
+      DB/mobile follow-ups only where later evidence actually covers them. This task
+      does not claim new application test results.
+
+Only unresolved safety, correctness, dependency, or required release-environment
+issues block the next step. Specify the required environment for the scoped task:
+hosted unknowns remain hosted release gates, but need not block independently
+testable local tools whose dependencies are locally validated. Do not turn this
+into endless cleanup or waive mandatory CI policy.
+
+**After required closeout checks pass, implement the Analyst Retrieval /
+Tool Layer.** Stable identifier: **Phase 18**, delivery priority **9**. Section 10
+explains identifiers and defines the single authoritative remaining order.
+
+The delivered AI surfaces are intentionally narrow. Universal Capture currently
+produces **one** previewable proposal from five kinds (expense, income, task,
+career application, knowledge concept); multi-action requests are unsupported.
+Analyst accepts **seven predefined questions**, retrieves fixed owner-scoped
+facts, and falls back to evidence-only output on model failure. These are sound
+safety foundations, not the final limits of ATLAS intelligence. The next step is
+an approved retrieval and tool layer for freeform analysis, rather than an
+ever-growing list of exact question strings. See [the implemented Analyst
+contract](atlas-analyst.md) for the current boundary.
 
 ---
 
@@ -667,7 +732,7 @@ on this machine because Docker Desktop was unavailable.
   previous activity entry cannot be reconstructed.
 - The local Docker-dependent migration and pgTAP checks still need to run in a
   Docker-enabled environment, followed by authenticated responsive E2E checks.
-- The next product target is **Phase 5 — Knowledge & Spaced Repetition**.
+- The original next target was Phase 5, now implemented. Use current closeout and Section 10 for next-action guidance.
 
 ## Goal
 
@@ -992,7 +1057,7 @@ Input:
 
 > Apply to Accenture tomorrow.
 
-Proposed actions:
+Future Phase 9 multi-action proposals, delivery priority 17 (not supported by current Capture):
 
 - Create career application draft
 - Create task for tomorrow
@@ -1081,7 +1146,7 @@ Implement a bounded set of supported capture intents first:
 - career application
 - knowledge item
 
-Potentially support multiple proposed actions from one input only if the UX remains clear.
+Keep this delivered scope single-action; multi-action proposals belong to future Phase 9 (delivery priority 17).
 
 Requirements:
 - Zod validate every model output
@@ -1145,6 +1210,11 @@ The Analyst should not be a generic chatbot.
 It should reason over carefully selected ATLAS facts.
 
 ## Example Questions
+
+These illustrate the original Analyst vision; they are not all supported by the
+current seven-question implementation. The exact implemented wording and data
+limits are listed in [the Analyst contract](atlas-analyst.md). Broader questions
+belong to Phase 12.
 
 - Why am I not making progress financially?
 - What changed in my spending this month?
@@ -1359,9 +1429,58 @@ Final response:
 
 ---
 
+# Phase acceptance and validation baselines
+
+A phase is accepted when its scoped requirements pass, it introduces no new
+validation regressions, and relevant safety, correctness, and deployment
+requirements are satisfied. Proven unrelated legacy failures are tracked
+separately.
+
+Record implementation, validation (date/environment), deployment and repository
+health independently. Implemented locally is not locally validated, deployed,
+or verified hosted. Missing evidence is **Verification pending** or **Hosted
+state not verified**. Previous passing reports establish only those runs.
+
+New lint or formatting failures, type errors, test or build failures, security
+regressions, and failed phase-specific E2E checks still fail phase acceptance.
+This rule cannot be used to excuse a regression introduced by the current phase.
+
+Before starting each roadmap phase:
+
+1. Establish the validation baseline and record the Git revision/change set.
+2. Record existing failures, exact affected files, and their scope separately.
+3. Implement the phase while preserving existing work.
+4. Rerun repository and phase-specific validation.
+5. Compare failures using consistent tooling/configuration and identify every new regression. A file outside the changed-file set does not prove a failure is unrelated. Unknown failures remain unclassified until investigated.
+6. Decide acceptance from the phase requirements and new regressions; link any
+   unrelated historical debt to its own record.
+
+For example, the same 37 unrelated format failures before and after a phase
+means zero new formatting regressions, provided every phase-modified file
+passes its applicable formatting check. It does not mean the repository format
+check passes. Formatting debt remains visible; subsequent phases must not inherit
+unexplained failures. Existing security, data-integrity or runtime failures affecting
+the feature or dependencies can block release. Never disable checks or silently
+waive mandatory requirements. Required repository-wide CI must pass or be handled
+through an explicitly approved project policy.
+
+---
+
 # Phase 8 — ATLAS Graph
 
-**Status:** Planned after the preceding phases.
+**Status:** Implemented locally as of 2026-09-24; local acceptance is recorded in [ATLAS Graph architecture and acceptance evidence](atlas-graph.md). Hosted state not verified.
+
+The local implementation includes the owner-scoped explicit relationship table,
+database endpoint validation and cleanup, native task/goal and milestone/goal
+adapters, deterministic Signal source references, Goal related counts and detail
+UI, manual add/remove, native task link/unlink, batched Search goal context,
+activity history, export, and one-hop Analyst-ready reads. The existing 2026-09-24 report records that local database tests
+(131), unit/component tests (358), lint, typecheck, and production build pass.
+Authenticated local Graph E2E passed on mobile and desktop, including explicit
+knowledge and native task add/remove and no horizontal overflow. The
+repository-wide format check now passes after a separate mechanical cleanup.
+Graph introduced zero formatting regressions; the original 45 unrelated
+failures and cleanup are recorded in [repository formatting debt](repository-formatting-debt.md). These are historical results, not reruns during this documentation task; code presence alone does not establish release completion.
 
 ## Goal
 
@@ -1415,6 +1534,16 @@ Related:
 Prefer a generic but controlled relationship model only if it remains type-safe and queryable.
 
 Avoid a completely unbounded “anything links to anything” table if it creates data-integrity problems.
+
+Graph edges should expose typed, owner-scoped relationship paths to Search and
+future Analyst tools. A developer-job goal, for example, can connect its
+applications, tasks, knowledge, reviews, Signals, and timeline events so Analyst
+can inspect blockers, overdue work, weak skills, and recent change around the
+goal. Some edges can be derived from existing foreign keys or source references;
+proposed permanent AI-created edges require user confirmation. Projects and
+decisions are future entity types, not claims about the current schema. Graph is
+AI context infrastructure first; its useful detail-page and retrieval behavior
+precedes any visual node graph.
 
 ## Acceptance Criteria
 
@@ -1515,6 +1644,8 @@ Until the above sequence is substantially complete, avoid distracting the projec
 
 # 6. Suggested Release Milestones
 
+These original product milestones describe foundation capabilities, not instructions to rebuild them or blanket hosted release claims.
+
 ## ATLAS 1.0 — Reliable
 
 Focus:
@@ -1596,9 +1727,29 @@ Primary outcome:
 
 ---
 
+## Next-generation release checkpoints
+
+Use Section 10 delivery priorities rather than numerical phase IDs:
+
+- **Evidence foundation (9–11):** Tested Tool Layer, evaluated Query Planner,
+  then freeform grounded Analyst; no freeform release before planner/evidence gates.
+- **History and connections (12–14):** Reproducible metrics, connected
+  longitudinal answers, then separately evaluated association discovery.
+- **Decision support (15–16):** Existing-engine scenario explanations, then
+  inspectable recommendations with confirmed actions.
+- **Capture expansion (17–18):** Multi-action proposals and mature confirmation,
+  then multimodal inputs through the same pipeline.
+- **Outcome review (19):** Deliberate decisions linked to actions and observations;
+  basic decision recording can be scoped earlier.
+
+Each checkpoint contains separate tasks and acceptance decisions, not a bundled
+implementation of all phases.
+
 # 7. Development Workflow for the AI Agent
 
-For every roadmap phase:
+Implement one scoped phase at a time in Section 10 delivery order after required
+closeout. Phase 1–8 prompts and the Phase 7 procedure are retained historical
+briefs, not instructions to repeat completed work. Reuse their source-of-truth services.
 
 ## Before Coding
 
@@ -1608,7 +1759,7 @@ For every roadmap phase:
 4. Inspect current UI patterns.
 5. Inspect tests.
 6. Check whether roadmap docs are stale relative to recent commits.
-7. Produce a small implementation plan before editing.
+7. Establish the baseline and required release environment under the acceptance rule; select only the next scoped delivery item and produce a small implementation plan.
 
 ## During Coding
 
@@ -1639,7 +1790,14 @@ npm run test:e2e
 npm run supabase:test
 ```
 
-Never run destructive database workflows against production.
+Never run destructive database workflows against production. The current CI
+quality job in `.github/workflows/ci.yml` requires lint, typecheck, test and build;
+E2E is separately dispatched. Recheck policy at implementation time.
+For documentation-only changes, run the installed project formatter only on edited
+documents: `npx --no-install prettier --check <edited-document-paths>`.
+The package `format` and `format:check` scripts target the whole repository;
+do not use them for documentation-only cleanup. Do not claim fresh application,
+database or browser results when only documentation was checked.
 
 ## Completion Report
 
@@ -1660,7 +1818,7 @@ For every phase, return:
 
 # 8. Final Product Loop
 
-The target ATLAS loop is:
+The target ATLAS runtime loop is cyclical, not implementation order. Section 10 defines delivery priority:
 
 ```text
 CAPTURE
@@ -1725,4 +1883,701 @@ Build toward that gradually.
 
 Do not rush the AI layer.
 
-A strong deterministic foundation will make every future AI capability safer, cheaper, more useful, and more trustworthy.
+A strong deterministic foundation will make every future AI capability safer, cheaper, more useful, and more trustworthy. Build approved retrieval tools after required closeout, then evaluated planning and freeform evidence handling; richer history and Capture follow delivery priority.
+
+---
+
+# 10. Next-Generation ATLAS Intelligence
+
+**Status:** Planned extensions; existing domain helpers are foundations, not proof
+that these generalized phases are delivered. Clear required current release
+closeout checks first, then implement the Tool Layer only.
+
+## Dependency map and sequencing decision
+
+### Stable identifiers and delivery priority
+
+Existing phase identifiers 1–17 are preserved. Their numbers are identifiers,
+**not the remaining delivery order**. Phase 11 retains Query Planner; its approved
+Tool Layer is split into new **Phase 18**. Phase 13 retains cross-domain and
+longitudinal analysis; association discovery is split into new **Phase 19**.
+No existing phase is renumbered. The two renamed phase headings and renamed handoff section retain explicit aliases
+for their old link anchors. Delivery priorities 9–19 below match the chosen order;
+all phase descriptions and “Following delivery” notes follow this same order.
+
+| Delivery priority | Stable phase ID | Capability                              | Delivery status                            |
+| ----------------- | --------------- | --------------------------------------- | ------------------------------------------ |
+| 9                 | 18              | Analyst Retrieval / Tool Layer          | Planned — next after required closeout     |
+| 10                | 11              | Analyst Query Planner                   | Planned                                    |
+| 11                | 12              | Analyst 2.0: Freeform Grounded Analysis | Planned                                    |
+| 12                | 10              | Historical / Longitudinal Metrics Layer | Planned                                    |
+| 13                | 13              | Cross-domain and Longitudinal Analyst   | Planned                                    |
+| 14                | 19              | Pattern and Association Discovery       | Planned                                    |
+| 15                | 14              | Scenario Intelligence                   | Planned                                    |
+| 16                | 15              | Next Best Action                        | Planned                                    |
+| 17                | 9               | Universal Capture 2.0                   | Planned                                    |
+| 18                | 17              | Multimodal Capture                      | Planned / exploratory formats              |
+| 19                | 16              | Decision → Outcome Intelligence         | Planned; basic recording may start earlier |
+
+This is delivery priority, not a claim that each phase technically requires all
+previous phases. Build and accept one scoped phase at a time. Initial freeform
+Analyst uses supported current evidence and available historical queries; the
+later Historical Metrics Layer makes broader comparisons reproducible. Never
+silently infer history to bridge that sequencing choice.
+
+### Hard prerequisites, enhancements and release blockers
+
+All rows inherit the cross-cutting safety, evidence, evaluation and acceptance
+rules below. A prerequisite applies to the capability actually being shipped.
+
+| Phase                    | Delivery priority | Hard prerequisites                                                                                                                                 | Optional enhancements                                          | Release blockers                                                                                          | What can be deferred                                             |
+| ------------------------ | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 18 Tool Layer            | 9                 | Required closeout; authenticated owner reads; existing deterministic services and evidence contract                                                | Graph/Timeline adapters where supported; richer history later  | Owner leaks, unbounded/incorrect results, missing source/coverage contracts, incompatible required schema | Planner, freeform UI, unsupported historical metrics             |
+| 11 Query Planner         | 10                | Accepted approved Tool Layer (18), validated plans and server execution                                                                            | More tools and optional context                                | Invalid/disallowed calls, budget escapes, unsafe partial failures, failed planner evaluations             | Production freeform interface and mutations                      |
+| 12 Freeform Analyst      | 11                | Tested planning (11), Tool Layer (18), evidence/answer validation                                                                                  | Editable preferences and richer history                        | Unsupported figures/citations, owner leaks, missing failure/retry/evidence fallback                       | Questions needing unavailable history; universal domain coverage |
+| 10 Historical Metrics    | 12                | Adequate source events or disclosed forward collection, metric/date/coverage definitions                                                           | Graph provenance; stored aggregates if justified               | Snapshot-as-history inference, unreconciled calculations, missingness treated as zero                     | New infrastructure and metrics lacking sufficient history        |
+| 13 Cross-domain Analyst  | 13                | Graph (8), adequate historical metrics (10), approved tools/planning/freeform evidence path                                                        | More relationship types and domains                            | Invented connections, invalid historical comparisons, undisclosed link coverage                           | Unlinked/unsupported domain questions                            |
+| 19 Association Discovery | 14                | Reliable historical metrics (10), defined method and minimum data requirements; Analyst path for explanations                                      | Graph context and cross-domain presentation (13)               | Small/incomplete or misaligned samples, unaccounted repeated searches, causal overclaims                  | Weak findings and additional methods                             |
+| 14 Scenario Intelligence | 15                | Existing Phase 3 engine and Analyst tool/planner/answer path (18, 11, 12)                                                                          | Association findings and historical baselines when appropriate | Engine mismatch, invented payoff rules, hidden assumptions or real-record writes                          | Association discovery; unsupported scenario types                |
+| 15 Next Best Action      | 16                | Grounded evidence, Dayline ranking where applicable, user priorities; validated actions for execution                                              | Graph links, history and scenarios for applicable proposals    | Unconfirmed or duplicate execution, unsupported urgency/ranking                                           | Scenario-based advice and broader action coverage                |
+| 9 Capture 2.0            | 17                | Current Capture, safe domain actions, owner resolution, review/confirmation contract                                                               | Graph context and Analyst explanation                          | Wrong-record writes, ambiguous confirmation, undefined partial success or duplicate submission            | Next Best Action; unsupported intents                            |
+| 17 Multimodal Capture    | 18                | Mature proposal/confirmation handling (9), validated media access and retention/deletion policy                                                    | More media formats and Graph context                           | Silent amount/date save, unsafe files/access, unclear provider sharing                                    | Additional formats and retained source media                     |
+| 16 Decision → Outcome    | 19                | Recording: owner-scoped storage and controls; advanced review: linked actions/goals, Timeline, sufficient historical measures and Analyst evidence | Recommendations, associations and multimodal entry             | Invented decisions/outcomes, causal attribution from sequence, missing privacy controls                   | Advanced analysis while deliberate decision recording begins     |
+
+Scenario Intelligence does not depend on Association Discovery. Capture 2.0 may
+be explicitly reprioritized earlier if capture friction dominates; it does not
+technically depend on Next Best Action. Multimodal Capture needs a mature
+proposal/confirmation path. Recording decisions may begin before advanced
+outcome analysis. Preserve the default priority above unless a product decision
+explicitly changes it and updates all affected next-action guidance.
+
+### Inspected foundations and historical limits
+
+The current local sources establish reuse candidates, not final tool names:
+
+| Existing source                                          | Reuse / limitation                                                                                                                                                                                                |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/analyst/server.ts` and `evidence.ts`            | `retrieveEvidence` supplies seven fixed questions with units, periods, record IDs and completeness. Generalize contracts without promising unsupported history.                                                   |
+| `src/lib/graph/server.ts`, `derived.ts`, registry/model  | `getRelatedEntities` authenticates and bounds one-hop native/manual retrieval; derived Signal provenance is separate. Preserve endpoint ownership, `hasMore` and native foreign keys.                             |
+| `src/lib/runway/server.ts` and `engine.ts`               | `loadRunwayWorkspace`, `calculateRunway`, `calculateScenario` exist. Wrap calculations with bounded input/output adapters; do not assume every existing loader already meets the new tool budgets.                |
+| `src/lib/timeline/server.ts` and Life Timeline migration | `loadTimelinePage` uses the owner-scoped `life_timeline` RPC. Activity contains both presentation snapshots and transition facts; not every row is an immutable historical measurement.                           |
+| Career actions and initial/Life Timeline migrations      | Application stage events and Timeline transition facts exist. Verify dates, coverage and duplicate representations before deriving stage history or conversion metrics; present stage counts are not conversions. |
+| Money/debt, task, knowledge and review records           | Recorded transactions/payments, supported task completion events, knowledge reviews and weekly scores can support scoped metrics. Inspect edits, deletion, backfill and coverage before promising reconstruction. |
+
+Life Timeline backfills surviving sources and cannot recover deleted legacy
+records with no event. Money snapshots can be updated; current goal progress,
+task overdue state and balances do not automatically supply prior snapshots.
+The existing [Analyst contract](atlas-analyst.md) explicitly limits current debt,
+goal and career snapshot claims. No new project, habit, sleep or decision module
+is a prerequisite for initial tools; those entities remain future concepts.
+
+**Shared phase contract:** Every future phase below includes goal, user problem,
+scope (under proposed architecture), data, deterministic/AI responsibilities,
+privacy, failures, acceptance and tests/evaluations. Before implementation, pin
+validated input/output schemas, source/owner rules, row/date/evidence budgets,
+completeness behavior and mobile design. Reuse the modular monolith; no embeddings,
+vector database, queues, Redis, GraphQL or microservices without measured need.
+
+## Phase 18 — Analyst Retrieval / Tool Layer
+
+**Status:** Planned; delivery priority 9 — the next single implementation task.
+
+- **Goal:** Build approved, deterministic, read-only tools that future Analyst reasoning can invoke independently.
+- **User problem:** Fixed question retrieval cannot safely be reused by a planner until inputs, limits and evidence have consistent contracts.
+- **Proposed architecture:** A server-only allowlisted registry wraps existing domain reads/calculations. Candidate capabilities include spending/income summaries, debt balances and recorded payments, task summaries, goal progress, career pipeline and available stage history, weekly review metrics, Signals, Timeline events, Graph-related entities, current runway and existing deterministic scenarios. Knowledge progress and period comparisons are optional supported adapters. Inspect services before final tool names; `getSpendingSummary`, `getIncomeSummary`, `getDebtProgress`, `getDebtPayments`, `getTaskCompletionTrend`, `getOverdueTaskSummary`, `getGoalProgress`, `getCareerPipeline`, `getCareerStageHistory`, `getWeeklyReviewMetrics`, `getSignals`, `getTimelineEvents`, `getKnowledgeProgress`, `getRunway`, `comparePeriods` and `runFinancialScenario` are design examples, not existing API claims. `getRelatedEntities` is an existing Graph helper to adapt; historical trend tools are only eligible when their source coverage supports them.
+- **Tool contract:** Validated input schema; server-derived owner identity; allowed filters/date ranges; deterministic calculation rules; bounded output; evidence IDs and source references; units and inspected periods; freshness and completeness; typed failure states. Bound internal retrieval as well as returned rows. A cap cannot silently turn partial sums into complete totals.
+- **Data required:** Current source-of-truth records and genuinely available history, inspected above. Unavailable history returns an explicit limitation; no requirement to build the Historical Metrics Layer first.
+- **Deterministic / AI responsibilities:** ATLAS authenticates, validates, filters, calculates and packages evidence. No model chooses tools or generates plans in this phase; synthetic evidence fixtures need no provider call.
+- **Dependencies:** Required closeout, owner-scoped services, current evidence types and relevant schema. Graph is reused for related-entity tools; scenario tools reuse Phase 3 math. Each adapter must meet the new contract independently.
+- **Privacy and security:** Server-derived identity, explicit owner filters and RLS on every invocation, server-only credentials, bounded/minimized retrieval, and no private prompts/evidence logged by default. Treat stored and returned text as untrusted.
+- **Failure behavior:** Typed invalid-input, unauthenticated, unavailable-source/setup, timeout, partial, insufficient-history and stale-data results; cross-owner IDs reveal no private existence. Reuse cross-cutting model/quota/provider error distinctions where applicable, without adding provider calls to tools.
+- **UX / mobile:** No new freeform UI. Evidence fields must support readable, accessible source/period/completeness display; verify any affected existing surface on mobile.
+- **Acceptance criteria:** Tools can be invoked and tested independently, enforce ownership, reuse deterministic calculations, obey budgets and return consistent inspectable evidence with honest data limitations.
+- **Testing / evaluation:** Synthetic evidence fixtures, schema/filter/date bounds, exact calculations, centavo/timezone edges, row caps, freshness/missingness, two-owner isolation, injection-like stored text, unavailable history, invalid IDs and typed failures. Verify relevant schema compatibility and independent invocation without AI.
+- **Out of scope:** AI query planner, production freeform Analyst UI, unrestricted SQL, mutation tools, new calculation engines and invented history.
+- **Following delivery:** Analyst Query Planner (Phase 11, priority 10).
+
+<a id="phase-11--analyst-query-planner-and-approved-read-only-tools"></a>
+
+## Phase 11 — Analyst Query Planner
+
+**Status:** Planned; delivery priority 10.
+
+- **Goal:** Let the model choose _what information it needs_ while ATLAS controls
+  _how that information is safely retrieved and calculated_.
+- **User problem:** The seven exact current questions are grounded but block
+  broader questions, and simply adding more exact strings will not scale.
+- **Example interaction:** “What is blocking my developer-job goal?” can request
+  goal progress, related tasks, career pipeline, and knowledge review evidence.
+- **Proposed architecture:** Question → validated plan → approved tool execution → evidence. Use only accepted Phase 18 tools; answer presentation ships in Phase 12 after planner evaluation. The tool catalog is defined by inspected services, not model-generated names.
+- **Data required:** Accepted tool schemas and evidence contracts; Graph edges or historical metrics only for tools that actually use them. No new history collection is required for the planner itself.
+- **Deterministic / AI responsibilities:** The planner selects and sequences
+  approved information needs. ATLAS authenticates, authorizes, retrieves,
+  calculates, validates arguments, and packages evidence. The model receives
+  neither arbitrary SQL nor unrestricted table access.
+- **Privacy and security:** Read-only allowlist, RLS, server-derived identity,
+  per-tool owner checks, minimum necessary fields, prompt-injection isolation,
+  and no mutation tool exposed in Analyst.
+- **Failure behavior:** Reject unsupported tool requests or invalid arguments;
+  return typed partial/insufficient evidence on source gaps. A tool failure
+  cannot become a fabricated answer.
+- **UX / mobile:** Show the inspected period, evidence and source links; hide
+  raw tool mechanics by default while offering an understandable “How this was
+  answered” view on mobile.
+- **Acceptance criteria:** Synthetic questions produce valid allowlisted plans and owner-scoped evidence within explicit call, context, token, cost and execution-time limits. Strict argument validation and server permissions apply on every invocation; ambiguous entity references require clarification. Partial tool failures remain explicit.
+- **Testing:** Tool schema/limit tests, two-user isolation, prompt injection,
+  tool rejection, stale Graph edges, row caps, and deterministic recalculation.
+- **AI evaluation:** Synthetic planner cases score tool choice, missing-tool
+  recognition, unnecessary retrieval, and correct handling of denied tools.
+- **Known limitations:** A planner may choose insufficient tools; the system
+  needs a bounded retry or a clear missing-evidence answer.
+- **Dependencies:** Accepted Phase 18 Tool Layer, current Analyst evidence and operating limits. Historical metrics and Graph are required only for tools whose scope uses them, not all planning.
+- **Out of scope:** Model-generated SQL, arbitrary URLs, direct table access, unrestricted execution, mutation tools and production freeform UI before evaluations pass. User text, stored records and tool-returned text are all untrusted; operational metadata must not log private prompts.
+- **Following delivery:** Freeform Analyst 2.0 (Phase 12, delivery priority 11).
+
+## Phase 12 — Analyst 2.0: freeform grounded analysis
+
+**Status:** Planned; delivery priority 11.
+
+- **Goal:** Answer broader, multi-step questions using only approved evidence.
+- **User problem:** “Why does it feel like I am not making financial progress?”,
+  “What changed in my life last month?”, and “Where am I losing momentum?”
+  require several sources and cannot fit one exact template. Initial examples are bounded: recorded spending changes, attention around a goal, overdue career follow-ups and how linked records connect. Broader questions remain limited by available evidence.
+- **Example interaction:** For “Why am I struggling financially despite paying
+  debt?”, a bounded plan retrieves income, expenses, payments, current balances,
+  runway, spending changes, and comparable periods, then synthesizes a cited
+  explanation. It distinguishes observed changes from possible explanations.
+- **Proposed architecture:** The Phase 11 planner may orchestrate multiple Phase 18 tools,
+  collect typed evidence IDs, and generate structured claims with citations.
+  Enforce maximum tool calls, evidence bytes, lookback, execution time,
+  output tokens, estimated cost, and per-user quotas. Server-side validation
+  checks citations, figures, and allowed claim types; evidence-only fallback
+  remains available.
+- **Data required:** Approved tool results only, including completeness and
+  comparison metadata; no automatic whole-database context.
+- **Deterministic / AI responsibilities:** ATLAS computes numbers and checks
+  support. AI plans, connects, compares, and explains with explicit uncertainty.
+- **Privacy and security:** Existing consent and minimal disclosure remain;
+  owner-scoped RLS retrieval, untrusted record text, no provider credentials or
+  write capability in the model context.
+- **Failure behavior:** Unsupported question, missing data, tool budget,
+  provider timeout, invalid citation, or contradictory claim each has a typed
+  result; show verified facts where possible, clear retry controls, and deterministic evidence when the AI explanation fails.
+- **UX / mobile:** Answer has concise summary, evidence chips, source records,
+  period and calculation basis, missing data, uncertainty, and expandable
+  reasoning trail. On mobile, citations remain tap-friendly and close to claims.
+- **Acceptance criteria:** Broader questions can be answered without exact
+  wording, every material claim cites supplied evidence, and ungrounded or
+  over-budget paths stop safely. The complete question → tools → evidence → answer flow distinguishes facts, interpretations and recommendations, shows inspected period/completeness and missing information, and uses only ATLAS-calculated authoritative figures.
+- **Testing:** Multi-step plans, limits, missing data, contradictory evidence,
+  invalid IDs, provider failure, cross-user isolation, mobile citation flows.
+- **AI evaluation:** Separate synthetic cases for grounding, fabricated facts,
+  causal overclaims, planner choice, cross-domain synthesis, uncertainty, and
+  injection in stored content.
+- **Known limitations:** Freeform does not mean unlimited topics; only domains
+  covered by approved tools and sufficient data can be answered.
+- **Dependencies:** Phase 11 and its evidence validation, operational controls.
+- **Out of scope:** Autonomous actions, general web research, unrestricted SQL.
+- **Following delivery:** Historical Metrics (Phase 10, delivery priority 12). Keep existing supported questions as presets where useful.
+
+## Phase 10 — Deterministic historical metrics
+
+**Status:** Planned; delivery priority 12.
+
+- **Goal:** Provide inspectable daily, weekly, and monthly history for Analyst,
+  Signals, Graph paths, and decision reviews.
+- **User problem:** Current Analyst can show snapshots and short comparisons but
+  cannot reliably answer “Which months were strongest?” or “Which goals keep
+  stalling?” from long histories.
+- **Example interaction:** “How did my finances and task completion change over
+  six months?” returns period-aligned totals with missing-data labels.
+- **Proposed architecture:** Define versioned metric contracts and deterministic
+  aggregation from source records. Begin with request-time queries or simple
+  materialization; pre-aggregate only where measured row counts or latency
+  warrant it. Support backfills, corrections, invalidation, and source links.
+  Do not send thousands of raw rows to a model.
+- **Data required:** Transactions, accounts, debt payments/balances, tasks,
+  applications and stage history, goals/milestones, knowledge reviews, weekly
+  reviews, and Signals; use timeline events where they represent durable source
+  changes. Conceptual weekly fields include week start, income, expenses, cash
+  flow delta, debt payments/current debt, task completions/overdue count,
+  applications/interviews, goal progress changes, knowledge reviews, energy,
+  stress, overall review score, and signal counts. These are candidate metrics, not promises of available history. Define source, date semantics, exclusions, coverage and completeness for each.
+- **Deterministic / AI responsibilities:** ATLAS defines periods, units,
+  centavo arithmetic, denominators, missingness, and metric versions. AI selects
+  relevant metrics and explains supported changes; it cannot invent trends.
+- **Privacy and security:** Owner-scoped aggregation with RLS and explicit
+  ownership filters; bound lookbacks and result sizes. Retain only justified
+  historical derivatives and honor data deletion.
+- **Failure behavior:** Missing source history yields “insufficient” or
+  “partial,” never a zero that masquerades as complete data. Stale materialized
+  metrics are marked or recomputed.
+- **UX / mobile:** Period, comparison basis, source count, coverage, and update
+  time are visible. Small-screen charts have a readable table alternative.
+- **Acceptance criteria:** Metrics reconcile to source records, reproduce after
+  backfill, reflect edits/deletions, and refuse misleading comparisons.
+- **Testing:** Calendar and Asia/Manila boundary tests, centavo overflow and
+  rounding, sparse history, edits, deleted records, and two-user isolation.
+- **AI evaluation:** Synthetic questions test whether interpretations respect
+  coverage and avoid fabricated trends.
+- **Known limitations:** Historical events and current-state snapshots differ. Never infer past overdue counts from today's task state, past goal progress from today's progress field, or historical balances without adequate transactions/snapshots. Start collecting unavailable history going forward and disclose its start date. Recompute deterministically after late edits, corrections and deletions with versioned definitions where needed. Missing data stays distinct from zero.
+- **Dependencies:** Sufficient source events or explicitly scoped forward collection and existing deterministic domain services. Reuse Timeline where suitable; Graph is optional provenance enrichment. No Analyst planner or Capture 2.0 is required to build metrics.
+- **Out of scope:** Hidden life scores or model-generated metric definitions.
+- **Following delivery:** Cross-domain and Longitudinal Analyst (Phase 13, delivery priority 13).
+
+<a id="phase-13--cross-domain-longitudinal-and-association-discovery"></a>
+
+## Phase 13 — Cross-domain and Longitudinal Analyst
+
+**Status:** Planned; delivery priority 13.
+
+- **Goal:** Combine Graph, reliable historical metrics, Timeline, Signals and approved tools for traceable cross-domain comparisons. Association discovery is separately scoped in Phase 19.
+- **User problem:** A person cannot easily see what changed around a goal across several linked activities over time.
+- **Example interaction:** “What changed around this goal over three months?”, “Which linked activities progressed while this goal stalled?”, or “How did my recorded spending and task completion change together?”
+- **Proposed architecture:** Align versioned Phase 10 metrics by comparable periods; use explicit/native Graph paths to identify connected entities. Distinguish derived Signal provenance from permanent links. Absent links or missing records are not proof of no activity. Never infer unrelated records support the same goal.
+- **Data required:** Historical metrics, source coverage, Graph relationships,
+  and optional weekly review scores. Sleep or habit data appears only if future
+  modules actually collect it.
+- **Deterministic / AI responsibilities:** ATLAS calculates comparisons and resolves relationship paths; AI explains supported observations with limitations. No causal inference from chronological sequence.
+- **Privacy and security:** Owner-scoped bounded analysis; suppress small or
+  incomplete samples and minimize sensitive review text sent to models.
+- **Failure behavior:** Sparse, incomparable, or confounded periods produce no
+  pattern claim and explain why. No zero-filling missing data.
+- **UX / mobile:** Show periods, coverage, relationship paths, missingness and source records in readable cards/charts.
+- **Acceptance criteria:** Cross-domain answers have traceable relationship paths, valid historical comparisons and clear limitations; no fabricated goal links or historical progress.
+- **Testing:** Synthetic linked/unlinked records, sparse and shifted periods, unavailable progress history, deleted sources, owner isolation and mobile evidence flows.
+- **AI evaluation:** Measure invented connection and causal-claim rates, weak-evidence refusal and cross-domain explanation quality.
+- **Known limitations:** Observational data and Graph coverage are incomplete. A current relationship does not prove it existed throughout the comparison period.
+- **Dependencies:** Phases 8, 10, and 12.
+- **Out of scope:** Association discovery (Phase 19), medical inference, hidden behavioral scoring and causal claims.
+- **Following delivery:** Pattern and Association Discovery (Phase 19, delivery priority 14).
+
+## Phase 19 — Pattern and Association Discovery
+
+**Status:** Planned; delivery priority 14. Separated from Phase 13 comparison work.
+
+- **Goal:** Identify evidence-backed associations across sufficiently complete history.
+- **User problem:** Users struggle to notice repeated combinations, such as recorded stress and task completion moving together, without mistaking chance for a reliable pattern.
+- **Example interaction:** “Did my recorded job-search activity and career momentum move together?” or “Which periods did dining spending coincide with budget overruns?” Only supported sources and definitions qualify.
+- **Proposed architecture:** Align versioned historical metrics by comparable observation periods. Deterministic methods enforce minimum data, sample-size and missingness requirements before reporting findings; account for repeated searches, chance findings, outliers and confounding. Show method, sample size, inspected period and limitations. Withhold findings that fail thresholds; never fabricate confidence scores.
+- **Data required:** Reliable historical metrics, coverage and source references; optional Graph relationships and weekly review scores. Sleep/habit data is unavailable unless separately collected by a future module.
+- **Deterministic / AI responsibilities:** ATLAS calculates independently testable association statistics; AI explains qualified observations using association language, not unsupported causal claims.
+- **Dependencies:** Reliable Phase 10 history and validated statistical contracts; accepted Analyst path for AI explanations. Phase 13/Graph can enrich context but are not universal statistical prerequisites.
+- **Privacy and security:** Owner-scoped bounded calculations and minimal provider disclosure. No private review prose in default logs or evaluation corpora; respect deletion and retention.
+- **Failure behavior:** Sparse, shifted, incomplete or incomparable samples produce no finding or an explicitly qualified exploratory observation. Missingness is not zero; uncertainty cannot be hidden behind a model score.
+- **UX / mobile:** Readable evidence cards/charts with table alternatives, source links, methods, sample counts and clear association labels.
+- **Acceptance criteria:** Pattern calculations are independently reproducible and testable; uncertain findings are withheld or clearly qualified, and explanations do not claim causation.
+- **Testing / evaluation:** Synthetic correlated/uncorrelated series, small samples, missing/shifted periods, outliers, repeated-search false positives, edits/deletions and owner isolation. Measure false-pattern and causal-claim rates, weak-evidence refusal and faithful reporting of method/limitations.
+- **Out of scope:** Causal inference from mere co-movement, medical inference, hidden behavioral scores, fabricated confidence and new uncollected domains.
+- **Following delivery:** Scenario Intelligence (Phase 14, priority 15), which does not technically depend on this phase.
+
+## Phase 14 — Scenario intelligence
+
+**Status:** Planned; delivery priority 15.
+
+- **Goal:** Let Analyst explain options calculated by existing deterministic
+  scenario engines.
+- **User problem:** Users can run a financial scenario but need help comparing
+  it with alternatives and understanding assumptions.
+- **Example interaction:** “Compare paying an extra ₱10,000 toward debt next
+  month with keeping it as emergency cash” or “What happens to runway if income
+  falls by 20%?”
+- **Proposed architecture:** Question → planner → validated scenario inputs →
+  `calculateScenario`/runway or another approved deterministic engine → typed
+  baseline and alternatives → cited explanation. Add a scenario tool only for
+  calculations the domain engine actually supports; expand payoff modeling
+  separately before promising payoff timelines.
+- **Data required:** Owner-scoped current financial state, user-editable
+  assumptions, calculation version, baseline, and scenario results.
+- **Deterministic / AI responsibilities:** ATLAS validates amounts and dates,
+  calculates outcomes, and labels assumptions. AI explains tradeoffs and
+  uncertainties, never independently computes authoritative figures.
+- **Privacy and security:** Read-only simulations, bounded input ranges and
+  owner data, explicit user confirmation for any later real-world mutation.
+- **Failure behavior:** Unsupported scenario, missing baseline, or invalid
+  assumptions return a clear limitation and a path to edit inputs.
+- **UX / mobile:** Baseline and alternatives appear side by side or stacked with
+  the same units, assumptions, uncertainty, and a financial-decision caution.
+- **Acceptance criteria:** Rendered outcomes exactly match the engine; no
+  simulation changes source records or implies a guaranteed result.
+- **Testing:** Engine parity, edge inputs, scenario order, stale data, partial
+  baseline, ownership, and mobile comparison layout.
+- **AI evaluation:** Detect invented calculations, omitted assumptions, biased
+  framing, and bad interpretation of deterministic results.
+- **Known limitations:** Today's runway engine is a projection with specified
+  assumptions, not a general financial planner or complete debt payoff engine.
+- **Dependencies:** Current runway/scenario engine and accepted Analyst tool/planner/answer path (Phases 18, 11, 12). Association discovery is not a prerequisite.
+- **Out of scope:** Rebuilding the financial engine, mutating real financial records, invented payoff dates, unsupported financial rules, financial transactions or automatic plan execution.
+- **Following delivery:** Next Best Action (Phase 15, delivery priority 16).
+
+## Phase 15 — Next Best Action
+
+**Status:** Planned; delivery priority 16.
+
+- **Goal:** Offer a small number of grounded, inspectable actions for the user
+  to choose from.
+- **User problem:** Signals and analysis can reveal problems without making a
+  concrete next step easy to assess.
+- **Example interaction:** “Follow up on these three overdue applications”
+  explains that all passed their follow-up dates and no interviews are currently
+  scheduled, then offers View applications and Create follow-up tasks.
+- **Proposed architecture:** Deterministic eligibility and priority candidates
+  from Signals, Dayline, goals, Graph, and metrics; Analyst may compare and
+  phrase them. A recommendation record or response includes proposed action,
+  reason, evidence IDs, urgency basis, related goal/records, uncertainty, and
+  possible user action. Only an explicit confirmation invokes an existing
+  domain mutation.
+- **Data required:** Current task/application state, relevant goal and Graph
+  links, Signals, dates, and source-backed metrics.
+- **Deterministic / AI responsibilities:** ATLAS determines eligibility,
+  urgency rules, action validity, and execution. AI can explain and rank within
+  allowed evidence; it cannot invent an overdue state or execute the action.
+- **Privacy and security:** Owner-scoped candidates; no autonomous external
+  communication, deletion, or financial action; revalidate before execution.
+- **Failure behavior:** Stale recommendations disappear or ask to refresh;
+  uncertain evidence yields a lower-confidence suggestion or no suggestion.
+- **UX / mobile:** One clear action at a time, compact “why” and uncertainty,
+  visible source links, dismiss control, and large touch targets. Avoid alert
+  fatigue and unexplained scores.
+- **Acceptance criteria:** Every recommendation has evidence and an explicit
+  user choice; execution uses existing deterministic services, explicit confirmation and duplicate-execution protection. Show proposed action, related goal (or no known link), evidence, ranking reason, urgency and uncertainty. Preference-based advice is not objectively optimal.
+- **Testing:** Eligibility/ranking, stale state, dismissal, confirmation,
+  ownership, no-action cases, and mobile review.
+- **AI evaluation:** Synthetic cases for irrelevant or unsafe suggestions,
+  evidence mismatch, urgency overstatement, and useful explanation.
+- **Known limitations:** Ranking reflects incomplete recorded reality; it
+  should never imply a universal “best” choice.
+- **Dependencies:** Evidence/answer path and validated domain actions for executable proposals. Reuse existing Dayline ranking and user priorities instead of creating a competing opaque prioritizer. Graph is required for linked-goal claims; history and Phase 14 scenarios are enhancements only when the recommendation uses them.
+- **Out of scope:** Background agents, automatic task creation, external contact.
+- **Following delivery:** Universal Capture 2.0 (Phase 9, delivery priority 17).
+
+## Phase 9 — Universal Capture 2.0 and entity resolution
+
+**Status:** Planned; delivery priority 17.
+
+- **Goal:** Make Capture the general natural-language ingestion layer for
+  existing ATLAS actions, with several independent, reviewable proposals.
+- **User problem:** A single sentence can describe several events and refer to
+  existing records by name, while today's one-action parser rejects it.
+- **Example interaction:** “Paid ₱2,500 to Billease, spent ₱380 on groceries
+  using GCash, applied to Acme as a PHP developer, and remind me to follow up
+  Friday” yields debt-payment, expense, application, and task proposals.
+  “Move interview prep to tomorrow” resolves an existing task; “Paid 2k today”
+  asks whether this was a debt payment, expense, transfer, or something else.
+- **Proposed architecture:** Parse into a bounded batch of typed proposals with
+  source spans; retrieve small, owner-scoped candidate sets for names; rank
+  candidates without treating a model guess as an ID; validate each proposal;
+  then preview. Support Review All, confirm one, confirm all, reject one, and
+  correct fields. Confirm-all must show every effect and use an explicit user
+  action; define transaction and partial-failure semantics before shipping.
+  One targeted, bounded clarification can fill a required field and returns to
+  preview. No silent execution.
+- **Data required:** Candidate accounts, debts, open tasks, active goals,
+  applications, concepts, and the existing mutation contracts; retrieve only
+  the relevant types and a capped number of candidates. Never dump a database
+  into a prompt.
+- **Deterministic / AI responsibilities:** AI segments text, classifies,
+  extracts, and suggests candidate references. ATLAS checks exact ownership,
+  confidence thresholds, amount/date/category rules, record state, conflicts,
+  and executes confirmed existing domain actions. Missing financial fields are
+  never invented.
+- **Privacy and security:** Authenticate server-side, use RLS as the final
+  boundary, ignore browser-supplied owner IDs, treat user text and stored titles
+  as untrusted, bind preview IDs to the owner and current records, and revalidate
+  at confirmation. No direct model writes or service-role credentials.
+- **Failure behavior:** Ambiguous matches produce named choices; unsupported
+  actions and missing required fields remain unsaved with a manual path. A
+  failed proposal must not be reported as saved. Provider failure must leave
+  manual forms available.
+- **UX / mobile:** Review cards show type, source phrase, resolved record,
+  amount/date, warnings, and correction controls. Sticky or reachable actions,
+  large touch targets, and a compact batch summary work at narrow widths.
+- **Acceptance criteria:** Each independent proposal can be corrected,
+  confirmed, or rejected; ambiguous references cannot update a record; every
+  saved action uses the existing deterministic service and has an auditable
+  confirmation path.
+- **Testing:** Unit and integration tests for segmentation, resolution, owner
+  isolation, stale/deleted targets, correction, duplicate confirmation,
+  all/individual confirmation, and partial failures; mobile and keyboard flow.
+- **AI evaluation:** Synthetic mixed-intent cases measure extraction recall,
+  wrong-record rate, hallucinated amounts/dates, clarification quality,
+  unsupported intents, and adversarial text separately from unit tests.
+- **Known limitations:** Some domain actions may need safe preview support;
+  bulk atomicity and conflict rules must be designed per action. Coverage grows
+  only when an existing deterministic action is ready.
+- **Dependencies:** Current Capture, validated domain actions, owner-scoped entity resolution and confirmation. Reuse Graph candidate retrieval where useful. Next Best Action is not required; Capture 2.0 can move earlier if capture friction becomes the dominant user problem.
+- **Out of scope:** Autonomous writes, arbitrary edits, and direct SQL from the
+  model. Multimodal inputs wait for Phase 17. Recording a debt payment is a database-record action, not authorization to move money through an external provider. Preserve native relationships rather than duplicate them as manual Graph edges.
+- **Following delivery:** Multimodal Capture (Phase 17, delivery priority 18).
+
+Candidate intent backlog: expense, income, account transfer, debt payment,
+debt creation, task creation/update/completion, goal, milestone and goal-progress
+changes, career application/stage/follow-up, knowledge concept/update, weekly
+review input, budget changes, and later supported entities. Each needs its own
+validation and preview contract; this list does not claim current support.
+
+## Phase 17 — Multimodal Universal Capture
+
+**Status:** Planned; delivery priority 18.
+
+- **Goal:** Accept text, voice transcription, receipts/photos, screenshots,
+  copied email, and uploaded documents through the same Capture proposal flow.
+- **User problem:** Important events arrive in formats other than typed text;
+  manual re-entry loses context and provenance.
+- **Example interaction:** A receipt image proposes an expense; a job-offer
+  screenshot proposes a career update; “Spent ₱800 on gas and remind me to pay
+  Meralco tomorrow” as a voice note proposes an expense and a task.
+- **Proposed architecture:** Ingest with file/type/size validation → extract
+  text or fields → normalize to Phase 9 proposal schema with source location,
+  extraction method and confidence → resolve entities → preview/correct →
+  explicit confirmation → existing deterministic mutation. Keep source files
+  only under a defined storage, deletion, and retention policy.
+- **Data required:** User-provided media, extraction provenance, limited
+  owner-scoped candidate context, existing Capture actions.
+- **Deterministic / AI responsibilities:** OCR/transcription/models extract and
+  classify. ATLAS validates fields, ownership, dates, centavos, duplicate risk,
+  and performs confirmed mutations. OCR never authorizes a financial amount.
+- **Privacy and security:** File scanning and content/size controls, private
+  storage and short-lived access, prompt-injection handling inside documents,
+  minimum necessary model disclosure, explicit deletion/retention controls.
+- **Failure behavior:** Unreadable media or conflicting fields become an
+  editable draft or manual form; no automatic save or guessed amount.
+- **UX / mobile:** Camera and share-friendly entry, accessible transcript/text
+  correction, source snippet beside each extracted field, clear upload status,
+  and small-screen proposal review. Show extracted fields and provenance, flag confidence/ambiguity, and explicitly confirm consequential amounts and dates; never silently save them.
+- **Acceptance criteria:** All formats converge on the same validated proposal
+  and confirmation boundary; provenance is visible and corrections persist.
+- **Testing:** File validation, OCR/transcription errors, duplicate receipts,
+  ambiguous amounts/dates, owner isolation, deletion, and mobile capture flow.
+- **AI evaluation:** Synthetic documents/audio text for extraction accuracy,
+  amount/date hallucination, injection, and multi-action splitting; never use
+  private user media as an evaluation corpus by default.
+- **Known limitations:** Format quality and provider support vary; copied text
+  can ship before image or audio without creating a separate subsystem.
+- **Dependencies:** Mature Phase 9 proposal/clarification/confirmation handling, secure media access and defined retention/deletion/provider-sharing boundaries. Reuse owner-scoped resolution; Graph is optional context.
+- **Out of scope:** Autonomous inbox monitoring or unseen background imports.
+- **Following delivery:** Decision → Outcome Intelligence (Phase 16, delivery priority 19).
+
+## Phase 16 — Decision journal and decision → outcome intelligence
+
+**Status:** Planned; delivery priority 19.
+
+- **Goal:** Record meaningful user decisions, connect them to intended goals,
+  and later inspect what happened.
+- **User problem:** Users forget which strategies they tried and confuse later
+  change with proof that a decision worked.
+- **Example interaction:** Record “Apply to ten jobs weekly,” then inspect
+  application and interview rates after several weeks. Other examples include
+  reducing food delivery or focusing on Next.js learning.
+- **Proposed architecture:** User-visible decision, date, intent, expected
+  outcome, review date, and optional related entities; Graph edges link the
+  decision to goals, actions, and observed outcomes; Timeline places both in
+  sequence; historical metrics compare defined before/after windows. Analyst
+  explains observations with alternative explanations and missing data.
+- **Data required:** Explicit decision date, user-stated rationale and assumptions, outcome measures and observation windows, user-entered decision context, source events, Graph links,
+  historical metrics, and review notes; record only what the user chose to keep.
+- **Deterministic / AI responsibilities:** ATLAS stores the decision and computes
+  comparisons. AI summarizes what followed and suggests interpretations; it
+  cannot infer that the decision caused an outcome.
+- **Privacy and security:** Strict owner scope, editable/deletable journal,
+  explicit retention/export behavior, confirmation for inferred permanent links.
+- **Failure behavior:** Insufficient follow-up time or baseline yields a pending
+  or inconclusive review, not a success claim.
+- **UX / mobile:** Simple decision entry, reminder for review only if opted in,
+  clear timeline and before/after evidence on narrow screens.
+- **Acceptance criteria:** A decision and its later observations can be traced
+  to source records, revised, and deleted; wording distinguishes sequence,
+  association, and supported causation.
+- **Testing:** Ownership, linking, deletion, comparison windows, delayed data,
+  changed plans, and mobile journal flow.
+- **AI evaluation:** Synthetic examples test hindsight bias, causal overclaim,
+  missing-baseline refusal, and faithful summaries.
+- **Known limitations:** Personal before/after data rarely isolates causal
+  effects. Decisions with no measurable outcome remain valid journal entries.
+- **Dependencies:** Basic recording needs only validated owner-scoped decision storage and user controls and can begin earlier. Advanced outcome review needs Timeline, Graph, reliable historical measures and the Analyst path. Phase 15 feedback is optional; Multimodal Capture is not required.
+- **Out of scope:** Inventing past decisions, causal claims based only on sequence, automated judgment of personal choices or covert tracking.
+- **Following delivery:** Reassess product evidence before defining another phase.
+
+## Cross-cutting architecture and release gates
+
+These capabilities are not separate reasons to create infrastructure up front.
+Begin with Phase 18, the next AI infrastructure phase, and grow with each phase.
+Do not defer these gates until freeform AI has shipped. Require typed errors for
+setup, model availability, application quotas, provider failures, timeouts and
+invalid output; safe metadata including requested/resolved model when available,
+tool-call counts/latency, token/cost budgets; synthetic evaluations, evidence
+validation, owner-isolation and prompt-injection tests; mobile/accessibility checks
+for affected surfaces; and deployment/schema compatibility checks.
+
+### Explainable evidence and claim types
+
+Every meaningful conclusion must answer “Why is ATLAS telling me this?” Use the
+current Analyst evidence contract as the starting point: stable evidence IDs,
+metric/value/unit, period, comparison basis, bounded source IDs and links, and
+completeness. Extend it to include calculation/version, Graph relationship path,
+missing data, uncertainty, and approved tool provenance when needed. Keep
+authoritative numbers in server-rendered evidence; the model provides prose.
+
+Label claims as **FACT**, **TREND**, **ASSOCIATION**, **INTERPRETATION**,
+**SCENARIO**, or **RECOMMENDATION**. A fact is a deterministic observation; a
+trend is a deterministic comparison; an association is an observed co-movement;
+an interpretation is an AI explanation; a scenario is a calculation under
+assumptions; a recommendation is a proposed action. Each label has its own
+evidence and uncertainty requirements. Evidence chips and source links should
+work with touch and keyboard, stay near claims, and expose inspected periods and
+data gaps without requiring a technical user to read internal tool traces.
+
+### Personal context inside ATLAS
+
+Prefer structured, user-visible and editable preferences over opaque model
+memory: preferred work schedule, financial priorities, active major goals,
+user-set risk tolerance, preferred categories, response style, and explicit
+personal rules. Read only relevant preferences for a request. Show what context
+was used, let the user correct or remove it, and honor export/deletion controls.
+Do not silently accumulate arbitrary prose from conversations as permanent
+memory. Existing `user_preferences` is a possible starting point, not proof
+that these proposed fields exist today. Attach preferences to freeform Analyst and Next Best Action as optional enhancements, not a new blocking phase.
+
+<a id="implementation-agent-handoffs-for-the-first-new-foundations"></a>
+
+### Implementation-agent handoffs
+
+Select one delivery item per task. Historical Phase 1–8 briefs above are retained
+for reference, not rebuilding.
+
+**Next single implementation: Phase 18 Tool Layer (delivery priority 9).**
+
+```text
+After required release closeout checks pass, implement only the Analyst Retrieval /
+Tool Layer. Inspect current local changes, Analyst retrieveEvidence/evidence types,
+Graph getRelatedEntities, Timeline loadTimelinePage, Signals, loadRunwayWorkspace,
+calculateRunway and calculateScenario plus their tests and migrations. Establish
+baseline and target-environment requirements. Define a bounded read-only tool
+registry with validated inputs, server-derived identity, permitted filters/date
+ranges, deterministic calculations, output caps, evidence IDs/source references,
+units/periods, freshness/completeness and typed failures. Final tool names follow
+inspected services. Wrap/reuse calculations; do not rebuild existing modules.
+Use current records and genuinely available history; report unsupported history.
+Add independent invocation tests, synthetic evidence fixtures, owner-isolation and
+injection tests, safe metadata and budgets. Report scoped acceptance, baseline
+comparison, deployment needs and remaining unknowns separately.
+No AI planner, freeform UI, mutations or unrestricted SQL in this task.
+```
+
+**Then Phase 11 Query Planner (delivery priority 10).**
+
+```text
+Use only accepted Phase 18 tools. Build question → validated bounded plan →
+server-authorized execution → evidence. Enforce allowlist, schemas, calls, context,
+tokens, cost and time limits. Clarify ambiguous references; reject unsupported
+questions; preserve partial failures. Treat all text as untrusted. Use synthetic
+plan/ownership/injection/budget evaluations and safe operational metadata.
+Do not ship freeform production UI or any mutation capability in this phase.
+```
+
+**Later foundations, selected separately:** For Phase 10 metrics, define versioned
+sources, date semantics, exclusions and coverage; reconcile backfills/corrections
+without inventing snapshots. For Phase 9 Capture 2.0, inspect current preview and
+domain actions; build bounded batches, owner resolution, targeted clarification,
+independent review and explicit partial-success/duplicate-confirmation behavior.
+Neither is a prerequisite for the initial read-only Tool Layer.
+
+### Cost-aware routing, quotas, and observability
+
+ATLAS currently has separate server-side model lists and defaults for Capture
+and Analyst, plus request quotas. Future automatic routing can choose a small
+model for straightforward extraction, a small/medium model for resolution, a
+capable reasoning model for normal analysis, and a frontier model for genuinely
+complex multi-domain work. Route on complexity, cost, latency, capability,
+structured-output support, and reasoning needs; allow a user override where
+safe. Prefer deterministic logic whenever it suffices. Resolve and validate
+the actual model server-side, including deployment allowlist compatibility. Preserve explicit user choices unless a documented fallback is authorized. Never silently switch models and label output as the originally selected model. Routing can grow with planner/freeform usage; richer aggregate diagnostics grow with operations, neither needs an extra blocking phase.
+
+For each request, retain safe operational metadata: feature, requested and
+resolved model, timestamp, latency, provider status, input/output tokens,
+estimated cost, reasoning mode, approved tool names/counts, outcome, and
+fallback. Avoid storing prompts, answers, private evidence, or credentials for
+observability by default. A developer-facing diagnostics view may show aggregate
+failure rates, quota/model mismatch, cost and latency without exposing private
+content. Define retention and access controls before persisting metadata.
+
+Use typed failure codes across Capture and Analyst: invalid model, database
+allowlist mismatch, hourly/daily/site quota, provider rate limit, model access,
+timeout, malformed structured output, setup error, and retrieval error are
+different conditions. Preserve precise safe reasons in diagnostics while the UI
+uses helpful language. Current Analyst already distinguishes several of these
+through its typed reservation RPC and evidence-only fallback; Capture's quota
+path is less specific and can be improved when that flow is stabilized. Do not
+regress the existing distinction by calling every failure “limit reached.”
+
+### Evaluation, privacy, and action boundary
+
+Normal unit and integration tests verify deterministic contracts. A separate
+AI evaluation suite uses synthetic fixtures and versioned expected behavior:
+Capture extraction, multi-action parsing, wrong-entity matches, hallucinated
+amounts/dates, ambiguity and injection; Analyst retrieval/tool choice, correct
+evidence IDs, grounding, false causal claims, scenario interpretation, missing
+uncertainty, and cross-domain reasoning. Record model/configuration versions,
+failure categories, and quality thresholds. Review regressions before widening
+an intent, tool, model, or context budget. Do not use private user data as the
+default evaluation corpus.
+
+RLS stays the final owner boundary, with server-derived identity and explicit
+owner filters. Models receive neither database nor service-role credentials and
+cannot query arbitrary tables. Retrieval is bounded and minimizes sensitive
+fields. Stored notes, imported files, and user text are untrusted data. Money
+remains integer centavos; Asia/Manila dates and business rules stay in ATLAS.
+All AI-generated mutations go through a user-visible proposal and an existing
+validated domain action. Permanent inferred relationships need confirmation
+unless provably derived. No autonomous financial transactions, important-data
+deletion, or external communication. Consequential choices remain with the
+user, including when an answer sounds confident.
+
+## Non-blocking concept backlog
+
+The [complementary future backlog](future-roadmap.md#complementary-post-mvp-improvements)
+retains workflow/reporting depth, calendar/recurrence, CRM, attachments, reflection
+journals, habits and opportunity scoring. Personal preferences, cost-aware routing
+and richer diagnostics attach to the phases above without new blocking phases.
+Projects, additional Graph entity types, visualization and named scenarios remain
+optional extensions; none is a prerequisite for the Tool Layer. Deliberate decision
+recording may be separately scoped earlier than advanced outcome interpretation.
+
+## Target intelligence loop
+
+```text
+CAPTURE → structured data → entity resolution → ATLAS Graph
+  → timeline + deterministic metrics + Signals
+  → Analyst planner → approved ATLAS tools → typed evidence
+  → AI interpretation / comparison / scenario explanation
+  → inspectable next best action → user decision
+  → confirmed deterministic execution → outcome
+  → timeline / reviews / metrics → learn
+```
+
+This is a cyclical runtime loop, not delivery or technical dependency order. It extends the existing product loop in Section 8. ATLAS should be able to
+answer what happened; what changed; why it might matter; what patterns appear
+over time; how domains connect; what deserves attention; what realistic options
+exist; what deterministic scenarios show; what to consider next; what followed
+a decision; what was learned; and what information is missing before an answer
+can be trusted.
+
+## Documentation review — 2026-09-24
+
+This documentation-only review inspected current local roadmap, architecture,
+validation and release records, package/CI commands, and relevant Graph, Capture,
+Analyst, runway, Timeline and career code/migrations. It preserved existing local
+work and historical validation records. No features, migrations, dependencies or
+configuration were changed; no application tests, hosted checks, migrations,
+deployments, commits or pushes were performed.
+
+Documentation validation: project Prettier on the two edited roadmap files;
+structural checks for 19 unique phase definitions, the retained Phases 1–8 order,
+remaining delivery priorities and required phase fields; local Markdown link/anchor
+checks; and SHA-256 comparison confirming all 478 other pre-existing files were
+unchanged. Repository-wide health remains a separately dated baseline, not a claim
+from these documentation checks.
+
+**Recommended next single implementation:** After required closeout checks pass,
+implement **Analyst Retrieval / Tool Layer — Phase 18, delivery priority 9**, using
+the handoff above. Do not combine it with the Query Planner or freeform UI.

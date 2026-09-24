@@ -7,28 +7,45 @@ Personal Runway & Financial Scenarios, Life Timeline, and Knowledge & Spaced
 Repetition, the first five phases of the
 [Intelligent roadmap](intelligent-roadmap.md), are also implemented.
 
-Universal Capture is being implemented as the first AI-assisted phase. The local
-code and request caps are in place, and a live structured-output smoke passed.
-The migration and local pgTAP validation passed on 2026-09-24.
+Universal Capture is implemented locally as the first AI-assisted phase, with
+release closeout remaining. Local code and request caps are in place; the existing
+record reports a live structured-output smoke and local migration/pgTAP validation
+passing on 2026-09-24.
 Production release gates still apply.
 
 ## Ordered intelligent improvements
 
-These phases remain ordered:
+Phases 1–8 remain the original foundation sequence. Knowledge is implemented;
+Universal Capture has five single-action local flows with release closeout pending;
+Analyst has seven bounded questions and a recorded typed-reservation fix; Graph
+is **implemented locally**, with local acceptance recorded on 2026-09-24.
+Graph hosted state is not verified. Existing validation records are historical,
+not checks rerun during this roadmap update.
 
-1. **Knowledge & Spaced Repetition — complete:** searchable concepts and
-   deterministic review scheduling.
-2. **Universal Capture — in progress:** structured AI proposals, preview, and
-   confirmed writes through existing actions; release checks remain.
-3. **ATLAS Analyst — next:** evidence-backed explanations after Universal Capture.
-4. **ATLAS Graph — later:** cross-domain relationships after the preceding phases.
+The [current release closeout](intelligent-roadmap.md#current-release-closeout)
+covers Capture release flows, deployed Analyst/schema and authenticated-browser
+verification, Graph acceptance/migration/hosted status, and baseline classification.
+After required closeout checks pass, implement the **Analyst Retrieval / Tool Layer**.
+
+The [authoritative delivery-priority table](intelligent-roadmap.md#stable-identifiers-and-delivery-priority)
+orders the remaining work: Tool Layer → Query Planner → Freeform Analyst →
+Historical Metrics → Cross-domain/Longitudinal Analyst → Association Discovery →
+Scenario Intelligence → Next Best Action → Capture 2.0 → Multimodal Capture →
+**Decision → Outcome Intelligence** (the final capability).
+
+Existing phase identifiers are preserved: the new Tool Layer is Phase 18 (priority
+9), and Association Discovery is Phase 19 (priority 14). Use delivery priorities,
+not numerical IDs, to select work. Hard prerequisites are separate; scenario
+explanations need no association phase, Capture 2.0 can be reprioritized without
+Next Best Action, and deliberate decision recording can begin before advanced
+outcome analysis. These extensions remain planned.
 
 Implementation prompts, acceptance criteria, exclusions, and phase-specific
 safety rules live in the [Intelligent roadmap](intelligent-roadmap.md).
 
 ## Complementary post-MVP improvements
 
-These are complementary improvements outside the ordered intelligent phases:
+These are an explicitly non-blocking backlog outside the ordered intelligent phases:
 
 1. **Workflow depth and reporting:** dedicated career detail surfaces, bulk
    actions, richer filters, saved views, improved trends, and generated Supabase

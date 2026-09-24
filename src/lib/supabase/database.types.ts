@@ -7,11 +7,6 @@ export type Json =
   | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5";
-  };
   public: {
     Tables: {
       account_balance_adjustments: {
@@ -195,6 +190,90 @@ export type Database = {
           source_key?: string | null;
           title?: string;
           updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      ai_analyst_requests: {
+        Row: {
+          analysis_type: string;
+          created_at: string;
+          id: number;
+          input_tokens: number | null;
+          model: string;
+          outcome: string;
+          output_tokens: number | null;
+          user_id: string;
+        };
+        Insert: {
+          analysis_type: string;
+          created_at?: string;
+          id?: never;
+          input_tokens?: number | null;
+          model: string;
+          outcome?: string;
+          output_tokens?: number | null;
+          user_id: string;
+        };
+        Update: {
+          analysis_type?: string;
+          created_at?: string;
+          id?: never;
+          input_tokens?: number | null;
+          model?: string;
+          outcome?: string;
+          output_tokens?: number | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      ai_capture_requests: {
+        Row: {
+          created_at: string;
+          id: number;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: never;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: never;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      atlas_relationships: {
+        Row: {
+          created_at: string;
+          id: string;
+          relationship_type: string;
+          source_id: string;
+          source_type: string;
+          target_id: string;
+          target_type: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          relationship_type: string;
+          source_id: string;
+          source_type: string;
+          target_id: string;
+          target_type: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          relationship_type?: string;
+          source_id?: string;
+          source_type?: string;
+          target_id?: string;
+          target_type?: string;
           user_id?: string;
         };
         Relationships: [];
@@ -629,6 +708,110 @@ export type Database = {
           work_setup?: string;
         };
         Relationships: [];
+      };
+      knowledge_concepts: {
+        Row: {
+          archived_at: string | null;
+          category: string;
+          confidence: number;
+          created_at: string;
+          example: string | null;
+          id: string;
+          interval_days: number;
+          last_reviewed_at: string | null;
+          next_review_at: string;
+          notes: string;
+          personal_explanation: string | null;
+          review_count: number;
+          tags: string[];
+          title: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          category: string;
+          confidence?: number;
+          created_at?: string;
+          example?: string | null;
+          id?: string;
+          interval_days?: number;
+          last_reviewed_at?: string | null;
+          next_review_at?: string;
+          notes: string;
+          personal_explanation?: string | null;
+          review_count?: number;
+          tags?: string[];
+          title: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          category?: string;
+          confidence?: number;
+          created_at?: string;
+          example?: string | null;
+          id?: string;
+          interval_days?: number;
+          last_reviewed_at?: string | null;
+          next_review_at?: string;
+          notes?: string;
+          personal_explanation?: string | null;
+          review_count?: number;
+          tags?: string[];
+          title?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      knowledge_reviews: {
+        Row: {
+          concept_id: string;
+          created_at: string;
+          id: string;
+          next_interval_days: number;
+          next_review_at: string;
+          outcome: string;
+          previous_interval_days: number;
+          recalled_answer: string | null;
+          reviewed_at: string;
+          user_id: string;
+        };
+        Insert: {
+          concept_id: string;
+          created_at?: string;
+          id?: string;
+          next_interval_days: number;
+          next_review_at: string;
+          outcome: string;
+          previous_interval_days: number;
+          recalled_answer?: string | null;
+          reviewed_at?: string;
+          user_id: string;
+        };
+        Update: {
+          concept_id?: string;
+          created_at?: string;
+          id?: string;
+          next_interval_days?: number;
+          next_review_at?: string;
+          outcome?: string;
+          previous_interval_days?: number;
+          recalled_answer?: string | null;
+          reviewed_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_reviews_concept_id_user_id_fkey";
+            columns: ["concept_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "knowledge_concepts";
+            referencedColumns: ["id", "user_id"];
+          },
+        ];
       };
       monthly_budgets: {
         Row: {
@@ -1193,6 +1376,14 @@ export type Database = {
         };
         Returns: string;
       };
+      atlas_goal_relationship_counts: {
+        Args: { p_goal_ids: string[] };
+        Returns: {
+          entity_type: string;
+          goal_id: string;
+          relationship_count: number;
+        }[];
+      };
       complete_onboarding: {
         Args: {
           p_current_cash_centavos: number;
@@ -1210,6 +1401,15 @@ export type Database = {
       delete_archived_financial_account: {
         Args: { p_account_id: string; p_confirmation_name: string };
         Returns: string;
+      };
+      finish_ai_analyst_request: {
+        Args: {
+          p_id: number;
+          p_input_tokens?: number;
+          p_outcome: string;
+          p_output_tokens?: number;
+        };
+        Returns: undefined;
       };
       life_timeline: {
         Args: {
@@ -1237,6 +1437,27 @@ export type Database = {
           source_available: boolean;
           source_href: string;
           title: string;
+        }[];
+      };
+      reserve_ai_analyst_request: {
+        Args: { p_model: string; p_type: string };
+        Returns: number;
+      };
+      reserve_ai_analyst_request_result: {
+        Args: { p_model: string; p_type: string };
+        Returns: Json;
+      };
+      reserve_ai_capture_request: { Args: never; Returns: boolean };
+      review_knowledge_concept: {
+        Args: {
+          p_concept_id: string;
+          p_outcome: string;
+          p_recalled_answer?: string;
+        };
+        Returns: {
+          confidence: number;
+          interval_days: number;
+          next_review_at: string;
         }[];
       };
       runway_monthly_totals: {

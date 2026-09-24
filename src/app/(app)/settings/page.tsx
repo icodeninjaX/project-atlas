@@ -77,6 +77,11 @@ const csvExports = [
     label: "Activity history",
     description: "Audited events and timestamps",
   },
+  {
+    entity: "atlas_relationships",
+    label: "Graph relationships",
+    description: "Manually linked records across ATLAS",
+  },
 ] as const;
 
 const weekDays = [

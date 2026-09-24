@@ -107,6 +107,15 @@ const csvEntities = {
     "created_at",
     "updated_at",
   ],
+  atlas_relationships: [
+    "id",
+    "source_type",
+    "source_id",
+    "target_type",
+    "target_id",
+    "relationship_type",
+    "created_at",
+  ],
 } as const;
 
 const jsonTables = [
@@ -124,11 +133,14 @@ const jsonTables = [
   "tasks",
   "goals",
   "goal_milestones",
+  "knowledge_concepts",
+  "knowledge_reviews",
   "job_applications",
   "job_application_events",
   "weekly_reviews",
   "daily_priority_pins",
   "activity_log",
+  "atlas_relationships",
 ] as const;
 
 function filename(suffix: string) {
@@ -207,7 +219,7 @@ export async function GET(
       JSON.stringify(
         {
           exported_at: new Date().toISOString(),
-          format_version: 2,
+          format_version: 3,
           data: exported,
         },
         null,

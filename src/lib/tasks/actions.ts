@@ -7,6 +7,56 @@ import { offlineEntityId } from "@/lib/offline/server";
 
 export type TaskActionState = { success: boolean; message: string };
 
+/** Changes the canonical task→goal foreign key. Graph never stores this native edge. */
+export async function setTaskGoalRelationshipAction(
+  taskId: string,
+  goalId: string,
+  mode: "link" | "unlink",
+): Promise<TaskActionState> {
+  const uuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (
+    !uuid.test(taskId) ||
+    !uuid.test(goalId) ||
+    !["link", "unlink"].includes(mode)
+  )
+    return { success: false, message: "Choose a valid task and goal." };
+  const supabase = await createClient();
+  if (!supabase)
+    return { success: false, message: "Supabase is not configured." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, message: "Your session expired." };
+  const request = supabase
+    .from("tasks")
+    .update({ related_goal_id: mode === "link" ? goalId : null })
+    .eq("id", taskId)
+    .eq("user_id", user.id);
+  const { data, error } = await (
+    mode === "link"
+      ? request.is("related_goal_id", null)
+      : request.eq("related_goal_id", goalId)
+  )
+    .select("id")
+    .maybeSingle();
+  if (error || !data)
+    return {
+      success: false,
+      message:
+        "The task or goal is unavailable, or the task is already linked.",
+    };
+  revalidatePath("/goals");
+  revalidatePath(`/goals/${goalId}`);
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
+  return {
+    success: true,
+    message:
+      mode === "link" ? "Task linked to goal." : "Task unlinked from goal.",
+  };
+}
+
 export async function createTaskAction(
   _state: TaskActionState,
   formData: FormData,

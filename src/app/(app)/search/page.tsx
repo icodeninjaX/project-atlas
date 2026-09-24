@@ -2,6 +2,7 @@ import { ArrowUpRight, Search } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { SearchInput } from "@/components/search/search-input";
+import { getSearchGoalContext, searchResultGraphKey } from "@/lib/graph/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Search" };
@@ -54,6 +55,7 @@ export default async function SearchPage({
       : { data: null };
     results = (data ?? []) as SearchResult[];
   }
+  const goalContext = await getSearchGoalContext(results);
 
   const grouped = results.reduce<Record<string, SearchResult[]>>(
     (groups, result) => {
@@ -131,6 +133,24 @@ export default async function SearchPage({
                             {result.subtitle}
                           </p>
                         )}
+                        {goalContext.get(
+                          searchResultGraphKey(
+                            result.entity_type,
+                            result.entity_id,
+                          ) ?? "",
+                        ) ? (
+                          <p className="text-primary mt-1 truncate text-xs">
+                            Related to goal ·{" "}
+                            {
+                              goalContext.get(
+                                searchResultGraphKey(
+                                  result.entity_type,
+                                  result.entity_id,
+                                ) ?? "",
+                              )?.title
+                            }
+                          </p>
+                        ) : null}
                       </div>
                       <ArrowUpRight className="text-muted-foreground size-4 shrink-0" />
                     </Link>

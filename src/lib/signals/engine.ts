@@ -48,6 +48,7 @@ export type Signal = {
   href: string;
   generatedAt: string;
   sensitive: boolean;
+  sourceRefs?: Array<{ type: "goal" | "debt"; id: string }>;
 };
 
 export type SignalSourceData = {
@@ -572,6 +573,7 @@ function debtSignals(
             value: formatCentavos(deadline.currentBalanceCentavos),
           },
           href: `/debts/${deadline.id}`,
+          sourceRefs: [{ type: "debt", id: deadline.id }],
           sensitive: true,
         },
         generatedAt,
@@ -930,6 +932,7 @@ function goalSignals(
             value: String(completedThisMonth.count),
           },
           href: `/goals?highlight=${completedThisMonth.goal.id}`,
+          sourceRefs: [{ type: "goal", id: completedThisMonth.goal.id }],
           sensitive: false,
         },
         generatedAt,
@@ -996,6 +999,7 @@ function goalSignals(
             value: dateLabel(deadline.goal.targetDate),
           },
           href: `/goals?highlight=${deadline.goal.id}`,
+          sourceRefs: [{ type: "goal", id: deadline.goal.id }],
           sensitive: false,
         },
         generatedAt,
@@ -1044,6 +1048,7 @@ function goalSignals(
             value: String(stalled.inactiveDays),
           },
           href: `/goals?highlight=${stalled.goal.id}`,
+          sourceRefs: [{ type: "goal", id: stalled.goal.id }],
           sensitive: false,
         },
         generatedAt,

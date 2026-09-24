@@ -3,7 +3,9 @@ import { GoalCardHeader } from "@/components/goals/goal-card-header";
 import { GoalCreatePanel } from "@/components/goals/goal-create-panel";
 import { GoalProgress } from "@/components/goals/goal-progress";
 import { MilestoneList } from "@/components/goals/milestone-list";
+import { GoalRelatedSummary } from "@/components/graph/goal-related-summary";
 import { Card, CardContent } from "@/components/ui/card";
+import { getGoalRelationshipCounts } from "@/lib/graph/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Goals" };
@@ -25,6 +27,9 @@ export default async function GoalsPage({
     throw new Error(`Could not load goals: ${goalResult.error.message}`);
   }
   const goals = goalResult.data ?? [];
+  const relationshipCounts = await getGoalRelationshipCounts(
+    goals.map((goal) => goal.id),
+  );
 
   const milestoneResult = goals.length
     ? await supabase
@@ -113,6 +118,10 @@ export default async function GoalsPage({
                     highlightMilestoneId={
                       query.highlight === goal.id ? query.milestone : undefined
                     }
+                  />
+                  <GoalRelatedSummary
+                    goalId={goal.id}
+                    counts={relationshipCounts.get(goal.id) ?? {}}
                   />
                 </CardContent>
               </Card>
