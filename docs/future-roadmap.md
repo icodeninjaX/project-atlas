@@ -1,34 +1,34 @@
 # Future roadmap
 
-Last reviewed: 2026-09-05
+Last reviewed: 2026-09-24
 
 The scoped MVP features are implemented. Signals, Capacity-Aware Dayline,
-Personal Runway & Financial Scenarios, and Life Timeline, the first four phases
-of the [Intelligent roadmap](intelligent-roadmap.md), are also implemented.
+Personal Runway & Financial Scenarios, Life Timeline, and Knowledge & Spaced
+Repetition, the first five phases of the
+[Intelligent roadmap](intelligent-roadmap.md), are also implemented.
 
-The next product improvement is **Phase 5 — Knowledge & Spaced Repetition**. The
-production-validation checklist in [MVP status](mvp-status.md) remains a parallel
-release track and should not be mistaken for a new product phase.
+Universal Capture is being implemented as the first AI-assisted phase. The local
+code and request caps are in place, and a live structured-output smoke passed.
+The migration and local pgTAP validation passed on 2026-09-24.
+Production release gates still apply.
 
 ## Ordered intelligent improvements
 
-These phases are authoritative and must remain sequential:
+These phases remain ordered:
 
-1. **Knowledge & Spaced Repetition:** searchable concepts and deterministic review
-   scheduling.
-2. **Universal Capture:** AI-assisted structured proposals that require validation
-   and user confirmation before existing mutation paths run.
-3. **ATLAS Analyst:** evidence-backed explanations over bounded, owner-scoped
-   ATLAS facts.
-4. **ATLAS Graph:** safe cross-domain relationships before any graph visualization.
+1. **Knowledge & Spaced Repetition — complete:** searchable concepts and
+   deterministic review scheduling.
+2. **Universal Capture — in progress:** structured AI proposals, preview, and
+   confirmed writes through existing actions; release checks remain.
+3. **ATLAS Analyst — next:** evidence-backed explanations after Universal Capture.
+4. **ATLAS Graph — later:** cross-domain relationships after the preceding phases.
 
 Implementation prompts, acceptance criteria, exclusions, and phase-specific
 safety rules live in the [Intelligent roadmap](intelligent-roadmap.md).
 
 ## Complementary post-MVP improvements
 
-These may be planned around the authoritative phase sequence when they do not
-delay or expand an active phase:
+These are complementary improvements outside the ordered intelligent phases:
 
 1. **Workflow depth and reporting:** dedicated career detail surfaces, bulk
    actions, richer filters, saved views, improved trends, and generated Supabase

@@ -2,7 +2,7 @@
 
 **Project:** ATLAS — Personal Operating System\
 **Repository:** `icodeninjaX/project-atlas`\
-**Last reviewed:** 2026-09-05\
+**Last reviewed:** 2026-09-24\
 **Purpose:** Give an AI coding agent a clear, sequential roadmap for evolving ATLAS from a structured personal tracker into a connected and increasingly intelligent personal operating system.
 
 ---
@@ -111,21 +111,20 @@ ATLAS should first become better at **detecting**, then **prioritizing**, then *
 
 ## Current Delivery Status
 
-| Phase                                    | Status   | Current note                                                                                                                                 |
-| ---------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Signals                               | Complete | Implemented and verified on 2026-08-26.                                                                                                      |
-| 2. Capacity-Aware Dayline                | Complete | Implemented on 2026-09-04; application validation passed, while local pgTAP execution remains pending until Docker is available.             |
-| 3. Personal Runway & Financial Scenarios | Complete | Implemented on 2026-09-05 with deterministic runway, saved assumptions, and non-destructive scenarios.                                       |
-| 4. Life Timeline                         | Complete | Implemented on 2026-09-05 with durable owner-scoped timeline snapshots, filters, pagination, and source links.                               |
-| 5. Knowledge & Spaced Repetition         | Complete | Implemented on 2026-09-06 with concept lifecycle, active recall, review history, deterministic scheduling, search, and activity integration. |
-| 6. Universal Capture                     | Planned  | First AI-assisted mutation proposal flow.                                                                                                    |
-| 7. ATLAS Analyst                         | Planned  | Evidence-backed explanations over bounded structured facts.                                                                                  |
-| 8. ATLAS Graph                           | Planned  | Cross-domain relationships after the underlying modules are mature.                                                                          |
+| Phase                                    | Status      | Current note                                                                                                                                 |
+| ---------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Signals                               | Complete    | Implemented and verified on 2026-08-26.                                                                                                      |
+| 2. Capacity-Aware Dayline                | Complete    | Implemented on 2026-09-04; application validation passed, while local pgTAP execution remains pending until Docker is available.             |
+| 3. Personal Runway & Financial Scenarios | Complete    | Implemented on 2026-09-05 with deterministic runway, saved assumptions, and non-destructive scenarios.                                       |
+| 4. Life Timeline                         | Complete    | Implemented on 2026-09-05 with durable owner-scoped timeline snapshots, filters, pagination, and source links.                               |
+| 5. Knowledge & Spaced Repetition         | Complete    | Implemented on 2026-09-06 with concept lifecycle, active recall, review history, deterministic scheduling, search, and activity integration. |
+| 6. Universal Capture                     | In progress | Local implementation, live structured-output smoke, and local pgTAP passed on 2026-09-24; release checks remain.                            |
+| 7. ATLAS Analyst                         | Planned     | Evidence-backed analysis follows Universal Capture.                                                                                          |
+| 8. ATLAS Graph                           | Planned     | Cross-domain relationships follow the preceding phases.                                                                                       |
 
-The next product target is **Phase 6 — Universal Capture**. Production validation,
-authenticated mobile checks, and database integration testing for delivered
-phases remain release-quality work that can proceed without changing the phase
-order.
+The current product priority is finishing and validating Universal Capture.
+Authenticated mobile checks and database integration testing for delivered
+phases remain release gates.
 
 ---
 
@@ -960,7 +959,10 @@ Final response:
 
 # Phase 6 — Universal Capture
 
-**Status:** Planned.
+**Status:** In progress. The local implementation supports five single-action
+intents with preview and confirmation. A live structured-output smoke passed on
+2026-09-24. The migration and local pgTAP integration checks passed; release
+checks remain.
 
 ## Goal
 
@@ -1128,7 +1130,7 @@ Final response:
 
 # Phase 7 — ATLAS Analyst
 
-**Status:** Planned.
+**Status:** Planned after Universal Capture.
 
 ## Goal
 
@@ -1196,10 +1198,83 @@ The AI should not be allowed to invent missing facts.
 - Questions outside available data are clearly identified as unsupported.
 - Model failure does not affect core ATLAS functionality.
 
+## Implementation Procedure
+
+This phase uses retrieval at request time, not model fine-tuning. The selected
+model has no automatic access to Supabase. ATLAS must explicitly fetch the
+signed-in user's relevant records and send a small evidence package with each
+question. Start with structured queries and existing calculations; add semantic
+search only if later questions about long-form notes need it.
+
+1. **Define the first supported questions.** Start with one finance question:
+   "What changed in my spending this month?" Specify the date windows,
+   included transaction types, category grouping, minimum history, and expected
+   answer shape. Compare equivalent elapsed days when the current month is
+   incomplete. Treat a change in recorded spending as an observation, not proof
+   of its cause. Expand to debts and tasks after this path is verified, then to
+   career, goals, weekly reviews, and signals.
+2. **Create a data contract for each question type.** List the exact Supabase
+   tables and columns required, maximum rows and date range, aggregation rules,
+   evidence fields, and behavior for missing or partial data. Reuse ATLAS's
+   integer-centavo accounting and Asia/Manila date semantics. Do not build an
+   unrestricted "ask the database" or model-generated SQL path.
+3. **Add a server-only Analyst request path.** Validate question length and a
+   separate Analyst model allowlist, authenticate with the existing Supabase
+   server client, then classify the question into a supported analysis type.
+   Reject unsupported or ambiguous requests before retrieving private data.
+   Keep `OPENAI_API_KEY` on the server; never pass Supabase credentials or a
+   service-role key to the model.
+4. **Retrieve bounded, owner-scoped data.** Use fixed queries or existing
+   domain services for the chosen analysis type. Rely on RLS as the final owner
+   boundary and explicitly constrain queries to the authenticated user. Select
+   only required columns and periods; summarize large histories server-side.
+   Check empty, partial, and stale datasets before generating an explanation.
+5. **Calculate facts in ATLAS.** Reuse deterministic finance, debt, task, and
+   Signals logic where applicable. Calculate totals, differences, percentages,
+   and comparison periods in server code or SQL, with tests for rounding and
+   date boundaries. Never ask the model to derive authoritative balances from
+   raw transaction text.
+6. **Build a typed evidence package.** Each fact should carry an ID, metric,
+   value and unit, date range, comparison basis, source record IDs or an
+   aggregate source description, and completeness notes. Include only facts
+   needed for the question. For example, a spending answer might receive two
+   monthly totals and the category changes that explain the difference, rather
+   than every transaction or unrelated personal record.
+7. **Generate and verify the explanation.** Send the question and evidence as
+   data to the selected OpenAI model with instructions to use only supplied
+   facts, identify uncertainty, and return a structured answer with evidence
+   IDs. Treat titles, notes, and other stored text as untrusted data. Validate
+   the response shape and cited IDs on the server. Render authoritative figures
+   from server evidence, not model text; fall back to evidence-only output if
+   the response is invalid or contradicts those figures. No tools for writes
+   or autonomous actions are available to the model.
+8. **Show the evidence in the UI.** Present the explanation, period, numbers,
+   and links to underlying ATLAS records where available. Show when history is
+   insufficient or a question is outside the supported set. Explain before
+   first use that relevant personal facts will be sent to OpenAI under the
+   OpenAI organization's current data-sharing settings. Do not imply the model
+   has learned the user's whole database or remembers later changes.
+9. **Set operating limits.** Reuse the server-side model configuration pattern
+   from Universal Capture, but give Analyst its own verified model options and
+   default. Cap question length, evidence size, output tokens, request time,
+   and per-user rate or daily usage. Record minimal audit metadata such as
+   analysis type, model, time, token usage, and outcome; do not log full private
+   evidence or answers. Give Analyst a separate owner-scoped quota, using the
+   Capture quota implementation as a pattern rather than sharing its allowance.
+10. **Verify and release in stages.** Test owner isolation with two users,
+    exact financial calculations, missing and partial history, unsupported
+    questions, prompt injection in stored notes, evidence-ID validation,
+    context truncation, rate limits, and OpenAI timeout or failure. Check the
+    UI on mobile and desktop. Release the finance question first and compare
+    answers with manually checked ATLAS figures before enabling more domains.
+
 ## AI Agent Prompt
 
 ```text
 Implement an evidence-based ATLAS Analyst.
+
+Follow the Implementation Procedure above. Deliver and verify the first finance
+question before extending the supported domains.
 
 This is not a generic chat feature.
 
@@ -1286,7 +1361,7 @@ Final response:
 
 # Phase 8 — ATLAS Graph
 
-**Status:** Planned.
+**Status:** Planned after the preceding phases.
 
 ## Goal
 

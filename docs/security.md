@@ -18,14 +18,18 @@ Every exposed table has RLS enabled and forced. Separate SELECT, INSERT, UPDATE,
 
 Owner columns, foreign keys, common status/date filters, and search text have supporting indexes. Composite ownership foreign keys prevent cross-user relationships even when an attacker guesses a UUID.
 
-Views and callable functions use `security_invoker`. The one necessary `security_definer` function provisions a new auth user, has an empty search path, uses the trigger’s trusted auth ID, lives in the private schema, and cannot be executed by browser roles.
+Views and ordinary callable functions use `security_invoker`. Privileged trigger
+functions and the Universal Capture quota function use a fixed empty search
+path and scoped inputs. The quota function reads `auth.uid()`, stores no prompt
+text, and is executable only by authenticated users; its ledger has RLS and no
+direct client grants.
 
 ## Secrets and environment variables
 
 - `NEXT_PUBLIC_SUPABASE_URL`: public project URL
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: public publishable key; protected data still depends on RLS
 - `SUPABASE_SERVICE_ROLE_KEY`: server-only; used by authenticated account deletion and the scheduled reminder worker
-- `OPENAI_API_KEY`: server-only, optional, and unused until the future AI Coach
+- `OPENAI_API_KEY`: server-only; enables Universal Capture after its migration is applied
 - `NEXT_PUBLIC_APP_URL`: fixed public application origin used in auth callbacks
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`: public browser push application key
 - `VAPID_PRIVATE_KEY`: server-only browser push signing key

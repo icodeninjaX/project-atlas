@@ -29,7 +29,9 @@ Current status (2026-08-26): the public production origin, health endpoint, and 
    - `CRON_SECRET` for Vercel Cron authentication
 4. Generate the VAPID pair with `npx web-push generate-vapid-keys`. Use a monitored `mailto:` address or HTTPS origin for `VAPID_SUBJECT`.
 5. Generate a high-entropy `CRON_SECRET`; Vercel sends it as the bearer token for `/api/cron/reminders`.
-6. Keep `OPENAI_API_KEY` unset until a reviewed server-only feature requires it.
+6. Apply the Universal Capture migration before setting `OPENAI_API_KEY` on the
+   server. Capture requests are capped at 10 per hour and 30 per day per user,
+   plus 300 per day site-wide; provider prompts are not stored in the quota ledger.
 7. Deploy after CI succeeds. `vercel.json` schedules the actionable digest once daily at 00:00 UTC / 08:00 Asia/Manila, which is compatible with Vercel Hobby cron limits.
 
 ## PWA and offline sync

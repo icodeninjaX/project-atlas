@@ -13,6 +13,7 @@ import {
   Radar,
   Search,
   Settings,
+  Sparkles,
   WalletCards,
   X,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
 
 const destinations = {
   today: { href: "/dashboard", label: "Today", icon: Gauge },
+  capture: { href: "/capture", label: "Capture", icon: Sparkles },
   signals: { href: "/signals", label: "Signals", icon: Radar },
   money: { href: "/money/accounts", label: "Money", icon: WalletCards },
   debts: { href: "/debts", label: "Debts", icon: Landmark },
@@ -39,7 +41,11 @@ const destinations = {
 const navigationGroups = [
   {
     label: "Daily",
-    destinations: [destinations.today, destinations.tasks],
+    destinations: [
+      destinations.today,
+      destinations.capture,
+      destinations.tasks,
+    ],
   },
   {
     label: "Plan",
@@ -69,6 +75,7 @@ const mobilePrimaryNavigation = [
 ] as const;
 
 const mobileMoreNavigation = [
+  destinations.capture,
   destinations.debts,
   destinations.signals,
   destinations.career,

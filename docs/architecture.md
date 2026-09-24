@@ -2,7 +2,7 @@
 
 ## Product boundary
 
-ATLAS is a private, single-user-per-account personal operating system. The MVP combines daily planning, money, debt, goals, career applications, weekly reflection, search, export, and activity history. AI, CRM, journals, knowledge, calendar sync, habits, scoring, file attachments, and automations remain future modules.
+ATLAS is a private, single-user-per-account personal operating system. The MVP combines daily planning, money, debt, goals, career applications, weekly reflection, search, export, and activity history. Universal Capture is a post-MVP AI-assisted proposal flow. CRM, journals, calendar sync, habits, file attachments, and automations remain future modules.
 
 ## Application shape
 

@@ -1,6 +1,6 @@
 # ATLAS MVP status
 
-Last verified: 2026-08-26
+Last verified: 2026-09-06
 
 ## Executive summary
 
@@ -31,11 +31,11 @@ The following checks were run against the current working copy on 2026-08-26:
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `npm run lint`          | Passed.                                                                                                                                                                     |
 | `npm run typecheck`     | Passed; Next.js route types generated successfully.                                                                                                                         |
-| `npm run test`          | Passed: 53 files and 193 tests.                                                                                                                                             |
-| `npm run build`         | Passed with Next.js 16.3.2; 29 application routes generated.                                                                                                                |
-| Chromium Playwright     | Passed: 19 public/PWA/edge/accessibility checks; 10 credential-dependent authenticated checks skipped; 0 failures.                                                          |
-| Production smoke        | The public landing page, `/api/health`, and `/manifest.webmanifest` returned HTTP 200 at `https://atlas.kdvwebsiteservices.com`; health returned `Cache-Control: no-store`. |
-| Database integration    | Not run in the latest local pass because the Docker daemon was unavailable.                                                                                                 |
+| `npm run test`          | Passed: 69 files and 269 tests.                                                                                                                                             |
+| `npm run build`         | Passed with Next.js 16.3.2; 34 application routes generated.                                                                                                                |
+| Playwright              | Passed: 38 desktop/mobile public, PWA, responsive, edge, and accessibility checks; 24 credential-dependent authenticated checks skipped; 0 failures.                        |
+| Production smoke        | Not rerun in this local pass. The previous check confirmed HTTP 200 for the landing page, `/api/health`, and `/manifest.webmanifest` at the production URL.                  |
+| Database integration    | Not run because Docker Desktop 4.85.0 crashes on a stale `dockerInference` runtime socket before its engine starts.                                                         |
 | Repository format check | Not clean: the existing repository contains legacy Prettier drift outside the current MVP changes. CI does not currently gate on this command.                              |
 
 ## Launch gates

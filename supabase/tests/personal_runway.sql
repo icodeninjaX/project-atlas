@@ -62,7 +62,7 @@ select throws_ok(
   $$select public.save_runway_preferences(
     array['98000000-0000-4000-8000-000000000003'::uuid],
     array[(select id from public.transaction_categories where user_id = '97000000-0000-4000-8000-000000000001' and name = 'Food' and category_type = 'expense')],
-    3
+    3::smallint
   )$$,
   'P0001',
   'One or more accounts are unavailable',
@@ -85,7 +85,7 @@ select set_config('request.jwt.claims', '{"sub":"97000000-0000-4000-8000-0000000
 
 select is(
   (select sum(amount_centavos) from public.runway_monthly_totals('2026-01-01', '2026-02-01')),
-  12000::bigint,
+  12000::numeric,
   'monthly aggregation returns only the authenticated owner transaction totals'
 );
 
@@ -93,7 +93,7 @@ select lives_ok(
   $$select public.save_runway_preferences(
     array['98000000-0000-4000-8000-000000000001'::uuid],
     array[(select id from public.transaction_categories where user_id = '97000000-0000-4000-8000-000000000001' and name = 'Housing' and category_type = 'expense')],
-    6
+    6::smallint
   )$$,
   'valid owner-scoped runway preferences save atomically'
 );
