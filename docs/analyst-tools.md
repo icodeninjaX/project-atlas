@@ -178,6 +178,6 @@ deployment proof. Before hosted adoption, verify relevant schema, RPC/grants and
 the authenticated application revision there. No deployment, migration, commit
 or push was performed.
 
-Next implementation: **Phase 10 — Analyst Query Planner**, using only this
-accepted registry. Keep production freeform UI for Phase 11 and mutations behind
-their separately authorized proposal/confirmation flow.
+Phase 10's [Analyst Query Planner](analyst-query-planner.md) now uses only this
+accepted registry. Next implementation: **Phase 11 — Freeform Grounded Analysis**.
+Keep mutations behind their separately authorized proposal/confirmation flow.

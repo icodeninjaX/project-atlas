@@ -2,6 +2,7 @@
 export const AI_MODELS = {
   capture: "gpt-5.4-nano-2026-03-17",
   analyst: "gpt-4o-mini-2024-07-18",
+  planner: "gpt-4o-mini-2024-07-18",
 } as const;
 
 /** Independently allowed for Analyst's strict JSON Chat Completions response. */

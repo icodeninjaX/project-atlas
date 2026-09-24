@@ -67,6 +67,8 @@ server-side code should import this list. Universal Capture defaults to the
 snapshots for predictable behavior; GPT-6 Astra, Sol, and Luna use their
 published API model IDs because dated snapshots are not listed. Every choice
 is validated on the server before each preview.
+The server-only Phase 10 Analyst Query Planner uses the pinned
+`gpt-4o-mini-2024-07-18` snapshot; it has no production route or freeform UI yet.
 Complimentary usage depends on OpenAI API account eligibility and data-sharing
 settings; check OpenAI Usage and Costs for the account's current usage.
 

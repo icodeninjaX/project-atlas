@@ -6,6 +6,7 @@ import {
   type SupabaseClient,
 } from "@supabase/supabase-js";
 import { invokeAnalystTool, listAnalystTools } from "./server";
+import { executeAnalystPlan } from "@/lib/analyst/planner/server";
 
 vi.mock("server-only", () => ({}));
 const state = vi.hoisted(() => ({ createClient: vi.fn() }));
@@ -348,5 +349,46 @@ suite("real local Analyst tool integration", () => {
       "unavailable_source",
     );
     expect(result.evidence).toEqual([]);
+  }, 30000);
+
+  it("executes a validated planner result through owner-scoped tools", async () => {
+    const evidenceByOwner: string[][] = [];
+    for (const fixture of fixtures) {
+      active = fixture;
+      const result = await executeAnalystPlan({
+        version: "1",
+        outcome: "plan",
+        clarification: null,
+        unsupportedReason: null,
+        missingCapabilities: [],
+        calls: [
+          {
+            id: "call_1",
+            tool: "getMoneySummary",
+            input: { kind: "expense", from: month, through: today },
+          },
+          {
+            id: "call_2",
+            tool: "getRelatedEntities",
+            input: {
+              entityType: "goal",
+              entityId: fixture.goal,
+              limit: 20,
+            },
+          },
+        ],
+      });
+      expect(result.status).toBe("ready");
+      expect(
+        result.evidence.find((item) => item.unit === "centavos")?.value,
+      ).toBe(fixture.amount);
+      expect(JSON.stringify(result.evidence)).toContain(fixture.task);
+      const other = fixtures.find((item) => item.owner !== fixture.owner)!;
+      expect(JSON.stringify(result.evidence)).not.toContain(other.task);
+      evidenceByOwner.push(result.evidence.map((item) => item.id));
+    }
+    expect(
+      evidenceByOwner[0]!.some((id) => evidenceByOwner[1]!.includes(id)),
+    ).toBe(false);
   }, 30000);
 });
