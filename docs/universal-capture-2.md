@@ -72,10 +72,9 @@ The database also caps each preview payload and active previews per owner.
   one-time claim and finish, and rejection of a foreign claim; it rolled back
   with no residual users or previews.
 - GitHub CI [run 36151365201](https://github.com/icodeninjaX/project-atlas/actions/runs/36151365201)
-  passed for implementation revision `a502abe`. Vercel deployment
-  `dpl_4EM1sWxp8BeB2PEBEkFZefjSsFfE` is ready and assigned to
-  [ATLAS production](https://atlas.kdvwebsiteservices.com); `/api/health`
-  returned `ok`.
+  passed for implementation revision `a502abe`. That revision was deployed to
+  [ATLAS production](https://atlas.kdvwebsiteservices.com), where `/api/health`
+  returned `ok` during acceptance.
 - A disposable hosted account passed two signed-in Chromium browser checks:
   desktop and 320px two-task review with keyboard confirmation, persisted
   tasks and reschedule, plus a mixed expense/task batch with a corrected
