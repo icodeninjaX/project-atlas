@@ -16,8 +16,8 @@ Production release gates still apply.
 ## Ordered intelligent improvements
 
 Phases 1–8 remain the original foundation sequence. Knowledge is implemented;
-Universal Capture has five creation flows and locally implemented multi-action
-review with task rescheduling; release closeout remains pending.
+Universal Capture has five creation flows and deployed multi-action review with
+task rescheduling. The earlier single-action release closeout remains pending.
 Analyst has seven bounded questions and a recorded typed-reservation fix; Graph
 is **implemented locally**, with local acceptance recorded on 2026-09-24.
 Graph hosted state is not verified. Existing validation records are historical,
@@ -27,9 +27,9 @@ The [current release closeout](intelligent-roadmap.md#current-release-closeout)
 covers Capture release flows, deployed Analyst/schema and authenticated-browser
 verification, Graph acceptance/migration/hosted status, and baseline classification.
 Phases 9–17 are implemented locally. Phase 12 Historical Metrics, Phase 13
-Cross-domain Analyst, and Phase 16 Next Best Action are deployed. Phase 14
-Pattern Discovery, Phase 15 Scenario Intelligence, and Phase 17 Capture 2.0
-retain separate hosted release gates. See the
+Cross-domain Analyst, Phase 16 Next Best Action, and Phase 17 Capture 2.0 are
+deployed. Phase 14 Pattern Discovery and Phase 15 Scenario Intelligence retain
+separate hosted release gates. See the
 [authoritative delivery status](intelligent-roadmap.md#current-delivery-status)
 and the [Capture 2.0 contract](universal-capture-2.md). Next implement
 **Phase 18 — Multimodal Capture**.
