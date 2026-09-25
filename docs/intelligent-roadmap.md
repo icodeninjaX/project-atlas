@@ -134,7 +134,7 @@ summary takes precedence for current next-action guidance.
 | 14. Pattern and Association Discovery       | Implemented locally, 2026-09-25                                            | Deterministic method, full application and database checks, two-owner tool integration, synthetic live AI evaluations, authenticated desktop/mobile no-finding browser checks; see [Phase 14 contract](pattern-associations.md) | Hosted deployment and qualified-finding browser flow not verified                                                                                                                 |
 | 15. Scenario Intelligence                   | Implemented locally, 2026-09-25                                            | Engine parity, two-owner tool checks, synthetic live AI evaluation and authenticated desktop/mobile comparison checks; see [Phase 15 contract](scenario-intelligence.md)                                                        | Hosted deployment and production comparison flow not verified                                                                                                                     |
 | 16. Next Best Action                        | Implemented and deployed, 2026-09-25                                       | Dayline-ranked application follow-ups, owner/stale/duplicate database checks, application tests and signed-in local desktop/320px browser review; see [Phase 16 contract](next-best-action.md)                                  | Hosted migrations, two-owner database check, ready deployment, signed-in desktop/320px review, saved choices and task persistence verified 2026-09-25                             |
-| 17. Universal Capture 2.0                   | Implemented locally, 2026-09-25                                            | Bounded batch, task resolution, live synthetic evaluation, local owner/RPC tests and signed-in desktop/320px review; see [Phase 17 contract](universal-capture-2.md)                                                            | Hosted migrations and application flow not verified                                                                                                                               |
+| 17. Universal Capture 2.0                   | Implemented and deployed, 2026-09-25                                       | Bounded batch, task resolution, live synthetic evaluation, local owner/RPC tests and signed-in desktop/320px review; see [Phase 17 contract](universal-capture-2.md)                                                            | Three hosted migrations, owner/RPC checks, scheduled cleanup, CI, ready deployment and signed-in production desktop/320px batch flows verified 2026-09-25                         |
 
 Repository health is independent: [formatting debt](repository-formatting-debt.md)
 records 45 historical failures and their local cleanup to zero on 2026-09-24.
@@ -194,7 +194,7 @@ release boundaries. The live Analyst check showed the expected insufficient-hist
 fallback and validation. Phase 13 is implemented and deployed; its
 [production acceptance](cross-domain-analyst.md#production-acceptance--2026-09-25)
 is recorded. Other hosted release gates above remain open. Phase 17 is implemented
-locally with its [contract and release boundary](universal-capture-2.md). The next
+and deployed with [production acceptance](universal-capture-2.md#production-acceptance). The next
 planned intelligence implementation is **Phase 18 — Multimodal Capture**. Phase 16's
 production acceptance is recorded in [its contract](next-best-action.md). Phase 14's
 local method and release boundary are recorded in [its contract](pattern-associations.md);
@@ -1935,7 +1935,7 @@ Legacy section anchors are retained for existing links.
 | 14                | 14    | Pattern and Association Discovery       | Implemented locally                        |
 | 15                | 15    | Scenario Intelligence                   | Implemented locally                        |
 | 16                | 16    | Next Best Action                        | Implemented and deployed                   |
-| 17                | 17    | Universal Capture 2.0                   | Implemented locally                        |
+| 17                | 17    | Universal Capture 2.0                   | Implemented and deployed                   |
 | 18                | 18    | Multimodal Capture                      | Planned / exploratory formats              |
 | 19                | 19    | Decision → Outcome Intelligence         | Planned; basic recording may start earlier |
 
@@ -2743,5 +2743,5 @@ implemented and deployed for Dayline-ranked application follow-ups. Its owner,
 stale-state, dismissal, duplicate-write, hosted migration and signed-in production
 browser checks are recorded in [next-best-action.md](next-best-action.md). Next
 planned intelligence phase: Multimodal Capture (Phase 18). Phase 17 Universal
-Capture 2.0 is implemented locally; its [contract](universal-capture-2.md)
-records supported actions and hosted release gates.
+Capture 2.0 is implemented and deployed; its [contract](universal-capture-2.md)
+records supported actions and production acceptance.

@@ -249,7 +249,7 @@ export default async function DashboardPage() {
         <GratitudeCard initialQuote={wisdomQuote} compact />
         <section
           aria-labelledby="week-position"
-          className="flex min-h-36 flex-col justify-between px-1 py-1"
+          className="border-border bg-card flex min-h-36 flex-col justify-between rounded-2xl border p-5 sm:p-6"
         >
           <div>
             <div className="flex items-center gap-2.5">

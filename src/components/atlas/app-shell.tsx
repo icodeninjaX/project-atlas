@@ -3,17 +3,19 @@
 import {
   BriefcaseBusiness,
   BookOpen,
-  CircleDollarSign,
+  CalendarRange,
+  ChartNoAxesCombined,
   ClipboardCheck,
   Gauge,
   Goal,
   History,
+  Inbox,
   Landmark,
   Menu,
+  NotebookPen,
   Radar,
   Search,
   Settings,
-  Sparkles,
   WalletCards,
   X,
 } from "lucide-react";
@@ -26,8 +28,8 @@ import { cn } from "@/lib/utils";
 
 const destinations = {
   today: { href: "/dashboard", label: "Today", icon: Gauge },
-  capture: { href: "/capture", label: "Capture", icon: Sparkles },
-  analyst: { href: "/analyst", label: "Analyst", icon: Sparkles },
+  capture: { href: "/capture", label: "Capture", icon: Inbox },
+  analyst: { href: "/analyst", label: "Analyst", icon: ChartNoAxesCombined },
   signals: { href: "/signals", label: "Signals", icon: Radar },
   money: { href: "/money/accounts", label: "Money", icon: WalletCards },
   debts: { href: "/debts", label: "Debts", icon: Landmark },
@@ -35,8 +37,8 @@ const destinations = {
   goals: { href: "/goals", label: "Goals", icon: Goal },
   history: { href: "/history", label: "History", icon: History },
   career: { href: "/career", label: "Career", icon: BriefcaseBusiness },
-  reviews: { href: "/reviews", label: "Reviews", icon: CircleDollarSign },
-  timeline: { href: "/timeline", label: "Timeline", icon: History },
+  reviews: { href: "/reviews", label: "Reviews", icon: NotebookPen },
+  timeline: { href: "/timeline", label: "Timeline", icon: CalendarRange },
   knowledge: { href: "/knowledge", label: "Knowledge", icon: BookOpen },
 } as const;
 
@@ -198,14 +200,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="bg-background text-foreground min-h-dvh w-full max-w-full min-w-0">
       <a
         href="#main-content"
-        className="bg-primary text-primary-foreground sr-only z-50 rounded-lg px-4 py-2 focus:not-sr-only focus:fixed focus:top-4 focus:left-4"
+        className="bg-primary-solid text-primary-solid-foreground sr-only z-50 rounded-lg px-4 py-2 focus:not-sr-only focus:fixed focus:top-4 focus:left-4"
       >
         Skip to content
       </a>
       <aside className="border-border bg-sidebar fixed inset-y-0 left-0 z-30 hidden w-64 border-r lg:flex lg:flex-col">
         <Link
           href="/dashboard"
-          className="border-border focus-visible:ring-ring flex h-20 items-center gap-3 border-b px-6 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+          className="border-border focus-visible:ring-ring flex h-18 shrink-0 items-center gap-3 border-b px-6 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
         >
           <AtlasMark />
           <div>
@@ -250,34 +252,43 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           ))}
         </nav>
-        <div className="border-border border-t p-3">
-          <Link
-            href="/search"
-            aria-current={isActive("/search") ? "page" : undefined}
-            className={cn(
-              "text-muted-foreground hover:bg-muted hover:text-foreground flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm",
-              isActive("/search") &&
-                "bg-primary/10 text-primary hover:bg-primary/15",
-            )}
-          >
-            <Search className="size-[18px]" />
-            Search
-            <kbd className="border-border bg-background ml-auto rounded border px-1.5 font-mono text-[10px]">
-              /
-            </kbd>
-          </Link>
-          <Link
-            href="/settings"
-            aria-current={isActive("/settings") ? "page" : undefined}
-            className={cn(
-              "text-muted-foreground hover:bg-muted hover:text-foreground flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm",
-              isActive("/settings") &&
-                "bg-primary/10 text-primary hover:bg-primary/15",
-            )}
-          >
-            <Settings className="size-[18px]" />
-            Settings
-          </Link>
+        <div className="border-border space-y-0.5 border-t p-3">
+          {(
+            [
+              { href: "/search", label: "Search", icon: Search, shortcut: "/" },
+              {
+                href: "/settings",
+                label: "Settings",
+                icon: Settings,
+                shortcut: undefined,
+              },
+            ] as const
+          ).map(({ href, label, icon: Icon, shortcut }) => (
+            <Link
+              key={href}
+              href={href}
+              aria-current={isActive(href) ? "page" : undefined}
+              className={cn(
+                "group text-muted-foreground hover:bg-muted/70 hover:text-foreground focus-visible:ring-ring relative flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                isActive(href) &&
+                  "bg-primary/10 text-foreground hover:bg-primary/12 before:bg-primary before:absolute before:inset-y-2.5 before:left-0 before:w-0.5 before:rounded-full",
+              )}
+            >
+              <Icon
+                aria-hidden="true"
+                className={cn(
+                  "text-muted-foreground group-hover:text-primary size-[17px]",
+                  isActive(href) && "text-primary",
+                )}
+              />
+              {label}
+              {shortcut && (
+                <kbd className="border-border bg-background text-muted-foreground ml-auto rounded-md border px-1.5 py-px text-[10px]">
+                  {shortcut}
+                </kbd>
+              )}
+            </Link>
+          ))}
         </div>
       </aside>
       <main
@@ -405,7 +416,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={() => setMoreOpen(false)}
                   aria-current={isActive(href) ? "page" : undefined}
                   className={cn(
-                    "border-border hover:bg-muted/60 focus-visible:ring-ring flex min-h-16 min-w-0 items-center gap-3 border-b px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset min-[360px]:odd:border-r",
+                    "border-border hover:bg-muted/60 focus-visible:ring-ring flex min-h-16 min-w-0 items-center gap-3 border-b px-3 text-sm font-medium transition-colors last:border-b-0 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset min-[360px]:odd:border-r min-[360px]:odd:last:col-span-2 min-[360px]:odd:last:border-r-0",
                     isActive(href) && "bg-primary/10 text-primary",
                   )}
                 >

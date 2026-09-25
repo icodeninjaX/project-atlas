@@ -4,16 +4,27 @@ import { randomUUID } from "node:crypto";
 
 const localUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const serviceKey = process.env.E2E_LOCAL_SERVICE_ROLE_KEY ?? "";
+const hosted = process.env.ATLAS_CAPTURE_BATCH_HOSTED === "1";
+const hostedEmail = process.env.E2E_HOSTED_CAPTURE_EMAIL ?? "";
+const hostedPassword = process.env.E2E_HOSTED_CAPTURE_PASSWORD ?? "";
 test.skip(
   process.env.ATLAS_CAPTURE_BATCH_BROWSER !== "1" ||
-    !localUrl.startsWith("http://127.0.0.1:") ||
-    !serviceKey ||
-    !process.env.OPENAI_API_KEY,
-  "A disposable local Supabase account and live Capture model are required.",
+    (hosted
+      ? !localUrl.startsWith("https://") ||
+        !process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ||
+        !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+        !hostedEmail.startsWith("atlas-phase17-") ||
+        !hostedPassword
+      : !localUrl.startsWith("http://127.0.0.1:") ||
+        !serviceKey ||
+        !process.env.OPENAI_API_KEY),
+  "A disposable Supabase account and live Capture model are required.",
 );
 
-const email = `capture-batch-${randomUUID()}@example.test`;
-const password = `${randomUUID()}aA!`;
+const email = hosted
+  ? hostedEmail
+  : `capture-batch-${randomUUID()}@example.test`;
+const password = hosted ? hostedPassword : `${randomUUID()}aA!`;
 const admin = createClient(
   localUrl || "http://127.0.0.1:54321",
   serviceKey || "placeholder",
@@ -24,6 +35,20 @@ const admin = createClient(
 let userId: string | undefined;
 
 test.beforeAll(async () => {
+  if (hosted) {
+    const owner = createClient(
+      localUrl,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "placeholder",
+    );
+    const { data, error } = await owner.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error || !data.user)
+      throw error ?? new Error("Could not sign in as hosted test user.");
+    userId = data.user.id;
+    return;
+  }
   const { data, error } = await admin.auth.admin.createUser({
     email,
     password,
@@ -35,7 +60,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  if (userId) await admin.auth.admin.deleteUser(userId);
+  if (!hosted && userId) await admin.auth.admin.deleteUser(userId);
 });
 
 test("reviews and confirms two actions at desktop and narrow mobile widths", async ({

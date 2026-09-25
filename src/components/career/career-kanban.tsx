@@ -452,7 +452,7 @@ function ApplicationCard({
                   "shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold lg:border lg:px-2 lg:py-1 lg:text-[10px]",
                   overdue
                     ? "bg-destructive lg:border-destructive/35 lg:bg-destructive/10 lg:text-destructive text-white"
-                    : "bg-primary text-primary-foreground lg:border-primary/25 lg:bg-primary/8 lg:text-primary",
+                    : "bg-primary-solid text-primary-solid-foreground lg:border-primary/25 lg:bg-primary/8 lg:text-primary",
                 )}
               >
                 {due}
@@ -889,7 +889,7 @@ export function CareerKanban({
                         className={cn(
                           "focus-visible:ring-ring min-h-9 rounded-lg px-2 text-xs font-semibold capitalize focus-visible:ring-2 focus-visible:outline-none",
                           preferences.density === density
-                            ? "bg-primary text-primary-foreground shadow-sm"
+                            ? "bg-primary-solid text-primary-solid-foreground shadow-sm"
                             : "text-muted-foreground hover:text-foreground",
                         )}
                       >
@@ -974,7 +974,7 @@ export function CareerKanban({
                             className={cn(
                               "border-border grid size-4 place-items-center rounded border",
                               checked &&
-                                "border-primary bg-primary text-primary-foreground",
+                                "border-primary-solid bg-primary-solid text-primary-solid-foreground",
                             )}
                           >
                             {checked ? (
@@ -1085,7 +1085,7 @@ export function CareerKanban({
               className={cn(
                 "focus-visible:ring-ring min-h-14 min-w-25 snap-start rounded-xl px-3 text-center focus-visible:ring-2 focus-visible:outline-none",
                 selected
-                  ? "bg-primary text-primary-foreground shadow-sm"
+                  ? "bg-primary-solid text-primary-solid-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >

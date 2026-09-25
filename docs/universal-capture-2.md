@@ -2,7 +2,7 @@
 
 - Phase: 17
 - Local implementation: 2026-09-25
-- Hosted state: Not deployed or verified.
+- Hosted state: Deployed and verified on 2026-09-25.
 
 Capture accepts up to 1,000 characters and asks the selected model for one to five
 independent proposals. Each proposal names an exact, nonoverlapping source phrase.
@@ -61,10 +61,37 @@ The database also caps each preview payload and active previews per owner.
   batch with an editable category and a persisted 38,000-centavo expense. The
   account was deleted after the check.
 
-## Release boundary
+## Production acceptance
 
-The hosted application and migrations are unverified. Apply all three migrations before
-deploying the new Capture page, confirm `pg_cron` runs in the target database, and
-repeat an authenticated hosted batch review with a disposable account. Keep the
-Phase 6 Capture closeout checklist separate; this implementation does not prove
-that earlier hosted Capture acceptance items are closed.
+- Hosted project `pcdrusgiwhezfodabchp` applied migrations
+  `20260925145457_capture_batch_previews`,
+  `20260925145512_capture_preview_retention`, and
+  `20260925145515_capture_preview_write_limits` before the app release. Local and
+  hosted migration versions match.
+- A hosted transaction with two synthetic owners verified owner-only reads,
+  one-time claim and finish, and rejection of a foreign claim; it rolled back
+  with no residual users or previews.
+- GitHub CI [run 36151365201](https://github.com/icodeninjaX/project-atlas/actions/runs/36151365201)
+  passed for implementation revision `a502abe`. That revision was deployed to
+  [ATLAS production](https://atlas.kdvwebsiteservices.com), where `/api/health`
+  returned `ok` during acceptance.
+- A disposable hosted account passed two signed-in Chromium browser checks:
+  desktop and 320px two-task review with keyboard confirmation, persisted
+  tasks and reschedule, plus a mixed expense/task batch with a corrected
+  category and a persisted 38,000-centavo expense. The account and all its
+  task, transaction and preview records were removed after verification.
+  Public test signup returned an email rate-limit response, so this account
+  was provisioned directly for acceptance; signup/SMTP remains a separate
+  [production Auth checklist](deployment.md) item.
+- `atlas-capture-preview-prune` is active on `*/30 * * * *` and completed a
+  successful hosted run at 2026-09-25 15:00 UTC.
+- The [Supabase security advisor](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable)
+  flags the two authenticated Capture `SECURITY DEFINER` RPCs. Their exposure
+  is intentional for atomic preview status changes; each checks `auth.uid()`,
+  owner, state and allowed transition. Hosted owner-isolation tests passed.
+  Earlier advisor findings on other tables/functions and leaked-password
+  protection remain tracked in [MVP status](mvp-status.md) and the
+  [security backlog](playwright-polish-backlog.md).
+
+The Phase 6 Capture closeout checklist remains separate. Phase 17 acceptance
+does not establish that all earlier single-action release scenarios passed.
