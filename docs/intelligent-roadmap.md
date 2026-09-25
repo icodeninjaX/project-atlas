@@ -133,6 +133,7 @@ summary takes precedence for current next-action guidance.
 | 13. Cross-domain and Longitudinal Analyst   | Implemented and deployed, 2026-09-25                                       | 472 application tests, 159 local DB assertions, two-owner tool checks, authenticated desktop/mobile browser checks and build; see [Phase 13 contract](cross-domain-analyst.md)                                                  | Hosted deployment, signed-in goal picker, two approved Analyst requests, source paths, safe incomplete-history fallback and clean route error scan verified 2026-09-25            |
 | 14. Pattern and Association Discovery       | Implemented locally, 2026-09-25                                            | Deterministic method, full application and database checks, two-owner tool integration, synthetic live AI evaluations, authenticated desktop/mobile no-finding browser checks; see [Phase 14 contract](pattern-associations.md) | Hosted deployment and qualified-finding browser flow not verified                                                                                                                 |
 | 15. Scenario Intelligence                   | Implemented locally, 2026-09-25                                            | Engine parity, two-owner tool checks, synthetic live AI evaluation and authenticated desktop/mobile comparison checks; see [Phase 15 contract](scenario-intelligence.md)                                                        | Hosted deployment and production comparison flow not verified                                                                                                                     |
+| 16. Next Best Action                        | Implemented locally, 2026-09-25                                            | Dayline-ranked application follow-ups, owner/stale/duplicate database checks, application tests and signed-in local desktop/320px browser review; see [Phase 16 contract](next-best-action.md)                                  | Hosted migrations, deployment and authenticated production browser flow not verified                                                                                              |
 
 Repository health is independent: [formatting debt](repository-formatting-debt.md)
 records 45 historical failures and their local cleanup to zero on 2026-09-24.
@@ -192,7 +193,8 @@ release boundaries. The live Analyst check showed the expected insufficient-hist
 fallback and validation. Phase 13 is implemented and deployed; its
 [production acceptance](cross-domain-analyst.md#production-acceptance--2026-09-25)
 is recorded. Other hosted release gates above remain open. The next planned
-intelligence implementation is **Phase 16 — Next Best Action**. Phase 14's
+intelligence implementation is **Phase 17 — Universal Capture 2.0**. Phase 16's
+local action boundary is recorded in [its contract](next-best-action.md). Phase 14's
 local method and release boundary are recorded in [its contract](pattern-associations.md);
 Phase 15's local comparison and release boundary are recorded in
 [its contract](scenario-intelligence.md).
@@ -1929,7 +1931,7 @@ Legacy section anchors are retained for existing links.
 | 13                | 13    | Cross-domain and Longitudinal Analyst   | Implemented and deployed                   |
 | 14                | 14    | Pattern and Association Discovery       | Implemented locally                        |
 | 15                | 15    | Scenario Intelligence                   | Implemented locally                        |
-| 16                | 16    | Next Best Action                        | Planned                                    |
+| 16                | 16    | Next Best Action                        | Implemented locally                        |
 | 17                | 17    | Universal Capture 2.0                   | Planned                                    |
 | 18                | 18    | Multimodal Capture                      | Planned / exploratory formats              |
 | 19                | 19    | Decision → Outcome Intelligence         | Planned; basic recording may start earlier |
@@ -2254,7 +2256,7 @@ flow, evidence validation, local acceptance and hosted release limits.
 
 ## Phase 16 — Next Best Action
 
-**Status:** Planned; delivery priority 16.
+**Status:** Implemented locally; hosted rollout open. See [Phase 16 contract](next-best-action.md).
 
 - **Goal:** Offer a small number of grounded, inspectable actions for the user
   to choose from.
@@ -2732,5 +2734,9 @@ record are in [scenario-intelligence.md](scenario-intelligence.md). Hosted
 deployment remains open. Local acceptance passed 500 application tests (24
 skipped), five real two-owner tool integration tests, 19 synthetic live AI
 evaluations, authenticated Chromium checks at 320px and 1280px, lint,
-typecheck, formatting and production build. Next planned intelligence phase:
-Next Best Action (Phase 16).
+typecheck, formatting and production build. Phase 16 Next Best Action is
+implemented locally for Dayline-ranked application follow-ups. Its owner,
+stale-state, dismissal, duplicate-write and signed-in local browser checks are recorded in
+[next-best-action.md](next-best-action.md). Hosted rollout and authenticated
+production browser review remain open. Next planned intelligence phase: Universal Capture
+2.0 (Phase 17).

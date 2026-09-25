@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { DaylineCommand } from "@/components/dashboard/dayline-command";
+import { NextBestActions } from "@/components/dashboard/next-best-actions";
 import { FinancialOverview } from "@/components/dashboard/financial-overview";
 import { GratitudeCard } from "@/components/dashboard/gratitude-card";
 import { SituationStrip } from "@/components/dashboard/situation-strip";
@@ -15,6 +16,7 @@ import { manilaDateLabel } from "@/lib/dates/dates";
 import { loadDayline } from "@/lib/dayline/server";
 import { getRandomWisdomQuote } from "@/lib/gratitude/gratitude-reflections";
 import { formatCentavos } from "@/lib/money/money";
+import { loadNextBestActions } from "@/lib/next-best-action/server";
 import { selectDashboardSignals } from "@/lib/signals/engine";
 import { loadSignals } from "@/lib/signals/server";
 import { createClient } from "@/lib/supabase/server";
@@ -129,6 +131,10 @@ export default async function DashboardPage() {
         durationMinutes: null,
         energy: null,
       }));
+  const nextBestActions =
+    supabase && daylineResult
+      ? await loadNextBestActions(supabase, daylineResult).catch(() => [])
+      : [];
 
   const metrics = [
     {
@@ -229,6 +235,8 @@ export default async function DashboardPage() {
           energyLevel={daylineResult?.energyLevel}
         />
       </div>
+
+      <NextBestActions actions={nextBestActions} />
 
       <SituationStrip items={situation} />
 
