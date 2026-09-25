@@ -75,10 +75,10 @@ export function GratitudeCard({
   return (
     <Card
       aria-label="Daily wisdom"
-      className={`relative overflow-hidden text-white ${
+      className={`relative overflow-hidden ${
         compact
-          ? "border-border/80 bg-[#111a29] shadow-none"
-          : "border-[#9a795f]/80 bg-[#172236]"
+          ? "border-border text-foreground bg-[#e8eef8] shadow-none dark:bg-[#111a29] dark:text-white"
+          : "border-[#9a795f]/80 bg-[#172236] text-white"
       } ${className}`}
       style={{
         backgroundImage: 'url("/gratitude/atlas-gratitude-card-surface.webp")',
@@ -95,7 +95,11 @@ export function GratitudeCard({
         }`}
       >
         <div className={compact ? "pr-12" : "pr-16 sm:pr-20 lg:pr-24"}>
-          <p className="text-[11px] font-semibold tracking-[0.12em] text-[#a9c5ff] uppercase">
+          <p
+            className={`text-[11px] font-semibold tracking-[0.12em] uppercase ${
+              compact ? "text-primary dark:text-[#a9c5ff]" : "text-[#a9c5ff]"
+            }`}
+          >
             <span>Daily reflection</span>
             <span aria-hidden="true"> · </span>
             <span>{quote.category}</span>
@@ -105,15 +109,21 @@ export function GratitudeCard({
             className={compact ? "mt-2" : "mt-3 sm:mt-4"}
           >
             <p
-              className={`max-w-xl font-serif text-[#f8fafc] ${
+              className={`max-w-xl font-serif ${
                 compact
-                  ? "text-base leading-6 text-[#eef3fa] sm:text-lg"
-                  : "text-lg leading-6 sm:text-2xl sm:leading-[1.45] lg:text-[1.7rem] lg:leading-[1.35]"
+                  ? "text-foreground text-base leading-6 sm:text-lg dark:text-[#eef3fa]"
+                  : "text-lg leading-6 text-[#f8fafc] sm:text-2xl sm:leading-[1.45] lg:text-[1.7rem] lg:leading-[1.35]"
               }`}
             >
               “{quote.message}”
             </p>
-            <footer className="mt-2 text-xs font-medium text-[#dce6f5] sm:text-sm">
+            <footer
+              className={`mt-2 text-xs font-medium sm:text-sm ${
+                compact
+                  ? "text-muted-foreground dark:text-[#dce6f5]"
+                  : "text-[#dce6f5]"
+              }`}
+            >
               — {quote.author}
             </footer>
           </blockquote>
@@ -128,10 +138,10 @@ export function GratitudeCard({
 
         <Sunrise
           aria-hidden="true"
-          className={`absolute text-[#dce6f5]/85 ${
+          className={`absolute ${
             compact
-              ? "top-5 right-5 size-7 opacity-60"
-              : "top-5 right-5 size-11 sm:top-6 sm:right-6 sm:size-14 lg:top-1/2 lg:right-7 lg:size-16 lg:-translate-y-1/2"
+              ? "text-primary/70 top-5 right-5 size-7 opacity-60 dark:text-[#dce6f5]/85"
+              : "top-5 right-5 size-11 text-[#dce6f5]/85 sm:top-6 sm:right-6 sm:size-14 lg:top-1/2 lg:right-7 lg:size-16 lg:-translate-y-1/2"
           }`}
           strokeWidth={1.25}
         />

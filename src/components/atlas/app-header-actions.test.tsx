@@ -67,4 +67,19 @@ describe("AppHeaderActions", () => {
       controls.getByRole("button", { name: "Log out this device" }),
     ).toBeInTheDocument();
   });
+
+  it("shows who is signed in at the top of the account controls", async () => {
+    const user = userEvent.setup();
+    render(<AppHeaderActions displayName="Kai Rivera" />);
+
+    const trigger = screen.getByRole("button", {
+      name: "Open account controls",
+    });
+    expect(trigger).toHaveTextContent("K");
+    await user.click(trigger);
+
+    const menu = screen.getByRole("dialog", { name: "Account controls" });
+    expect(within(menu).getByText("Signed in as")).toBeInTheDocument();
+    expect(within(menu).getByText("Kai Rivera")).toBeInTheDocument();
+  });
 });

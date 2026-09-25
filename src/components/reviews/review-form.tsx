@@ -299,7 +299,7 @@ export function ReviewForm({
                 className={cn(
                   "border-border bg-card text-muted-foreground focus-visible:ring-ring grid min-h-10 place-items-center rounded-xl border font-mono text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none",
                   selected &&
-                    "border-primary bg-primary text-primary-foreground shadow-sm",
+                    "border-primary-solid bg-primary-solid text-primary-solid-foreground shadow-sm",
                   filled && !selected && "border-primary/35 text-primary",
                 )}
               >

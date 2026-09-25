@@ -60,7 +60,7 @@ export function HistoryFilters({
       </label>
       <button
         type="submit"
-        className="bg-primary text-primary-foreground min-h-11 rounded-lg px-5 text-sm font-semibold"
+        className="bg-primary-solid text-primary-solid-foreground min-h-11 rounded-lg px-5 text-sm font-semibold"
       >
         Update view
       </button>

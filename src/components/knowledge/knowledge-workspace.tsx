@@ -275,7 +275,7 @@ export function KnowledgeWorkspace({
                   aria-label={`${label}, ${count} ${count === 1 ? "concept" : "concepts"}`}
                   aria-pressed={view === value}
                   onClick={() => selectView(value)}
-                  className={`focus-visible:ring-ring min-h-10 shrink-0 rounded-lg px-3 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none ${view === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+                  className={`focus-visible:ring-ring min-h-10 shrink-0 rounded-lg px-3 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none ${view === value ? "bg-primary-solid text-primary-solid-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
                 >
                   {label}
                   <span className="ml-1.5 font-mono text-[10px] opacity-80">
