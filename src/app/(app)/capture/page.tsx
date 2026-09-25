@@ -1,4 +1,4 @@
-import { CaptureWorkspace } from "@/components/capture/capture-workspace";
+import { CaptureBatchWorkspace } from "@/components/capture/capture-batch-workspace";
 import { PageHeading } from "@/components/shared/page-heading";
 import { AI_MODELS, CAPTURE_MODEL_OPTIONS } from "@/lib/ai/models";
 import { createClient } from "@/lib/supabase/server";
@@ -26,9 +26,9 @@ export default async function CapturePage() {
       <PageHeading
         eyebrow="Capture"
         title="Tell ATLAS what happened"
-        description="Write one expense, income, task, career application, or learning item. ATLAS will suggest fields for you to review before anything is saved."
+        description="Describe up to five actions. ATLAS will separate them into cards for you to review, correct, save, or reject."
       />
-      <CaptureWorkspace
+      <CaptureBatchWorkspace
         accounts={accounts.data ?? []}
         categories={categories.data ?? []}
         models={CAPTURE_MODEL_OPTIONS}

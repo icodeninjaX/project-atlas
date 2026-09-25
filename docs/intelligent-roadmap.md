@@ -134,6 +134,7 @@ summary takes precedence for current next-action guidance.
 | 14. Pattern and Association Discovery       | Implemented locally, 2026-09-25                                            | Deterministic method, full application and database checks, two-owner tool integration, synthetic live AI evaluations, authenticated desktop/mobile no-finding browser checks; see [Phase 14 contract](pattern-associations.md) | Hosted deployment and qualified-finding browser flow not verified                                                                                                                 |
 | 15. Scenario Intelligence                   | Implemented locally, 2026-09-25                                            | Engine parity, two-owner tool checks, synthetic live AI evaluation and authenticated desktop/mobile comparison checks; see [Phase 15 contract](scenario-intelligence.md)                                                        | Hosted deployment and production comparison flow not verified                                                                                                                     |
 | 16. Next Best Action                        | Implemented and deployed, 2026-09-25                                       | Dayline-ranked application follow-ups, owner/stale/duplicate database checks, application tests and signed-in local desktop/320px browser review; see [Phase 16 contract](next-best-action.md)                                  | Hosted migrations, two-owner database check, ready deployment, signed-in desktop/320px review, saved choices and task persistence verified 2026-09-25                             |
+| 17. Universal Capture 2.0                   | Implemented locally, 2026-09-25                                            | Bounded batch, task resolution, live synthetic evaluation, local owner/RPC tests and signed-in desktop/320px review; see [Phase 17 contract](universal-capture-2.md)                                                            | Hosted migrations and application flow not verified                                                                                                                               |
 
 Repository health is independent: [formatting debt](repository-formatting-debt.md)
 records 45 historical failures and their local cleanup to zero on 2026-09-24.
@@ -192,16 +193,18 @@ release boundaries. The live Analyst check showed the expected insufficient-hist
 [contract](analyst-freeform.md) records the quota migration, grounded claims,
 fallback and validation. Phase 13 is implemented and deployed; its
 [production acceptance](cross-domain-analyst.md#production-acceptance--2026-09-25)
-is recorded. Other hosted release gates above remain open. The next planned
-intelligence implementation is **Phase 17 — Universal Capture 2.0**. Phase 16's
+is recorded. Other hosted release gates above remain open. Phase 17 is implemented
+locally with its [contract and release boundary](universal-capture-2.md). The next
+planned intelligence implementation is **Phase 18 — Multimodal Capture**. Phase 16's
 production acceptance is recorded in [its contract](next-best-action.md). Phase 14's
 local method and release boundary are recorded in [its contract](pattern-associations.md);
 Phase 15's local comparison and release boundary are recorded in
 [its contract](scenario-intelligence.md).
 
-The delivered AI surfaces are intentionally narrow. Universal Capture currently
-produces **one** previewable proposal from five kinds (expense, income, task,
-career application, knowledge concept); multi-action requests are unsupported.
+The delivered AI surfaces are intentionally narrow. Universal Capture now
+previews up to five independent actions from five creation kinds (expense,
+income, task, career application, knowledge concept) plus task rescheduling.
+Other intent-backlog actions remain unsupported.
 Analyst retains **seven predefined questions** and now also accepts bounded
 freeform questions through the approved planner and tool layer. Both flows show
 calculated evidence when an explanation fails. See the [preset Analyst
@@ -1932,7 +1935,7 @@ Legacy section anchors are retained for existing links.
 | 14                | 14    | Pattern and Association Discovery       | Implemented locally                        |
 | 15                | 15    | Scenario Intelligence                   | Implemented locally                        |
 | 16                | 16    | Next Best Action                        | Implemented and deployed                   |
-| 17                | 17    | Universal Capture 2.0                   | Planned                                    |
+| 17                | 17    | Universal Capture 2.0                   | Implemented locally                        |
 | 18                | 18    | Multimodal Capture                      | Planned / exploratory formats              |
 | 19                | 19    | Decision → Outcome Intelligence         | Planned; basic recording may start earlier |
 
@@ -2299,7 +2302,8 @@ flow, evidence validation, local acceptance and hosted release limits.
 
 ## Phase 17 — Universal Capture 2.0 and entity resolution
 
-**Status:** Planned; delivery priority 17.
+**Status:** Implemented locally; hosted release boundary open. See
+[the Phase 17 contract](universal-capture-2.md).
 
 - **Goal:** Make Capture the general natural-language ingestion layer for
   existing ATLAS actions, with several independent, reviewable proposals.
@@ -2738,4 +2742,6 @@ typecheck, formatting and production build. Phase 16 Next Best Action is
 implemented and deployed for Dayline-ranked application follow-ups. Its owner,
 stale-state, dismissal, duplicate-write, hosted migration and signed-in production
 browser checks are recorded in [next-best-action.md](next-best-action.md). Next
-planned intelligence phase: Universal Capture 2.0 (Phase 17).
+planned intelligence phase: Multimodal Capture (Phase 18). Phase 17 Universal
+Capture 2.0 is implemented locally; its [contract](universal-capture-2.md)
+records supported actions and hosted release gates.

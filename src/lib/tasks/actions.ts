@@ -7,6 +7,47 @@ import { offlineEntityId } from "@/lib/offline/server";
 
 export type TaskActionState = { success: boolean; message: string };
 
+/** Owner and version checked scheduling used by a reviewed Capture proposal. */
+export async function rescheduleTaskFromCaptureAction(
+  taskId: string,
+  expectedUpdatedAt: string,
+  scheduledFor: string,
+): Promise<TaskActionState> {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(taskId) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(scheduledFor) ||
+    !Number.isFinite(Date.parse(`${scheduledFor}T00:00:00Z`)) ||
+    new Date(`${scheduledFor}T00:00:00Z`).toISOString().slice(0, 10) !==
+      scheduledFor ||
+    !expectedUpdatedAt
+  )
+    return { success: false, message: "Choose a valid task and date." };
+  const supabase = await createClient();
+  if (!supabase)
+    return { success: false, message: "Supabase is not configured." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, message: "Your session expired." };
+  const { data, error } = await supabase
+    .from("tasks")
+    .update({ scheduled_for: scheduledFor, status: "planned" })
+    .eq("id", taskId)
+    .eq("user_id", user.id)
+    .eq("updated_at", expectedUpdatedAt)
+    .in("status", ["inbox", "planned", "in_progress"])
+    .select("id")
+    .maybeSingle();
+  if (error || !data)
+    return {
+      success: false,
+      message: "That task changed or is no longer available. Preview it again.",
+    };
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
+  return { success: true, message: "Task rescheduled." };
+}
+
 /** Changes the canonical task→goal foreign key. Graph never stores this native edge. */
 export async function setTaskGoalRelationshipAction(
   taskId: string,
