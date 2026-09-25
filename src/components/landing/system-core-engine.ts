@@ -22,7 +22,6 @@ export type SystemCoreEngineOptions = {
   domainLabels: HTMLElement[];
   routeLabels: HTMLElement[];
   getAnchors: () => ChapterAnchor[];
-  reducedMotion: boolean;
   onReady: () => void;
   onContextLost: () => void;
 };
@@ -303,11 +302,9 @@ export class SystemCoreEngine {
 
     options.canvas.addEventListener("webglcontextlost", this.handleContextLost);
     window.addEventListener("resize", this.handleResize);
-    if (!options.reducedMotion) {
-      window.addEventListener("pointermove", this.handlePointer, {
-        passive: true,
-      });
-    }
+    window.addEventListener("pointermove", this.handlePointer, {
+      passive: true,
+    });
     document.addEventListener("visibilitychange", this.handleVisibility);
     this.handleResize();
   }
@@ -414,7 +411,7 @@ export class SystemCoreEngine {
 
   private layout(state: SceneState, time: number, out: Targets) {
     const view = this.visibleAt(0);
-    const spin = this.options.reducedMotion ? 0 : time * 0.12;
+    const spin = time * 0.12;
     const narrow = this.narrow;
 
     switch (state.layout) {
@@ -502,7 +499,7 @@ export class SystemCoreEngine {
               narrow ? near.height * 0.26 : 0.05,
               depth,
             );
-            const sway = this.options.reducedMotion ? 0 : time * 0.35;
+            const sway = time * 0.35;
             out.quaternions[index]!.setFromEuler(
               euler.set(
                 -0.3 + Math.sin(sway) * 0.08,
@@ -538,7 +535,7 @@ export class SystemCoreEngine {
           0,
         );
         out.frame.setFromEuler(euler.set(-1.05, 0, 0.12));
-        const orbit = this.options.reducedMotion ? 0 : time * 0.22;
+        const orbit = time * 0.22;
         this.pieces.forEach((piece, index) => {
           const angle =
             Math.atan2(piece.direction.y, piece.direction.x) + orbit;
@@ -561,7 +558,7 @@ export class SystemCoreEngine {
         this.pieces.forEach((piece, index) => {
           const position = this.routePosition(index, view);
           out.positions[index]!.copy(position);
-          const turn = this.options.reducedMotion ? 0 : time * 0.25;
+          const turn = time * 0.25;
           out.quaternions[index]!.setFromEuler(
             euler.set(-0.35, 0.45, turn + index * 1.2),
           );
@@ -644,7 +641,7 @@ export class SystemCoreEngine {
       );
 
     const visibilityTarget = mix("visibility");
-    const follow = this.options.reducedMotion ? 1 : 1 - Math.exp(-delta * 4.2);
+    const follow = 1 - Math.exp(-delta * 4.2);
     const ease = this.ready ? follow : 1;
 
     this.current.visibility = damp(
@@ -711,9 +708,7 @@ export class SystemCoreEngine {
       ease,
     );
 
-    const pulse = this.options.reducedMotion
-      ? 1
-      : 1 + Math.sin(this.elapsed * 1.6) * 0.06;
+    const pulse = 1 + Math.sin(this.elapsed * 1.6) * 0.06;
     const glow = this.current.glow;
     this.glow.position.copy(this.current.center);
     this.glow.scale.setScalar(
@@ -766,7 +761,7 @@ export class SystemCoreEngine {
       "position",
     ) as THREE.BufferAttribute;
     const center = this.current.center;
-    const speed = this.options.reducedMotion ? 0 : 0.28;
+    const speed = 0.28;
     this.pieces.forEach((piece, pieceIndex) => {
       const start = piece.mesh.position;
       for (let index = 0; index < STREAM_PARTICLES; index += 1) {
@@ -791,7 +786,6 @@ export class SystemCoreEngine {
   }
 
   private updateDust(delta: number) {
-    if (this.options.reducedMotion) return;
     this.dust.rotation.y += delta * 0.006;
     this.dust.position.y = Math.sin(this.elapsed * 0.05) * 0.4;
   }

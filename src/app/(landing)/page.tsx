@@ -500,10 +500,19 @@ export default function LandingPage() {
                   Five systems. <Serif>One route.</Serif>
                 </h2>
               </div>
-              <ol className="sr-only">
+              <ol className="landing-route-list">
                 {ROUTE_STOPS.map((stop) => (
                   <li key={stop.time}>
-                    {stop.time} {stop.title}: {stop.note}
+                    <span className="landing-route-label-time">
+                      {stop.time}
+                    </span>{" "}
+                    <span className="landing-route-label-title">
+                      {stop.title}
+                    </span>
+                    <span className="sr-only">: </span>{" "}
+                    <span className="landing-route-label-note">
+                      {stop.note}
+                    </span>
                   </li>
                 ))}
               </ol>

@@ -59,7 +59,17 @@
 }
 
 .landing-stage-fallback {
-  opacity: 0.55;
+  opacity: 0.4;
+}
+
+.landing-stage[data-status="fallback"] .landing-stage-vignette {
+  background:
+    linear-gradient(90deg, rgb(5 7 11 / 78%), transparent 65%),
+    radial-gradient(
+      ellipse 120% 90% at 50% 45%,
+      transparent 50%,
+      rgb(2 3 6 / 75%) 100%
+    );
 }
 
 .landing-stage-vignette {
@@ -800,6 +810,54 @@
 
 .landing-dayline-top .landing-h2 {
   max-width: none;
+}
+
+/* Screen-reader text while the 3D route labels are showing; a visible card
+   when the scene falls back to the still render. */
+.landing-route-list {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.landing:has(.landing-stage[data-status="fallback"]) .landing-route-list {
+  position: static;
+  display: grid;
+  width: min(100%, 26rem);
+  height: auto;
+  gap: 0.25rem;
+  margin-inline: auto;
+  padding: 1.25rem 1.5rem;
+  overflow: visible;
+  clip-path: none;
+  border: 1px solid var(--landing-line);
+  border-radius: 1.375rem;
+  background: rgb(9 13 20 / 85%);
+  white-space: normal;
+  backdrop-filter: blur(22px);
+}
+
+.landing:has(.landing-stage[data-status="fallback"]) .landing-route-list li {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  column-gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--landing-line);
+}
+
+.landing:has(.landing-stage[data-status="fallback"])
+  .landing-route-list
+  li:last-child {
+  border-bottom: 0;
+}
+
+.landing:has(.landing-stage[data-status="fallback"])
+  .landing-route-list
+  .landing-route-label-note {
+  grid-column: 2;
 }
 
 .landing-dayline-legend {

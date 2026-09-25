@@ -54,7 +54,12 @@ export function LandingStage() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    if (!supportsWebGL()) {
+    // Reduced-motion visitors get the still render: the scene's chapter
+    // transitions are driven by scrolling, so they cannot be made calm.
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (reducedMotion || !supportsWebGL()) {
       // Deferred so the fallback swap happens outside the effect body.
       const frame = requestAnimationFrame(() => setStatus("fallback"));
       return () => cancelAnimationFrame(frame);
@@ -62,9 +67,6 @@ export function LandingStage() {
 
     let disposed = false;
     let engine: import("./system-core-engine").SystemCoreEngine | null = null;
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
 
     import("./system-core-engine")
       .then(({ SystemCoreEngine }) => {
@@ -74,7 +76,6 @@ export function LandingStage() {
           domainLabels: domainRefs.current,
           routeLabels: routeRefs.current,
           getAnchors: readAnchors,
-          reducedMotion,
           onReady: () => setStatus("ready"),
           onContextLost: () => setStatus("fallback"),
         });
