@@ -9,6 +9,8 @@
   --color-card-foreground: var(--card-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-solid: var(--primary-solid);
+  --color-primary-solid-foreground: var(--primary-solid-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -32,6 +34,9 @@
   --card-foreground: #111827;
   --primary: #2867e8;
   --primary-foreground: #ffffff;
+  /* Filled surfaces that carry text (buttons, active pills). */
+  --primary-solid: #2867e8;
+  --primary-solid-foreground: #ffffff;
   --secondary: #edf2f9;
   --secondary-foreground: #182131;
   --muted: #e9eef6;
@@ -138,6 +143,10 @@
   --card-foreground: #f4f7fb;
   --primary: #84afff;
   --primary-foreground: #070a0f;
+  /* A saturated fill keeps white labels at 4.9:1 while --primary stays
+     light enough for links and accents on the dark background. */
+  --primary-solid: #2b66f2;
+  --primary-solid-foreground: #ffffff;
   --secondary: #151d2a;
   --secondary-foreground: #f4f7fb;
   --muted: #182131;

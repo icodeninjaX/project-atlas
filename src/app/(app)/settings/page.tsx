@@ -402,7 +402,7 @@ export default async function SettingsPage() {
                   <Link
                     href="/api/export/json"
                     prefetch={false}
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none sm:min-h-10"
+                    className="bg-primary-solid text-primary-solid-foreground hover:bg-primary-solid/90 focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none sm:min-h-10"
                   >
                     <FileJson className="size-4" />
                     Download JSON
@@ -447,7 +447,7 @@ export default async function SettingsPage() {
           <Card>
             <CardContent>
               <div className="flex items-center gap-3">
-                <span className="bg-primary text-primary-foreground grid size-11 shrink-0 place-items-center rounded-xl font-mono text-sm font-semibold shadow-sm">
+                <span className="bg-primary-solid text-primary-solid-foreground grid size-11 shrink-0 place-items-center rounded-xl font-mono text-sm font-semibold shadow-sm">
                   {accountInitials(accountName) || "A"}
                 </span>
                 <div className="min-w-0">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, MoreHorizontal, Plus, Search, Sun } from "lucide-react";
+import { Moon, Plus, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -11,7 +11,17 @@ import { PrivacyToggle } from "@/components/privacy/privacy-toggle";
 import { Button } from "@/components/ui/button";
 import { TooltipHint } from "@/components/ui/tooltip";
 
-export function AppHeaderActions() {
+function initialFor(displayName: string | null | undefined) {
+  const initial = displayName?.trim().charAt(0).toUpperCase();
+  return initial || "A";
+}
+
+export function AppHeaderActions({
+  displayName,
+}: {
+  displayName?: string | null;
+}) {
+  const name = displayName || "ATLAS user";
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -81,7 +91,12 @@ export function AppHeaderActions() {
             aria-controls="mobile-account-menu"
             onClick={() => setMenuOpen((open) => !open)}
           >
-            <MoreHorizontal className="size-5" />
+            <span
+              aria-hidden="true"
+              className="border-primary/25 bg-primary/12 text-primary grid size-8 place-items-center rounded-full border text-xs font-semibold"
+            >
+              {initialFor(displayName)}
+            </span>
           </Button>
         </TooltipHint>
         {menuOpen && (
@@ -91,6 +106,20 @@ export function AppHeaderActions() {
             aria-label="Account controls"
             className="border-border bg-card text-card-foreground absolute top-12 right-0 z-50 max-h-[calc(100dvh-5rem-env(safe-area-inset-top))] w-[min(15rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border p-2 shadow-xl"
           >
+            <div className="border-border mb-1 flex min-w-0 items-center gap-3 border-b px-2 pt-1 pb-3">
+              <span
+                aria-hidden="true"
+                className="bg-primary/12 text-primary grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold"
+              >
+                {initialFor(displayName)}
+              </span>
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-[11px]">
+                  Signed in as
+                </p>
+                <p className="truncate text-sm font-semibold">{name}</p>
+              </div>
+            </div>
             <Button
               asChild
               variant="ghost"

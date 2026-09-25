@@ -19,6 +19,7 @@ Preserve the existing ATLAS identity. The product is calm, precise, restrained, 
 - Data font: the `font-mono` utility renders the UI face with tabular numerals (`tnum`) for money, dates, status labels, counts, and metadata, so figures align without a terminal feel. Geist Mono (`--font-geist-mono`) is reserved for `kbd`, `code`, and `pre`.
 - Light: background `#f4f7fb`, foreground `#111827`, card `#ffffff`, primary `#2867e8`, secondary `#edf2f9`, muted `#e9eef6`, muted foreground `#5f6b7d`, border `#dce3ed`, destructive `#c83a4a`, sidebar `#f9fbfe`.
 - Dark: background `#070a0f`, foreground `#f4f7fb`, card `#0e131c`, primary `#84afff`, secondary `#151d2a`, muted `#182131`, muted foreground `#8d99aa`, border `#202a39`, destructive `#e04f5f`, sidebar `#0a0e15`.
+- Filled primary surfaces that carry text (buttons, active pills, selected segments) use `primary-solid` / `primary-solid-foreground`: `#2867e8` in light and a saturated `#2b66f2` in dark, both with white labels at 4.5:1 or better. `primary` stays the accent for links, rings, tints, and meters.
 - Cards: flat bordered surfaces with 16px radius. Favor grouping, hierarchy, and whitespace over decorative shadows. Primary and secondary buttons carry a subtle top highlight and soft shadow for tactile depth.
 - Controls: 12px radius, visible focus rings, concise labels, and at least 44×44px mobile targets where practical.
 - Icons: use the exact Lucide icons present in source; each navigation destination has a distinct icon. Do not introduce emoji, alternate icon families, decorative illustrations, or invented brand marks.
@@ -37,7 +38,7 @@ Preserve the existing ATLAS identity. The product is calm, precise, restrained, 
 
 ## Responsive application shell
 
-- Desktop (`lg` and up): fixed 256px left sidebar, full navigation labels, 80px brand header, content offset by sidebar width.
+- Desktop (`lg` and up): fixed 256px left sidebar, full navigation labels, 72px brand block aligned with the 72px app header, content offset by sidebar width. The header names the current page; the signed-in identity lives in the account menu behind an initial avatar.
 - Mobile/tablet (below `lg`): no sidebar. Use a compact top bar and fixed bottom navigation that respects `env(safe-area-inset-bottom)`.
 - Mobile navigation must prioritize reachability, readable labels, clear selected state, and 44px minimum interactive targets. A More destination may expose lower-frequency Career, Reviews, Search, and Settings items.
 - Content must never be obscured by the bottom navigation; account for its full height plus safe-area inset.

@@ -87,7 +87,7 @@ export function DaylineCommand({
         <div className="relative px-5 pt-7 pb-6 sm:px-7 sm:pt-9 sm:pb-8">
           <div className="max-w-3xl">
             <div className="flex items-center gap-2">
-              <span className="bg-primary text-primary-foreground inline-flex min-h-7 items-center rounded-full px-3 text-xs font-bold tracking-[0.12em]">
+              <span className="bg-primary-solid text-primary-solid-foreground inline-flex min-h-7 items-center rounded-full px-3 text-xs font-bold tracking-[0.12em]">
                 NOW
               </span>
               <Duration minutes={now.durationMinutes} />
