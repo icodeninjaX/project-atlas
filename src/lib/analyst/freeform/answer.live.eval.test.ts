@@ -29,6 +29,31 @@ const cases: Array<{
   evidence: ToolEvidence[];
 }> = [
   {
+    name: "financial options stay neutral and cite the deterministic comparison",
+    question: "What if my monthly income falls by 20%?",
+    evidence: [
+      ...["Current", "Option 1"].flatMap((label, index) =>
+        ["Monthly income", "Runway estimate"].map((metric) => ({
+          ...base,
+          id: `${label}.${metric}`,
+          metric: `${label} · ${metric}`,
+          value: metric === "Monthly income" ? 400000 - index * 80000 : 6,
+          unit:
+            metric === "Monthly income"
+              ? ("centavos" as const)
+              : ("months" as const),
+          comparisonBasis: `${label}: income change ${index ? "-20%" : "none"}; same source snapshot`,
+          source: { ...base.source, href: "/money/runway" },
+          claimType: index ? ("SCENARIO" as const) : ("FACT" as const),
+          provenance: {
+            ...base.provenance,
+            tool: "compareFinancialScenarios" as const,
+          },
+        })),
+      ),
+    ],
+  },
+  {
     name: "qualified association stays grounded",
     question:
       "What might my recorded expenses and task completions pattern be worth reviewing?",

@@ -132,6 +132,7 @@ summary takes precedence for current next-action guidance.
 | 12. Historical / Longitudinal Metrics Layer | Implemented and deployed, 2026-09-25                                       | 464 application tests, 159 local DB assertions, authenticated desktop/mobile browser checks and build; see [Phase 12 contract](historical-metrics.md)                                                                           | Hosted migration, owner isolation, ready deployment, signed-in History views and one consented Analyst fallback verified 2026-09-25                                               |
 | 13. Cross-domain and Longitudinal Analyst   | Implemented and deployed, 2026-09-25                                       | 472 application tests, 159 local DB assertions, two-owner tool checks, authenticated desktop/mobile browser checks and build; see [Phase 13 contract](cross-domain-analyst.md)                                                  | Hosted deployment, signed-in goal picker, two approved Analyst requests, source paths, safe incomplete-history fallback and clean route error scan verified 2026-09-25            |
 | 14. Pattern and Association Discovery       | Implemented locally, 2026-09-25                                            | Deterministic method, full application and database checks, two-owner tool integration, synthetic live AI evaluations, authenticated desktop/mobile no-finding browser checks; see [Phase 14 contract](pattern-associations.md) | Hosted deployment and qualified-finding browser flow not verified                                                                                                                 |
+| 15. Scenario Intelligence                   | Implemented locally, 2026-09-25                                            | Engine parity, two-owner tool checks, synthetic live AI evaluation and authenticated desktop/mobile comparison checks; see [Phase 15 contract](scenario-intelligence.md)                                                        | Hosted deployment and production comparison flow not verified                                                                                                                     |
 
 Repository health is independent: [formatting debt](repository-formatting-debt.md)
 records 45 historical failures and their local cleanup to zero on 2026-09-24.
@@ -191,8 +192,10 @@ release boundaries. The live Analyst check showed the expected insufficient-hist
 fallback and validation. Phase 13 is implemented and deployed; its
 [production acceptance](cross-domain-analyst.md#production-acceptance--2026-09-25)
 is recorded. Other hosted release gates above remain open. The next planned
-intelligence implementation is **Phase 15 — Scenario Intelligence**. Phase 14's
-local method and release boundary are recorded in [its contract](pattern-associations.md).
+intelligence implementation is **Phase 16 — Next Best Action**. Phase 14's
+local method and release boundary are recorded in [its contract](pattern-associations.md);
+Phase 15's local comparison and release boundary are recorded in
+[its contract](scenario-intelligence.md).
 
 The delivered AI surfaces are intentionally narrow. Universal Capture currently
 produces **one** previewable proposal from five kinds (expense, income, task,
@@ -1925,7 +1928,7 @@ Legacy section anchors are retained for existing links.
 | 12                | 12    | Historical / Longitudinal Metrics Layer | Implemented locally                        |
 | 13                | 13    | Cross-domain and Longitudinal Analyst   | Implemented and deployed                   |
 | 14                | 14    | Pattern and Association Discovery       | Implemented locally                        |
-| 15                | 15    | Scenario Intelligence                   | Planned                                    |
+| 15                | 15    | Scenario Intelligence                   | Implemented locally                        |
 | 16                | 16    | Next Best Action                        | Planned                                    |
 | 17                | 17    | Universal Capture 2.0                   | Planned                                    |
 | 18                | 18    | Multimodal Capture                      | Planned / exploratory formats              |
@@ -2210,7 +2213,7 @@ flow, evidence validation, local acceptance and hosted release limits.
 
 ## Phase 15 — Scenario intelligence
 
-**Status:** Planned; delivery priority 15.
+**Status:** Implemented locally; delivery priority 15. See [Phase 15 contract](scenario-intelligence.md) for supported calculations and release boundaries.
 
 - **Goal:** Let Analyst explain options calculated by existing deterministic
   scenario engines.
@@ -2712,4 +2715,22 @@ lint, typecheck, formatting, production build, and authenticated Chromium
 desktop/mobile browser checks of the no-finding page. A disposable local account
 was removed after the browser run. A qualified-finding card was checked at the
 component level; hosted deployment and a data-rich authenticated browser flow
-remain open. Next planned intelligence phase: Scenario Intelligence (Phase 15).
+remain open. Next planned intelligence phase: Scenario Intelligence (Phase 15),
+subsequently implemented locally.
+
+## Phase 15 implementation closeout — 2026-09-25
+
+Added a bounded, read-only Analyst comparison of the current runway baseline
+with up to two changed options. The tool reads one owner-scoped source snapshot,
+converts stated peso inputs to centavos in ATLAS, runs the existing scenario
+engine, and shows matching figures and assumptions in responsive cards. An
+active-debt picker supports explicitly monthly extra payments with an owner
+check. One-time debt payments, stale baselines, ungrounded assumptions and
+foreign debts cannot become calculated outcomes. The answer model is limited to
+a neutral citation while ATLAS renders the figures. The method and acceptance
+record are in [scenario-intelligence.md](scenario-intelligence.md). Hosted
+deployment remains open. Local acceptance passed 500 application tests (24
+skipped), five real two-owner tool integration tests, 19 synthetic live AI
+evaluations, authenticated Chromium checks at 320px and 1280px, lint,
+typecheck, formatting and production build. Next planned intelligence phase:
+Next Best Action (Phase 16).

@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { calculateRunway, type RunwaySource } from "@/lib/runway/engine";
+import {
+  calculateRunway,
+  calculateScenario,
+  type RunwaySource,
+} from "@/lib/runway/engine";
 import { metricDefinitions } from "@/lib/history/metrics";
 import {
   runway,
+  compareFinancialScenarios,
   timeline,
   related,
   historicalSeries,
@@ -536,6 +541,85 @@ describe("tool evidence adapters", () => {
       '"oneTimePurchaseCentavos":200000',
     );
     expect(JSON.stringify(source)).toBe(before);
+  });
+  it("compares two options against one owner-scoped snapshot with engine parity", async () => {
+    const before = JSON.stringify(source);
+    const result = await compareFinancialScenarios(
+      {
+        alternatives: [
+          {
+            monthlyIncomePesos: null,
+            monthlyIncomeChangePercent: -20,
+            monthlyExpenseChangePesos: "0",
+            oneTimePurchasePesos: "0",
+            extraDebtPayment: null,
+          },
+          {
+            monthlyIncomePesos: null,
+            monthlyExpenseChangePesos: "-100",
+            oneTimePurchasePesos: "250",
+            extraDebtPayment: null,
+          },
+        ],
+      },
+      context,
+    );
+    const analysis = calculateRunway(source, now);
+    const first = calculateScenario(analysis, {
+      monthlyIncomeCentavos: 320000,
+      monthlyExpenseChangeCentavos: 0,
+      oneTimePurchaseCentavos: 0,
+      extraDebtPayment: null,
+      targetMonths: 3,
+    });
+    const fact = (metric: string) =>
+      result.evidence.find((item) => item.metric === metric)?.value;
+    expect(fact("Current · Runway estimate")).toBe(analysis.runwayMonths);
+    expect(fact("Option 1 · Monthly income")).toBe(320000);
+    expect(fact("Option 1 · Monthly free cash flow")).toBe(
+      first.monthlyFreeCashFlowCentavos,
+    );
+    expect(fact("Option 2 · Available liquid balance")).toBe(875000);
+    expect(result.evidence).toHaveLength(15);
+    expect(sources.runway).toHaveBeenCalledOnce();
+    expect(JSON.stringify(source)).toBe(before);
+    expect(JSON.stringify(result)).not.toContain("Private");
+  });
+  it("withholds stale or invalid comparison assumptions", async () => {
+    const option = {
+      monthlyIncomePesos: null,
+      monthlyExpenseChangePesos: "-2000",
+      oneTimePurchasePesos: "0",
+      extraDebtPayment: null,
+    };
+    await expect(
+      compareFinancialScenarios({ alternatives: [option] }, context),
+    ).rejects.toMatchObject({ code: "invalid_input" });
+    source.budget = { ...source.budget!, monthStart: "2026-08-01" };
+    await expect(
+      compareFinancialScenarios({ alternatives: [option] }, context),
+    ).rejects.toMatchObject({ code: "stale_data" });
+  });
+  it("converts a stated peso payment to centavos before calling the engine", async () => {
+    const result = await compareFinancialScenarios(
+      {
+        alternatives: [
+          {
+            monthlyIncomePesos: null,
+            monthlyExpenseChangePesos: null,
+            oneTimePurchasePesos: null,
+            extraDebtPayment: { debtId: id, amountPesos: "100" },
+          },
+        ],
+      },
+      context,
+    );
+    expect(
+      result.evidence.find(
+        (item) => item.metric === "Option 1 · Monthly financial need",
+      )?.value,
+    ).toBe(160000);
+    expect(result.evidence[5]?.comparisonBasis).toContain("₱100.00");
   });
   it("does not silently ignore a foreign or missing scenario debt", async () => {
     await expect(

@@ -20,6 +20,7 @@ import { requestAnalystPlan } from "./provider";
 export type PlannerCallExecution = {
   callId: string;
   tool: ToolName;
+  input: PlannerPlan["calls"][number]["input"];
   status: ToolResult["status"];
   result: ToolResult;
 };
@@ -186,7 +187,7 @@ export async function executeAnalystPlan(
           },
         };
       }
-      return { callId: call.id, tool: call.tool, result };
+      return { callId: call.id, tool: call.tool, input: call.input, result };
     }),
   );
   const completed = await Promise.race([work, deadline]);
@@ -254,6 +255,7 @@ export async function executeAnalystPlan(
     calls.push({
       callId: call.callId,
       tool: call.tool,
+      input: call.input,
       status: result.status,
       result,
     });

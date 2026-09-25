@@ -221,4 +221,72 @@ describe("Analyst planner contract", () => {
       ).calls[0]?.tool,
     ).toBe("runFinancialScenario");
   });
+  it("accepts a stated income drop and rejects an inverted or invented option", () => {
+    const option = {
+      monthlyIncomePesos: null,
+      monthlyIncomeChangePercent: -20,
+      monthlyExpenseChangePesos: "0",
+      oneTimePurchasePesos: "0",
+      extraDebtPayment: null,
+    };
+    const comparison = output({
+      calls: [
+        {
+          id: "call_1",
+          tool: "compareFinancialScenarios",
+          argumentsJson: JSON.stringify({ alternatives: [option] }),
+        },
+      ],
+    });
+    const question = "What if monthly income falls by 20%?";
+    expect(validatePlannerOutput(comparison, question).calls[0]?.tool).toBe(
+      "compareFinancialScenarios",
+    );
+    expect(() =>
+      validatePlannerOutput(comparison, "What if monthly income falls by 10%?"),
+    ).toThrow(/comparison assumptions/i);
+    expect(() =>
+      validatePlannerOutput(
+        output({
+          calls: [
+            {
+              id: "call_1",
+              tool: "compareFinancialScenarios",
+              argumentsJson: JSON.stringify({
+                alternatives: [{ ...option, monthlyIncomeChangePercent: 20 }],
+              }),
+            },
+          ],
+        }),
+        question,
+      ),
+    ).toThrow(/comparison assumptions/i);
+  });
+  it("does not treat digits in a debt ID as a stated peso amount", () => {
+    const debtId = "11111111-1111-4111-8111-111111111111";
+    const question = `What if I pay an extra ₱100 monthly? Selected active debt ID: ${debtId}.`;
+    const plan = (amountPesos: string) =>
+      output({
+        calls: [
+          {
+            id: "call_1",
+            tool: "compareFinancialScenarios",
+            argumentsJson: JSON.stringify({
+              alternatives: [
+                {
+                  monthlyIncomePesos: null,
+                  monthlyExpenseChangePesos: null,
+                  oneTimePurchasePesos: null,
+                  extraDebtPayment: { debtId, amountPesos },
+                },
+              ],
+            }),
+          },
+        ],
+      });
+    expect(validatePlannerOutput(plan("100"), question).calls).toHaveLength(1);
+    expect(() => validatePlannerOutput(plan("11111111"), question)).toThrow(
+      /comparison assumptions/i,
+    );
+  });
 });

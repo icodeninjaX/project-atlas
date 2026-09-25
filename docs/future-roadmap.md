@@ -1,6 +1,6 @@
 # Future roadmap
 
-Last reviewed: 2026-09-24
+Last reviewed: 2026-09-25
 
 The scoped MVP features are implemented. Signals, Capacity-Aware Dayline,
 Personal Runway & Financial Scenarios, Life Timeline, and Knowledge & Spaced
@@ -25,12 +25,12 @@ not checks rerun during this roadmap update.
 The [current release closeout](intelligent-roadmap.md#current-release-closeout)
 covers Capture release flows, deployed Analyst/schema and authenticated-browser
 verification, Graph acceptance/migration/hosted status, and baseline classification.
-The **Phase 9 Analyst Retrieval / Tool Layer** and **Phase 10 Analyst Query
-Planner** are implemented and accepted locally; see their
-[tool contract](analyst-tools.md) and
-[planner contract](analyst-query-planner.md). Hosted release gates remain
-separate. Next implement **Phase 11 — Freeform Grounded Analysis** using only the
-accepted registry and planner.
+Phases 9–15 are implemented locally. Phase 12 Historical Metrics and Phase 13
+Cross-domain Analyst are deployed; Phase 14 Pattern Discovery and Phase 15
+Scenario Intelligence retain separate hosted release gates. See the
+[authoritative delivery status](intelligent-roadmap.md#current-delivery-status)
+and the [Scenario Intelligence contract](scenario-intelligence.md). Next
+implement **Phase 16 — Next Best Action**.
 
 The [authoritative delivery-priority table](intelligent-roadmap.md#phase-numbering-and-delivery-order)
 records the completed local Tool Layer and Query Planner and orders the remaining
@@ -44,7 +44,7 @@ Phases 9–19 follow delivery order: Tool Layer is Phase 9, Query Planner is Pha
 Hard prerequisites are separate; scenario
 explanations need no association phase, Capture 2.0 can be reprioritized without
 Next Best Action, and deliberate decision recording can begin before advanced
-outcome analysis. Phases 11–19 remain planned.
+outcome analysis. Phases 16–19 remain planned.
 
 Implementation prompts, acceptance criteria, exclusions, and phase-specific
 safety rules live in the [Intelligent roadmap](intelligent-roadmap.md).

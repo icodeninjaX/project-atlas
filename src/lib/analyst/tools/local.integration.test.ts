@@ -297,6 +297,17 @@ suite("real local Analyst tool integration", () => {
       },
       getTimelineEvents: { from: month, through: today },
       runFinancialScenario: scenario,
+      compareFinancialScenarios: {
+        alternatives: [
+          {
+            monthlyIncomePesos: null,
+            monthlyIncomeChangePercent: -20,
+            monthlyExpenseChangePesos: "0",
+            oneTimePurchasePesos: "0",
+            extraDebtPayment: null,
+          },
+        ],
+      },
     };
     for (const { name } of listAnalystTools()) {
       const result = await invokeAnalystTool(name, inputs[name] ?? {});
@@ -310,7 +321,11 @@ suite("real local Analyst tool integration", () => {
         estimatedCost: 0,
       });
       expect(result.metadata.queries, name).toBeGreaterThan(0);
-      if (name === "getRunway" || name === "runFinancialScenario")
+      if (
+        name === "getRunway" ||
+        name === "runFinancialScenario" ||
+        name === "compareFinancialScenarios"
+      )
         expect(result.status, name).toBe("ready");
     }
     expect(reads).toBeGreaterThan(13);
@@ -375,6 +390,18 @@ suite("real local Analyst tool integration", () => {
       "unavailable_source",
     );
     expect(result.evidence).toEqual([]);
+    const comparison = await invokeAnalystTool("compareFinancialScenarios", {
+      alternatives: [
+        {
+          monthlyIncomePesos: null,
+          monthlyExpenseChangePesos: "0",
+          oneTimePurchasePesos: "0",
+          extraDebtPayment: { debtId: other.debt, amountPesos: "1" },
+        },
+      ],
+    });
+    expect(comparison.error?.code).toBe("unavailable_source");
+    expect(comparison.evidence).toEqual([]);
   }, 30000);
 
   it("executes a validated planner result through owner-scoped tools", async () => {

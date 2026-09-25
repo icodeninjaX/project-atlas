@@ -97,6 +97,114 @@ beforeEach(() => {
 });
 
 describe("freeform Analyst route", () => {
+  it("requires the comparison tool for a financial what-if", async () => {
+    const response = await POST(
+      request({
+        question: "What if monthly income falls by 20%?",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(await response.json()).toMatchObject({
+      status: "fallback",
+      failureCode: "missing_scenario_comparison",
+    });
+    expect(mocks.answer).not.toHaveBeenCalled();
+  });
+  it("rejects a selected goal for a whole-finance scenario before quota", async () => {
+    const response = await POST(
+      request({
+        question: "What if monthly income falls by 20%?",
+        goalId: "11111111-1111-4111-8111-111111111111",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it("states the one-time debt limitation without reserving quota", async () => {
+    const response = await POST(
+      request({
+        question:
+          "Compare a one-time ₱10,000 toward debt with keeping it as cash.",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(await response.json()).toMatchObject({
+      status: "unsupported",
+      failureCode: "unsupported_one_time_debt_scenario",
+    });
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it("checks the selected debt belongs to the owner before quota", async () => {
+    const missing = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    };
+    missing.select.mockReturnValue(missing);
+    missing.eq.mockReturnValue(missing);
+    mocks.from.mockReturnValueOnce(missing);
+    const response = await POST(
+      request({
+        question: "What if I pay an extra 100 pesos monthly?",
+        debtId: "11111111-1111-4111-8111-111111111111",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(response.status).toBe(404);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.from).toHaveBeenCalledWith("debts");
+  });
+  it("requires the selected debt in the calculated monthly option", async () => {
+    mocks.plan.mockResolvedValueOnce({
+      status: "ready",
+      calls: [
+        {
+          tool: "compareFinancialScenarios",
+          input: { alternatives: [{ extraDebtPayment: null }] },
+        },
+      ],
+      evidence: [item],
+      limitations: [],
+      metadata: { planner: { inputTokens: 90, outputTokens: 20 } },
+    });
+    const response = await POST(
+      request({
+        question: "What if I pay an extra 100 pesos monthly?",
+        debtId: "11111111-1111-4111-8111-111111111111",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(await response.json()).toMatchObject({
+      status: "fallback",
+      failureCode: "missing_selected_debt",
+    });
+    expect(mocks.plan.mock.calls[0]?.[0]).toContain(
+      "11111111-1111-4111-8111-111111111111",
+    );
+    expect(mocks.answer).not.toHaveBeenCalled();
+  });
+  it("sends only calculated comparison evidence to the answer model", async () => {
+    const question = "What if monthly income falls by 20%?";
+    const scenario = {
+      ...item,
+      id: "scenario.current",
+      metric: "Current · Monthly income",
+      provenance: { ...item.provenance, tool: "compareFinancialScenarios" },
+    };
+    mocks.plan.mockResolvedValueOnce({
+      status: "ready",
+      calls: [{ tool: "compareFinancialScenarios" }],
+      evidence: [item, scenario],
+      limitations: [],
+      metadata: { planner: { inputTokens: 90, outputTokens: 20 } },
+    });
+    const response = await POST(
+      request({ question, dataSharingAcknowledged: true }),
+    );
+    expect(response.status).toBe(200);
+    expect(mocks.answer).toHaveBeenCalledWith(question, [scenario]);
+  });
   it("requires the approved pattern tool before explaining an association", async () => {
     const response = await POST(
       request({

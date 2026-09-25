@@ -78,6 +78,26 @@ describe("freeform claim validation", () => {
       ).toBeNull();
     }
   });
+  it("rejects a preferred or guaranteed financial scenario", () => {
+    const scenario = {
+      ...evidence[0]!,
+      provenance: {
+        ...evidence[0]!.provenance,
+        tool: "compareFinancialScenarios" as const,
+      },
+    };
+    for (const text of [
+      "This may be the best option for your finances.",
+      "This option might be safe to choose.",
+      "This could guarantee your financial security.",
+    ]) {
+      expect(
+        validateGroundedAnswer({ claims: [{ ...valid.claims[0], text }] }, [
+          scenario,
+        ]),
+      ).toBeNull();
+    }
+  });
   it("does not recommend action from incomplete data", () => {
     const suggestion = {
       claims: [

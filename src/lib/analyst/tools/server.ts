@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import {
+  compareFinancialScenarios,
   existingEvidence,
   crossDomainHistory,
   goalLinkedActivity,
@@ -246,6 +247,11 @@ export async function invokeAnalystTool(
           return runway(
             tool,
             toolInputs.runFinancialScenario.parse(rawInput),
+            context,
+          );
+        case "compareFinancialScenarios":
+          return compareFinancialScenarios(
+            toolInputs.compareFinancialScenarios.parse(rawInput),
             context,
           );
         default:

@@ -153,6 +153,74 @@ for (const width of [390, 1280]) {
   });
 }
 
+for (const width of [320, 1280]) {
+  test(`Scenario comparison stays usable at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 850 });
+    await page.goto("/analyst");
+    await page
+      .getByRole("textbox", { name: "Ask your own question" })
+      .fill("What if monthly income falls by 20%?");
+    await page.getByRole("checkbox").first().check();
+    const evidence = ["Current", "Option 1", "Option 2"].flatMap(
+      (label, index) =>
+        ["Runway estimate", "Monthly income"].map((metric) => ({
+          id: `scenario.${index}.${metric}`,
+          metric: `${label} · ${metric}`,
+          value:
+            metric === "Runway estimate" ? 6 - index : 400000 - index * 50000,
+          unit: metric === "Runway estimate" ? "months" : "centavos",
+          period: { from: "2026-09-01", through: "2026-09-25" },
+          comparisonBasis: `${label}: stated assumptions`,
+          source: {
+            description: "Runway",
+            recordIds: [],
+            href: "/money/runway",
+          },
+          completeness: "complete",
+          claimType: index === 0 ? "FACT" : "SCENARIO",
+          provenance: {
+            tool: "compareFinancialScenarios",
+            calculationVersion: "1",
+            retrievedAt: "2026-09-25T00:00:00Z",
+            textTrust: "untrusted_data",
+          },
+        })),
+    );
+    await page.route("**/api/analyst/freeform", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "fallback",
+          message: "Calculated comparison available.",
+          evidence,
+          limitations: ["Estimates are not guaranteed outcomes."],
+        }),
+      }),
+    );
+    await page.getByRole("button", { name: "Ask Analyst" }).click();
+    const comparison = page.getByLabel("Runway scenario comparison");
+    await expect(comparison).toBeVisible();
+    await expect(
+      comparison.getByRole("heading", { name: "Current" }),
+    ).toBeVisible();
+    await expect(
+      comparison.getByRole("heading", { name: "Option 1" }),
+    ).toBeVisible();
+    await expect(
+      comparison.getByRole("heading", { name: "Option 2" }),
+    ).toBeVisible();
+    await expect(
+      comparison.getByRole("link", {
+        name: "Review or edit runway assumptions",
+      }),
+    ).toHaveAttribute("href", "/money/runway");
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+  });
+}
+
 test("selected goal reaches freeform Analyst and shows its current path", async ({
   page,
 }) => {

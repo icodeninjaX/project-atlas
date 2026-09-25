@@ -66,6 +66,54 @@ const cases: PlannerEvaluationCase[] = [
 ];
 
 suite("live synthetic Analyst planner evaluation", () => {
+  it("plans one supported percentage-income scenario without inventing amounts", async () => {
+    const result = await requestAnalystPlan(
+      "What if my monthly income falls by 20%? Compare this with my current runway.",
+    );
+    expect(result.status, JSON.stringify(result)).toBe("planned");
+    if (result.status !== "planned") return;
+    expect(result.plan.calls, JSON.stringify(result)).toHaveLength(1);
+    expect(result.plan.calls[0]).toMatchObject({
+      tool: "compareFinancialScenarios",
+      input: {
+        alternatives: [
+          {
+            monthlyIncomePesos: null,
+            monthlyIncomeChangePercent: -20,
+            extraDebtPayment: null,
+          },
+        ],
+      },
+    });
+  }, 20000);
+  it("does not model a one-time debt payment as a monthly payment", async () => {
+    const result = await requestAnalystPlan(
+      "Compare paying a one-time ₱10,000 toward debt next month with keeping it as emergency cash.",
+    );
+    expect(result.status, JSON.stringify(result)).not.toBe("planned");
+    if (result.status === "error")
+      expect(result.error.code).toBe("invalid_plan");
+  }, 20000);
+  it("uses the literal selected debt for a monthly extra-payment option", async () => {
+    const debtId = "11111111-1111-4111-8111-111111111111";
+    const result = await requestAnalystPlan(
+      `What if I pay an extra ₱100 monthly toward my debt? Selected active debt ID: ${debtId}. Extra payments are monthly.`,
+    );
+    expect(result.status, JSON.stringify(result)).toBe("planned");
+    if (result.status !== "planned") return;
+    expect(result.plan.calls, JSON.stringify(result)).toHaveLength(1);
+    expect(result.plan.calls[0]).toMatchObject({
+      tool: "compareFinancialScenarios",
+      input: {
+        alternatives: [
+          {
+            monthlyIncomePesos: null,
+            extraDebtPayment: { debtId, amountPesos: "100" },
+          },
+        ],
+      },
+    });
+  }, 20000);
   it("uses literal goal context without inventing past goal progress", async () => {
     const goalId = "11111111-1111-4111-8111-111111111111";
     const today = new Intl.DateTimeFormat("en-CA", {
@@ -113,7 +161,7 @@ suite("live synthetic Analyst planner evaluation", () => {
     );
     expect(result.status, JSON.stringify(result)).toBe("planned");
     if (result.status !== "planned") return;
-    expect(result.plan.calls).toHaveLength(1);
+    expect(result.plan.calls, JSON.stringify(result)).toHaveLength(1);
     expect(result.plan.calls[0]).toMatchObject({
       tool: "getCrossDomainHistory",
       input: {

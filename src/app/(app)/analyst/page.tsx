@@ -17,6 +17,16 @@ export default async function AnalystPage() {
           .order("title")
           .limit(100)
       : null;
+  const debts =
+    client && user?.data.user
+      ? await client
+          .from("debts")
+          .select("id,creditor_name")
+          .eq("user_id", user.data.user.id)
+          .eq("status", "active")
+          .order("creditor_name")
+          .limit(100)
+      : null;
   return (
     <div className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
       <PageHeading
@@ -25,7 +35,10 @@ export default async function AnalystPage() {
         description="Ask about supported ATLAS records. ATLAS calculates the facts and shows the sources behind each answer."
       />
       <div className="mt-8">
-        <FreeformWorkspace goals={goals?.data ?? []} />
+        <FreeformWorkspace
+          goals={goals?.data ?? []}
+          debts={debts?.data ?? []}
+        />
       </div>
       <h2 className="mt-10 text-lg font-semibold">Suggested questions</h2>
       <AnalystWorkspace

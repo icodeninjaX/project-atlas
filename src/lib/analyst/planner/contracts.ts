@@ -1,6 +1,10 @@
 import "server-only";
 import { z } from "zod";
 import {
+  pesoInputToCentavos,
+  signedPesoInputToCentavos,
+} from "@/lib/money/money";
+import {
   toolDescriptions,
   toolInputs,
   type ToolInput,
@@ -9,8 +13,8 @@ import {
 
 export const PLANNER_LIMITS = Object.freeze({
   questionChars: 500,
-  providerInputChars: 18_000,
-  inputTokens: 16_000,
+  providerInputChars: 19_500,
+  inputTokens: 18_000,
   outputTokens: 500,
   estimatedCostUsdMicros: 3_000,
   authenticationTimeoutMs: 5_000,
@@ -186,6 +190,17 @@ function referencedIds(tool: ToolName, input: unknown): string[] {
     )
       return [payment.debtId];
   }
+  if (tool === "compareFinancialScenarios" && Array.isArray(value.alternatives))
+    return value.alternatives.flatMap((option) => {
+      if (!option || typeof option !== "object") return [];
+      const payment = (option as Record<string, unknown>).extraDebtPayment;
+      return payment &&
+        typeof payment === "object" &&
+        "debtId" in payment &&
+        typeof payment.debtId === "string"
+        ? [payment.debtId]
+        : [];
+    });
   return [];
 }
 
@@ -226,6 +241,26 @@ function statedPesoAmounts(question: string) {
   );
 }
 
+function statedCurrencyAmounts(question: string) {
+  const marked = [
+    ...[...question.matchAll(/(?:₱|PHP\s*)(\d[\d,]*(?:\.\d{1,2})?)/gi)].map(
+      (match) => match[1]!,
+    ),
+    ...[
+      ...question.matchAll(/(\d[\d,]*(?:\.\d{1,2})?)\s*(?:pesos?|PHP)\b/gi),
+    ].map((match) => match[1]!),
+  ];
+  return new Set(
+    marked.flatMap((amount) => {
+      try {
+        return [pesoInputToCentavos(amount)];
+      } catch {
+        return [];
+      }
+    }),
+  );
+}
+
 function scenarioIsGrounded(input: unknown, question: string) {
   if (!input || typeof input !== "object") return false;
   const value = input as Record<string, unknown>;
@@ -252,6 +287,74 @@ function scenarioIsGrounded(input: unknown, question: string) {
   );
 }
 
+function comparisonIsGrounded(input: unknown, question: string) {
+  if (!input || typeof input !== "object" || !("alternatives" in input))
+    return false;
+  const alternatives = (input as { alternatives: unknown }).alternatives;
+  if (!Array.isArray(alternatives) || alternatives.length < 1) return false;
+  const percentages = new Set(
+    [...question.matchAll(/(-?\d+(?:\.\d+)?)\s*(?:%|percent)/gi)].map((match) =>
+      Number(match[1]),
+    ),
+  );
+  const decliningPercentages = new Set(
+    [
+      ...question.matchAll(
+        /(?:falls?|drops?|declines?|decreases?|down|reduced?)\s+(?:by\s+)?(\d+(?:\.\d+)?)\s*(?:%|percent)/gi,
+      ),
+    ].map((match) => Number(match[1])),
+  );
+  return alternatives.every((option) => {
+    if (!option || typeof option !== "object") return false;
+    const value = option as Record<string, unknown>;
+    if (
+      value.monthlyIncomeChangePercent !== undefined &&
+      (typeof value.monthlyIncomeChangePercent !== "number" ||
+        !percentages.has(Math.abs(value.monthlyIncomeChangePercent)))
+    )
+      return false;
+    if (
+      typeof value.monthlyIncomeChangePercent === "number" &&
+      decliningPercentages.has(Math.abs(value.monthlyIncomeChangePercent)) &&
+      value.monthlyIncomeChangePercent > 0
+    )
+      return false;
+    if (
+      value.extraDebtPayment !== null &&
+      !/\b(?:monthly|per month|each month)\b/i.test(question)
+    )
+      return false;
+    const stated = statedCurrencyAmounts(question);
+    const amounts = [
+      value.monthlyIncomePesos === null
+        ? null
+        : pesoInputToCentavos(value.monthlyIncomePesos as string),
+      Math.abs(
+        signedPesoInputToCentavos(
+          (value.monthlyExpenseChangePesos as string | null) ?? "0",
+        ),
+      ),
+      pesoInputToCentavos((value.oneTimePurchasePesos as string | null) ?? "0"),
+      (value.extraDebtPayment as { amountPesos?: string } | null)?.amountPesos
+        ? pesoInputToCentavos(
+            (value.extraDebtPayment as { amountPesos: string }).amountPesos,
+          )
+        : undefined,
+    ];
+    if (
+      amounts.some(
+        (amount) =>
+          typeof amount === "number" && amount !== 0 && !stated.has(amount),
+      )
+    )
+      return false;
+    return (
+      value.targetMonths === undefined ||
+      new RegExp(`\\b${value.targetMonths}\\s*months?\\b`, "i").test(question)
+    );
+  });
+}
+
 function normalizeCalls(
   calls: Array<{ id: string; tool: ToolName; rawInput: unknown }>,
   question?: string,
@@ -266,6 +369,13 @@ function normalizeCalls(
   );
   if (new Set(signatures).size !== signatures.length)
     throw new PlannerContractError("Duplicate retrieval is not allowed.");
+  if (
+    normalized.filter((call) => call.tool === "compareFinancialScenarios")
+      .length > 1 ||
+    (normalized.some((call) => call.tool === "compareFinancialScenarios") &&
+      normalized.some((call) => call.tool === "runFinancialScenario"))
+  )
+    throw new PlannerContractError("Use one bounded scenario comparison.");
   if (question) {
     const lowerQuestion = question.toLowerCase();
     if (
@@ -287,6 +397,16 @@ function normalizeCalls(
     )
       throw new PlannerContractError(
         "Clarification is required for unstated scenario assumptions.",
+      );
+    if (
+      normalized.some(
+        (call) =>
+          call.tool === "compareFinancialScenarios" &&
+          !comparisonIsGrounded(call.input, question),
+      )
+    )
+      throw new PlannerContractError(
+        "Clarification is required for unstated comparison assumptions.",
       );
   }
   return normalized;

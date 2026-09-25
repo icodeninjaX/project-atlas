@@ -70,6 +70,50 @@ const scenario = z
     targetMonths: z.number().int().min(1).max(24),
   })
   .strict();
+const peso = z.string().regex(/^\d{1,10}(?:\.\d{1,2})?$/);
+const signedPeso = z.string().regex(/^-?\d{1,10}(?:\.\d{1,2})?$/);
+const scenarioOption = z
+  .object({
+    monthlyIncomePesos: peso.nullable(),
+    monthlyIncomeChangePercent: z.number().min(-100).max(100).optional(),
+    monthlyExpenseChangePesos: signedPeso.nullable(),
+    oneTimePurchasePesos: peso.nullable(),
+    extraDebtPayment: z
+      .object({ debtId: z.uuid(), amountPesos: peso })
+      .strict()
+      .nullable(),
+    targetMonths: z.number().int().min(1).max(24).optional(),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      value.monthlyIncomeChangePercent === undefined ||
+      value.monthlyIncomePesos === null,
+    "Choose an income amount or percentage, not both.",
+  );
+const scenarioComparison = z
+  .object({ alternatives: z.array(scenarioOption).min(1).max(2) })
+  .strict()
+  .refine(
+    (value) =>
+      value.alternatives.every(
+        (item) =>
+          item.monthlyIncomePesos !== null ||
+          item.monthlyIncomeChangePercent !== undefined ||
+          Number(item.monthlyExpenseChangePesos ?? 0) !== 0 ||
+          Number(item.oneTimePurchasePesos ?? 0) !== 0 ||
+          item.extraDebtPayment !== null ||
+          item.targetMonths !== undefined,
+      ),
+    "Every alternative must change at least one assumption.",
+  )
+  .refine(
+    (value) =>
+      value.alternatives.length === 1 ||
+      JSON.stringify(value.alternatives[0]) !==
+        JSON.stringify(value.alternatives[1]),
+    "Compare distinct alternatives.",
+  );
 
 /** No owner, SQL, arbitrary table, prompt, or mutation arguments are accepted. */
 export const toolInputs = {
@@ -143,6 +187,7 @@ export const toolInputs = {
     .refine(boundedPeriod),
   getRunway: empty,
   runFinancialScenario: scenario,
+  compareFinancialScenarios: scenarioComparison,
 } as const;
 export type ToolName = keyof typeof toolInputs;
 export type ToolInput<N extends ToolName> = z.infer<(typeof toolInputs)[N]>;
@@ -221,4 +266,6 @@ export const toolDescriptions: Record<ToolName, string> = {
     "Existing deterministic runway calculation with disclosed baseline coverage.",
   runFinancialScenario:
     "Existing runway scenario calculation under explicit assumptions; never writes.",
+  compareFinancialScenarios:
+    "Compare one or two changed runway alternatives with the same current baseline, which this tool automatically includes. Never include an unchanged baseline in alternatives or call getRunway too. Copy explicit peso amounts into *Pesos strings without converting to centavos; ATLAS does that. Income can be an absolute monthly peso amount or a percentage change. Expense change, one-time purchase and extra debt payment (monthly only) use the existing engine. Omit targetMonths to keep the current target. No one-time debt payoff, historical balance, guaranteed outcome or record write.",
 };

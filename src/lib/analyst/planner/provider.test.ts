@@ -55,7 +55,7 @@ describe("Analyst planner provider boundary", () => {
     expect(request.max_completion_tokens).toBe(PLANNER_LIMITS.outputTokens);
     expect(request.response_format.json_schema.strict).toBe(true);
     expect(request.messages[0].content).toContain("untrusted data");
-    expect(request.messages[1].content).toContain("2026-09-25");
+    expect(request.messages.at(-1).content).toContain("2026-09-25");
     expect(response.metadata.estimatedCostUsdMicros).toBeGreaterThan(0);
   });
 

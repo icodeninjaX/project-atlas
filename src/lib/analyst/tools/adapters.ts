@@ -10,6 +10,11 @@ import {
 import { retrieveEvidence } from "@/lib/analyst/server";
 import { getRelatedEntities } from "@/lib/graph/server";
 import { calculateScenario } from "@/lib/runway/engine";
+import {
+  formatCentavos,
+  pesoInputToCentavos,
+  signedPesoInputToCentavos,
+} from "@/lib/money/money";
 import { loadRunwayWorkspace } from "@/lib/runway/server";
 import { loadTimelinePage } from "@/lib/timeline/server";
 import {
@@ -834,6 +839,139 @@ export async function runway(
               completeness: "complete",
             }),
           ],
+    ),
+  };
+}
+
+/** One source snapshot for the baseline and every alternative. No writes. */
+export async function compareFinancialScenarios(
+  input: ToolInput<"compareFinancialScenarios">,
+  { client, now }: Context,
+): Promise<ToolPayload> {
+  const workspace = await loadRunwayWorkspace(now, client);
+  if (!workspace) throw new ToolFailure("unavailable_source");
+  const baseline = workspace.analysis;
+  if (baseline.status !== "ready")
+    throw new ToolFailure("insufficient_history");
+  if (
+    baseline.baselineSource === "budget" &&
+    workspace.source.budget &&
+    workspace.source.budget.monthStart < workspace.monthStart
+  )
+    throw new ToolFailure("stale_data");
+
+  const alternatives = input.alternatives.map((option) => {
+    if (
+      option.extraDebtPayment &&
+      !baseline.debts.some(
+        (debt) => debt.id === option.extraDebtPayment?.debtId,
+      )
+    )
+      throw new ToolFailure("unavailable_source");
+    const monthlyExpenseChangeCentavos = signedPesoInputToCentavos(
+      option.monthlyExpenseChangePesos ?? "0",
+    );
+    const oneTimePurchaseCentavos = pesoInputToCentavos(
+      option.oneTimePurchasePesos ?? "0",
+    );
+    const extraDebtPayment = option.extraDebtPayment
+      ? {
+          debtId: option.extraDebtPayment.debtId,
+          amountCentavos: pesoInputToCentavos(
+            option.extraDebtPayment.amountPesos,
+          ),
+        }
+      : null;
+    if (baseline.monthlyEssentialCentavos + monthlyExpenseChangeCentavos < 0)
+      throw new ToolFailure("invalid_input");
+    const monthlyIncomeCentavos =
+      option.monthlyIncomeChangePercent === undefined
+        ? option.monthlyIncomePesos === null
+          ? null
+          : pesoInputToCentavos(option.monthlyIncomePesos)
+        : Math.round(
+            baseline.monthlyIncomeCentavos *
+              (1 + option.monthlyIncomeChangePercent / 100),
+          );
+    if (
+      monthlyIncomeCentavos !== null &&
+      (!Number.isSafeInteger(monthlyIncomeCentavos) ||
+        monthlyIncomeCentavos > 1_000_000_000_000)
+    )
+      throw new ToolFailure("invalid_input");
+    const resolved = {
+      monthlyIncomeCentavos,
+      monthlyExpenseChangeCentavos,
+      oneTimePurchaseCentavos,
+      extraDebtPayment,
+      targetMonths: option.targetMonths ?? baseline.targetMonths,
+    };
+    if (
+      resolved.monthlyIncomeCentavos === null &&
+      resolved.monthlyExpenseChangeCentavos === 0 &&
+      resolved.oneTimePurchaseCentavos === 0 &&
+      resolved.extraDebtPayment === null &&
+      resolved.targetMonths === baseline.targetMonths
+    )
+      throw new ToolFailure("invalid_input");
+    return { option, resolved, result: calculateScenario(baseline, resolved) };
+  });
+  const months = [...baseline.includedMonths].sort();
+  const period = {
+    from: months[0] ?? workspace.source.budget?.monthStart ?? manilaToday(now),
+    through: manilaToday(now),
+  };
+  const recordIds = [
+    ...baseline.selectedAccounts.map((item) => item.id),
+    ...baseline.selectedCategories.map((item) => item.id),
+    ...baseline.debts.map((item) => item.id),
+  ].slice(0, 20);
+  const source = {
+    description: "Current runway accounts, categories, debts and baseline",
+    recordIds,
+    href: "/money/runway",
+  };
+  const metrics = [
+    ["availableLiquidCentavos", "Available liquid balance", "centavos"],
+    ["monthlyNeedCentavos", "Monthly financial need", "centavos"],
+    ["monthlyIncomeCentavos", "Monthly income", "centavos"],
+    ["monthlyFreeCashFlowCentavos", "Monthly free cash flow", "centavos"],
+    ["runwayMonths", "Runway estimate", "months"],
+  ] as const;
+  const commonBasis = `Runway engine version 1. Current accounts and active debts; essential baseline: ${baseline.baselineSource}; income source: ${baseline.incomeSource}; included months: ${months.join(", ") || "none"}; target: ${baseline.targetMonths} months.`;
+  const rows = [
+    { label: "Current", result: baseline, assumptions: "No changes" },
+    ...alternatives.map(({ option, resolved, result }, index) => ({
+      label: `Option ${index + 1}`,
+      result,
+      assumptions: `Monthly income ${option.monthlyIncomeChangePercent === undefined ? (resolved.monthlyIncomeCentavos === null ? "unchanged" : `set to ${formatCentavos(resolved.monthlyIncomeCentavos)}`) : `${option.monthlyIncomeChangePercent}% change`}; monthly essential expense change ${formatCentavos(resolved.monthlyExpenseChangeCentavos)}; one-time purchase ${formatCentavos(resolved.oneTimePurchaseCentavos)}; extra monthly debt payment ${formatCentavos(resolved.extraDebtPayment?.amountCentavos ?? 0)}; target ${resolved.targetMonths} months.`,
+    })),
+  ];
+  return {
+    status: "ready",
+    limitations: [
+      "These are estimates under stated assumptions, not guaranteed outcomes or advice to move money. No records were changed.",
+      "The same current owner-scoped baseline was used for every option. Recorded history, current budget or profile fallback may be incomplete; review the linked runway source before a financial decision.",
+      "Extra debt payments mean an extra amount every month. One-time debt payoff and payoff dates are not modeled here.",
+    ],
+    evidence: rows.flatMap(({ label, result, assumptions }) =>
+      metrics.flatMap(([key, metric, unit]) =>
+        result[key] === null
+          ? []
+          : [
+              makeFact("compareFinancialScenarios", now, {
+                id: `${label}.${key}`,
+                metric: `${label} · ${metric}`,
+                value: result[key]!,
+                unit,
+                period,
+                claimType: label === "Current" ? "FACT" : "SCENARIO",
+                comparisonBasis: `${commonBasis} ${label}: ${assumptions}`,
+                source,
+                completeness: "complete",
+              }),
+            ],
+      ),
     ),
   };
 }

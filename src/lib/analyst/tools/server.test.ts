@@ -94,7 +94,7 @@ afterEach(() => {
 
 describe("independent Analyst tools", () => {
   it("exposes only named read tools with strict schemas", () => {
-    expect(listAnalystTools()).toHaveLength(17);
+    expect(listAnalystTools()).toHaveLength(18);
     expect(listAnalystTools().map((tool) => tool.name)).toEqual(
       expect.arrayContaining([
         "getCrossDomainHistory",

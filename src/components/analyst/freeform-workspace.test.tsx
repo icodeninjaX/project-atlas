@@ -9,6 +9,96 @@ afterEach(() => {
 });
 
 describe("Freeform Analyst workspace", () => {
+  it("stacks a source-linked scenario comparison with assumptions", async () => {
+    const user = userEvent.setup();
+    const evidence = ["Current", "Option 1", "Option 2"].map(
+      (label, index) => ({
+        id: `scenario.${index}`,
+        metric: `${label} · Runway estimate`,
+        value: 6 - index,
+        unit: "months",
+        period: { from: "2026-09-01", through: "2026-09-24" },
+        comparisonBasis: `${label}: stated assumptions`,
+        completeness: "complete",
+        source: { description: "Runway", recordIds: [], href: "/money/runway" },
+        claimType: index === 0 ? "FACT" : "SCENARIO",
+        provenance: {
+          tool: "compareFinancialScenarios",
+          calculationVersion: "1",
+          retrievedAt: "2026-09-24T00:00:00Z",
+          textTrust: "untrusted_data",
+        },
+      }),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            status: "fallback",
+            message: "Calculated comparison available.",
+            evidence,
+            limitations: [],
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+    render(<FreeformWorkspace />);
+    await user.type(
+      screen.getByRole("textbox", { name: "Ask your own question" }),
+      "What if monthly income falls by 20%?",
+    );
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Ask Analyst" }));
+    const comparison = await screen.findByLabelText(
+      "Runway scenario comparison",
+    );
+    expect(comparison).toHaveTextContent("Current: stated assumptions");
+    expect(comparison).toHaveTextContent("Option 1: stated assumptions");
+    expect(comparison).toHaveTextContent("Option 2: stated assumptions");
+    expect(
+      screen.getByRole("link", { name: "Review or edit runway assumptions" }),
+    ).toHaveAttribute("href", "/money/runway");
+  });
+  it("sends the selected active debt with a monthly scenario", async () => {
+    const user = userEvent.setup();
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ status: "fallback", evidence: [], limitations: [] }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetch);
+    render(
+      <FreeformWorkspace
+        debts={[
+          {
+            id: "11111111-1111-4111-8111-111111111111",
+            creditor_name: "Test debt",
+          },
+        ]}
+      />,
+    );
+    await user.type(
+      screen.getByRole("textbox", { name: "Ask your own question" }),
+      "What if I pay an extra 100 pesos monthly?",
+    );
+    await user.selectOptions(
+      screen.getByRole("combobox", {
+        name: "Active debt for a monthly payment scenario (optional)",
+      }),
+      "11111111-1111-4111-8111-111111111111",
+    );
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Ask Analyst" }));
+    await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
+    expect(JSON.parse(fetch.mock.calls[0]![1].body)).toMatchObject({
+      debtId: "11111111-1111-4111-8111-111111111111",
+    });
+  });
   it("requires disclosure and opens cited evidence on narrow layouts", async () => {
     const user = userEvent.setup();
     const fetch = vi.fn().mockResolvedValue(

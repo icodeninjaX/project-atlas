@@ -17,6 +17,7 @@ const inputSchema = z
   .object({
     question: plannerQuestionSchema,
     goalId: z.uuid().optional(),
+    debtId: z.uuid().optional(),
     dataSharingAcknowledged: z.literal(true),
   })
   .strict();
@@ -63,6 +64,21 @@ export async function POST(request: Request) {
       { error: "Use a shorter question when selecting a goal." },
       400,
     );
+  if (parsed.data.debtId && parsed.data.question.length > 400)
+    return json(
+      { error: "Use a shorter question when selecting a debt." },
+      400,
+    );
+  if (parsed.data.debtId && parsed.data.goalId)
+    return json({ error: "Select a goal or a debt for one question." }, 400);
+  if (
+    parsed.data.debtId &&
+    !/\b(?:monthly|per month|each month)\b/i.test(parsed.data.question)
+  )
+    return json(
+      { error: "State that the extra debt payment is monthly." },
+      400,
+    );
   if (parsed.data.goalId) {
     const goal = await supabase
       .from("goals")
@@ -73,15 +89,51 @@ export async function POST(request: Request) {
     if (goal.error || !goal.data)
       return json({ error: "The selected goal is unavailable." }, 404);
   }
+  if (parsed.data.debtId) {
+    const debt = await supabase
+      .from("debts")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .eq("id", parsed.data.debtId)
+      .maybeSingle();
+    if (debt.error || !debt.data)
+      return json({ error: "The selected active debt is unavailable." }, 404);
+  }
   const associationQuestion =
     /\b(?:correlat\w*|associat\w*|coincid\w*|mov\w* together|pattern between)\b/i.test(
       parsed.data.question,
     );
+  const scenarioQuestion =
+    /\b(?:what if|scenario|runway if|runway under|income (?:falls|drops|decreases)|expenses? (?:rise|increase))\b/i.test(
+      parsed.data.question,
+    );
+  const oneTimeDebtQuestion =
+    /\b(?:one[- ]time|lump[- ]sum)\b.*\b(?:debt|loan|pay(?:ment|off)?)\b|\b(?:debt|loan)\b.*\b(?:one[- ]time|lump[- ]sum)\b/i.test(
+      parsed.data.question,
+    );
+  if (oneTimeDebtQuestion)
+    return json({
+      status: "unsupported",
+      failureCode: "unsupported_one_time_debt_scenario",
+      message:
+        "ATLAS can compare extra monthly debt payments, but cannot model a one-time debt payment here. Review or edit your assumptions in Runway.",
+      evidence: [],
+      limitations: ["No payoff date or one-time debt outcome was calculated."],
+    });
   if (associationQuestion && parsed.data.goalId)
     return json(
       {
         error:
           "Pattern testing compares whole-domain history, not a selected goal.",
+      },
+      400,
+    );
+  if (scenarioQuestion && parsed.data.goalId)
+    return json(
+      {
+        error:
+          "Runway scenarios use whole-finance assumptions. Clear the selected goal to compare options.",
       },
       400,
     );
@@ -123,7 +175,9 @@ export async function POST(request: Request) {
   try {
     const plannerQuestion = parsed.data.goalId
       ? `${parsed.data.question} Selected goal ID: ${parsed.data.goalId}.`
-      : parsed.data.question;
+      : parsed.data.debtId
+        ? `${parsed.data.question} Selected active debt ID: ${parsed.data.debtId}. Extra payments are monthly.`
+        : parsed.data.question;
     const plan = await runAnalystQueryPlanner(plannerQuestion);
     const plannerUsage =
       "calls" in plan ? plan.metadata.planner : plan.metadata;
@@ -172,11 +226,21 @@ export async function POST(request: Request) {
     const usesPattern = plan.calls.some(
       (call) => call.tool === "getPatternAssociation",
     );
+    const usesScenario = plan.calls.some(
+      (call) => call.tool === "compareFinancialScenarios",
+    );
     if (usesPattern && parsed.data.goalId) {
       outcome = "insufficient";
       return fallback(
         "The pattern test covers whole-domain history and cannot establish an association for the selected goal.",
         "unsupported_goal_pattern",
+      );
+    }
+    if (usesScenario && parsed.data.goalId) {
+      outcome = "insufficient";
+      return fallback(
+        "Runway scenarios cover the whole financial baseline, not the selected goal.",
+        "unsupported_goal_scenario",
       );
     }
     if (associationQuestion && !usesPattern) {
@@ -185,6 +249,33 @@ export async function POST(request: Request) {
         "A reliable association requires the approved pattern test. Review the available facts below.",
         "missing_pattern_test",
       );
+    }
+    if (scenarioQuestion && !usesScenario) {
+      outcome = "insufficient";
+      return fallback(
+        "A financial what-if needs the approved scenario comparison. Review the available facts below or edit your assumptions.",
+        "missing_scenario_comparison",
+      );
+    }
+    if (parsed.data.debtId) {
+      const selectedDebtUsed = plan.calls.some((call) => {
+        if (call.tool !== "compareFinancialScenarios") return false;
+        const input = call.input as {
+          alternatives?: Array<{
+            extraDebtPayment?: { debtId: string } | null;
+          }>;
+        };
+        return input.alternatives?.some(
+          (option) => option.extraDebtPayment?.debtId === parsed.data.debtId,
+        );
+      });
+      if (!selectedDebtUsed) {
+        outcome = "insufficient";
+        return fallback(
+          "A monthly debt scenario needs the selected active debt. Review the available facts below or edit your question.",
+          "missing_selected_debt",
+        );
+      }
     }
     if (
       parsed.data.goalId &&
@@ -211,7 +302,11 @@ export async function POST(request: Request) {
         ? evidence.filter(
             (item) => item.provenance.tool === "getPatternAssociation",
           )
-        : evidence;
+        : usesScenario
+          ? evidence.filter(
+              (item) => item.provenance.tool === "compareFinancialScenarios",
+            )
+          : evidence;
     if (explanationEvidence.length > ANSWER_LIMITS.evidenceItems) {
       outcome = "context_limit";
       return fallback(
