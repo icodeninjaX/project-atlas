@@ -1,6 +1,6 @@
 # Phase 16 — Next Best Action
 
-**Implementation:** Local, 2026-09-25. Hosted migration, deployment, and authenticated production browser verification remain open.
+**Implementation and production release:** 2026-09-25.
 
 ## Delivered scope
 
@@ -18,4 +18,14 @@ This first action type uses existing Dayline priorities and recorded career data
 - A disposable signed-in local account passed the Chromium review at 1280px and 320px. The browser check confirmed the source link, cancellation without a task, and confirmation creating one task; the account was deleted afterward.
 - Lint, typecheck, formatting, and production build passed.
 
-The local `.env.local` points at a hosted Supabase project, so the browser test explicitly overrode it with the disposable local Supabase instance. No test account or record was created in the hosted project. Apply both migrations in order and verify a signed-in, data-rich flow in the intended release environment before calling Phase 16 deployed.
+The local browser test explicitly used the disposable local Supabase instance even though `.env.local` points at the hosted project.
+
+## Production acceptance — 2026-09-25
+
+- Applied `20260925130000_next_best_action.sql` and `20260925130100_fix_application_timeline_trigger.sql` to the hosted ProjectAtlas database in order. Hosted migration history matches the repository versions. The choice table, RPC, and application timeline trigger were inspected. Anonymous RPC execution and direct authenticated choice insertion are denied.
+- A hosted transactional two-owner database check rejected a foreign confirmation, created one task for the owner, and returned `already_confirmed` for a repeat. Its synthetic rows were rolled back.
+- Commit `c2cc09a43d8f6aea732fe54f0b3efa76516188cc` reached the production alias through Vercel deployment `dpl_CcLjjn3uYrzDzALxh8dPn3uBei3e` in the READY state. GitHub CI run `36144033900` passed its quality job; CI E2E was skipped because it has no disposable credentials. Production `/api/health` returned 200 with `Cache-Control: no-store`, and the deployment error scan found no errors.
+- A disposable hosted account signed in and created two follow-up applications. The dashboard showed two proposals at desktop and 320px, with no horizontal overflow. Review and cancel left the proposal available. Confirmation created one task; dismissal stored the other choice. The initial browser run exceeded its overall 30-second test limit after the dismissal click, before its toast assertion. Hosted database inspection confirmed one `confirmed` choice with one task and one `dismissed` choice without a task. A separate signed-in browser run passed after reload: both proposals remained resolved and the task appeared in Tasks at 320px.
+- The disposable account and its two applications, task, and choices were deleted. Hosted counts for that account were all zero afterward. The production runtime error scan found no dashboard errors during the release check.
+
+The hosted security advisor still reports existing internal-table RLS and signed-in `SECURITY DEFINER` warnings, plus disabled leaked-password protection. The new authenticated choice RPC is also flagged as a signed-in definer function; its owner and state checks, restricted execute grant, and atomic choice/task write were verified for this phase. Broader production security configuration remains tracked in [MVP status](mvp-status.md).
