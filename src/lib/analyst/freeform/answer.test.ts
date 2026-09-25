@@ -66,6 +66,8 @@ describe("freeform claim validation", () => {
       "Expenses increased by 25%.",
       "Debt fell because income rose.",
       "This always proves progress.",
+      "These patterns may explain the change in tasks.",
+      "This may be a cause of task completion.",
       "Your finances are healthy.",
     ]) {
       expect(

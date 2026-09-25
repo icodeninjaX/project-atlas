@@ -119,6 +119,13 @@ export const toolInputs = {
         metricDomain(value.metrics[0]) !== metricDomain(value.metrics[1]),
       "Choose two different domains across two to six calendar months.",
     ),
+  getPatternAssociation: z
+    .object({ metrics: z.tuple([z.enum(metricKeys), z.enum(metricKeys)]) })
+    .strict()
+    .refine(
+      (value) => value.metrics[0] !== value.metrics[1],
+      "Choose two different metrics.",
+    ),
   getRelatedEntities: z
     .object({
       entityType: z.enum(graphEntityTypes),
@@ -141,7 +148,7 @@ export type ToolName = keyof typeof toolInputs;
 export type ToolInput<N extends ToolName> = z.infer<(typeof toolInputs)[N]>;
 
 export type ToolEvidence = Omit<Evidence, "unit"> & {
-  unit: Evidence["unit"] | "months" | "event" | "relationship";
+  unit: Evidence["unit"] | "months" | "event" | "relationship" | "correlation";
   claimType: "FACT" | "TREND" | "SCENARIO" | "RECOMMENDATION";
   provenance: {
     tool: ToolName;
@@ -202,6 +209,8 @@ export const toolDescriptions: Record<ToolName, string> = {
     "Versioned whole-domain historical series. Metric must be one of income_centavos, expense_centavos, debt_payments_centavos, task_completions, knowledge_reviews, review_overall_score. Supply inclusive from/through dates and grain day/week/month, up to twelve buckets. Call once per metric; two calls with the same dates compare two domains. Includes source counts and coverage. No past balances, overdue counts or goal progress. No category or entity ID is needed.",
   getCrossDomainHistory:
     "Compare two different whole-domain recorded metrics across two to six aligned calendar months. Supply inclusive from/through dates and two metric keys. Returns period facts and only emits change facts when the first and last months are complete and have enough source records. Never attributes whole-domain changes to a goal or infers causation.",
+  getPatternAssociation:
+    "Test whether monthly changes in two different supported metrics were associated in the last eleven completed calendar months. Supply exactly two metric keys. Deterministic checks require full coverage, adequate activity, outlier stability and a permutation test adjusted for all fifteen supported pairs. Returns a finding only when every check passes; never a causal claim. Use this tool for correlation, association, coincidence or whether metrics moved together.",
   getRelatedEntities:
     "One-hop native and manual Graph relationships with source references.",
   getGoalLinkedActivity:

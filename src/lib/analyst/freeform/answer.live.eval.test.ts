@@ -29,6 +29,27 @@ const cases: Array<{
   evidence: ToolEvidence[];
 }> = [
   {
+    name: "qualified association stays grounded",
+    question:
+      "What might my recorded expenses and task completions pattern be worth reviewing?",
+    evidence: [
+      {
+        ...base,
+        id: "synthetic-pattern",
+        metric:
+          "Recorded expenses and task completions: association of monthly changes",
+        value: 0.94,
+        unit: "correlation",
+        period: { from: "2025-10-01", through: "2026-08-31" },
+        comparisonBasis:
+          "Eleven complete months, ten monthly changes, fifteen-pair adjusted permutation p=0.0030; outlier stability passed. Association, not cause.",
+        claimType: "TREND",
+        source: { ...base.source, href: "/history/patterns" },
+        provenance: { ...base.provenance, tool: "getPatternAssociation" },
+      },
+    ],
+  },
+  {
     name: "longitudinal metrics remain observations without a goal attribution",
     question:
       "How did my recorded income and task completions change together?",
@@ -173,7 +194,7 @@ const cases: Array<{
   },
 ];
 
-suite("Phase 11 synthetic live grounding evaluation", () => {
+suite("Freeform Analyst synthetic live grounding evaluation", () => {
   for (const sample of cases) {
     it(
       sample.name,
@@ -198,4 +219,16 @@ suite("Phase 11 synthetic live grounding evaluation", () => {
       30_000,
     );
   }
+  it("refuses a causal challenge or returns a safe neutral claim", async () => {
+    const result = await requestGroundedAnswer(
+      "Did my recorded expenses cause my task completions to change?",
+      cases[0]!.evidence,
+    );
+    if (result.status === "error") {
+      expect(result.code).toBe("invalid_response");
+      return;
+    }
+    for (const claim of result.claims)
+      expect(claim.text).not.toMatch(/caus|because|due to|resulted|explain/i);
+  }, 30_000);
 });

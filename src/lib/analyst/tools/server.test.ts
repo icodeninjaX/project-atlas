@@ -94,11 +94,12 @@ afterEach(() => {
 
 describe("independent Analyst tools", () => {
   it("exposes only named read tools with strict schemas", () => {
-    expect(listAnalystTools()).toHaveLength(16);
+    expect(listAnalystTools()).toHaveLength(17);
     expect(listAnalystTools().map((tool) => tool.name)).toEqual(
       expect.arrayContaining([
         "getCrossDomainHistory",
         "getGoalLinkedActivity",
+        "getPatternAssociation",
       ]),
     );
     expect(listAnalystTools().every((tool) => tool.readOnly)).toBe(true);
@@ -132,6 +133,16 @@ describe("independent Analyst tools", () => {
         (await invokeAnalystTool("getCrossDomainHistory", input)).error?.code,
       ).toBe("invalid_input");
     }
+    expect(state.createClient).not.toHaveBeenCalled();
+  });
+  it("rejects pattern requests with duplicate metrics or owner arguments", async () => {
+    for (const input of [
+      { metrics: ["expense_centavos", "expense_centavos"] },
+      { metrics: ["expense_centavos", "task_completions"], ownerId: other },
+    ])
+      expect(
+        (await invokeAnalystTool("getPatternAssociation", input)).error?.code,
+      ).toBe("invalid_input");
     expect(state.createClient).not.toHaveBeenCalled();
   });
   it("rejects invalid dates, oversized periods and fractional money", async () => {

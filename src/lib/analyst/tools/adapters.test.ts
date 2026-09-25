@@ -8,6 +8,7 @@ import {
   related,
   historicalSeries,
   crossDomainHistory,
+  patternAssociation,
   goalLinkedActivity,
 } from "./adapters";
 
@@ -67,6 +68,58 @@ beforeEach(() => {
 });
 
 describe("tool evidence adapters", () => {
+  it("returns an owner-scoped pattern finding only from complete monthly RPC rows", async () => {
+    const x = [10, 14, 11, 18, 16, 24, 20, 29, 25, 35, 30];
+    const y = [21, 29, 23, 36, 33, 49, 40, 59, 51, 71, 60];
+    const data = Array.from({ length: 11 }, (_, index) => {
+      const start = new Date(Date.UTC(2025, index + 9, 1));
+      const end = new Date(Date.UTC(2025, index + 10, 0));
+      return Object.keys(metricDefinitions).map((metric_key) => {
+        const selected =
+          metric_key === "expense_centavos" ||
+          metric_key === "task_completions";
+        return {
+          metric_key,
+          period_start: start.toISOString().slice(0, 10),
+          period_end: end.toISOString().slice(0, 10),
+          value: selected
+            ? metric_key === "expense_centavos"
+              ? x[index]
+              : y[index]
+            : null,
+          source_count: selected ? 2 : 0,
+          coverage: selected ? "recorded" : "insufficient",
+          first_recorded_on: selected ? "2025-09-01" : null,
+        };
+      });
+    }).flat();
+    const rpc = vi.fn().mockResolvedValue({ data, error: null });
+    const client = { rpc } as unknown as SupabaseClient;
+    const input = {
+      metrics: ["expense_centavos", "task_completions"] as [
+        "expense_centavos",
+        "task_completions",
+      ],
+    };
+    const found = await patternAssociation(input, { ...context, client });
+    expect(found.status).toBe("ready");
+    expect(found.evidence).toMatchObject([
+      {
+        unit: "correlation",
+        claimType: "TREND",
+        source: { href: "/history/patterns", recordIds: [] },
+      },
+    ]);
+    expect(rpc).toHaveBeenCalledWith("atlas_historical_metrics", {
+      p_from: "2025-10-01",
+      p_through: "2026-08-31",
+      p_grain: "month",
+    });
+    data.find((row) => row.metric_key === "expense_centavos")!.coverage =
+      "partial";
+    const withheld = await patternAssociation(input, { ...context, client });
+    expect(withheld).toMatchObject({ status: "insufficient", evidence: [] });
+  });
   it("aligns two domains and emits change only from complete supported months", async () => {
     const rpc = vi.fn().mockResolvedValue({
       data: ["2026-05-01", "2026-06-01"].flatMap((period_start, index) =>

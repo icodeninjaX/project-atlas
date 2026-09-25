@@ -97,6 +97,79 @@ beforeEach(() => {
 });
 
 describe("freeform Analyst route", () => {
+  it("requires the approved pattern tool before explaining an association", async () => {
+    const response = await POST(
+      request({
+        question: "Did recorded expenses and task completions move together?",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(await response.json()).toMatchObject({
+      status: "fallback",
+      failureCode: "missing_pattern_test",
+    });
+    expect(mocks.answer).not.toHaveBeenCalled();
+  });
+  it("rejects goal-specific pattern requests before consuming Analyst quota", async () => {
+    const response = await POST(
+      request({
+        question: "Did recorded expenses and task completions move together?",
+        goalId: "11111111-1111-4111-8111-111111111111",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.plan).not.toHaveBeenCalled();
+  });
+  it("withholds a selected-goal answer if the planner uses whole-domain pattern evidence", async () => {
+    mocks.plan.mockResolvedValueOnce({
+      status: "ready",
+      calls: [{ tool: "getPatternAssociation" }],
+      evidence: [item],
+      limitations: [],
+      metadata: { planner: { inputTokens: 90, outputTokens: 20 } },
+    });
+    const response = await POST(
+      request({
+        question: "What shifted around this goal?",
+        goalId: "11111111-1111-4111-8111-111111111111",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(await response.json()).toMatchObject({
+      status: "fallback",
+      failureCode: "unsupported_goal_pattern",
+    });
+    expect(mocks.answer).not.toHaveBeenCalled();
+  });
+  it("limits an association explanation to a qualified pattern citation", async () => {
+    const patternQuestion =
+      "Did my expenses and task completions rise together?";
+    const pattern = {
+      ...item,
+      id: "pattern.expenses.tasks",
+      metric: "Recorded expenses and task completions association",
+      value: 0.96,
+      unit: "correlation",
+      provenance: { ...item.provenance, tool: "getPatternAssociation" },
+    };
+    mocks.plan.mockResolvedValueOnce({
+      status: "ready",
+      calls: [{ tool: "getPatternAssociation" }],
+      evidence: [item, pattern],
+      limitations: [],
+      metadata: { planner: { inputTokens: 90, outputTokens: 20 } },
+    });
+    const response = await POST(
+      request({
+        question: patternQuestion,
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(mocks.answer).toHaveBeenCalledWith(patternQuestion, [pattern]);
+  });
   it("requires identity and consent before reservation or planning", async () => {
     mocks.getUser.mockResolvedValueOnce({ data: { user: null }, error: null });
     expect((await POST(request(valid))).status).toBe(401);

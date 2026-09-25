@@ -48,5 +48,14 @@ test("recorded history remains readable at phone and desktop widths", async ({
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);
+    await page.getByRole("link", { name: "Explore recorded patterns" }).click();
+    await expect(page).toHaveURL(/\/history\/patterns/);
+    await expect(page.getByRole("heading", { name: "Patterns" })).toBeVisible();
+    await expect(
+      page.getByText("No reliable pattern to show yet"),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
   }
 });

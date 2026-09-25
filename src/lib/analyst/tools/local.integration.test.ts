@@ -287,6 +287,9 @@ suite("real local Analyst tool integration", () => {
         through: today,
         metrics: ["expense_centavos", "task_completions"],
       },
+      getPatternAssociation: {
+        metrics: ["expense_centavos", "task_completions"],
+      },
       getGoalLinkedActivity: {
         goalId: active.goal,
         from: month,

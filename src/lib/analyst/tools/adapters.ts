@@ -17,6 +17,11 @@ import {
   parseHistoricalMetrics,
 } from "@/lib/history/metrics";
 import {
+  ASSOCIATION_TESTS,
+  associationWindow,
+  discoverAssociation,
+} from "@/lib/history/associations";
+import {
   ToolFailure,
   type ToolEvidence,
   type ToolInput,
@@ -395,6 +400,64 @@ export async function crossDomainHistory(
             "A change claim needs complete first and last calendar months with at least two contributing records for each metric in each endpoint month.",
           ]
         : []),
+    ],
+  };
+}
+
+export async function patternAssociation(
+  input: ToolInput<"getPatternAssociation">,
+  { client, now }: Context,
+): Promise<ToolPayload> {
+  const window = associationWindow(manilaToday(now));
+  const { data, error } = await client.rpc("atlas_historical_metrics", {
+    p_from: window.from,
+    p_through: window.through,
+    p_grain: "month",
+  });
+  if (error) throw new ToolFailure("unavailable_source");
+  let result;
+  try {
+    const rows = parseHistoricalMetrics(data, { ...window, grain: "month" });
+    result = discoverAssociation(rows, input.metrics);
+  } catch {
+    throw new ToolFailure("invalid_output");
+  }
+  const limitations = [
+    "Association is not causation. Shared trends, seasonality and unmeasured factors can explain a finding.",
+    "Only surviving records are measured; edits, deletions, unrecorded activity and future months can change the result.",
+    `Method version 1 uses eleven complete months, ten monthly changes, a leave-one-month-out stability check, and a permutation test adjusted for all ${ASSOCIATION_TESTS} supported metric pairs.`,
+  ];
+  if (result.status === "withheld")
+    return {
+      status: "insufficient",
+      evidence: [],
+      limitations: [
+        ...limitations,
+        `No reliable association finding: ${result.reason.replaceAll("_", " ")}. Weak or incomplete observations are withheld.`,
+      ],
+    };
+  const [first, second] = input.metrics;
+  return {
+    status: "ready",
+    limitations,
+    evidence: [
+      makeFact("getPatternAssociation", now, {
+        id: `${first}.${second}.${result.from}`,
+        metric: `${metricDefinitions[first].label} and ${metricDefinitions[second].label}: association of monthly changes`,
+        value: result.correlation,
+        unit: "correlation",
+        period: { from: result.from, through: result.through },
+        comparisonBasis: `Pearson correlation of ${result.changes} aligned month-to-month changes across ${result.months} fully recorded months; ${ASSOCIATION_TESTS} pair Bonferroni-adjusted permutation p=${result.adjustedP.toFixed(4)}; leave-one-month-out stability passed. ${result.direction === "together" ? "Same" : "Opposite"} direction.`,
+        source: {
+          description:
+            "Version 1 historical metrics; both source series and monthly values are shown on the Patterns page",
+          recordIds: [],
+          href: "/history/patterns",
+        },
+        completeness: "complete",
+        claimType: "TREND",
+        note: "An association does not establish cause.",
+      }),
     ],
   };
 }

@@ -63,6 +63,12 @@ export default async function HistoryPage({
         title="Recorded history"
         description="Compare the records ATLAS can actually reconstruct. Every value is recalculated from your surviving source records."
       />
+      <Link
+        className="text-primary mt-4 inline-block text-sm underline underline-offset-2"
+        href="/history/patterns"
+      >
+        Explore recorded patterns
+      </Link>
       <HistoryFilters
         key={`${grain}-${months}`}
         initialGrain={grain}

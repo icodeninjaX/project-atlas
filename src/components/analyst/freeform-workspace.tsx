@@ -22,6 +22,7 @@ function displayValue(item: ToolEvidence) {
     return formatCentavos(item.value);
   if (item.unit === "percent") return `${item.value}%`;
   if (item.unit === "score") return `${item.value} / 10`;
+  if (item.unit === "correlation") return `r = ${item.value}`;
   return `${item.value}${item.unit === "count" ? "" : ` ${item.unit}`}`;
 }
 

@@ -7,6 +7,7 @@ import {
   goalLinkedActivity,
   historicalSeries,
   paymentSummary,
+  patternAssociation,
   related,
   runway,
   timeline,
@@ -46,7 +47,7 @@ const safeHref = z
   .string()
   .max(300)
   .regex(
-    /^\/(?:money\/transactions|money\/runway|debts|tasks|goals|career|reviews|signals|timeline|knowledge)(?:[/?][a-zA-Z0-9_?=&%.-]*)?$/,
+    /^\/(?:money\/transactions|money\/runway|debts|tasks|goals|career|reviews|signals|timeline|knowledge|history\/patterns)(?:[/?][a-zA-Z0-9_?=&%.-]*)?$/,
   );
 const evidenceSchema = z
   .object({
@@ -64,6 +65,7 @@ const evidenceSchema = z
       "months",
       "event",
       "relationship",
+      "correlation",
     ]),
     period,
     comparisonBasis: z.string().max(1200),
@@ -216,6 +218,11 @@ export async function invokeAnalystTool(
         case "getCrossDomainHistory":
           return crossDomainHistory(
             toolInputs.getCrossDomainHistory.parse(rawInput),
+            context,
+          );
+        case "getPatternAssociation":
+          return patternAssociation(
+            toolInputs.getPatternAssociation.parse(rawInput),
             context,
           );
         case "getRelatedEntities":

@@ -9,6 +9,16 @@ const suite = enabled ? describe : describe.skip;
 
 const cases: PlannerEvaluationCase[] = [
   {
+    id: "qualified-association",
+    question:
+      "Did my recorded expenses and task completions move together over time?",
+    expectedOutcome: "plan",
+    requiredTools: ["getPatternAssociation"],
+    allowedTools: ["getPatternAssociation"],
+    forbiddenTools: ["getCrossDomainHistory", "getHistoricalMetricSeries"],
+    maxCalls: 1,
+  },
+  {
     id: "spending-change",
     question: "How has my spending changed this month?",
     expectedOutcome: "plan",
@@ -145,6 +155,10 @@ suite("live synthetic Analyst planner evaluation", () => {
       expect(score, JSON.stringify({ plan, score })).toMatchObject({
         passed: true,
       });
+      if (fixture.id === "qualified-association" && result.status === "planned")
+        expect(result.plan.calls[0]?.input).toEqual({
+          metrics: ["expense_centavos", "task_completions"],
+        });
     },
     20000,
   );

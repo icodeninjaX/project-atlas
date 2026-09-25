@@ -73,6 +73,18 @@ export async function POST(request: Request) {
     if (goal.error || !goal.data)
       return json({ error: "The selected goal is unavailable." }, 404);
   }
+  const associationQuestion =
+    /\b(?:correlat\w*|associat\w*|coincid\w*|mov\w* together|pattern between)\b/i.test(
+      parsed.data.question,
+    );
+  if (associationQuestion && parsed.data.goalId)
+    return json(
+      {
+        error:
+          "Pattern testing compares whole-domain history, not a selected goal.",
+      },
+      400,
+    );
   if (!process.env.OPENAI_API_KEY)
     return json({ error: "AI analysis is not configured." }, 503);
 
@@ -157,6 +169,23 @@ export async function POST(request: Request) {
     const limitations = plan.limitations;
     const fallback = (message: string, failureCode: string) =>
       json({ status: "fallback", failureCode, message, evidence, limitations });
+    const usesPattern = plan.calls.some(
+      (call) => call.tool === "getPatternAssociation",
+    );
+    if (usesPattern && parsed.data.goalId) {
+      outcome = "insufficient";
+      return fallback(
+        "The pattern test covers whole-domain history and cannot establish an association for the selected goal.",
+        "unsupported_goal_pattern",
+      );
+    }
+    if (associationQuestion && !usesPattern) {
+      outcome = "insufficient";
+      return fallback(
+        "A reliable association requires the approved pattern test. Review the available facts below.",
+        "missing_pattern_test",
+      );
+    }
     if (
       parsed.data.goalId &&
       !plan.calls.some((call) => call.tool === "getGoalLinkedActivity")
@@ -178,7 +207,11 @@ export async function POST(request: Request) {
       ? evidence.filter(
           (item) => item.provenance.tool === "getGoalLinkedActivity",
         )
-      : evidence;
+      : usesPattern
+        ? evidence.filter(
+            (item) => item.provenance.tool === "getPatternAssociation",
+          )
+        : evidence;
     if (explanationEvidence.length > ANSWER_LIMITS.evidenceItems) {
       outcome = "context_limit";
       return fallback(
