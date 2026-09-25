@@ -23,6 +23,7 @@ The scoped MVP is implemented and is now in release-candidate validation. See th
 - opt-in daily web-push reminders with quiet hours and idempotent Vercel cron delivery
 - daily gratitude and productivity prompts, rotating local wisdom, and dark-first responsive visual treatments
 - light/dark/system themes, focus states, reduced motion, loading, empty, and error states
+- scroll-driven 3D landing page built around the System Core mark (three.js)
 
 ## Stack
 
@@ -130,6 +131,7 @@ docs/             architecture, database, security, testing, and delivery docs
 - [Deployment](docs/deployment.md)
 - [Future roadmap](docs/future-roadmap.md)
 - [Intelligent roadmap](docs/intelligent-roadmap.md)
+- [Landing experience](docs/landing-experience.md)
 
 ## Screenshots
 
