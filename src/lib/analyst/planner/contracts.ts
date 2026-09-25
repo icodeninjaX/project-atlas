@@ -167,6 +167,8 @@ function referencedIds(tool: ToolName, input: unknown): string[] {
   const value = input as Record<string, unknown>;
   if (tool === "getRelatedEntities" && typeof value.entityId === "string")
     return [value.entityId];
+  if (tool === "getGoalLinkedActivity" && typeof value.goalId === "string")
+    return [value.goalId];
   if (
     (tool === "getMoneySummary" || tool === "getDebtPayments") &&
     typeof value.categoryId === "string"

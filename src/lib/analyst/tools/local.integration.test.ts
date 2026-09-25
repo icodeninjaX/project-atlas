@@ -38,6 +38,7 @@ const createdUsers: string[] = [];
 const createdClients = new Map<string, SupabaseClient>();
 const nativeFetch = globalThis.fetch;
 let reads = 0;
+let fixtureWrites = false;
 const sourceErrors: string[] = [];
 const today = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Asia/Manila",
@@ -46,6 +47,11 @@ const today = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit",
 }).format(new Date());
 const month = `${today.slice(0, 7)}-01`;
+const previousMonth = new Date(
+  Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 2, 1),
+)
+  .toISOString()
+  .slice(0, 10);
 const scenario = {
   monthlyIncomeCentavos: null,
   monthlyExpenseChangeCentavos: 0,
@@ -199,6 +205,7 @@ suite("real local Analyst tool integration", () => {
         const request = new Request(input, init);
         if (new URL(request.url).origin !== url)
           throw new Error("Non-local network request blocked.");
+        if (fixtureWrites) return nativeFetch(request);
         if (
           request.method !== "GET" &&
           !new URL(request.url).pathname.startsWith("/rest/v1/rpc/")
@@ -263,12 +270,28 @@ suite("real local Analyst tool integration", () => {
     if (failures.length) throw new Error(failures.join(" "));
   }, 30000);
 
-  it("invokes all thirteen tools against real local sources without a provider", async () => {
+  it("invokes all approved tools against real local sources without a provider", async () => {
     active = fixtures[0]!;
     const inputs: Record<string, unknown> = {
       getMoneySummary: { kind: "expense", from: month, through: today },
       getDebtPayments: { from: month, through: today },
+      getHistoricalMetricSeries: {
+        metric: "expense_centavos",
+        grain: "month",
+        from: month,
+        through: today,
+      },
       getRelatedEntities: { entityType: "goal", entityId: active.goal },
+      getCrossDomainHistory: {
+        from: previousMonth,
+        through: today,
+        metrics: ["expense_centavos", "task_completions"],
+      },
+      getGoalLinkedActivity: {
+        goalId: active.goal,
+        from: month,
+        through: today,
+      },
       getTimelineEvents: { from: month, through: today },
       runFinancialScenario: scenario,
     };
@@ -390,5 +413,55 @@ suite("real local Analyst tool integration", () => {
     expect(
       evidenceByOwner[0]!.some((id) => evidenceByOwner[1]!.includes(id)),
     ).toBe(false);
+  }, 30000);
+
+  it("keeps dated goal activity within the selected owner's current Graph paths", async () => {
+    fixtureWrites = true;
+    try {
+      for (const fixture of fixtures) {
+        const task = await fixture.client
+          .from("tasks")
+          .update({
+            status: "completed",
+            completed_at: new Date().toISOString(),
+          })
+          .eq("user_id", fixture.owner)
+          .eq("id", fixture.task);
+        expect(task.error).toBeNull();
+        await insert(fixture.client, "atlas_relationships", {
+          user_id: fixture.owner,
+          source_type: "transaction",
+          source_id: fixture.transaction,
+          target_type: "goal",
+          target_id: fixture.goal,
+          relationship_type: "financially_related",
+        });
+      }
+    } finally {
+      fixtureWrites = false;
+    }
+    for (const fixture of fixtures) {
+      active = fixture;
+      const result = await invokeAnalystTool("getGoalLinkedActivity", {
+        goalId: fixture.goal,
+        from: month,
+        through: today,
+      });
+      expect(result.status, sourceErrors.join("; ")).toBe("ready");
+      expect(
+        result.evidence.some((item) => item.value === fixture.amount),
+      ).toBe(true);
+      expect(JSON.stringify(result.evidence)).toContain(fixture.task);
+      const other = fixtures.find((item) => item.owner !== fixture.owner)!;
+      expect(JSON.stringify(result.evidence)).not.toContain(other.task);
+      expect(JSON.stringify(result.evidence)).not.toContain(other.transaction);
+      const denied = await invokeAnalystTool("getGoalLinkedActivity", {
+        goalId: other.goal,
+        from: month,
+        through: today,
+      });
+      expect(denied.error?.code).toBe("unavailable_source");
+      expect(denied.evidence).toEqual([]);
+    }
   }, 30000);
 });

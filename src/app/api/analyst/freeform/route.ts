@@ -16,6 +16,7 @@ const json = (body: unknown, status = 200) =>
 const inputSchema = z
   .object({
     question: plannerQuestionSchema,
+    goalId: z.uuid().optional(),
     dataSharingAcknowledged: z.literal(true),
   })
   .strict();
@@ -57,6 +58,21 @@ export async function POST(request: Request) {
       { error: "Enter a question and acknowledge data sharing." },
       400,
     );
+  if (parsed.data.goalId && parsed.data.question.length > 400)
+    return json(
+      { error: "Use a shorter question when selecting a goal." },
+      400,
+    );
+  if (parsed.data.goalId) {
+    const goal = await supabase
+      .from("goals")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("id", parsed.data.goalId)
+      .maybeSingle();
+    if (goal.error || !goal.data)
+      return json({ error: "The selected goal is unavailable." }, 404);
+  }
   if (!process.env.OPENAI_API_KEY)
     return json({ error: "AI analysis is not configured." }, 503);
 
@@ -93,7 +109,10 @@ export async function POST(request: Request) {
   let inputTokens: number | null = null;
   let outputTokens: number | null = null;
   try {
-    const plan = await runAnalystQueryPlanner(parsed.data.question);
+    const plannerQuestion = parsed.data.goalId
+      ? `${parsed.data.question} Selected goal ID: ${parsed.data.goalId}.`
+      : parsed.data.question;
+    const plan = await runAnalystQueryPlanner(plannerQuestion);
     const plannerUsage =
       "calls" in plan ? plan.metadata.planner : plan.metadata;
     inputTokens = plannerUsage?.inputTokens ?? null;
@@ -138,6 +157,16 @@ export async function POST(request: Request) {
     const limitations = plan.limitations;
     const fallback = (message: string, failureCode: string) =>
       json({ status: "fallback", failureCode, message, evidence, limitations });
+    if (
+      parsed.data.goalId &&
+      !plan.calls.some((call) => call.tool === "getGoalLinkedActivity")
+    ) {
+      outcome = "insufficient";
+      return fallback(
+        "This answer needs the selected goal's linked activity. Review the available facts below.",
+        "missing_goal_context",
+      );
+    }
     if (plan.status === "partial" || evidence.length === 0) {
       outcome = "insufficient";
       return fallback(
@@ -145,14 +174,22 @@ export async function POST(request: Request) {
         "insufficient_evidence",
       );
     }
-    if (evidence.length > ANSWER_LIMITS.evidenceItems) {
+    const explanationEvidence = parsed.data.goalId
+      ? evidence.filter(
+          (item) => item.provenance.tool === "getGoalLinkedActivity",
+        )
+      : evidence;
+    if (explanationEvidence.length > ANSWER_LIMITS.evidenceItems) {
       outcome = "context_limit";
       return fallback(
         "The evidence exceeds the explanation limit. Review the ATLAS facts below.",
         "context_limit",
       );
     }
-    const answer = await requestGroundedAnswer(parsed.data.question, evidence);
+    const answer = await requestGroundedAnswer(
+      parsed.data.question,
+      explanationEvidence,
+    );
     if (answer.status === "error") {
       inputTokens = (inputTokens ?? 0) + (answer.inputTokens ?? 0);
       outputTokens = (outputTokens ?? 0) + (answer.outputTokens ?? 0);

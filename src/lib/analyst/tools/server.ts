@@ -3,6 +3,8 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import {
   existingEvidence,
+  crossDomainHistory,
+  goalLinkedActivity,
   historicalSeries,
   paymentSummary,
   related,
@@ -211,9 +213,19 @@ export async function invokeAnalystTool(
             toolInputs.getHistoricalMetricSeries.parse(rawInput),
             context,
           );
+        case "getCrossDomainHistory":
+          return crossDomainHistory(
+            toolInputs.getCrossDomainHistory.parse(rawInput),
+            context,
+          );
         case "getRelatedEntities":
           return related(
             toolInputs.getRelatedEntities.parse(rawInput),
+            context,
+          );
+        case "getGoalLinkedActivity":
+          return goalLinkedActivity(
+            toolInputs.getGoalLinkedActivity.parse(rawInput),
             context,
           );
         case "getTimelineEvents":

@@ -136,6 +136,43 @@ describe("Analyst planner contract", () => {
       ),
     ).toThrow(/clarification/i);
   });
+  it("accepts bounded cross-domain months and rejects an invented goal ID", () => {
+    const history = validatePlannerOutput(
+      output({
+        calls: [
+          {
+            id: "call_1",
+            tool: "getCrossDomainHistory",
+            argumentsJson: JSON.stringify({
+              from: "2026-05-01",
+              through: "2026-06-30",
+              metrics: ["income_centavos", "task_completions"],
+            }),
+          },
+        ],
+      }),
+      "Compare my income and task completions in May and June 2026.",
+    );
+    expect(history.calls[0]?.tool).toBe("getCrossDomainHistory");
+    expect(() =>
+      validatePlannerOutput(
+        output({
+          calls: [
+            {
+              id: "call_1",
+              tool: "getGoalLinkedActivity",
+              argumentsJson: JSON.stringify({
+                goalId,
+                from: "2026-05-01",
+                through: "2026-06-30",
+              }),
+            },
+          ],
+        }),
+        "What happened around my goal in May and June?",
+      ),
+    ).toThrow(/clarification/i);
+  });
 
   it("keeps clarification and unsupported outcomes non-executable", () => {
     const clarification = validatePlannerOutput(

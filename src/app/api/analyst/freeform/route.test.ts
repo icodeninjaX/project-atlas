@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   rpc: vi.fn(),
   plan: vi.fn(),
   answer: vi.fn(),
+  from: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
@@ -62,7 +63,18 @@ beforeEach(() => {
   mocks.createClient.mockResolvedValue({
     auth: { getUser: mocks.getUser },
     rpc: mocks.rpc,
+    from: mocks.from,
   });
+  const goalQuery = {
+    select: vi.fn(),
+    eq: vi.fn(),
+    maybeSingle: vi
+      .fn()
+      .mockResolvedValue({ data: { id: "goal" }, error: null }),
+  };
+  goalQuery.select.mockReturnValue(goalQuery);
+  goalQuery.eq.mockReturnValue(goalQuery);
+  mocks.from.mockReturnValue(goalQuery);
   mocks.plan.mockResolvedValue({
     status: "ready",
     calls: [],
@@ -169,5 +181,54 @@ describe("freeform Analyst route", () => {
       evidence: [],
     });
     expect(mocks.answer).not.toHaveBeenCalled();
+  });
+  it("resolves a selected goal before quota use and requires goal-specific retrieval", async () => {
+    const goalId = "11111111-1111-4111-8111-111111111111";
+    const body = { ...valid, goalId };
+    const query = mocks.from();
+    query.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
+    expect((await POST(request(body))).status).toBe(404);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    const response = await POST(request(body));
+    expect(await response.json()).toMatchObject({
+      status: "fallback",
+      failureCode: "missing_goal_context",
+    });
+    expect(mocks.plan).toHaveBeenCalledWith(
+      `${question} Selected goal ID: ${goalId}.`,
+    );
+    expect(query.eq).toHaveBeenCalledWith("user_id", "owner-a");
+    expect(query.eq).toHaveBeenCalledWith("id", goalId);
+    expect(mocks.answer).not.toHaveBeenCalled();
+  });
+  it("explains selected-goal evidence without mixing whole-domain totals into its claim", async () => {
+    const goalId = "11111111-1111-4111-8111-111111111111";
+    const goalFact = {
+      ...item,
+      id: "goal.activity",
+      provenance: { ...item.provenance, tool: "getGoalLinkedActivity" },
+    };
+    const historyFact = {
+      ...item,
+      id: "history.total",
+      provenance: { ...item.provenance, tool: "getCrossDomainHistory" },
+    };
+    mocks.plan.mockResolvedValueOnce({
+      status: "ready",
+      calls: [
+        { tool: "getGoalLinkedActivity" },
+        { tool: "getCrossDomainHistory" },
+      ],
+      evidence: [goalFact, historyFact],
+      limitations: [],
+      metadata: { planner: { inputTokens: 90, outputTokens: 20 } },
+    });
+    const response = await POST(request({ ...valid, goalId }));
+    expect(response.status).toBe(200);
+    expect(mocks.answer).toHaveBeenCalledWith(question, [goalFact]);
+    expect(await response.json()).toMatchObject({
+      status: "answered",
+      evidence: [goalFact, historyFact],
+    });
   });
 });

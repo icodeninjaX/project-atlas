@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "node:crypto";
 
 const email = process.env.E2E_EMAIL;
 const password = process.env.E2E_PASSWORD;
@@ -150,3 +152,76 @@ for (const width of [390, 1280]) {
     expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.width);
   });
 }
+
+test("selected goal reaches freeform Analyst and shows its current path", async ({
+  page,
+}) => {
+  const client = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+  const login = await client.auth.signInWithPassword({
+    email: email!,
+    password: password!,
+  });
+  expect(login.error).toBeNull();
+  const goalId = randomUUID();
+  const title = `Analyst goal ${Date.now()}`;
+  const inserted = await client.from("goals").insert({
+    id: goalId,
+    user_id: login.data.user!.id,
+    title,
+    area: "personal",
+  });
+  expect(inserted.error).toBeNull();
+  await page.setViewportSize({ width: 390, height: 850 });
+  await page.goto("/analyst");
+  const selector = page.getByLabel("Specific goal (optional)");
+  await selector.selectOption(goalId);
+  let submittedGoalId: string | undefined;
+  await page.route("**/api/analyst/freeform", async (route) => {
+    submittedGoalId = route.request().postDataJSON().goalId;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        status: "fallback",
+        message: "A linked task was completed in the selected period.",
+        evidence: [
+          {
+            id: "goal.task",
+            metric: "Linked task completion",
+            value: 1,
+            unit: "count",
+            period: { from: "2026-09-01", through: "2026-09-25" },
+            comparisonBasis: "Current Graph path to selected goal",
+            source: { description: "Tasks", recordIds: [], href: "/tasks" },
+            completeness: "complete",
+            relationship: {
+              source: { type: "task", id: goalId },
+              target: { type: "goal", id: goalId },
+              origin: "native",
+            },
+          },
+        ],
+        limitations: ["Historical goal progress is unavailable."],
+      }),
+    });
+  });
+  await page
+    .getByRole("textbox", { name: "Ask your own question" })
+    .fill("What changed around this goal?");
+  await page.getByRole("checkbox").first().check();
+  await page.getByRole("button", { name: "Ask Analyst" }).click();
+  await expect(page.getByText("Linked task completion")).toBeVisible();
+  await expect(
+    page.getByText("Current native path: task → goal"),
+  ).toBeVisible();
+  expect(submittedGoalId).toBe(goalId);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  const removed = await client.from("goals").delete().eq("id", goalId);
+  expect(removed.error).toBeNull();
+});

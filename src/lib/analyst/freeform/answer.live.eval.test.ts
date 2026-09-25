@@ -29,6 +29,84 @@ const cases: Array<{
   evidence: ToolEvidence[];
 }> = [
   {
+    name: "longitudinal metrics remain observations without a goal attribution",
+    question:
+      "How did my recorded income and task completions change together?",
+    evidence: [
+      {
+        ...base,
+        id: "income-first",
+        metric: "Recorded income",
+        value: 500000,
+        unit: "centavos",
+        period: { from: "2026-05-01", through: "2026-05-31" },
+        comparisonBasis: "Complete May calendar month; two source records.",
+        provenance: { ...base.provenance, tool: "getCrossDomainHistory" },
+      },
+      {
+        ...base,
+        id: "income-last",
+        metric: "Recorded income",
+        value: 600000,
+        unit: "centavos",
+        period: { from: "2026-06-01", through: "2026-06-30" },
+        comparisonBasis: "Complete June calendar month; two source records.",
+        provenance: { ...base.provenance, tool: "getCrossDomainHistory" },
+      },
+      {
+        ...base,
+        id: "tasks-first",
+        metric: "Task completions",
+        value: 3,
+        unit: "count",
+        period: { from: "2026-05-01", through: "2026-05-31" },
+        comparisonBasis: "Complete May calendar month; three source records.",
+        source: { ...base.source, href: "/tasks" },
+        provenance: { ...base.provenance, tool: "getCrossDomainHistory" },
+      },
+      {
+        ...base,
+        id: "tasks-last",
+        metric: "Task completions",
+        value: 5,
+        unit: "count",
+        period: { from: "2026-06-01", through: "2026-06-30" },
+        comparisonBasis: "Complete June calendar month; five source records.",
+        source: { ...base.source, href: "/tasks" },
+        provenance: { ...base.provenance, tool: "getCrossDomainHistory" },
+      },
+    ],
+  },
+  {
+    name: "current goal paths do not become historical progress",
+    question: "What changed around my selected goal in the recorded period?",
+    evidence: [
+      {
+        ...base,
+        id: "linked-task",
+        metric: "Currently linked task completed",
+        value: 1,
+        unit: "count",
+        period: { from: "2026-08-10", through: "2026-08-10" },
+        comparisonBasis:
+          "A current native Graph path exists; past link existence is unknown.",
+        source: { ...base.source, href: "/tasks" },
+        provenance: { ...base.provenance, tool: "getGoalLinkedActivity" },
+      },
+      {
+        ...base,
+        id: "linked-expense",
+        metric: "Currently linked recorded expense",
+        value: 12345,
+        unit: "centavos",
+        period: { from: "2026-08-12", through: "2026-08-12" },
+        comparisonBasis:
+          "A current manual Graph path exists; past link existence is unknown.",
+        provenance: { ...base.provenance, tool: "getGoalLinkedActivity" },
+      },
+    ],
+  },
+  {
     name: "financial context without invented causes",
     question: "Why do my finances feel tight despite recorded debt payments?",
     evidence: [

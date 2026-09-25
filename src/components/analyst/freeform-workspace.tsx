@@ -25,9 +25,14 @@ function displayValue(item: ToolEvidence) {
   return `${item.value}${item.unit === "count" ? "" : ` ${item.unit}`}`;
 }
 
-export function FreeformWorkspace() {
+export function FreeformWorkspace({
+  goals = [],
+}: {
+  goals?: Array<{ id: string; title: string }>;
+}) {
   const evidenceDetails = useRef<HTMLDetailsElement>(null);
   const [question, setQuestion] = useState("");
+  const [goalId, setGoalId] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -44,6 +49,7 @@ export function FreeformWorkspace() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question,
+          ...(goalId && { goalId }),
           dataSharingAcknowledged: acknowledged,
         }),
       });
@@ -74,7 +80,7 @@ export function FreeformWorkspace() {
           <textarea
             id="analyst-freeform-question"
             value={question}
-            maxLength={500}
+            maxLength={goalId ? 400 : 500}
             rows={3}
             onChange={(event) => setQuestion(event.target.value)}
             required
@@ -91,6 +97,38 @@ export function FreeformWorkspace() {
             model selector under Suggested questions applies to those presets.
           </p>
         </div>
+        {goals.length > 0 && (
+          <div>
+            <label
+              htmlFor="analyst-goal"
+              className="block text-sm font-semibold"
+            >
+              Specific goal (optional)
+            </label>
+            <select
+              id="analyst-goal"
+              value={goalId}
+              onChange={(event) => setGoalId(event.target.value)}
+              className="border-border bg-background mt-2 min-h-11 w-full rounded-xl border px-3 text-sm"
+            >
+              <option value="">All records</option>
+              {goals.map((goal) => (
+                <option key={goal.id} value={goal.id}>
+                  {goal.title}
+                </option>
+              ))}
+            </select>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Selecting a goal lets Analyst inspect its current links and dated
+              linked activity. Past goal progress is unavailable.
+            </p>
+            {goalId && question.length > 400 && (
+              <p className="text-destructive mt-1 text-xs">
+                Shorten the question to 400 characters for a selected goal.
+              </p>
+            )}
+          </div>
+        )}
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
@@ -107,7 +145,12 @@ export function FreeformWorkspace() {
         </label>
         <Button
           type="submit"
-          disabled={pending || !acknowledged || question.trim().length < 8}
+          disabled={
+            pending ||
+            !acknowledged ||
+            question.trim().length < 8 ||
+            (Boolean(goalId) && question.length > 400)
+          }
         >
           {pending ? "Analyzing…" : "Ask Analyst"}
         </Button>
@@ -222,6 +265,13 @@ export function FreeformWorkspace() {
                     <p className="text-muted-foreground mt-1 text-xs">
                       {item.comparisonBasis}
                     </p>
+                    {item.relationship && (
+                      <p className="text-muted-foreground mt-1 text-xs break-words">
+                        Current {item.relationship.origin} path:{" "}
+                        {item.relationship.source.type} →{" "}
+                        {item.relationship.target.type}
+                      </p>
+                    )}
                     <Link
                       href={item.source.href as Route}
                       className="text-primary mt-3 inline-flex min-h-11 items-center text-sm underline"

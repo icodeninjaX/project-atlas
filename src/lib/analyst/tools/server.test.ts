@@ -94,7 +94,13 @@ afterEach(() => {
 
 describe("independent Analyst tools", () => {
   it("exposes only named read tools with strict schemas", () => {
-    expect(listAnalystTools()).toHaveLength(14);
+    expect(listAnalystTools()).toHaveLength(16);
+    expect(listAnalystTools().map((tool) => tool.name)).toEqual(
+      expect.arrayContaining([
+        "getCrossDomainHistory",
+        "getGoalLinkedActivity",
+      ]),
+    );
     expect(listAnalystTools().every((tool) => tool.readOnly)).toBe(true);
   });
   it("rejects unknown tools and owner/SQL injection before reading", async () => {
@@ -105,6 +111,27 @@ describe("independent Analyst tools", () => {
       (await invokeAnalystTool("getDebtProgress", { ownerId: other })).error
         ?.code,
     ).toBe("invalid_input");
+    expect(state.createClient).not.toHaveBeenCalled();
+  });
+  it("rejects same-domain or oversized cross-domain requests before reading", async () => {
+    const base = { from: "2026-05-01", through: "2026-06-30" };
+    for (const input of [
+      { ...base, metrics: ["income_centavos", "expense_centavos"] },
+      {
+        from: "2026-01-01",
+        through: "2026-07-31",
+        metrics: ["income_centavos", "task_completions"],
+      },
+      {
+        ...base,
+        metrics: ["income_centavos", "task_completions"],
+        ownerId: other,
+      },
+    ]) {
+      expect(
+        (await invokeAnalystTool("getCrossDomainHistory", input)).error?.code,
+      ).toBe("invalid_input");
+    }
     expect(state.createClient).not.toHaveBeenCalled();
   });
   it("rejects invalid dates, oversized periods and fractional money", async () => {
@@ -215,6 +242,26 @@ describe("independent Analyst tools", () => {
     expect(foreign.error).toEqual(missing.error);
     expect(foreign.error?.code).toBe("unavailable_source");
     expect(JSON.stringify(foreign)).not.toContain("Secret goal");
+    const linkedInput = {
+      goalId: record,
+      from: "2026-09-01",
+      through: "2026-09-02",
+    };
+    tables.goals = [
+      { id: record, user_id: other, title: "Secret goal", status: "active" },
+    ];
+    const foreignLinked = await invokeAnalystTool(
+      "getGoalLinkedActivity",
+      linkedInput,
+    );
+    tables.goals = [];
+    const missingLinked = await invokeAnalystTool(
+      "getGoalLinkedActivity",
+      linkedInput,
+    );
+    expect(foreignLinked.error).toEqual(missingLinked.error);
+    expect(foreignLinked.error?.code).toBe("unavailable_source");
+    expect(foreignLinked.evidence).toEqual([]);
   });
   it("requires authentication before any record read", async () => {
     authenticated = false;

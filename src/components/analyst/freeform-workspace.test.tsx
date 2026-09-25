@@ -43,6 +43,17 @@ describe("Freeform Analyst workspace", () => {
                 retrievedAt: "2026-09-24T00:00:00Z",
                 textTrust: "untrusted_data",
               },
+              relationship: {
+                source: {
+                  type: "task",
+                  id: "11111111-1111-4111-8111-111111111111",
+                },
+                target: {
+                  type: "goal",
+                  id: "22222222-2222-4222-8222-222222222222",
+                },
+                origin: "native",
+              },
             },
           ],
           limitations: [],
@@ -51,7 +62,13 @@ describe("Freeform Analyst workspace", () => {
       ),
     );
     vi.stubGlobal("fetch", fetch);
-    render(<FreeformWorkspace />);
+    render(
+      <FreeformWorkspace
+        goals={[
+          { id: "22222222-2222-4222-8222-222222222222", title: "Career goal" },
+        ]}
+      />,
+    );
     const submit = screen.getByRole("button", { name: "Ask Analyst" });
     expect(submit).toBeDisabled();
     await user.type(
@@ -59,6 +76,10 @@ describe("Freeform Analyst workspace", () => {
       "What needs my attention in money?",
     );
     await user.click(screen.getByRole("checkbox"));
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Specific goal (optional)" }),
+      "22222222-2222-4222-8222-222222222222",
+    );
     await user.click(submit);
     await waitFor(() =>
       expect(
@@ -70,6 +91,7 @@ describe("Freeform Analyst workspace", () => {
     ).toBeInTheDocument();
     const sent = JSON.parse(fetch.mock.calls[0]![1].body);
     expect(sent.dataSharingAcknowledged).toBe(true);
+    expect(sent.goalId).toBe("22222222-2222-4222-8222-222222222222");
     const citation = screen.getByRole("link", { name: "Recorded expenses" });
     expect(citation).toHaveAttribute("href", "#evidence-money.current");
     const details = screen
@@ -78,6 +100,9 @@ describe("Freeform Analyst workspace", () => {
     expect(details.open).toBe(false);
     await user.click(citation);
     expect(details.open).toBe(true);
+    expect(
+      screen.getByText(/Current native path: task → goal/),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View ATLAS records" }),
     ).toHaveAttribute("href", "/money/transactions");

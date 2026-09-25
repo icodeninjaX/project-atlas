@@ -95,6 +95,34 @@ describe("freeform claim validation", () => {
       ]),
     ).toBeNull();
   });
+  it("does not turn whole-domain history into goal-specific evidence", () => {
+    const wholeDomain = {
+      ...evidence[0]!,
+      id: "history",
+      provenance: {
+        ...evidence[0]!.provenance,
+        tool: "getCrossDomainHistory" as const,
+      },
+    };
+    const goalLink = {
+      ...evidence[0]!,
+      id: "goal-link",
+      provenance: {
+        ...evidence[0]!.provenance,
+        tool: "getGoalLinkedActivity" as const,
+      },
+    };
+    expect(
+      validateGroundedAnswer(
+        {
+          claims: [
+            { ...valid.claims[0], evidenceIds: ["history", "goal-link"] },
+          ],
+        },
+        [wholeDomain, goalLink],
+      ),
+    ).toBeNull();
+  });
 });
 
 describe("freeform provider boundary", () => {
@@ -102,7 +130,7 @@ describe("freeform provider boundary", () => {
     const fetch = vi.fn();
     const result = await requestGroundedAnswer(
       "How is my money?",
-      Array.from({ length: 13 }, (_, i) => ({
+      Array.from({ length: 17 }, (_, i) => ({
         ...evidence[0]!,
         id: `item-${i}`,
       })),

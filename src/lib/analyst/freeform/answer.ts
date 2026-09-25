@@ -4,7 +4,7 @@ import { AI_MODELS } from "@/lib/ai/models";
 import type { ToolEvidence } from "@/lib/analyst/tools/contracts";
 
 export const ANSWER_LIMITS = Object.freeze({
-  evidenceItems: 12,
+  evidenceItems: 16,
   payloadChars: 14_000,
   inputTokens: 16_000,
   outputTokens: 450,
@@ -69,6 +69,15 @@ export function validateGroundedAnswer(raw: unknown, evidence: ToolEvidence[]) {
     if (new Set(claim.evidenceIds).size !== claim.evidenceIds.length)
       return null;
     if (claim.evidenceIds.some((id) => !byId.has(id))) return null;
+    const citedTools = new Set(
+      claim.evidenceIds.map((id) => byId.get(id)!.provenance.tool),
+    );
+    // Whole-domain history cannot be presented as evidence about a goal's links.
+    if (
+      citedTools.has("getCrossDomainHistory") &&
+      citedTools.has("getGoalLinkedActivity")
+    )
+      return null;
     if (
       claim.kind === "suggestion" &&
       claim.evidenceIds.some((id) => byId.get(id)?.completeness !== "complete")

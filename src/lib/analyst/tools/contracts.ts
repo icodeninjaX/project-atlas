@@ -47,6 +47,12 @@ const boundedPeriod = (value: { from: string; through: string }) => {
     (Date.parse(value.through) - Date.parse(value.from)) / 86_400_000;
   return days >= 0 && days < 366;
 };
+const metricKeys = Object.keys(metricDefinitions) as [
+  keyof typeof metricDefinitions,
+  ...(keyof typeof metricDefinitions)[],
+];
+const metricDomain = (metric: keyof typeof metricDefinitions) =>
+  metric.endsWith("_centavos") ? "money" : metric;
 const centavos = z.number().int().min(0).max(1_000_000_000_000);
 const scenario = z
   .object({
@@ -89,12 +95,7 @@ export const toolInputs = {
   getHistoricalMetricSeries: z
     .object({
       ...periodShape,
-      metric: z.enum(
-        Object.keys(metricDefinitions) as [
-          keyof typeof metricDefinitions,
-          ...(keyof typeof metricDefinitions)[],
-        ],
-      ),
+      metric: z.enum(metricKeys),
       grain: z.enum(["day", "week", "month"]),
     })
     .strict()
@@ -104,6 +105,20 @@ export const toolInputs = {
         historicalBucketCount(value.from, value.through, value.grain) <= 12
       );
     }, "Use at most twelve calendar periods within a year."),
+  getCrossDomainHistory: z
+    .object({
+      ...periodShape,
+      metrics: z.tuple([z.enum(metricKeys), z.enum(metricKeys)]),
+    })
+    .strict()
+    .refine(
+      (value) =>
+        boundedPeriod(value) &&
+        historicalBucketCount(value.from, value.through, "month") >= 2 &&
+        historicalBucketCount(value.from, value.through, "month") <= 6 &&
+        metricDomain(value.metrics[0]) !== metricDomain(value.metrics[1]),
+      "Choose two different domains across two to six calendar months.",
+    ),
   getRelatedEntities: z
     .object({
       entityType: z.enum(graphEntityTypes),
@@ -111,6 +126,10 @@ export const toolInputs = {
       limit: z.number().int().min(1).max(20).default(20),
     })
     .strict(),
+  getGoalLinkedActivity: z
+    .object({ goalId: z.uuid(), ...periodShape })
+    .strict()
+    .refine(boundedPeriod, "Use an ordered period of at most 366 days."),
   getTimelineEvents: z
     .object({ ...periodShape, module: z.enum(timelineModules).optional() })
     .strict()
@@ -181,8 +200,12 @@ export const toolDescriptions: Record<ToolName, string> = {
     "Recorded debt payments for an explicit Manila date period; not historical balances.",
   getHistoricalMetricSeries:
     "Versioned whole-domain historical series. Metric must be one of income_centavos, expense_centavos, debt_payments_centavos, task_completions, knowledge_reviews, review_overall_score. Supply inclusive from/through dates and grain day/week/month, up to twelve buckets. Call once per metric; two calls with the same dates compare two domains. Includes source counts and coverage. No past balances, overdue counts or goal progress. No category or entity ID is needed.",
+  getCrossDomainHistory:
+    "Compare two different whole-domain recorded metrics across two to six aligned calendar months. Supply inclusive from/through dates and two metric keys. Returns period facts and only emits change facts when the first and last months are complete and have enough source records. Never attributes whole-domain changes to a goal or infers causation.",
   getRelatedEntities:
     "One-hop native and manual Graph relationships with source references.",
+  getGoalLinkedActivity:
+    "For a literal goal ID, show current one-hop Graph paths and dated surviving linked task or milestone completions and transactions in an explicit period. Current links do not prove historical linkage, and this never reconstructs past goal progress or a goal stall.",
   getTimelineEvents:
     "One bounded page of recorded events, without private titles or descriptions.",
   getRunway:

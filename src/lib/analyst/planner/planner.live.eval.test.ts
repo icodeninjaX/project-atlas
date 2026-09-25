@@ -56,6 +56,33 @@ const cases: PlannerEvaluationCase[] = [
 ];
 
 suite("live synthetic Analyst planner evaluation", () => {
+  it("uses literal goal context without inventing past goal progress", async () => {
+    const goalId = "11111111-1111-4111-8111-111111111111";
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Manila",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    const year = Number(today.slice(0, 4));
+    const monthIndex = Number(today.slice(5, 7)) - 1;
+    const from = new Date(Date.UTC(year, monthIndex - 2, 1))
+      .toISOString()
+      .slice(0, 10);
+    const through = new Date(Date.UTC(year, monthIndex, 0))
+      .toISOString()
+      .slice(0, 10);
+    const result = await requestAnalystPlan(
+      `Which currently linked task completions and transactions were recorded from ${from} through ${through} for goal ${goalId}? Do not infer past goal progress.`,
+    );
+    expect(result.status, JSON.stringify(result)).toBe("planned");
+    if (result.status !== "planned") return;
+    expect(result.plan.calls).toHaveLength(1);
+    expect(result.plan.calls[0]).toMatchObject({
+      tool: "getGoalLinkedActivity",
+      input: { goalId, from, through },
+    });
+  }, 20000);
   it("selects bounded history for a two-domain longitudinal question", async () => {
     const today = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Manila",
@@ -76,29 +103,15 @@ suite("live synthetic Analyst planner evaluation", () => {
     );
     expect(result.status, JSON.stringify(result)).toBe("planned");
     if (result.status !== "planned") return;
-    expect(result.plan.calls).toHaveLength(2);
-    expect(
-      result.plan.calls.every(
-        (call) => call.tool === "getHistoricalMetricSeries",
-      ),
-    ).toBe(true);
-    expect(
-      result.plan.calls
-        .map((call) => (call.input as { metric: string }).metric)
-        .sort(),
-    ).toEqual(["income_centavos", "task_completions"]);
-    expect(
-      result.plan.calls.every(
-        (call) => (call.input as { grain: string }).grain === "month",
-      ),
-    ).toBe(true);
-    expect(
-      result.plan.calls.every(
-        (call) =>
-          (call.input as { from: string; through: string }).from === from &&
-          (call.input as { through: string }).through === through,
-      ),
-    ).toBe(true);
+    expect(result.plan.calls).toHaveLength(1);
+    expect(result.plan.calls[0]).toMatchObject({
+      tool: "getCrossDomainHistory",
+      input: {
+        from,
+        through,
+        metrics: ["income_centavos", "task_completions"],
+      },
+    });
   }, 20000);
   it.each(cases)(
     "passes $id",

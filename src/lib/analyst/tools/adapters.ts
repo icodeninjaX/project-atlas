@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createHash } from "node:crypto";
+import { z } from "zod";
 import {
   manilaToday,
   type Evidence,
@@ -265,6 +266,346 @@ export async function historicalSeries(
         completeness: row.coverage === "recorded" ? "complete" : "partial",
       });
     }),
+  };
+}
+
+/** Compare only like-for-like, fully recorded calendar months. */
+export async function crossDomainHistory(
+  input: ToolInput<"getCrossDomainHistory">,
+  { client, now }: Context,
+): Promise<ToolPayload> {
+  const today = manilaToday(now);
+  const earliest = new Date(Date.parse(today) - 365 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  if (input.through > today || input.from < earliest)
+    throw new ToolFailure("invalid_input");
+  const { data, error } = await client.rpc("atlas_historical_metrics", {
+    p_from: input.from,
+    p_through: input.through,
+    p_grain: "month",
+  });
+  if (error) throw new ToolFailure("unavailable_source");
+  let rows;
+  try {
+    rows = parseHistoricalMetrics(data, {
+      from: input.from,
+      through: input.through,
+      grain: "month",
+    }).filter((row) => input.metrics.includes(row.metric));
+  } catch {
+    throw new ToolFailure("invalid_output");
+  }
+  const months = [...new Set(rows.map((row) => row.period.from))].sort();
+  if (months.length < 2 || rows.length !== months.length * 2)
+    throw new ToolFailure("invalid_output");
+  const evidence: ToolEvidence[] = [];
+  let comparable = true;
+  for (const row of rows) {
+    const definition = metricDefinitions[row.metric];
+    const from = [
+      row.period.from,
+      input.from,
+      row.firstRecordedOn ?? input.from,
+    ]
+      .sort()
+      .at(-1)!;
+    const through =
+      row.period.through < input.through ? row.period.through : input.through;
+    const complete =
+      row.coverage === "recorded" &&
+      from === row.period.from &&
+      through === row.period.through;
+    if (!complete) comparable = false;
+    if (row.value === null) continue;
+    evidence.push(
+      makeFact("getCrossDomainHistory", now, {
+        id: `${row.metric}.${row.period.from}`,
+        metric: definition.label,
+        value: row.value,
+        unit: definition.unit,
+        period: { from, through },
+        comparisonBasis: `Calendar month ${row.period.from} through ${row.period.through}; version 1; ${row.sourceCount} contributing surviving records; coverage ${row.coverage}.`,
+        source: {
+          description: definition.source,
+          recordIds: [],
+          href: definition.href,
+        },
+        completeness: complete ? "complete" : "partial",
+      }),
+    );
+  }
+  const first = months[0]!;
+  const last = months.at(-1)!;
+  for (const metric of input.metrics) {
+    const before = rows.find(
+      (row) => row.metric === metric && row.period.from === first,
+    )!;
+    const after = rows.find(
+      (row) => row.metric === metric && row.period.from === last,
+    )!;
+    if (before.sourceCount < 2 || after.sourceCount < 2) comparable = false;
+  }
+  if (comparable) {
+    for (const metric of input.metrics) {
+      const before = rows.find(
+        (row) => row.metric === metric && row.period.from === first,
+      )!;
+      const after = rows.find(
+        (row) => row.metric === metric && row.period.from === last,
+      )!;
+      const definition = metricDefinitions[metric];
+      const difference =
+        definition.unit === "score"
+          ? (Math.round(after.value! * 100) - Math.round(before.value! * 100)) /
+            100
+          : after.value! - before.value!;
+      if (
+        !Number.isFinite(difference) ||
+        (definition.unit !== "score" && !Number.isSafeInteger(difference))
+      )
+        throw new ToolFailure("invalid_output");
+      evidence.push(
+        makeFact("getCrossDomainHistory", now, {
+          id: `${metric}.change.${first}.${last}`,
+          metric: `${definition.label} change: first to last month`,
+          value: difference,
+          unit: definition.unit,
+          period: { from: before.period.from, through: after.period.through },
+          comparisonBasis: `Difference between complete calendar months ${first} and ${last}; version 1; ${before.sourceCount} and ${after.sourceCount} contributing surviving records. This is an observation, not an association or cause.`,
+          source: {
+            description: definition.source,
+            recordIds: [],
+            href: definition.href,
+          },
+          completeness: "complete",
+          claimType: "TREND",
+        }),
+      );
+    }
+  }
+  return {
+    status: comparable ? "ready" : "partial",
+    evidence,
+    limitations: [
+      "Whole-domain records are not attributed to a goal. These parallel observations do not establish association or causation.",
+      "Only surviving recorded sources are counted; absent or deleted history is not zero-filled.",
+      ...(!comparable
+        ? [
+            "A change claim needs complete first and last calendar months with at least two contributing records for each metric in each endpoint month.",
+          ]
+        : []),
+    ],
+  };
+}
+
+const linkedTask = z.object({
+  id: z.uuid(),
+  status: z.string(),
+  completed_at: z.iso.datetime({ offset: true }).nullable(),
+});
+const linkedMilestone = z.object({
+  id: z.uuid(),
+  completed_at: z.iso.datetime({ offset: true }).nullable(),
+});
+const linkedTransaction = z.object({
+  id: z.uuid(),
+  transaction_type: z.enum(["income", "expense", "transfer"]),
+  transaction_date: z.iso.date(),
+  amount_centavos: z
+    .union([z.number(), z.string().regex(/^\d+$/)])
+    .transform(Number)
+    .pipe(z.number().int().nonnegative().safe()),
+});
+
+/** Dated activity of today's one-hop goal links; never historical goal progress. */
+export async function goalLinkedActivity(
+  input: ToolInput<"getGoalLinkedActivity">,
+  { client, now, owner }: Context,
+): Promise<ToolPayload> {
+  const today = manilaToday(now);
+  const earliest = new Date(Date.parse(today) - 365 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  if (input.through > today || input.from < earliest)
+    throw new ToolFailure("invalid_input");
+  const graph = await getRelatedEntities(
+    { entityType: "goal", entityId: input.goalId, limit: 12 },
+    client,
+  );
+  const taskIds = graph.items
+    .filter((item) => item.related.type === "task")
+    .map((item) => item.related.id);
+  const milestoneIds = graph.items
+    .filter((item) => item.related.type === "goal_milestone")
+    .map((item) => item.related.id);
+  const transactionIds = graph.items
+    .filter((item) => item.related.type === "transaction")
+    .map((item) => item.related.id);
+  const [taskResult, milestoneResult, transactionResult] = await Promise.all([
+    taskIds.length
+      ? client
+          .from("tasks")
+          .select("id,status,completed_at")
+          .eq("user_id", owner)
+          .in("id", taskIds)
+          .limit(taskIds.length)
+      : Promise.resolve({ data: [], error: null }),
+    milestoneIds.length
+      ? client
+          .from("goal_milestones")
+          .select("id,completed_at")
+          .eq("user_id", owner)
+          .in("id", milestoneIds)
+          .limit(milestoneIds.length)
+      : Promise.resolve({ data: [], error: null }),
+    transactionIds.length
+      ? client
+          .from("transactions")
+          .select("id,transaction_type,transaction_date,amount_centavos")
+          .eq("user_id", owner)
+          .in("id", transactionIds)
+          .limit(transactionIds.length)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (taskResult.error || milestoneResult.error || transactionResult.error)
+    throw new ToolFailure("unavailable_source");
+  const tasks = z.array(linkedTask).safeParse(taskResult.data);
+  const milestones = z.array(linkedMilestone).safeParse(milestoneResult.data);
+  const transactions = z
+    .array(linkedTransaction)
+    .safeParse(transactionResult.data);
+  if (!tasks.success || !milestones.success || !transactions.success)
+    throw new ToolFailure("invalid_output");
+  const byTask = new Map(tasks.data.map((task) => [task.id, task]));
+  const byMilestone = new Map(
+    milestones.data.map((milestone) => [milestone.id, milestone]),
+  );
+  const byTransaction = new Map(
+    transactions.data.map((transaction) => [transaction.id, transaction]),
+  );
+  const evidence = graph.items.flatMap((item): ToolEvidence[] => {
+    const relationship = {
+      source: { type: item.source.type, id: item.source.id },
+      target: { type: item.target.type, id: item.target.id },
+      origin: item.origin,
+    } as const;
+    const base = {
+      source: {
+        description: "Current Graph path to a surviving linked source",
+        recordIds: [item.source.id, item.target.id],
+        href: item.related.href,
+      },
+      relationship,
+    };
+    const task = byTask.get(item.related.id);
+    const completedOn =
+      task?.status === "completed" && task.completed_at
+        ? manilaToday(new Date(task.completed_at))
+        : null;
+    if (
+      item.related.type === "task" &&
+      completedOn &&
+      completedOn >= input.from &&
+      completedOn <= input.through
+    )
+      return [
+        makeFact("getGoalLinkedActivity", now, {
+          ...base,
+          id: `task.${task!.id}`,
+          metric: "Currently linked task completed",
+          value: 1,
+          unit: "count",
+          period: { from: completedOn, through: completedOn },
+          comparisonBasis: `Task completion timestamp in Asia/Manila; ${item.origin} Graph path currently exists. Link existence during this period is unknown.`,
+          completeness: "complete",
+        }),
+      ];
+    const milestone = byMilestone.get(item.related.id);
+    const milestoneCompletedOn = milestone?.completed_at
+      ? manilaToday(new Date(milestone.completed_at))
+      : null;
+    if (
+      item.related.type === "goal_milestone" &&
+      milestoneCompletedOn &&
+      milestoneCompletedOn >= input.from &&
+      milestoneCompletedOn <= input.through
+    )
+      return [
+        makeFact("getGoalLinkedActivity", now, {
+          ...base,
+          id: `milestone.${milestone!.id}`,
+          metric: "Currently linked milestone completed",
+          value: 1,
+          unit: "count",
+          period: {
+            from: milestoneCompletedOn,
+            through: milestoneCompletedOn,
+          },
+          comparisonBasis: `Milestone completion timestamp in Asia/Manila; ${item.origin} Graph path currently exists. This is a dated event, not reconstructed past goal progress.`,
+          completeness: "complete",
+        }),
+      ];
+    const transaction = byTransaction.get(item.related.id);
+    if (
+      item.related.type === "transaction" &&
+      transaction &&
+      transaction.transaction_date >= input.from &&
+      transaction.transaction_date <= input.through &&
+      transaction.transaction_type !== "transfer"
+    )
+      return [
+        makeFact("getGoalLinkedActivity", now, {
+          ...base,
+          id: `transaction.${transaction.id}`,
+          metric: `Currently linked recorded ${transaction.transaction_type}`,
+          value: transaction.amount_centavos,
+          unit: "centavos",
+          period: {
+            from: transaction.transaction_date,
+            through: transaction.transaction_date,
+          },
+          comparisonBasis: `Transaction date; ${item.origin} Graph path currently exists. Link existence during this period is unknown.`,
+          completeness: "complete",
+        }),
+      ];
+    const sourceDisappeared =
+      (item.related.type === "task" && !task) ||
+      (item.related.type === "goal_milestone" && !milestone) ||
+      (item.related.type === "transaction" && !transaction);
+    return [
+      makeFact("getGoalLinkedActivity", now, {
+        ...base,
+        id: `link.${item.id}`,
+        metric: "Current goal relationship",
+        value: item.kind,
+        unit: "relationship",
+        period: { from: today, through: today },
+        comparisonBasis: sourceDisappeared
+          ? "A current Graph path was observed, but its source could not be reloaded. The source may have changed or been deleted."
+          : "Current Graph path only; this tool returned no supported dated activity for this link in the requested period.",
+        completeness: sourceDisappeared ? "partial" : "complete",
+      }),
+    ];
+  });
+  const dated = evidence.some((item) => item.unit !== "relationship");
+  const incomplete = evidence.some((item) => item.completeness !== "complete");
+  return {
+    status:
+      graph.items.length === 0
+        ? "insufficient"
+        : graph.hasMore || !dated || incomplete
+          ? "partial"
+          : "ready",
+    evidence,
+    limitations: [
+      "Graph paths are current. They do not prove when a link was created or that it existed during an activity.",
+      "Only surviving linked task and milestone completions and income/expense transactions in the requested period are shown. No historical goal progress or stall is inferred.",
+      "Missing links and unrecorded or deleted activity do not prove inactivity.",
+      ...(graph.hasMore
+        ? ["More links exist than the bounded result shows."]
+        : []),
+    ],
   };
 }
 
