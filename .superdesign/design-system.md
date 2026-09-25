@@ -16,12 +16,12 @@ Primary surfaces:
 Preserve the existing ATLAS identity. The product is calm, precise, restrained, and information-forward—not ornamental.
 
 - UI font: Geist Sans (`--font-geist-sans`).
-- Data font: Geist Mono (`--font-geist-mono`) for money, dates, status labels, counts, and metadata.
+- Data font: the `font-mono` utility renders the UI face with tabular numerals (`tnum`) for money, dates, status labels, counts, and metadata, so figures align without a terminal feel. Geist Mono (`--font-geist-mono`) is reserved for `kbd`, `code`, and `pre`.
 - Light: background `#f4f7fb`, foreground `#111827`, card `#ffffff`, primary `#2867e8`, secondary `#edf2f9`, muted `#e9eef6`, muted foreground `#5f6b7d`, border `#dce3ed`, destructive `#c83a4a`, sidebar `#f9fbfe`.
 - Dark: background `#070a0f`, foreground `#f4f7fb`, card `#0e131c`, primary `#84afff`, secondary `#151d2a`, muted `#182131`, muted foreground `#8d99aa`, border `#202a39`, destructive `#e04f5f`, sidebar `#0a0e15`.
-- Cards: flat bordered surfaces with 16px radius. Favor grouping, hierarchy, and whitespace over decorative shadows.
+- Cards: flat bordered surfaces with 16px radius. Favor grouping, hierarchy, and whitespace over decorative shadows. Primary and secondary buttons carry a subtle top highlight and soft shadow for tactile depth.
 - Controls: 12px radius, visible focus rings, concise labels, and at least 44×44px mobile targets where practical.
-- Icons: use the exact Lucide icons present in source. Do not introduce emoji, alternate icon families, decorative illustrations, or invented brand marks.
+- Icons: use the exact Lucide icons present in source; each navigation destination has a distinct icon. Do not introduce emoji, alternate icon families, decorative illustrations, or invented brand marks.
 - Brand mark: reproduce the existing code-rendered `AtlasMark` exactly when identity is shown.
 - Copy: direct, humane, factual. Avoid hype, gamification, and unexplained financial predictions.
 

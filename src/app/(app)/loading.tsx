@@ -1,7 +1,7 @@
 export default function AppLoading() {
   return (
     <div
-      className="mx-auto max-w-[1500px] animate-pulse p-4 sm:p-6 lg:p-8"
+      className="mx-auto max-w-[1240px] animate-pulse px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10"
       aria-label="Loading"
     >
       <div className="bg-muted h-3 w-32 rounded" />

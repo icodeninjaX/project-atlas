@@ -31,14 +31,16 @@ export default function HomePage() {
     <main>
       <section className="relative overflow-hidden">
         <div className="atlas-grid pointer-events-none absolute inset-0 opacity-65" />
-        <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-14 pb-18 sm:px-8 sm:pt-24 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:pb-28">
-          <div className="max-w-xl">
-            <p className="text-primary mb-5 font-mono text-xs font-semibold tracking-[0.22em] uppercase">
+        <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-14 pb-18 sm:px-8 sm:pt-24 lg:pb-28 xl:grid-cols-[1.05fr_0.95fr] xl:items-center xl:gap-16">
+          <div className="max-w-2xl">
+            <p className="text-primary mb-5 text-xs font-semibold tracking-[0.14em] uppercase">
               Your personal operating system
             </p>
-            <h1 className="text-5xl leading-[0.98] font-semibold tracking-[-0.055em] text-balance sm:text-7xl">
-              See where you are.
-              <span className="text-muted-foreground block">
+            <h1 className="text-5xl leading-[1.02] font-semibold tracking-[-0.05em] sm:text-7xl xl:text-[4.25rem] 2xl:text-7xl">
+              <span className="block text-balance xl:whitespace-nowrap">
+                See where you are.
+              </span>
+              <span className="text-muted-foreground block text-balance xl:whitespace-nowrap">
                 Choose what moves.
               </span>
             </h1>
@@ -71,13 +73,13 @@ export default function HomePage() {
                   <p className="text-muted-foreground text-xs">Sunday route</p>
                   <p className="mt-0.5 text-sm font-semibold">July 26, 2026</p>
                 </div>
-                <div className="border-primary/25 bg-primary/10 text-primary rounded-full border px-3 py-1 font-mono text-[10px] font-semibold">
+                <div className="border-primary/25 bg-primary/10 text-primary rounded-full border px-3 py-1 text-[11px] font-semibold">
                   3 priorities
                 </div>
               </div>
               <div className="bg-border grid gap-px sm:grid-cols-[1.3fr_0.7fr]">
-                <div className="bg-card p-5 sm:p-6">
-                  <p className="text-muted-foreground mb-5 text-xs font-semibold tracking-wider uppercase">
+                <div className="bg-card flex flex-col p-5 sm:p-6">
+                  <p className="text-muted-foreground mb-5 text-xs font-semibold tracking-[0.12em] uppercase">
                     Dayline
                   </p>
                   <ol className="space-y-0">
@@ -110,6 +112,17 @@ export default function HomePage() {
                       </li>
                     ))}
                   </ol>
+                  <div className="border-border mt-6 border-t pt-4 sm:mt-auto">
+                    <div className="text-muted-foreground flex items-center justify-between text-xs">
+                      <span>Planned today</span>
+                      <span className="text-foreground font-mono font-medium">
+                        70 of 180 min
+                      </span>
+                    </div>
+                    <div className="bg-muted mt-2 h-1.5 overflow-hidden rounded-full">
+                      <div className="bg-primary h-full w-[39%] rounded-full" />
+                    </div>
+                  </div>
                 </div>
                 <div className="bg-border grid grid-cols-2 gap-px sm:grid-cols-1">
                   <div className="bg-card p-5">
@@ -128,7 +141,7 @@ export default function HomePage() {
                       Active applications
                     </p>
                   </div>
-                  <div className="bg-card p-5">
+                  <div className="bg-card col-span-2 p-5 sm:col-span-1">
                     <Goal className="text-primary size-4" />
                     <p className="mt-5 font-mono text-2xl font-semibold">63%</p>
                     <p className="text-muted-foreground mt-1 text-xs">
