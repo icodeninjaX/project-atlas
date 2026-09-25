@@ -130,7 +130,7 @@ summary takes precedence for current next-action guidance.
 | 10. Analyst Query Planner                   | Implemented locally, 2026-09-24                                            | Strict plan/provider/execution tests, synthetic live evaluation and two-owner tool execution; see [acceptance record](analyst-query-planner.md#acceptance-and-validation--2026-09-24) | No hosted adoption or deployment verified; no new route/UI                                                                                                                        |
 | 11. Analyst 2.0: Freeform Grounded Analysis | Implemented locally, 2026-09-25                                            | Grounding, quota, browser and synthetic live evaluation; see [Phase 11 contract](analyst-freeform.md#local-acceptance-and-release-boundary--2026-09-25)                               | Current deployment and one signed-in insufficient-history fallback verified with Phase 12; complete Phase 11 hosted acceptance remains open                                       |
 | 12. Historical / Longitudinal Metrics Layer | Implemented and deployed, 2026-09-25                                       | 464 application tests, 159 local DB assertions, authenticated desktop/mobile browser checks and build; see [Phase 12 contract](historical-metrics.md)                                 | Hosted migration, owner isolation, ready deployment, signed-in History views and one consented Analyst fallback verified 2026-09-25                                               |
-| 13. Cross-domain and Longitudinal Analyst   | Implemented locally, 2026-09-25; release acceptance open                   | Tool, planner, route, grounding and component tests plus synthetic live model evaluation; see [Phase 13 contract](cross-domain-analyst.md)                                            | No Phase 13 hosted rollout or authenticated browser flow verified                                                                                                                 |
+| 13. Cross-domain and Longitudinal Analyst   | Implemented and deployed, 2026-09-25                                       | 472 application tests, 159 local DB assertions, two-owner tool checks, authenticated desktop/mobile browser checks and build; see [Phase 13 contract](cross-domain-analyst.md)        | Hosted deployment, signed-in goal picker, two approved Analyst requests, source paths, safe incomplete-history fallback and clean route error scan verified 2026-09-25            |
 
 Repository health is independent: [formatting debt](repository-formatting-debt.md)
 records 45 historical failures and their local cleanup to zero on 2026-09-24.
@@ -187,9 +187,9 @@ into endless cleanup or waive mandatory CI policy.
 [contract](historical-metrics.md) defines source/date/coverage semantics and
 release boundaries. The live Analyst check showed the expected insufficient-history fallback for the current account. Phase 11's
 [contract](analyst-freeform.md) records the quota migration, grounded claims,
-fallback and validation. Phase 13 is implemented locally; its
-[release acceptance](cross-domain-analyst.md#local-verification-and-release-boundary--2026-09-25)
-remains open. Other hosted release gates above remain open. The next planned
+fallback and validation. Phase 13 is implemented and deployed; its
+[production acceptance](cross-domain-analyst.md#production-acceptance--2026-09-25)
+is recorded. Other hosted release gates above remain open. The next planned
 intelligence implementation is **Phase 14 — Pattern and Association Discovery**.
 
 The delivered AI surfaces are intentionally narrow. Universal Capture currently
@@ -1899,8 +1899,8 @@ A strong deterministic foundation will make every future AI capability safer, ch
 
 # 10. Next-Generation ATLAS Intelligence
 
-**Status:** Phases 9–13 are implemented locally. Phase 13 release acceptance and
-other required release-environment gates remain open. Phases 14–19 remain planned.
+**Status:** Phases 9–13 are implemented locally; Phases 12–13 are deployed and
+verified. Other required release-environment gates remain open. Phases 14–19 remain planned.
 
 ## Dependency map and sequencing decision
 
@@ -1921,7 +1921,7 @@ Legacy section anchors are retained for existing links.
 | 10                | 10    | Analyst Query Planner                   | Implemented and accepted locally           |
 | 11                | 11    | Analyst 2.0: Freeform Grounded Analysis | Implemented and accepted locally           |
 | 12                | 12    | Historical / Longitudinal Metrics Layer | Implemented locally                        |
-| 13                | 13    | Cross-domain and Longitudinal Analyst   | Implemented locally; release checks open   |
+| 13                | 13    | Cross-domain and Longitudinal Analyst   | Implemented and deployed                   |
 | 14                | 14    | Pattern and Association Discovery       | Planned                                    |
 | 15                | 15    | Scenario Intelligence                   | Planned                                    |
 | 16                | 16    | Next Best Action                        | Planned                                    |
@@ -2160,7 +2160,7 @@ flow, evidence validation, local acceptance and hosted release limits.
 
 ## Phase 13 — Cross-domain and Longitudinal Analyst
 
-**Status:** Implemented locally; release checks open. See [Phase 13 contract](cross-domain-analyst.md).
+**Status:** Implemented and verified in production. See [Phase 13 contract](cross-domain-analyst.md).
 
 - **Goal:** Combine Graph, reliable historical metrics, Timeline, Signals and approved tools for traceable cross-domain comparisons. Association discovery is separately scoped in Phase 14.
 - **User problem:** A person cannot easily see what changed around a goal across several linked activities over time.
@@ -2688,7 +2688,7 @@ planner's two-owner tool checks, 132 local database assertions, the local securi
 advisor, authenticated desktop/mobile browser checks and production build.
 Hosted migration and deployed authenticated flow remain separate release gates.
 Phase 12's request-time historical metrics, History page and bounded Analyst tool
-are described in [historical-metrics.md](historical-metrics.md). Phase 13's local
-implementation and release boundary are recorded in
+are described in [historical-metrics.md](historical-metrics.md). Phase 13's
+implementation and production acceptance are recorded in
 [cross-domain-analyst.md](cross-domain-analyst.md). Next planned intelligence phase:
 Pattern and Association Discovery (Phase 14).

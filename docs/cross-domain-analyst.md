@@ -1,6 +1,6 @@
 # Phase 13 — Cross-domain and Longitudinal Analyst
 
-**Implementation:** Local code, 2026-09-25. **Release state:** Hosted rollout and authenticated browser acceptance pending. This phase reuses the Phase 8 Graph, Phase 11 freeform Analyst and Phase 12 historical metrics RPC; it adds no migration or dependency.
+**Implementation and production release:** 2026-09-25. This phase reuses the Phase 8 Graph, Phase 11 freeform Analyst and Phase 12 historical metrics RPC; it adds no migration or dependency.
 
 ## Supported analysis
 
@@ -18,8 +18,16 @@ The Analyst page offers an optional goal picker. The server verifies that the se
 - The evidence cards show periods, coverage, calculation basis, source links and current relationship path types on narrow and wide layouts.
 - No private titles, descriptions or raw source IDs are sent to the answer model. The planner sees only the question, selected goal ID when provided, and approved tool schemas.
 
-## Local verification and release boundary — 2026-09-25
+## Local verification — 2026-09-25
 
 Focused tests cover complete and sparse month comparisons, bounded input, linked task and transaction facts, owner filters, foreign or missing goal parity, literal goal IDs in planner plans, selected-goal route behavior, model citation separation and the goal picker. The full application suite, lint, typecheck, formatting and production build passed. Seven synthetic live planner cases and five synthetic live answer cases passed with the pinned model after the planner prompt explicitly distinguished supported recorded history from unavailable historical snapshots.
 
-With Docker available, all five real local two-owner tool integration checks passed, including cross-domain history and goal-linked activity. The local database suite passed 159 pgTAP assertions across 17 files. A disposable local account completed the authenticated Analyst browser suite at desktop and mobile sizes; the selected-goal check verified the request's goal ID, current path evidence, and narrow layout. The account and its seeded records were removed. Hosted deployment and signed-in verification remain release acceptance work. No hosted phase state is inferred from local code or synthetic provider tests.
+With Docker available, all five real local two-owner tool integration checks passed, including cross-domain history and goal-linked activity. The local database suite passed 159 pgTAP assertions across 17 files. A disposable local account completed the authenticated Analyst browser suite at desktop and mobile sizes; the selected-goal check verified the request's goal ID, current path evidence, and narrow layout. The account and its seeded records were removed. The final application run passed 472 tests (17 skipped), lint, typecheck, format, and production build. No hosted phase state is inferred from local code or synthetic provider tests.
+
+## Production acceptance — 2026-09-25
+
+The Supabase connector confirmed that ProjectAtlas already has the Phase 8 Graph, Phase 11 freeform quota, and Phase 12 historical metrics migrations. No Phase 13 schema change was needed. The historical metrics RPC remains security-invoker, executable by signed-in users, and denied to anonymous users. The hosted security advisor reported the same pre-existing notices documented for Phase 11; Phase 13 added no schema finding.
+
+Commit `ddd8ad60aac1027032f4b5af08f32c444a3dfd0a` reached production through Vercel deployment `dpl_Ht2HH4ppnywqc9i3WiYR4iEENW2m` with the `atlas.kdvwebsiteservices.com` alias. GitHub CI run `36084741286` passed its quality job; its E2E job was skipped because CI has no disposable credentials. The local authenticated browser run above covered the new Phase 13 flow. Production `/api/health` returned 200, and an anonymous freeform POST returned 401. The signed-in Analyst page loaded the goal picker. Vercel reported no runtime errors on `/analyst` and `/api/analyst/freeform` in the checked hour after the live requests.
+
+With the account owner's explicit approval, two live questions were submitted from the signed-in account, consuming two freeform allowances. The cross-domain month comparison returned five source-linked facts with month, source count, and coverage; it withheld an AI trend explanation because the requested history included incomplete months. The selected `Build a stronger portfolio` goal returned two cited milestone completion facts, each with a current native Graph path and record link. Its grounded explanation did not claim past goal progress, and the limitations explicitly stated that current paths do not establish when links began. These requests verify the hosted tool, planner, evidence, consent, and answer paths for the available account records; they do not establish a complete-month change claim for this account.
