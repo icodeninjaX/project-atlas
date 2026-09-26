@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +11,8 @@ import {
   type BatchInterpretState,
 } from "@/lib/capture/batch-actions";
 import type { BatchCaptureItem } from "@/lib/capture/batch";
+import type { CaptureSource } from "@/lib/capture/media";
+import { MAX_CAPTURE_FILE_BYTES } from "@/lib/capture/media";
 
 type Account = { id: string; name: string; account_type: string };
 type Category = { id: string; name: string; category_type: string };
@@ -30,6 +32,7 @@ function Field({
   type = "text",
   required = false,
   maxLength,
+  sourceSnippet,
 }: {
   label: string;
   name: string;
@@ -37,6 +40,7 @@ function Field({
   type?: string;
   required?: boolean;
   maxLength?: number;
+  sourceSnippet?: string | null;
 }) {
   return (
     <label className="text-muted-foreground block text-xs">
@@ -49,6 +53,9 @@ function Field({
         maxLength={maxLength}
         className="border-border bg-background focus-visible:ring-ring mt-1.5 min-h-11 w-full rounded-xl border px-3 text-base outline-none focus-visible:ring-2"
       />
+      {sourceSnippet && (
+        <span className="mt-1 block text-xs">Source: “{sourceSnippet}”</span>
+      )}
     </label>
   );
 }
@@ -74,9 +81,58 @@ export function CaptureBatchWorkspace({
   );
   const [busy, setBusy] = useState(false);
   const [summary, setSummary] = useState("");
+  const [text, setText] = useState("");
+  const [source, setSource] = useState<CaptureSource | null>(null);
+  const [textKind, setTextKind] = useState<"typed" | "email">("typed");
+  const [extracting, setExtracting] = useState(false);
+  const [sourceMessage, setSourceMessage] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
   const items =
     state.batchId && state.batchId !== visibleBatch ? state.items : [];
   const pending = items.filter((item) => item.id && !results[item.id]);
+
+  async function extractFile() {
+    const file = fileRef.current?.files?.[0];
+    if (!file || extracting) return;
+    if (file.size > MAX_CAPTURE_FILE_BYTES) {
+      setSourceMessage("Choose a file under 4 MB.");
+      return;
+    }
+    setExtracting(true);
+    setSourceMessage("Reading your file…");
+    try {
+      const data = new FormData();
+      data.set("file", file);
+      const response = await fetch("/api/capture/extract", {
+        method: "POST",
+        body: data,
+      });
+      const result = (await response.json()) as {
+        text?: string;
+        source?: CaptureSource;
+        message?: string;
+      };
+      if (!response.ok || !result.text || !result.source) {
+        setSourceMessage(result.message ?? "Could not read that file.");
+        return;
+      }
+      setText(result.text);
+      setSource(result.source);
+      setVisibleBatch(state.batchId);
+      setSourceMessage(
+        result.text.length > 1000
+          ? "Text extracted. Keep the relevant 1,000 characters before previewing."
+          : "Text extracted. Correct anything misread before previewing.",
+      );
+      if (fileRef.current) fileRef.current.value = "";
+    } catch {
+      setSourceMessage(
+        "Could not read that file. Try again or type the details.",
+      );
+    } finally {
+      setExtracting(false);
+    }
+  }
 
   async function save(item: BatchCaptureItem) {
     if (!item.id || busy) return;
@@ -157,19 +213,108 @@ export function CaptureBatchWorkspace({
         action={action}
         className="border-border bg-card space-y-4 rounded-2xl border p-4 sm:p-6"
       >
+        <div className="space-y-3">
+          <label htmlFor="capture-file" className="block text-sm font-semibold">
+            Photo, document, or voice note
+          </label>
+          <input
+            ref={fileRef}
+            id="capture-file"
+            type="file"
+            accept=".png,.jpg,.jpeg,.webp,.pdf,.txt,.mp3,.m4a,.mp4,.wav,.webm,image/*,audio/*"
+            className="border-border bg-background block w-full rounded-xl border p-2 text-sm"
+          />
+          <p className="text-muted-foreground text-xs">
+            On mobile, choose Camera or Files. Files up to 4 MB. ATLAS does not
+            store the original file.
+          </p>
+          <Button
+            type="button"
+            disabled={extracting || interpreting}
+            onClick={extractFile}
+          >
+            {extracting ? "Reading file…" : "Extract text"}
+          </Button>
+          {sourceMessage && (
+            <p role="status" className="text-muted-foreground text-sm">
+              {sourceMessage}
+            </p>
+          )}
+        </div>
+        <label
+          htmlFor="capture-text-kind"
+          className="block text-sm font-semibold"
+        >
+          Text source
+        </label>
+        <select
+          id="capture-text-kind"
+          value={source?.kind === "email" ? "email" : textKind}
+          onChange={(event) => {
+            const kind = event.target.value as "typed" | "email";
+            setTextKind(kind);
+            setSource(
+              kind === "email"
+                ? {
+                    kind: "email",
+                    label: "Copied email",
+                    method: "copied",
+                    digest: null,
+                  }
+                : null,
+            );
+            setVisibleBatch(state.batchId);
+          }}
+          className="border-border bg-background min-h-11 w-full rounded-xl border px-3 text-sm sm:max-w-sm"
+        >
+          <option value="typed">Typed or pasted text</option>
+          <option value="email">Copied email</option>
+        </select>
+        {source && (
+          <div className="border-border bg-muted/40 rounded-xl border p-3 text-sm">
+            <p>
+              Source: {source.label} · {source.method}
+            </p>
+            <button
+              type="button"
+              className="text-primary mt-1 underline"
+              onClick={() => {
+                setText("");
+                setSource(null);
+                setTextKind("typed");
+                setSourceMessage("Source and extracted text removed.");
+                setVisibleBatch(state.batchId);
+              }}
+            >
+              Remove source and text
+            </button>
+          </div>
+        )}
         <label htmlFor="capture-text" className="block text-sm font-semibold">
           What happened?
         </label>
+        {source && (
+          <p className="text-muted-foreground text-xs">
+            Review and correct extracted text before previewing.
+          </p>
+        )}
         <textarea
           id="capture-text"
           name="text"
+          value={text}
           required
           minLength={8}
           maxLength={1000}
           placeholder="Paid ₱380 for groceries using GCash, then remind me to call Acme tomorrow"
-          onChange={() => setVisibleBatch(state.batchId)}
+          onChange={(event) => {
+            setText(event.target.value);
+            setVisibleBatch(state.batchId);
+          }}
           className="border-border bg-background focus-visible:ring-ring min-h-28 w-full resize-y rounded-xl border px-3 py-3 text-base outline-none focus-visible:ring-2"
         />
+        {source && (
+          <input type="hidden" name="source" value={JSON.stringify(source)} />
+        )}
         <label htmlFor="capture-model" className="block text-sm font-semibold">
           AI model
         </label>
@@ -190,9 +335,10 @@ export function CaptureBatchWorkspace({
           ))}
         </select>
         <p className="text-muted-foreground text-xs">
-          Your text is sent to OpenAI only when you request a preview. Eligible
-          API inputs and outputs may be shared with OpenAI depending on your API
-          project settings; standard charges may apply.
+          Your text or selected file is sent to OpenAI only when you request
+          extraction or a preview. Eligible API inputs and outputs may be shared
+          with OpenAI depending on your API project settings; standard charges
+          may apply.
         </p>
         <Button
           type="submit"
@@ -331,6 +477,13 @@ function CaptureCard({
             : proposal.kind.replaceAll("_", " ")}
         </p>
         <p className="mt-1 text-sm font-medium">“{item.sourcePhrase}”</p>
+        {item.source && (
+          <p className="text-muted-foreground mt-1 text-xs">
+            {item.source.label} · {item.source.method} · line{" "}
+            {item.sourceLine ?? 1} of corrected text · {proposal.confidence}{" "}
+            confidence
+          </p>
+        )}
         <p className="text-muted-foreground mt-1 text-xs">
           {result ? result.message : "Review and correct before saving."}
         </p>
@@ -385,6 +538,7 @@ function CaptureCard({
                 name="scheduledFor"
                 type="date"
                 value={proposal.date}
+                sourceSnippet={item.source && proposal.dateText}
                 required
               />
               {item.candidates.length === 0 && (
@@ -412,6 +566,11 @@ function CaptureCard({
                     </option>
                   ))}
                 </select>
+                {item.source && proposal.accountText && (
+                  <span className="mt-1 block text-xs">
+                    Source: “{proposal.accountText}”
+                  </span>
+                )}
               </label>
               <label className="text-muted-foreground block text-xs">
                 Category
@@ -435,6 +594,7 @@ function CaptureCard({
                 label="Amount in PHP"
                 name="amount"
                 value={proposal.amount}
+                sourceSnippet={item.source && proposal.amountText}
                 required
               />
               <Field
@@ -442,12 +602,14 @@ function CaptureCard({
                 name="transactionDate"
                 type="date"
                 value={proposal.date}
+                sourceSnippet={item.source && proposal.dateText}
                 required
               />
               <Field
                 label="Merchant or source"
                 name="merchantOrSource"
                 value={proposal.merchantOrSource}
+                sourceSnippet={item.source && proposal.merchantOrSource}
                 maxLength={160}
               />
               <Field
@@ -464,6 +626,7 @@ function CaptureCard({
                 label="Task title"
                 name="title"
                 value={proposal.title}
+                sourceSnippet={item.source && proposal.title}
                 required
                 maxLength={160}
               />
@@ -472,6 +635,7 @@ function CaptureCard({
                 name="scheduledFor"
                 type="date"
                 value={proposal.date}
+                sourceSnippet={item.source && proposal.dateText}
               />
               <Field
                 label="Description"
@@ -500,6 +664,7 @@ function CaptureCard({
                 label="Company name"
                 name="companyName"
                 value={proposal.companyName}
+                sourceSnippet={item.source && proposal.companyName}
                 required
                 maxLength={160}
               />
@@ -507,6 +672,7 @@ function CaptureCard({
                 label="Role title"
                 name="roleTitle"
                 value={proposal.roleTitle}
+                sourceSnippet={item.source && proposal.roleTitle}
                 required
                 maxLength={160}
               />
@@ -514,6 +680,7 @@ function CaptureCard({
                 label="Next action"
                 name="nextAction"
                 value={proposal.title}
+                sourceSnippet={item.source && proposal.title}
                 maxLength={160}
               />
               <Field
@@ -521,6 +688,11 @@ function CaptureCard({
                 name="appliedAt"
                 type="date"
                 value={proposal.dateRole === "applied" ? proposal.date : null}
+                sourceSnippet={
+                  item.source && proposal.dateRole === "applied"
+                    ? proposal.dateText
+                    : null
+                }
               />
               <Field
                 label="Next action date"
@@ -528,6 +700,11 @@ function CaptureCard({
                 type="date"
                 value={
                   proposal.dateRole === "next_action" ? proposal.date : null
+                }
+                sourceSnippet={
+                  item.source && proposal.dateRole === "next_action"
+                    ? proposal.dateText
+                    : null
                 }
               />
               <label className="text-muted-foreground block text-xs">
@@ -578,6 +755,7 @@ function CaptureCard({
                 label="Concept title"
                 name="title"
                 value={proposal.title}
+                sourceSnippet={item.source && proposal.title}
                 required
                 maxLength={160}
               />
@@ -597,8 +775,28 @@ function CaptureCard({
                   defaultValue={proposal.notes ?? ""}
                   className="border-border bg-background mt-1.5 min-h-28 w-full rounded-xl border px-3 py-2 text-base"
                 />
+                {item.source && proposal.notes && (
+                  <span className="mt-1 block text-xs">
+                    Source: “{proposal.notes}”
+                  </span>
+                )}
               </label>
             </div>
+          )}
+          {item.source && (money || proposal.date) && (
+            <label className="border-border bg-muted/40 flex items-start gap-3 rounded-xl border p-3 text-sm">
+              <input
+                type="checkbox"
+                name="reviewedSource"
+                value="yes"
+                required
+                className="mt-1"
+              />
+              <span>
+                I checked the extracted amount and date, where present, against
+                the source text.
+              </span>
+            </label>
           )}
           <div className="border-border flex flex-wrap gap-2 border-t pt-4">
             <Button type="submit" disabled={busy}>

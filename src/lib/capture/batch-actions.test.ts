@@ -96,6 +96,74 @@ afterEach(() => {
 });
 
 describe("Capture 2.0 actions", () => {
+  it("warns when the same source file was previewed recently", async () => {
+    const digest = "a".repeat(64);
+    const source = {
+      kind: "image",
+      label: "receipt.png",
+      method: "vision",
+      digest,
+    };
+    mocks.from.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          order: () => ({
+            limit: async () => ({
+              data: [{ proposal: { source: { digest } } }],
+              error: null,
+            }),
+          }),
+        }),
+      }),
+      insert: mocks.insert,
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              finish_reason: "stop",
+              message: {
+                content: JSON.stringify({
+                  items: [
+                    {
+                      sourcePhrase: "Call Acme tomorrow",
+                      operation: "create",
+                      targetText: null,
+                      proposal: proposal(),
+                    },
+                  ],
+                }),
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const result = await interpretCaptureBatchAction(
+      { message: "", batchId: null, items: [] },
+      form({ text: "Call Acme tomorrow", source: JSON.stringify(source) }),
+    );
+    expect(result.items[0]?.source).toEqual(source);
+    expect(result.items[0]?.proposal.warnings).toEqual(
+      expect.arrayContaining([expect.stringMatching(/previewed recently/)]),
+    );
+    expect(mocks.insert.mock.calls[0]?.[0]?.[0]?.proposal.source).toEqual(
+      source,
+    );
+  });
+
+  it("rejects malformed provenance before reserving a model request", async () => {
+    const result = await interpretCaptureBatchAction(
+      { message: "", batchId: null, items: [] },
+      form({ text: "Call Acme tomorrow", source: "{" }),
+    );
+    expect(result.items).toHaveLength(0);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
   it("previews two independent records without invoking a domain mutation", async () => {
     vi.stubGlobal(
       "fetch",
@@ -180,6 +248,39 @@ describe("Capture 2.0 actions", () => {
       p_status: "saved",
       p_message: "Task added.",
     });
+  });
+
+  it("requires an explicit source check before a media-derived dated action", async () => {
+    mocks.rpc.mockImplementation(async (name: string) =>
+      name === "claim_capture_preview"
+        ? {
+            data: {
+              proposal: {
+                proposal: proposal(),
+                candidates: [],
+                source: {
+                  kind: "image",
+                  label: "note.png",
+                  method: "vision",
+                  digest: "a".repeat(64),
+                },
+              },
+            },
+            error: null,
+          }
+        : { data: true, error: null },
+    );
+    const result = await confirmCaptureBatchItemAction(
+      form({
+        previewId: id,
+        operation: "create",
+        kind: "task",
+        title: "Call Acme",
+        scheduledFor: "2026-09-26",
+      }),
+    );
+    expect(result.status).toBe("failed");
+    expect(mocks.task).not.toHaveBeenCalled();
   });
 
   it("refuses a replay before any domain mutation", async () => {
