@@ -1,6 +1,6 @@
 # Decision → Outcome Intelligence — Phase 19
 
-**Status:** Implemented and locally accepted on 2026-09-26. Hosted release and signed-in production acceptance remain to be verified.
+**Status:** Implemented and locally accepted on 2026-09-26. Hosted migrations are applied; application release and signed-in production acceptance remain to be verified.
 
 ## Product contract
 
@@ -14,7 +14,7 @@
 
 ## Local acceptance — 2026-09-26
 
-- Three migrations applied to the existing local Supabase database without a reset: `20260926033912_decision_journal`, `20260926044749_decision_timeline_column_fix`, and `20260926044920_decision_revision_context`. The second migration resolves an ambiguous Timeline output column found by pgTAP; the third preserves changed assumptions and rationale.
+- Three migrations applied to the existing local Supabase database without a reset: `20260926051251_decision_journal`, `20260926051306_decision_timeline_column_fix`, and `20260926051309_decision_revision_context`. The second migration resolves an ambiguous Timeline output column found by pgTAP; the third preserves changed assumptions and rationale. Local migration history was aligned to the hosted versions after deployment.
 - All 225 database assertions across 21 files passed. The Phase 19 cases cover owner isolation, foreign-link rejection, source cleanup, revision history, Timeline, Graph counts, bounded source IDs, and deletion. Local Supabase security advisors found no warning-level issues.
 - Lint and typecheck passed. The production build included `/decisions` and `/decisions/[id]`. The application suite passed with two workers: 553 passed, 29 skipped across 113 files. The default parallel run had unrelated 5-second test timeouts; those tests passed in isolation and the bounded full run passed.
 - A disposable local account completed the signed-in Chromium flow at 1280px and 320px: record a decision, select goal and task, cite a career application, inspect the source, revise the plan, see Timeline, verify no horizontal overflow, and delete the decision. The account was deleted afterward.
@@ -22,4 +22,4 @@
 
 ## Release boundary
 
-The hosted Supabase project already has the prerequisite Graph and History migrations; the three Phase 19 migrations and application revision still need deployment and a disposable signed-in production browser check. The current Analyst planner has no decision-specific evidence tool, so Phase 19 presents bounded deterministic interpretation instead of sending journal contents to a model. A future Analyst explanation needs a dedicated decision evidence contract, explicit data-sharing choice, quota handling, and the same no-causation checks.
+The hosted Supabase project has the prerequisite Graph and History migrations and all three Phase 19 migrations. Application deployment and a disposable signed-in production browser check remain. The current Analyst planner has no decision-specific evidence tool, so Phase 19 presents bounded deterministic interpretation instead of sending journal contents to a model. A future Analyst explanation needs a dedicated decision evidence contract, explicit data-sharing choice, quota handling, and the same no-causation checks.
