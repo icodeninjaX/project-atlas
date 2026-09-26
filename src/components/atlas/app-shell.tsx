@@ -33,6 +33,7 @@ const destinations = {
   signals: { href: "/signals", label: "Signals", icon: Radar },
   money: { href: "/money/accounts", label: "Money", icon: WalletCards },
   debts: { href: "/debts", label: "Debts", icon: Landmark },
+  decisions: { href: "/decisions", label: "Decisions", icon: NotebookPen },
   tasks: { href: "/tasks", label: "Tasks", icon: ClipboardCheck },
   goals: { href: "/goals", label: "Goals", icon: Goal },
   history: { href: "/history", label: "History", icon: History },
@@ -65,6 +66,7 @@ const navigationGroups = [
     label: "Reflect",
     destinations: [
       destinations.reviews,
+      destinations.decisions,
       destinations.history,
       destinations.timeline,
       destinations.knowledge,
@@ -87,6 +89,7 @@ const mobileMoreNavigation = [
   destinations.signals,
   destinations.career,
   destinations.reviews,
+  destinations.decisions,
   destinations.history,
   destinations.timeline,
   destinations.knowledge,

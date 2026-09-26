@@ -153,6 +153,98 @@ describe("one-hop relationship materialization", () => {
     expect(resolved.items[0]?.related.title).toBe("Complete portfolio");
     expect(resolved.items[0]?.removable).toBe(false);
   });
+
+  it("traces a decision through its goal, action, observation, and cited source", () => {
+    const decision: GraphEntitySummary = {
+      type: "decision",
+      id: "d",
+      title: "Apply weekly",
+      subtitle: "2026-09-01",
+      href: "/decisions/d",
+    };
+    const observation: GraphEntitySummary = {
+      type: "decision_observation",
+      id: "o",
+      title: "Sent an application",
+      subtitle: "2026-09-10",
+      href: "/decisions/d#observation-o",
+    };
+    const application: GraphEntitySummary = {
+      type: "job_application",
+      id: "a",
+      title: "Acme · Developer",
+      subtitle: "applied",
+      href: "/career?highlight=a",
+    };
+    const links: GraphEdge[] = [
+      {
+        id: "dg",
+        sourceType: "decision",
+        sourceId: "d",
+        targetType: "goal",
+        targetId: "g",
+        kind: "decision_goal",
+        origin: "native",
+      },
+      {
+        id: "da",
+        sourceType: "decision",
+        sourceId: "d",
+        targetType: "task",
+        targetId: "t",
+        kind: "decision_action",
+        origin: "native",
+      },
+      {
+        id: "od",
+        sourceType: "decision_observation",
+        sourceId: "o",
+        targetType: "decision",
+        targetId: "d",
+        kind: "observation_decision",
+        origin: "native",
+      },
+      {
+        id: "os",
+        sourceType: "decision_observation",
+        sourceId: "o",
+        targetType: "job_application",
+        targetId: "a",
+        kind: "observation_source",
+        origin: "native",
+      },
+    ];
+    const records = new Map([
+      ...summaries,
+      ["decision:d", decision] as const,
+      ["decision_observation:o", observation] as const,
+      ["job_application:a", application] as const,
+    ]);
+    expect(
+      materializeRelationships(
+        links,
+        records,
+        { type: "decision", id: "d" },
+        10,
+      ).items.map((item) => item.related.type),
+    ).toEqual(["goal", "task", "decision_observation"]);
+    expect(
+      materializeRelationships(
+        links,
+        records,
+        { type: "decision_observation", id: "o" },
+        10,
+      ).items.map((item) => item.related.type),
+    ).toEqual(["decision", "job_application"]);
+    expect(
+      materializeRelationships(
+        links,
+        records,
+        { type: "job_application", id: "a" },
+        10,
+      ).items[0]?.removable,
+    ).toBe(false);
+  });
 });
 
 it("keeps signal provenance derived and ephemeral", () => {

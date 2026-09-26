@@ -23,6 +23,8 @@ const order: GraphEntityType[] = [
   "job_application",
   "weekly_review",
   "transaction",
+  "decision",
+  "decision_observation",
 ];
 
 export function GoalRelatedDetails({

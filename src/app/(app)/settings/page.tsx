@@ -68,6 +68,21 @@ const csvExports = [
     description: "Goals and progress",
   },
   {
+    entity: "decisions",
+    label: "Decisions",
+    description: "Choices and expected outcomes",
+  },
+  {
+    entity: "decision_observations",
+    label: "Decision observations",
+    description: "Notes from later reviews",
+  },
+  {
+    entity: "decision_revisions",
+    label: "Decision revisions",
+    description: "Earlier plans kept for review",
+  },
+  {
     entity: "job_applications",
     label: "Career applications",
     description: "Pipeline and follow-ups",

@@ -84,6 +84,9 @@ describe("AppShell", () => {
       within(sheet).getByRole("link", { name: "Reviews" }),
     ).toBeInTheDocument();
     expect(
+      within(sheet).getByRole("link", { name: "Decisions" }),
+    ).toBeInTheDocument();
+    expect(
       within(sheet).getByRole("link", { name: "Timeline" }),
     ).toBeInTheDocument();
     expect(

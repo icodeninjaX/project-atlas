@@ -26,6 +26,20 @@ type ExplicitRow = {
   created_at: string;
 };
 
+type DecisionLinkRow = {
+  id: string;
+  goal_id: string | null;
+  action_task_id: string | null;
+};
+
+type ObservationLinkRow = {
+  id: string;
+  decision_id: string;
+  source_task_id: string | null;
+  source_transaction_id: string | null;
+  source_application_id: string | null;
+};
+
 export type { RelatedEntity } from "@/lib/graph/model";
 
 const uuidPattern =
@@ -71,6 +85,64 @@ async function resolveEntities(
   return new Map(
     entries.flat().map((entity) => [`${entity.type}:${entity.id}`, entity]),
   );
+}
+
+async function loadDecisionLinks(
+  client: SupabaseClient,
+  ownerId: string,
+  type: GraphEntityType,
+  id: string,
+  limit: number,
+): Promise<DecisionLinkRow[]> {
+  const column =
+    type === "goal"
+      ? "goal_id"
+      : type === "task"
+        ? "action_task_id"
+        : type === "decision"
+          ? "id"
+          : null;
+  if (!column) return [];
+  const { data, error } = await client
+    .from("decisions")
+    .select("id,goal_id,action_task_id")
+    .eq("user_id", ownerId)
+    .eq(column, id)
+    .limit(limit);
+  if (error) throw new Error("Related decisions could not be loaded.");
+  return (data ?? []) as DecisionLinkRow[];
+}
+
+async function loadObservationLinks(
+  client: SupabaseClient,
+  ownerId: string,
+  type: GraphEntityType,
+  id: string,
+  limit: number,
+): Promise<ObservationLinkRow[]> {
+  const column =
+    type === "decision"
+      ? "decision_id"
+      : type === "decision_observation"
+        ? "id"
+        : type === "task"
+          ? "source_task_id"
+          : type === "transaction"
+            ? "source_transaction_id"
+            : type === "job_application"
+              ? "source_application_id"
+              : null;
+  if (!column) return [];
+  const { data, error } = await client
+    .from("decision_observations")
+    .select(
+      "id,decision_id,source_task_id,source_transaction_id,source_application_id",
+    )
+    .eq("user_id", ownerId)
+    .eq(column, id)
+    .limit(limit);
+  if (error) throw new Error("Related observations could not be loaded.");
+  return (data ?? []) as ObservationLinkRow[];
 }
 
 /** One-hop, owner-scoped Graph read helper for product UI and future Analyst retrieval. */
@@ -194,6 +266,67 @@ export async function getRelatedEntities(
     }
   }
 
+  const [decisions, observations] = await Promise.all([
+    loadDecisionLinks(client, ownerId, entityType, entityId, boundedLimit + 1),
+    loadObservationLinks(
+      client,
+      ownerId,
+      entityType,
+      entityId,
+      boundedLimit + 1,
+    ),
+  ]);
+  for (const row of decisions) {
+    if (row.goal_id)
+      edges.push({
+        id: `native:decision-goal:${row.id}`,
+        sourceType: "decision",
+        sourceId: row.id,
+        targetType: "goal",
+        targetId: row.goal_id,
+        kind: "decision_goal",
+        origin: "native",
+      });
+    if (row.action_task_id)
+      edges.push({
+        id: `native:decision-action:${row.id}`,
+        sourceType: "decision",
+        sourceId: row.id,
+        targetType: "task",
+        targetId: row.action_task_id,
+        kind: "decision_action",
+        origin: "native",
+      });
+  }
+  for (const row of observations) {
+    edges.push({
+      id: `native:observation-decision:${row.id}`,
+      sourceType: "decision_observation",
+      sourceId: row.id,
+      targetType: "decision",
+      targetId: row.decision_id,
+      kind: "observation_decision",
+      origin: "native",
+    });
+    const source = row.source_task_id
+      ? { type: "task" as const, id: row.source_task_id }
+      : row.source_transaction_id
+        ? { type: "transaction" as const, id: row.source_transaction_id }
+        : row.source_application_id
+          ? { type: "job_application" as const, id: row.source_application_id }
+          : null;
+    if (source)
+      edges.push({
+        id: `native:observation-source:${row.id}`,
+        sourceType: "decision_observation",
+        sourceId: row.id,
+        targetType: source.type,
+        targetId: source.id,
+        kind: "observation_source",
+        origin: "native",
+      });
+  }
+
   const summaries = await resolveEntities(
     client,
     ownerId,
@@ -253,9 +386,11 @@ export async function searchGraphCandidates(
         ? "company_name"
         : type === "weekly_review"
           ? "week_start"
-          : type === "transaction"
-            ? "merchant_or_source"
-            : "title";
+          : type === "decision_observation"
+            ? "note"
+            : type === "transaction"
+              ? "merchant_or_source"
+              : "title";
   let request = client
     .from(definition.table)
     .select(definition.columns)

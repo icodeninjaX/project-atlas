@@ -7,6 +7,7 @@ describe("pageTitleFor", () => {
     expect(pageTitleFor("/money/transactions")).toBe("Transactions");
     expect(pageTitleFor("/money/runway/details")).toBe("Runway");
     expect(pageTitleFor("/goals/abc")).toBe("Goals");
+    expect(pageTitleFor("/decisions/abc")).toBe("Decisions");
   });
 
   it("falls back to the product name for unknown routes", () => {

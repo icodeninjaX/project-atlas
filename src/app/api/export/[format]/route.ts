@@ -67,6 +67,47 @@ const csvEntities = {
     "created_at",
     "updated_at",
   ],
+  decisions: [
+    "id",
+    "title",
+    "decision_on",
+    "intent",
+    "expected_outcome",
+    "rationale",
+    "assumptions",
+    "review_on",
+    "goal_id",
+    "action_task_id",
+    "metric_key",
+    "created_at",
+    "updated_at",
+  ],
+  decision_observations: [
+    "id",
+    "decision_id",
+    "observed_on",
+    "note",
+    "source_task_id",
+    "source_transaction_id",
+    "source_application_id",
+    "created_at",
+    "updated_at",
+  ],
+  decision_revisions: [
+    "id",
+    "decision_id",
+    "previous_title",
+    "previous_decision_on",
+    "previous_intent",
+    "previous_expected_outcome",
+    "previous_rationale",
+    "previous_assumptions",
+    "previous_review_on",
+    "previous_goal_id",
+    "previous_action_task_id",
+    "previous_metric_key",
+    "changed_at",
+  ],
   job_applications: [
     "id",
     "company_name",
@@ -132,6 +173,9 @@ const jsonTables = [
   "debt_payments",
   "tasks",
   "goals",
+  "decisions",
+  "decision_observations",
+  "decision_revisions",
   "goal_milestones",
   "knowledge_concepts",
   "knowledge_reviews",
@@ -172,7 +216,9 @@ export async function GET(
     const { data, error } = await supabase
       .from(entity)
       .select(columns.join(","))
-      .order("created_at", { ascending: true })
+      .order(entity === "decision_revisions" ? "changed_at" : "created_at", {
+        ascending: true,
+      })
       .limit(10_000);
 
     if (error)
@@ -204,7 +250,9 @@ export async function GET(
       const { data, error } = await supabase
         .from(table)
         .select("*")
-        .order("created_at", { ascending: true })
+        .order(table === "decision_revisions" ? "changed_at" : "created_at", {
+          ascending: true,
+        })
         .limit(10_000);
       if (error) {
         return Response.json(
@@ -219,7 +267,7 @@ export async function GET(
       JSON.stringify(
         {
           exported_at: new Date().toISOString(),
-          format_version: 3,
+          format_version: 5,
           data: exported,
         },
         null,
