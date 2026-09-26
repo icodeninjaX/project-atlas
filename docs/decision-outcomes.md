@@ -1,6 +1,6 @@
 # Decision → Outcome Intelligence — Phase 19
 
-**Status:** Implemented and locally accepted on 2026-09-26. Hosted migrations are applied; application release and signed-in production acceptance remain to be verified.
+**Status:** Implemented, deployed, and signed-in production accepted on 2026-09-26.
 
 ## Product contract
 
@@ -20,6 +20,12 @@
 - A disposable local account completed the signed-in Chromium flow at 1280px and 320px: record a decision, select goal and task, cite a career application, inspect the source, revise the plan, see Timeline, verify no horizontal overflow, and delete the decision. The account was deleted afterward.
 - Synthetic review cases cover complete and missing windows, delayed follow-up, year boundaries, and a larger recorded measure without a success or causal label. All five measure-specific alternative prompts remain questions.
 
-## Release boundary
+## Hosted release — 2026-09-26
 
-The hosted Supabase project has the prerequisite Graph and History migrations and all three Phase 19 migrations. Application deployment and a disposable signed-in production browser check remain. The current Analyst planner has no decision-specific evidence tool, so Phase 19 presents bounded deterministic interpretation instead of sending journal contents to a model. A future Analyst explanation needs a dedicated decision evidence contract, explicit data-sharing choice, quota handling, and the same no-causation checks.
+- [PR #4](https://github.com/icodeninjaX/project-atlas/pull/4) passed its quality and Vercel preview checks and merged at `2e38c8b5ab85b7f2756a50932e6fa3a751e7ae5a`. [Main-branch CI](https://github.com/icodeninjaX/project-atlas/actions/runs/36220446878) passed 554 application tests (29 skipped), lint, typecheck, and build. Vercel production deployment `dpl_HyaQvKEchmBSufgj9Ymqv1wdLCUs` reached Ready and owns the production alias.
+- The three Phase 19 migrations applied to the hosted project in filename order. Hosted checks found the decision, observation, and revision tables; the source RPC is executable by `authenticated` and unavailable to `anon`. Supabase security advisors reported no Phase 19 findings; their existing warnings concern earlier functions and project password settings.
+- Production `/api/health` returned 200 with `Cache-Control: no-store`. A disposable hosted account passed a signed-in Chromium flow at 1280px and 320px covering decision creation, goal/action links, Graph, a cited career application, a dated observation, revision history, Timeline, no horizontal overflow, and decision deletion. The account was then removed; its user, decision, observation, revision, and Timeline counts were all zero. The production deployment error log had no entries in the checked 30-minute window.
+
+## Future boundary
+
+The current Analyst planner has no decision-specific evidence tool, so Phase 19 presents bounded deterministic interpretation instead of sending journal contents to a model. A future Analyst explanation needs a dedicated decision evidence contract, explicit data-sharing choice, quota handling, and the same no-causation checks.
