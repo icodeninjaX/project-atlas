@@ -2,7 +2,7 @@
 
 **Project:** ATLAS — Personal Operating System\
 **Repository:** `icodeninjaX/project-atlas`\
-**Last reviewed:** 2026-09-25\
+**Last reviewed:** 2026-09-26\
 **Purpose:** Give an AI coding agent a clear, sequential roadmap for evolving ATLAS from a structured personal tracker into a connected and increasingly intelligent personal operating system.
 
 ---
@@ -136,7 +136,7 @@ summary takes precedence for current next-action guidance.
 | 16. Next Best Action                        | Implemented and deployed, 2026-09-25                                       | Dayline-ranked application follow-ups, owner/stale/duplicate database checks, application tests and signed-in local desktop/320px browser review; see [Phase 16 contract](next-best-action.md)                                  | Hosted migrations, two-owner database check, ready deployment, signed-in desktop/320px review, saved choices and task persistence verified 2026-09-25                             |
 | 17. Universal Capture 2.0                   | Implemented and deployed, 2026-09-25                                       | Bounded batch, task resolution, live synthetic evaluation, local owner/RPC tests and signed-in desktop/320px review; see [Phase 17 contract](universal-capture-2.md)                                                            | Three hosted migrations, owner/RPC checks, scheduled cleanup, CI, ready deployment and signed-in production desktop/320px batch flows verified 2026-09-25                         |
 | 18. Multimodal Universal Capture            | Implemented and deployed, 2026-09-26; signed-in acceptance open            | File validation, extraction, editable text, provenance, confirmation tests, synthetic live media checks, CI and production smoke; see [Phase 18 contract](multimodal-capture.md)                                                | File-scanning decision documented; broader media evaluation and signed-in desktop/320px review remain open                                                                        |
-| 19. Decision → Outcome Intelligence         | Implemented locally, 2026-09-26                                            | 553 application tests, 225 database assertions, signed-in local desktop/320px flow, lint, typecheck and build; see [Phase 19 contract](decision-outcomes.md)                                                                    | Hosted migration, application deployment and signed-in production acceptance pending                                                                                              |
+| 19. Decision → Outcome Intelligence         | Implemented and deployed, 2026-09-26                                       | 553 local application tests plus one focused review test, 225 database assertions, signed-in local desktop/320px flow, lint, typecheck and build; see [Phase 19 contract](decision-outcomes.md)                                 | Three hosted migrations, 554 passing CI tests, ready deployment and signed-in production desktop/320px flow verified 2026-09-26                                                   |
 
 Repository health is independent: [formatting debt](repository-formatting-debt.md)
 records 45 historical failures and their local cleanup to zero on 2026-09-24.
@@ -1913,7 +1913,7 @@ A strong deterministic foundation will make every future AI capability safer, ch
 
 **Status:** Phases 9–17 are implemented locally; Phases 12–13 and 16–17 are
 deployed and verified. Other required release-environment gates remain open.
-Phase 18 is deployed with signed-in acceptance open; Phase 19 is locally accepted with release checks open.
+Phase 18 is deployed with signed-in acceptance open; Phase 19 is deployed and signed-in accepted.
 
 ## Dependency map and sequencing decision
 
@@ -1940,7 +1940,7 @@ Legacy section anchors are retained for existing links.
 | 16                | 16    | Next Best Action                        | Implemented and deployed                 |
 | 17                | 17    | Universal Capture 2.0                   | Implemented and deployed                 |
 | 18                | 18    | Multimodal Capture                      | Core local flow; release acceptance open |
-| 19                | 19    | Decision → Outcome Intelligence         | Implemented locally; hosted release open |
+| 19                | 19    | Decision → Outcome Intelligence         | Implemented and deployed                 |
 
 This numbering gives delivery order, not a claim that each phase technically requires all
 previous phases. Build and accept one scoped phase at a time. Initial freeform
@@ -2417,7 +2417,7 @@ validation and preview contract; this list does not claim current support.
 
 ## Phase 19 — Decision journal and decision → outcome intelligence
 
-**Status:** Implemented and locally accepted; hosted release open. See [Phase 19 contract](decision-outcomes.md). Delivery priority 19.
+**Status:** Implemented, deployed, and signed-in accepted; see [Phase 19 contract](decision-outcomes.md). Delivery priority 19.
 
 - **Goal:** Record meaningful user decisions, connect them to intended goals,
   and later inspect what happened.
@@ -2745,8 +2745,9 @@ typecheck, formatting and production build. Phase 16 Next Best Action is
 implemented and deployed for Dayline-ranked application follow-ups. Its owner,
 stale-state, dismissal, duplicate-write, hosted migration and signed-in production
 browser checks are recorded in [next-best-action.md](next-best-action.md).
-Current intelligence phase: Multimodal Capture (Phase 18), released with
-remaining browser acceptance recorded in [its contract](multimodal-capture.md).
-Phase 19 has Graph/Timeline integration and local acceptance; hosted release acceptance remains. Phase 17 Universal
-Capture 2.0 is implemented and deployed; its [contract](universal-capture-2.md)
-records supported actions and production acceptance.
+The latest delivered intelligence phase is Decision → Outcome (Phase 19), with
+Graph/Timeline integration and production acceptance in [its contract](decision-outcomes.md).
+Phase 18 is released with signed-in browser acceptance still open in
+[its contract](multimodal-capture.md). Phase 17 Universal Capture 2.0 is
+implemented and deployed; its [contract](universal-capture-2.md) records
+supported actions and production acceptance.
