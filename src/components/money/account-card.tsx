@@ -56,13 +56,13 @@ function walletTone(account: AccountSummary) {
 
   switch (account.account_type) {
     case "cash":
-      return "border-emerald-200/25 bg-emerald-600 text-white shadow-emerald-950/30";
+      return "border-emerald-200/25 bg-emerald-700 text-white shadow-emerald-950/30";
     case "bank":
       return "border-cyan-200/25 bg-cyan-700 text-white shadow-cyan-950/30";
     case "savings":
-      return "border-rose-200/25 bg-rose-500 text-white shadow-rose-950/30";
+      return "border-rose-200/25 bg-rose-700 text-white shadow-rose-950/30";
     case "investment":
-      return "border-orange-200/25 bg-orange-600 text-white shadow-orange-950/30";
+      return "border-orange-200/25 bg-orange-700 text-white shadow-orange-950/30";
     default:
       return "border-violet-200/25 bg-violet-600 text-white shadow-violet-950/30";
   }
@@ -120,7 +120,7 @@ export function AccountCard({
                 <p className="text-sm font-semibold tracking-[-0.01em] break-words sm:text-[15px]">
                   {account.name}
                 </p>
-                <p className="mt-0.5 text-xs leading-4 font-medium break-words text-white/75 capitalize">
+                <p className="mt-0.5 text-xs leading-4 font-medium break-words text-white capitalize">
                   {account.account_type.replaceAll("_", " ")}
                   {account.institution ? ` · ${account.institution}` : ""}
                 </p>
@@ -128,7 +128,7 @@ export function AccountCard({
             </div>
 
             <div className="mt-auto pt-5">
-              <p className="text-xs font-semibold tracking-[0.12em] text-white/70 uppercase">
+              <p className="text-xs font-semibold tracking-[0.12em] text-white uppercase">
                 Balance
               </p>
               <p className="mt-1 min-w-0 font-mono text-lg leading-tight font-bold tracking-[-0.045em] [overflow-wrap:anywhere] break-words tabular-nums sm:text-xl">

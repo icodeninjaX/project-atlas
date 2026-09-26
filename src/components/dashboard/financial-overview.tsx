@@ -57,9 +57,9 @@ export function FinancialOverview({ metrics }: { metrics: FinancialMetric[] }) {
           Money <ArrowRight aria-hidden="true" className="size-3" />
         </Link>
       </div>
-      <dl className="border-border mt-3 border-y">
+      <div className="border-border mt-3 border-y">
         {available && (
-          <div className="py-3">
+          <dl className="py-3">
             <dt className="text-muted-foreground text-[11px] font-medium">
               Available balance
             </dt>
@@ -69,10 +69,10 @@ export function FinancialOverview({ metrics }: { metrics: FinancialMetric[] }) {
             <dd className="text-muted-foreground mt-1 text-xs leading-4">
               Available across active accounts
             </dd>
-          </div>
+          </dl>
         )}
 
-        <div className="border-border divide-border divide-y border-t">
+        <dl className="border-border divide-border divide-y border-t">
           {supportingMetrics.map((metric) => (
             <div
               key={metric.label}
@@ -89,8 +89,8 @@ export function FinancialOverview({ metrics }: { metrics: FinancialMetric[] }) {
               </dd>
             </div>
           ))}
-        </div>
-      </dl>
+        </dl>
+      </div>
       <div className="mt-1 flex justify-end">
         <Link
           href="/money/runway"

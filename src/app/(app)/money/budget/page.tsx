@@ -125,16 +125,18 @@ export default async function BudgetPage({
           <CardContent>
             <p className="text-muted-foreground text-xs">Remaining</p>
             <p
-              className={`mt-3 font-mono text-2xl font-semibold ${plannedTotal - actualTotal < 0 ? "text-destructive" : "text-primary"}`}
+              className={`mt-3 font-mono text-2xl font-semibold ${plannedTotal > 0 && plannedTotal - actualTotal < 0 ? "text-destructive" : plannedTotal > 0 ? "text-primary" : ""}`}
             >
               <SensitiveValue>
                 {formatCentavos(plannedTotal - actualTotal)}
               </SensitiveValue>
             </p>
             <p className="text-muted-foreground mt-1 text-[10px]">
-              {plannedTotal - actualTotal < 0
-                ? "Over budget"
-                : "Available in plan"}
+              {plannedTotal === 0
+                ? "No plan set for this month"
+                : plannedTotal - actualTotal < 0
+                  ? "Over budget"
+                  : "Available in plan"}
             </p>
           </CardContent>
         </Card>

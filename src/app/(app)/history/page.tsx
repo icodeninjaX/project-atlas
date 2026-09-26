@@ -124,7 +124,12 @@ export default async function HistoryPage({
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="max-h-80 overflow-auto rounded-lg border">
+                  <div
+                    tabIndex={0}
+                    role="region"
+                    aria-label={`${definition.label} table`}
+                    className="focus-visible:ring-ring max-h-80 overflow-auto rounded-lg border focus-visible:ring-2 focus-visible:outline-none"
+                  >
                     <table className="w-full min-w-80 text-left text-sm">
                       <caption className="sr-only">
                         {definition.label} by {grain}

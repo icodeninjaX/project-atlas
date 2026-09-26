@@ -20,6 +20,8 @@ function todayInManila() {
   }).format(new Date());
 }
 
+export const metadata = { title: "Debt details" };
+
 export default async function DebtDetailPage({
   params,
   searchParams,
@@ -64,7 +66,7 @@ export default async function DebtDetailPage({
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">
             {debt.creditor_name}
           </h1>
-          <p className="text-muted-foreground mt-2 text-sm">
+          <p className="text-muted-foreground mt-2 text-sm first-letter:uppercase">
             {debt.status} · {Number(debt.interest_rate_percent)}% annual
             interest
           </p>

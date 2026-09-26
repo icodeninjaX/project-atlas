@@ -158,8 +158,15 @@ export default async function ReviewsPage({
         currentContent={
           <div>
             <section>
-              <h2 className="text-sm font-semibold">This week in facts</h2>
-              <div className="-mx-4 mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-2.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5 [&::-webkit-scrollbar]:hidden">
+              <h2 id="week-facts-heading" className="text-sm font-semibold">
+                This week in facts
+              </h2>
+              <div
+                tabIndex={0}
+                role="region"
+                aria-labelledby="week-facts-heading"
+                className="focus-visible:ring-ring -mx-4 mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-2.5 overflow-x-auto px-4 pb-2 focus-visible:ring-2 focus-visible:outline-none sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5 [&::-webkit-scrollbar]:hidden"
+              >
                 {metrics.map(([label, value]) => (
                   <Card
                     key={label}

@@ -347,6 +347,10 @@ pre {
   }
 }
 
+html[data-launch-seen] .atlas-launch-screen {
+  display: none;
+}
+
 @keyframes atlas-launch-core {
   0% {
     transform: scale(0.72) rotate(-24deg);

@@ -39,6 +39,19 @@ type ReviewFields = {
   overallScore: string;
 };
 
+const emptyReview: ReviewFields = {
+  wins: "",
+  challenges: "",
+  lessons: "",
+  timeWasters: "",
+  moneyReflection: "",
+  careerReflection: "",
+  nextWeekFocus: "",
+  energyScore: "",
+  stressScore: "",
+  overallScore: "",
+};
+
 const questions = [
   {
     name: "wins",
@@ -154,7 +167,7 @@ export function ReviewForm({
     setFocus,
     formState: { isDirty },
   } = useForm<ReviewFields>({
-    defaultValues: initial,
+    defaultValues: { ...emptyReview, ...initial },
   });
   const [savedAt, setSavedAt] = useState(lastSavedAt);
   const [activePrompt, setActivePrompt] = useState(0);

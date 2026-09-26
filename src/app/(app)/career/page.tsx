@@ -81,6 +81,9 @@ function ApplicationCards({
                         "en-PH",
                         {
                           timeZone: "Asia/Manila",
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
                         },
                       )}
                     </p>
@@ -323,6 +326,9 @@ export default async function CareerPage({
                                 application.next_action_at,
                               ).toLocaleDateString("en-PH", {
                                 timeZone: "Asia/Manila",
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
                               })}
                             </p>
                           )}

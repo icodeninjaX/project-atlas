@@ -168,7 +168,7 @@ export default async function TasksPage({
   }
 
   return (
-    <div className="mx-auto max-w-[1200px] px-3 py-4 sm:p-6 lg:p-8">
+    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
       <p className="text-primary text-xs font-semibold tracking-[0.1em] uppercase">
         {manilaDateLabel(new Date())}
       </p>

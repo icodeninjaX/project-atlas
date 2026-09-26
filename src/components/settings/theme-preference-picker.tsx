@@ -1,6 +1,7 @@
 "use client";
 
 import { Laptop, Moon, Sun } from "lucide-react";
+import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 
 const themes = [
@@ -9,9 +10,18 @@ const themes = [
   { value: "dark", label: "Dark", icon: Moon },
 ] as const;
 
+const subscribeToNothing = () => () => {};
+
 export function ThemePreferencePicker() {
   const { theme, setTheme } = useTheme();
-  const selectedTheme = theme ?? "system";
+  // The stored theme is only known in the browser; render no selection on the
+  // server so hydration matches, then reveal the saved choice.
+  const hydrated = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false,
+  );
+  const selectedTheme = hydrated ? (theme ?? "system") : undefined;
 
   return (
     <div>

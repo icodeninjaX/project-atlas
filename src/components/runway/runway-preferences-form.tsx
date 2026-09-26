@@ -59,7 +59,7 @@ export function RunwayPreferencesForm({
                   <span className="block truncate font-medium">
                     {account.name}
                   </span>
-                  <span className="text-muted-foreground text-xs">
+                  <span className="text-muted-foreground text-xs capitalize">
                     {account.accountType.replaceAll("_", " ")}
                   </span>
                 </span>
