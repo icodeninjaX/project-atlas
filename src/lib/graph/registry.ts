@@ -7,6 +7,8 @@ export const graphEntityTypes = [
   "job_application",
   "weekly_review",
   "transaction",
+  "decision",
+  "decision_observation",
 ] as const;
 
 export type GraphEntityType = (typeof graphEntityTypes)[number];
@@ -17,7 +19,11 @@ export type GraphRelationshipType =
   | "financially_related"
   | "related_knowledge"
   | "task_goal"
-  | "milestone_goal";
+  | "milestone_goal"
+  | "decision_goal"
+  | "decision_action"
+  | "observation_decision"
+  | "observation_source";
 
 type GraphRecord = {
   id: string;
@@ -33,6 +39,10 @@ type GraphRecord = {
   transaction_type?: string;
   transaction_date?: string;
   goal_id?: string;
+  decision_on?: string;
+  decision_id?: string;
+  observed_on?: string;
+  note?: string;
 };
 
 export type GraphEntitySummary = {
@@ -164,6 +174,32 @@ export const graphRegistry: Record<GraphEntityType, EntityDefinition> = {
         `/money/transactions?highlight=${r.id}`,
       ),
   },
+  decision: {
+    label: "Decisions",
+    table: "decisions",
+    columns: "id,title,decision_on",
+    summarize: (r) =>
+      summary(
+        "decision",
+        r,
+        r.title ?? "Decision",
+        r.decision_on ?? null,
+        `/decisions/${r.id}`,
+      ),
+  },
+  decision_observation: {
+    label: "Decision observations",
+    table: "decision_observations",
+    columns: "id,decision_id,observed_on,note",
+    summarize: (r) =>
+      summary(
+        "decision_observation",
+        r,
+        (r.note ?? "Observation").slice(0, 100),
+        r.observed_on ?? null,
+        `/decisions/${r.decision_id}#observation-${r.id}`,
+      ),
+  },
 };
 
 export const explicitGraphPairs = [
@@ -224,6 +260,10 @@ export function findExplicitPair(
 }
 
 export function graphRelationshipLabel(kind: GraphRelationshipType): string {
+  if (kind === "decision_goal") return "Intended goal";
+  if (kind === "decision_action") return "Planned action";
+  if (kind === "observation_decision") return "Observed after decision";
+  if (kind === "observation_source") return "Supporting record";
   if (kind === "task_goal") return "Supports goal";
   if (kind === "milestone_goal") return "Milestone of goal";
   return (

@@ -135,7 +135,8 @@ summary takes precedence for current next-action guidance.
 | 15. Scenario Intelligence                   | Implemented locally, 2026-09-25                                            | Engine parity, two-owner tool checks, synthetic live AI evaluation and authenticated desktop/mobile comparison checks; see [Phase 15 contract](scenario-intelligence.md)                                                        | Hosted deployment and production comparison flow not verified                                                                                                                     |
 | 16. Next Best Action                        | Implemented and deployed, 2026-09-25                                       | Dayline-ranked application follow-ups, owner/stale/duplicate database checks, application tests and signed-in local desktop/320px browser review; see [Phase 16 contract](next-best-action.md)                                  | Hosted migrations, two-owner database check, ready deployment, signed-in desktop/320px review, saved choices and task persistence verified 2026-09-25                             |
 | 17. Universal Capture 2.0                   | Implemented and deployed, 2026-09-25                                       | Bounded batch, task resolution, live synthetic evaluation, local owner/RPC tests and signed-in desktop/320px review; see [Phase 17 contract](universal-capture-2.md)                                                            | Three hosted migrations, owner/RPC checks, scheduled cleanup, CI, ready deployment and signed-in production desktop/320px batch flows verified 2026-09-25                         |
-| 18. Multimodal Universal Capture            | Implemented and deployed, 2026-09-26; signed-in acceptance open             | File validation, extraction, editable text, provenance, confirmation tests, synthetic live media checks, CI and production smoke; see [Phase 18 contract](multimodal-capture.md)                                                | File-scanning decision documented; broader media evaluation and signed-in desktop/320px review remain open                                                                         |
+| 18. Multimodal Universal Capture            | Implemented and deployed, 2026-09-26; signed-in acceptance open            | File validation, extraction, editable text, provenance, confirmation tests, synthetic live media checks, CI and production smoke; see [Phase 18 contract](multimodal-capture.md)                                                | File-scanning decision documented; broader media evaluation and signed-in desktop/320px review remain open                                                                        |
+| 19. Decision → Outcome Intelligence         | Implemented locally, 2026-09-26                                            | 553 application tests, 225 database assertions, signed-in local desktop/320px flow, lint, typecheck and build; see [Phase 19 contract](decision-outcomes.md)                                                                    | Hosted migration, application deployment and signed-in production acceptance pending                                                                                              |
 
 Repository health is independent: [formatting debt](repository-formatting-debt.md)
 records 45 historical failures and their local cleanup to zero on 2026-09-24.
@@ -1912,7 +1913,7 @@ A strong deterministic foundation will make every future AI capability safer, ch
 
 **Status:** Phases 9–17 are implemented locally; Phases 12–13 and 16–17 are
 deployed and verified. Other required release-environment gates remain open.
-Phases 18–19 remain planned.
+Phase 18 is deployed with signed-in acceptance open; Phase 19 is locally accepted with release checks open.
 
 ## Dependency map and sequencing decision
 
@@ -1927,19 +1928,19 @@ and handoffs use this numbering. Phase
 numbers express delivery order; hard prerequisites remain separately defined below.
 Legacy section anchors are retained for existing links.
 
-| Delivery priority | Phase | Capability                              | Delivery status                            |
-| ----------------- | ----- | --------------------------------------- | ------------------------------------------ |
-| 9                 | 9     | Analyst Retrieval / Tool Layer          | Implemented and accepted locally           |
-| 10                | 10    | Analyst Query Planner                   | Implemented and accepted locally           |
-| 11                | 11    | Analyst 2.0: Freeform Grounded Analysis | Implemented and accepted locally           |
-| 12                | 12    | Historical / Longitudinal Metrics Layer | Implemented locally                        |
-| 13                | 13    | Cross-domain and Longitudinal Analyst   | Implemented and deployed                   |
-| 14                | 14    | Pattern and Association Discovery       | Implemented locally                        |
-| 15                | 15    | Scenario Intelligence                   | Implemented locally                        |
-| 16                | 16    | Next Best Action                        | Implemented and deployed                   |
-| 17                | 17    | Universal Capture 2.0                   | Implemented and deployed                   |
-| 18                | 18    | Multimodal Capture                      | Core local flow; release acceptance open   |
-| 19                | 19    | Decision → Outcome Intelligence         | Planned; basic recording may start earlier |
+| Delivery priority | Phase | Capability                              | Delivery status                          |
+| ----------------- | ----- | --------------------------------------- | ---------------------------------------- |
+| 9                 | 9     | Analyst Retrieval / Tool Layer          | Implemented and accepted locally         |
+| 10                | 10    | Analyst Query Planner                   | Implemented and accepted locally         |
+| 11                | 11    | Analyst 2.0: Freeform Grounded Analysis | Implemented and accepted locally         |
+| 12                | 12    | Historical / Longitudinal Metrics Layer | Implemented locally                      |
+| 13                | 13    | Cross-domain and Longitudinal Analyst   | Implemented and deployed                 |
+| 14                | 14    | Pattern and Association Discovery       | Implemented locally                      |
+| 15                | 15    | Scenario Intelligence                   | Implemented locally                      |
+| 16                | 16    | Next Best Action                        | Implemented and deployed                 |
+| 17                | 17    | Universal Capture 2.0                   | Implemented and deployed                 |
+| 18                | 18    | Multimodal Capture                      | Core local flow; release acceptance open |
+| 19                | 19    | Decision → Outcome Intelligence         | Implemented locally; hosted release open |
 
 This numbering gives delivery order, not a claim that each phase technically requires all
 previous phases. Build and accept one scoped phase at a time. Initial freeform
@@ -2416,7 +2417,7 @@ validation and preview contract; this list does not claim current support.
 
 ## Phase 19 — Decision journal and decision → outcome intelligence
 
-**Status:** Planned; delivery priority 19.
+**Status:** Implemented and locally accepted; hosted release open. See [Phase 19 contract](decision-outcomes.md). Delivery priority 19.
 
 - **Goal:** Record meaningful user decisions, connect them to intended goals,
   and later inspect what happened.
@@ -2746,6 +2747,6 @@ stale-state, dismissal, duplicate-write, hosted migration and signed-in producti
 browser checks are recorded in [next-best-action.md](next-best-action.md).
 Current intelligence phase: Multimodal Capture (Phase 18), released with
 remaining browser acceptance recorded in [its contract](multimodal-capture.md).
-Phase 19 is next and has not started. Phase 17 Universal
+Phase 19 has Graph/Timeline integration and local acceptance; hosted release acceptance remains. Phase 17 Universal
 Capture 2.0 is implemented and deployed; its [contract](universal-capture-2.md)
 records supported actions and production acceptance.

@@ -5,6 +5,7 @@ export const timelineModules = [
   "goals",
   "career",
   "reviews",
+  "decisions",
 ] as const;
 
 export type TimelineModule = (typeof timelineModules)[number];
@@ -46,6 +47,7 @@ export const timelineModuleLabels: Record<TimelineModule, string> = {
   goals: "Goals",
   career: "Career",
   reviews: "Reviews",
+  decisions: "Decisions",
 };
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;

@@ -16,6 +16,7 @@ const pageTitles: Array<[prefix: string, title: string]> = [
   ["/debts", "Debts"],
   ["/tasks", "Tasks"],
   ["/goals", "Goals"],
+  ["/decisions", "Decisions"],
   ["/career", "Career"],
   ["/reviews", "Reviews"],
   ["/history", "History"],
