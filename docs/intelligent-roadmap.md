@@ -1909,8 +1909,9 @@ A strong deterministic foundation will make every future AI capability safer, ch
 
 # 10. Next-Generation ATLAS Intelligence
 
-**Status:** Phases 9–14 are implemented locally; Phases 12–13 are deployed and
-verified. Other required release-environment gates remain open. Phases 15–19 remain planned.
+**Status:** Phases 9–17 are implemented locally; Phases 12–13 and 16–17 are
+deployed and verified. Other required release-environment gates remain open.
+Phases 18–19 remain planned.
 
 ## Dependency map and sequencing decision
 
@@ -2302,8 +2303,8 @@ flow, evidence validation, local acceptance and hosted release limits.
 
 ## Phase 17 — Universal Capture 2.0 and entity resolution
 
-**Status:** Implemented locally; hosted release boundary open. See
-[the Phase 17 contract](universal-capture-2.md).
+**Status:** Implemented and deployed; production acceptance recorded. See
+[the Phase 17 contract](universal-capture-2.md#production-acceptance).
 
 - **Goal:** Make Capture the general natural-language ingestion layer for
   existing ATLAS actions, with several independent, reviewable proposals.
