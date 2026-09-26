@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { CaptureSource } from "./media";
 import {
   captureJsonSchema,
   modelCaptureSchema,
@@ -58,6 +59,8 @@ export type BatchCaptureItem = {
   candidates: TaskCandidate[];
   targetId: string | null;
   targetUpdatedAt: string | null;
+  source?: CaptureSource;
+  sourceLine?: number;
 };
 
 export function prepareCaptureBatch(

@@ -18,6 +18,7 @@ import {
   type TaskCandidate,
 } from "./batch";
 import { type CaptureProposal } from "./proposal";
+import { parseCaptureSource } from "./media";
 
 export type BatchInterpretState = {
   message: string;
@@ -59,6 +60,17 @@ export async function interpretCaptureBatchAction(
   });
   const input = captureBatchInputSchema.safeParse(formData.get("text"));
   if (!input.success) return empty("Enter 8 to 1,000 characters.");
+  const rawSource = formData.get("source");
+  let source = null;
+  if (rawSource !== null) {
+    try {
+      source = parseCaptureSource(JSON.parse(String(rawSource)));
+    } catch {
+      return empty("The source details changed. Add the source again.");
+    }
+  }
+  if (rawSource !== null && !source)
+    return empty("The source details changed. Add the source again.");
   const model = resolveCaptureModel(formData.get("model"));
   if (!model) return empty("Choose an available AI model.");
   const supabase = await createClient();
@@ -178,12 +190,36 @@ export async function interpretCaptureBatchAction(
       scheduledFor: row.scheduled_for,
     }));
     const batchId = crypto.randomUUID();
+    let duplicateSource = false;
+    if (source?.digest) {
+      const previous = await supabase
+        .from("capture_batch_previews")
+        .select("proposal")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(25);
+      if (previous.error)
+        return empty(
+          "Could not check this file for prior previews. Try again later.",
+        );
+      duplicateSource = (previous.data ?? []).some(
+        (row) =>
+          (row.proposal as { source?: { digest?: string } } | null)?.source
+            ?.digest === source.digest,
+      );
+    }
     const items: BatchCaptureItem[] = parsed.map((item) => {
       const candidates =
         item.operation === "reschedule_task"
           ? rankTaskCandidates(item.targetText ?? "", tasks)
           : [];
       const matched = candidates.length === 1 ? candidates[0] : null;
+      const position = input.data.indexOf(item.sourcePhrase);
+      const sourceLine = input.data.slice(0, position).split("\n").length;
+      if (duplicateSource)
+        item.proposal.warnings.push(
+          "This file was previewed recently. Check existing records before saving a duplicate.",
+        );
       return {
         id: item.proposal.kind === "unsupported" ? null : crypto.randomUUID(),
         sourcePhrase: item.sourcePhrase,
@@ -192,6 +228,7 @@ export async function interpretCaptureBatchAction(
         candidates,
         targetId: matched?.id ?? null,
         targetUpdatedAt: matched?.updatedAt ?? null,
+        ...(source && { source, sourceLine }),
       };
     });
     const records = items
@@ -203,7 +240,11 @@ export async function interpretCaptureBatchAction(
         position,
         source_phrase: item.sourcePhrase,
         operation: item.operation,
-        proposal: { proposal: item.proposal, candidates: item.candidates },
+        proposal: {
+          proposal: item.proposal,
+          candidates: item.candidates,
+          ...(source && { source }),
+        },
         target_id: item.targetId,
         target_updated_at: item.targetUpdatedAt,
       }));
@@ -258,13 +299,31 @@ export async function confirmCaptureBatchItemAction(
   });
   if (error || !claimed) return unavailable;
   const value = claimed as {
-    proposal?: { proposal?: CaptureProposal; candidates?: TaskCandidate[] };
+    proposal?: {
+      proposal?: CaptureProposal;
+      candidates?: TaskCandidate[];
+      source?: unknown;
+    };
   };
   const proposal = value.proposal?.proposal;
   const candidates = value.proposal?.candidates ?? [];
+  const source = parseCaptureSource(value.proposal?.source);
   let result: { success: boolean; message: string };
   try {
-    if (operation === "reschedule_task") {
+    if (
+      source &&
+      proposal &&
+      (proposal.kind === "expense" ||
+        proposal.kind === "income" ||
+        proposal.date) &&
+      formData.get("reviewedSource") !== "yes"
+    ) {
+      result = {
+        success: false,
+        message:
+          "Review the extracted amount and date against the source before saving.",
+      };
+    } else if (operation === "reschedule_task") {
       const chosenId = String(formData.get("taskId") ?? "");
       const chosen = candidates.find((candidate) => candidate.id === chosenId);
       result =
