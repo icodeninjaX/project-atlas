@@ -5,6 +5,7 @@ import {
 } from "@/lib/capture/media";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const noStore = { "Cache-Control": "no-store" };
 const MAX_REQUEST_BYTES = MAX_CAPTURE_FILE_BYTES + 100_000;
