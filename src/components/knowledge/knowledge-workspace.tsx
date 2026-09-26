@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { CollapsibleFilters } from "@/components/shared/collapsible-filters";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -257,7 +258,10 @@ export function KnowledgeWorkspace({
         ))}
       </div>
 
-      <section aria-label="Browse concepts" className="space-y-3">
+      <section
+        aria-label="Browse concepts"
+        className={concepts.length === 0 ? "hidden" : "space-y-3"}
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="border-border bg-card flex max-w-full gap-1 overflow-x-auto rounded-xl border p-1">
             {primaryViews.map(({ value, label }) => {
@@ -317,45 +321,56 @@ export function KnowledgeWorkspace({
               />
             </span>
           </label>
-          <label className="text-muted-foreground text-xs">
-            Category
-            <select
-              value={selectedCategory}
-              onChange={(event) => setCategory(event.target.value)}
-              className="border-border bg-background focus-visible:ring-ring mt-1 min-h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
-            >
-              <option value="all">All categories</option>
-              {categories.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-muted-foreground text-xs">
-            Sort by
-            <select
-              value={sort}
-              onChange={(event) => setSort(event.target.value as KnowledgeSort)}
-              className="border-border bg-background focus-visible:ring-ring mt-1 min-h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
-            >
-              <option value="next-review">Next review</option>
-              <option value="newest">Newest added</option>
-              <option value="title">Title A–Z</option>
-            </select>
-          </label>
-          {filtersActive && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="self-end"
-            >
-              <X className="size-3.5" />
-              Clear filters
-            </Button>
-          )}
+          <CollapsibleFilters
+            activeCount={
+              Number(selectedCategory !== "all") +
+              Number(sort !== "next-review")
+            }
+            actions={
+              filtersActive ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="min-h-11 self-end sm:min-h-9"
+                >
+                  <X className="size-3.5" />
+                  Clear filters
+                </Button>
+              ) : null
+            }
+          >
+            <label className="text-muted-foreground text-xs">
+              Category
+              <select
+                value={selectedCategory}
+                onChange={(event) => setCategory(event.target.value)}
+                className="border-border bg-background focus-visible:ring-ring mt-1 min-h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
+              >
+                <option value="all">All categories</option>
+                {categories.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-muted-foreground text-xs">
+              Sort by
+              <select
+                value={sort}
+                onChange={(event) =>
+                  setSort(event.target.value as KnowledgeSort)
+                }
+                className="border-border bg-background focus-visible:ring-ring mt-1 min-h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
+              >
+                <option value="next-review">Next review</option>
+                <option value="newest">Newest added</option>
+                <option value="title">Title A–Z</option>
+              </select>
+            </label>
+          </CollapsibleFilters>
         </div>
       </section>
 

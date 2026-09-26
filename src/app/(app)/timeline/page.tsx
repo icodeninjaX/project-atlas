@@ -1,6 +1,7 @@
 import { Filter, History, Search } from "lucide-react";
 import Link from "next/link";
 import { TimelineWorkspace } from "@/components/timeline/timeline-workspace";
+import { CollapsibleFilters } from "@/components/shared/collapsible-filters";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,43 +80,51 @@ export default async function TimelinePage({
             />
           </span>
         </label>
-        <label className="text-muted-foreground text-xs">
-          Module
-          <select
-            name="module"
-            defaultValue={filters.module ?? ""}
-            className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
-          >
-            <option value="">All modules</option>
-            {timelineModules.map((module) => (
-              <option key={module} value={module}>
-                {timelineModuleLabels[module]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-muted-foreground text-xs">
-          From
-          <input
-            name="from"
-            type="date"
-            defaultValue={filters.from ?? ""}
-            className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
-          />
-        </label>
-        <label className="text-muted-foreground text-xs">
-          To
-          <input
-            name="to"
-            type="date"
-            defaultValue={filters.to ?? ""}
-            className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
-          />
-        </label>
-        <Button type="submit" className="self-end">
-          <Filter className="size-4" />
-          Apply
-        </Button>
+        <CollapsibleFilters
+          activeCount={
+            [filters.module, filters.from, filters.to].filter(Boolean).length
+          }
+          actions={
+            <Button type="submit" className="flex-1 self-end">
+              <Filter className="size-4" />
+              Apply
+            </Button>
+          }
+        >
+          <label className="text-muted-foreground text-xs">
+            Module
+            <select
+              name="module"
+              defaultValue={filters.module ?? ""}
+              className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+            >
+              <option value="">All modules</option>
+              {timelineModules.map((module) => (
+                <option key={module} value={module}>
+                  {timelineModuleLabels[module]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-muted-foreground text-xs">
+            From
+            <input
+              name="from"
+              type="date"
+              defaultValue={filters.from ?? ""}
+              className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+            />
+          </label>
+          <label className="text-muted-foreground text-xs">
+            To
+            <input
+              name="to"
+              type="date"
+              defaultValue={filters.to ?? ""}
+              className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+            />
+          </label>
+        </CollapsibleFilters>
       </form>
 
       {invalidRange ? (

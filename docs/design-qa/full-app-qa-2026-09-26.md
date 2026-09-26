@@ -40,6 +40,12 @@ per page, and no failed routes.
    filter card above results (even with zero records). Collapse the create form
    behind a "Record a decision" button (as Tasks/Goals/Debts already do) and
    put filters in a disclosure or bottom sheet.
+   **Done:** Decisions lists past decisions first and opens the form from
+   "Record a decision" (open by default only while the journal is empty).
+   Timeline, Search, and Knowledge keep the search field visible and fold the
+   other filters behind a "Filters" toggle below `sm` (open when a filter is
+   applied, with a count). Knowledge hides its tabs and filters until the first
+   concept exists. Desktop layouts are unchanged.
 2. **History tables on mobile.** Period cells wrap to 4 lines
    (`2026-` / `09-01` / `–` …) and the Coverage column is cut off. Use short
    labels (`Sep 2026`) or stacked cards under `sm`.
