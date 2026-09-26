@@ -135,7 +135,7 @@ summary takes precedence for current next-action guidance.
 | 15. Scenario Intelligence                   | Implemented locally, 2026-09-25                                            | Engine parity, two-owner tool checks, synthetic live AI evaluation and authenticated desktop/mobile comparison checks; see [Phase 15 contract](scenario-intelligence.md)                                                        | Hosted deployment and production comparison flow not verified                                                                                                                     |
 | 16. Next Best Action                        | Implemented and deployed, 2026-09-25                                       | Dayline-ranked application follow-ups, owner/stale/duplicate database checks, application tests and signed-in local desktop/320px browser review; see [Phase 16 contract](next-best-action.md)                                  | Hosted migrations, two-owner database check, ready deployment, signed-in desktop/320px review, saved choices and task persistence verified 2026-09-25                             |
 | 17. Universal Capture 2.0                   | Implemented and deployed, 2026-09-25                                       | Bounded batch, task resolution, live synthetic evaluation, local owner/RPC tests and signed-in desktop/320px review; see [Phase 17 contract](universal-capture-2.md)                                                            | Three hosted migrations, owner/RPC checks, scheduled cleanup, CI, ready deployment and signed-in production desktop/320px batch flows verified 2026-09-25                         |
-| 18. Multimodal Universal Capture            | Core local flow implemented, release acceptance open, 2026-09-26            | File validation, extraction, editable text, provenance, confirmation tests and synthetic live media checks; see [Phase 18 contract](multimodal-capture.md)                                                                     | Broader media evaluation, signed-in mobile review, scanning decision and hosted deployment remain open                                                                            |
+| 18. Multimodal Universal Capture            | Implemented and deployed, 2026-09-26; signed-in acceptance open             | File validation, extraction, editable text, provenance, confirmation tests, synthetic live media checks, CI and production smoke; see [Phase 18 contract](multimodal-capture.md)                                                | File-scanning decision documented; broader media evaluation and signed-in desktop/320px review remain open                                                                         |
 
 Repository health is independent: [formatting debt](repository-formatting-debt.md)
 records 45 historical failures and their local cleanup to zero on 2026-09-24.
@@ -195,8 +195,8 @@ release boundaries. The live Analyst check showed the expected insufficient-hist
 fallback and validation. Phase 13 is implemented and deployed; its
 [production acceptance](cross-domain-analyst.md#production-acceptance--2026-09-25)
 is recorded. Other hosted release gates above remain open. Phase 17 is implemented
-and deployed with [production acceptance](universal-capture-2.md#production-acceptance). Phase 18's
-[core local flow](multimodal-capture.md) is implemented with release acceptance open. Phase 16's
+and deployed with [production acceptance](universal-capture-2.md#production-acceptance). Phase 18 is
+deployed with [release evidence and remaining acceptance](multimodal-capture.md#validation-and-production-release). Phase 16's
 production acceptance is recorded in [its contract](next-best-action.md). Phase 14's
 local method and release boundary are recorded in [its contract](pattern-associations.md);
 Phase 15's local comparison and release boundary are recorded in
@@ -2372,7 +2372,7 @@ validation and preview contract; this list does not claim current support.
 
 ## Phase 18 — Multimodal Universal Capture
 
-**Status:** Core local flow implemented; release acceptance open. See [Phase 18 contract](multimodal-capture.md).
+**Status:** Implemented and deployed 2026-09-26; signed-in browser acceptance open. See [Phase 18 contract](multimodal-capture.md).
 
 - **Goal:** Accept text, voice transcription, receipts/photos, screenshots,
   copied email, and uploaded documents through the same Capture proposal flow.
@@ -2744,7 +2744,8 @@ typecheck, formatting and production build. Phase 16 Next Best Action is
 implemented and deployed for Dayline-ranked application follow-ups. Its owner,
 stale-state, dismissal, duplicate-write, hosted migration and signed-in production
 browser checks are recorded in [next-best-action.md](next-best-action.md).
-Current intelligence phase: Multimodal Capture (Phase 18), with local core and
-release gates recorded in [its contract](multimodal-capture.md). Phase 17 Universal
+Current intelligence phase: Multimodal Capture (Phase 18), released with
+remaining browser acceptance recorded in [its contract](multimodal-capture.md).
+Phase 19 is next and has not started. Phase 17 Universal
 Capture 2.0 is implemented and deployed; its [contract](universal-capture-2.md)
 records supported actions and production acceptance.
