@@ -26,9 +26,54 @@ progress is never compared with a full one.
 5. The card shows the claims (peso figures masked in privacy mode), the weekly
    facts and their limitations. Nothing is stored.
 
-## Why on demand
+## Automatic last-week insight
 
-A scheduled job would send personal totals to OpenAI without a per-request
-acknowledgement and would need a table for stored notes. The on-demand card
-keeps the Analyst's consent model. A scheduled version can reuse
-`gatherWeeklyInsightEvidence` if an opt-in setting and storage are added later.
+The card also has a **Last week** section with an opt-in checkbox,
+**Prepare last week's insight automatically**, stored as
+`user_preferences.weekly_insight_auto` (off by default). Turning it on is
+standing consent to send last week's totals to OpenAI once per week.
+
+When it is on, the first visit to Weekly reviews in a new week calls
+`POST /api/reviews/insight` with `{ "mode": "previous" }`. The route compares
+the last full Monday–Sunday week with the week before, using the same fixed tool
+calls and verified answer step.
+
+Before any quota reservation or provider call, the route inserts a `pending`
+claim row for the owner and week. The unique `(user_id, week_start)` constraint
+makes the claim atomic, so concurrent first visits (two tabs) prepare the note
+once; the other request sees "being prepared". The claim is then completed as
+`answered`, `insufficient` or `failed`:
+
+- A provider attempt is final for the week, even if the answer is rejected, so
+  last week's totals are sent to OpenAI at most once per week.
+- The claim is released (deleted) only when nothing was sent: a quota or
+  reservation failure, or an evidence-gathering error. A later visit then
+  retries.
+- A claim still `pending` after two minutes was abandoned mid-request and reads
+  as "could not be prepared", without a retry.
+- If completing the claim fails, the pending row still blocks repeat attempts.
+
+Later visits read the stored row server-side with no model call and no quota
+use. The owner can still use **This week so far** at any time.
+
+It runs in the owner's own session rather than a cron job. The historical
+metrics RPC derives the owner from `auth.uid()` and keeps RLS in force, so a
+background job would need a new service-role function that bypasses RLS.
+Generation happens when the owner opens the page, with no click, at most once
+per week.
+
+### Database
+
+Migration `20260927100211_weekly_insights.sql` adds the preference column and
+the `weekly_insights` table: owner-only select, insert and delete under forced
+RLS, a Monday `week_start`, JSON array checks, and a 64 KB payload
+cap. The table is included in the JSON account export and cascades on account
+deletion. Migration `20260927100221_weekly_insight_claims.sql` adds the `pending` and
+`failed` statuses and an update policy that only lets the owner complete their
+own `pending` claim to a final status; finished rows stay read-only.
+`supabase/tests/weekly_insights.sql` covers the default, ownership, uniqueness,
+Monday check, size cap, read/delete isolation, one claim per week, completing a
+claim once and cross-owner completion. Both migrations were applied to the hosted ProjectAtlas project on
+2026-09-27 through the Supabase connector and verified (forced RLS, four
+owner-only policies, update limited to the completion columns, no new security
+advisor findings). Their filenames match the hosted migration versions.

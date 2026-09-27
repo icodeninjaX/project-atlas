@@ -3,7 +3,12 @@ import {
   ReviewWorkspace,
   type ReviewArchiveItem,
 } from "@/components/reviews/review-workspace";
-import { WeeklyInsightCard } from "@/components/reviews/weekly-insight-card";
+import {
+  WeeklyInsightCard,
+  type InsightResult,
+} from "@/components/reviews/weekly-insight-card";
+import { previousWeekWindows } from "@/lib/reviews/insight";
+import { storedResponse } from "@/lib/reviews/insight-storage";
 import { PageHeading } from "@/components/shared/page-heading";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,6 +102,27 @@ export default async function ReviewsPage({
           .eq("id", query.highlight)
           .maybeSingle()
       : { data: null };
+  // Last week's stored insight and the automatic-insight opt-in.
+  const lastWeekStart = previousWeekWindows(now).current.from;
+  const [insightPreference, lastWeekInsight] = supabase
+    ? await Promise.all([
+        supabase
+          .from("user_preferences")
+          .select("weekly_insight_auto")
+          .maybeSingle(),
+        supabase
+          .from("weekly_insights")
+          .select("status,claims,evidence,limitations,created_at")
+          .eq("week_start", lastWeekStart)
+          .maybeSingle(),
+      ])
+    : [{ data: null }, { data: null }];
+  const storedLastWeek = lastWeekInsight.data
+    ? (storedResponse(
+        lastWeekInsight.data,
+        lastWeekStart,
+      ) as unknown as InsightResult)
+    : null;
   const current = currentResult.data;
   const history = historyResult.data ?? [];
   const spending = (spendingResult.data ?? []).reduce(
@@ -194,7 +220,12 @@ export default async function ReviewsPage({
             </section>
 
             <div className="mt-4 sm:mt-5">
-              <WeeklyInsightCard />
+              <WeeklyInsightCard
+                autoEnabled={
+                  insightPreference.data?.weekly_insight_auto === true
+                }
+                lastWeek={storedLastWeek}
+              />
             </div>
 
             <Card className="sm:bg-card mt-4 border-0 bg-transparent sm:mt-5 sm:border">

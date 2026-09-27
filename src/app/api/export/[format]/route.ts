@@ -182,6 +182,7 @@ const jsonTables = [
   "job_applications",
   "job_application_events",
   "weekly_reviews",
+  "weekly_insights",
   "daily_priority_pins",
   "activity_log",
   "atlas_relationships",
