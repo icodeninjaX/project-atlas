@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(9);
+select plan(14);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password,
   email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
@@ -54,6 +54,19 @@ set local role authenticated;
 select is(
   (select item->>'used' from jsonb_array_elements(public.ai_pool_status()) item where item->>'pool' = 'large'),
   '10000', 'the ledger is a floor under OpenAI''s figure');
+
+-- Only one caller at a time may refresh from OpenAI.
+set local role authenticated;
+select throws_ok($$select public.claim_ai_pool_provider_sync()$$, '42501', null,
+  'an account cannot claim a refresh');
+set local role service_role;
+select is(public.claim_ai_pool_provider_sync(), true, 'the first caller claims the refresh');
+select is(public.claim_ai_pool_provider_sync(), false, 'a second caller waits instead');
+reset role;
+update public.ai_pool_provider_sync set claimed_at = now() - interval '20 seconds';
+set local role service_role;
+select is(public.claim_ai_pool_provider_sync(), true, 'a lapsed claim can be taken again');
+select isnt(public.ai_pool_provider_synced_at(), null, 'waiting callers can see the recorded time');
 
 select * from finish();
 rollback;

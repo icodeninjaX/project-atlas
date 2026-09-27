@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchProviderUsage,
   providerUsageStale,
+  refreshProviderUsage,
   syncProviderUsage,
 } from "./provider-usage";
 
@@ -162,5 +163,53 @@ describe("OpenAI usage sync", () => {
     expect(
       providerUsageStale(new Date(Date.now() - 6 * 60_000).toISOString()),
     ).toBe(true);
+  });
+
+  it("shares one refresh between concurrent callers in an instance", async () => {
+    admin.rpc.mockImplementation(async (name: string) =>
+      name === "claim_ai_pool_provider_sync"
+        ? { data: true, error: null }
+        : { error: null },
+    );
+    const fetch = vi.fn().mockResolvedValue(page([]));
+    const results = await Promise.all([
+      refreshProviderUsage({ fetch, now }),
+      refreshProviderUsage({ fetch, now }),
+      refreshProviderUsage({ fetch, now }),
+    ]);
+    expect(results).toEqual([true, true, true]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(
+      admin.rpc.mock.calls.filter(
+        ([name]) => name === "claim_ai_pool_provider_sync",
+      ),
+    ).toHaveLength(1);
+  });
+  it("waits for another instance's refresh instead of calling OpenAI", async () => {
+    const fresh = new Date().toISOString();
+    admin.rpc.mockImplementation(async (name: string) =>
+      name === "claim_ai_pool_provider_sync"
+        ? { data: false, error: null }
+        : name === "ai_pool_provider_synced_at"
+          ? { data: fresh, error: null }
+          : { error: null },
+    );
+    const fetch = vi.fn();
+    expect(
+      await refreshProviderUsage({ fetch, now, pollMs: 1, waitMs: 50 }),
+    ).toBe(true);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("keeps the ledger decision when the other refresh does not finish", async () => {
+    admin.rpc.mockImplementation(async (name: string) =>
+      name === "claim_ai_pool_provider_sync"
+        ? { data: false, error: null }
+        : { data: null, error: null },
+    );
+    const fetch = vi.fn();
+    expect(
+      await refreshProviderUsage({ fetch, now, pollMs: 1, waitMs: 20 }),
+    ).toBe(false);
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

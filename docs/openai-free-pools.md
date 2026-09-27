@@ -85,6 +85,11 @@ records it per pool (`supabase/migrations/20260927170000_openai_provider_usage.s
   figure, so usage outside the meter cannot let it cross the limit. The
   refresh adds one Usage API call at most every five minutes; if it fails,
   the ledger decision stands.
+- Refreshes are coalesced: callers in one server instance share a single
+  in-flight refresh, and across instances only the caller that claims it
+  (`claim_ai_pool_provider_sync`, a 15-second claim) calls the Usage API.
+  The others wait up to four seconds for its figure, then keep their ledger
+  decision if it has not arrived.
 - `OPENAI_PROJECT_ID` (optional) narrows the count to ATLAS's project. Without
   it the whole organization counts, which can only stop ATLAS sooner.
 - Without the admin key, or when OpenAI cannot be reached, the meter keeps

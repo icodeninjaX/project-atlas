@@ -135,3 +135,54 @@ export async function syncProviderUsage(
     return false;
   }
 }
+
+let inflight: Promise<boolean> | null = null;
+
+/**
+ * Refreshes OpenAI's figure once for everyone waiting on it. Callers in this
+ * server instance share one in-flight refresh, and across instances only the
+ * caller that claims the refresh calls the Usage API; the rest wait up to
+ * `waitMs` for its figure. Resolves true once a fresh figure is recorded,
+ * false when the caller should keep its ledger decision.
+ */
+export function refreshProviderUsage(
+  options: {
+    fetch?: typeof globalThis.fetch;
+    now?: Date;
+    pollMs?: number;
+    waitMs?: number;
+  } = {},
+): Promise<boolean> {
+  inflight ??= coordinatedRefresh(options).finally(() => {
+    inflight = null;
+  });
+  return inflight;
+}
+
+async function coordinatedRefresh(options: {
+  fetch?: typeof globalThis.fetch;
+  now?: Date;
+  pollMs?: number;
+  waitMs?: number;
+}) {
+  const admin = createAdminClient();
+  if (!admin) return false;
+  try {
+    const { data: claimed, error } = await admin.rpc(
+      "claim_ai_pool_provider_sync",
+    );
+    if (error) return false;
+    if (claimed === true) return syncProviderUsage(options);
+    const deadline = Date.now() + (options.waitMs ?? SYNC_TIMEOUT_MS);
+    while (Date.now() < deadline) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, options.pollMs ?? 400),
+      );
+      const { data } = await admin.rpc("ai_pool_provider_synced_at");
+      if (typeof data === "string" && !providerUsageStale(data)) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}

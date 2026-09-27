@@ -61,6 +61,42 @@ end; $$;
 revoke all on function public.record_ai_pool_provider_usage(date, bigint, bigint, jsonb) from public, anon, authenticated;
 grant execute on function public.record_ai_pool_provider_usage(date, bigint, bigint, jsonb) to service_role;
 
+-- One refresh at a time across server instances: the first caller claims
+-- it, and others wait for its figure instead of calling the Usage API too.
+create table public.ai_pool_provider_sync (
+  id boolean primary key default true check (id),
+  claimed_at timestamptz
+);
+insert into public.ai_pool_provider_sync (id, claimed_at) values (true, null);
+
+alter table public.ai_pool_provider_sync enable row level security;
+alter table public.ai_pool_provider_sync force row level security;
+revoke all on public.ai_pool_provider_sync from anon, authenticated;
+
+-- True for the one caller that may refresh now; a claim lapses after 15s.
+create function public.claim_ai_pool_provider_sync()
+returns boolean language plpgsql security definer set search_path = '' as $$
+declare
+  claimed boolean;
+begin
+  update public.ai_pool_provider_sync set claimed_at = now()
+    where id and (claimed_at is null or claimed_at < now() - interval '15 seconds')
+    returning true into claimed;
+  return coalesce(claimed, false);
+end; $$;
+revoke all on function public.claim_ai_pool_provider_sync() from public, anon, authenticated;
+grant execute on function public.claim_ai_pool_provider_sync() to service_role;
+
+-- When OpenAI's figure for today was last recorded, for callers waiting on a
+-- refresh another instance claimed.
+create function public.ai_pool_provider_synced_at()
+returns timestamptz language sql stable security definer set search_path = '' as $$
+  select min(synced_at) from public.ai_pool_provider_usage
+  where usage_day = (now() at time zone 'utc')::date
+$$;
+revoke all on function public.ai_pool_provider_synced_at() from public, anon, authenticated;
+grant execute on function public.ai_pool_provider_synced_at() to service_role;
+
 create or replace function public.reserve_ai_pool_tokens(p_user_id uuid, p_model text, p_feature text, p_tokens integer)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare

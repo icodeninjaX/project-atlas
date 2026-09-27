@@ -21,7 +21,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 const usage = vi.hoisted(() => ({ sync: vi.fn() }));
 vi.mock("./provider-usage", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./provider-usage")>()),
-  syncProviderUsage: usage.sync,
+  refreshProviderUsage: usage.sync,
 }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({

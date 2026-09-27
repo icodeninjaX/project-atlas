@@ -2,7 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { freePoolFor, type FreePool } from "./pools";
-import { providerUsageStale, syncProviderUsage } from "./provider-usage";
+import { providerUsageStale, refreshProviderUsage } from "./provider-usage";
 
 export type PoolFeature =
   | "analyst_planner"
@@ -126,7 +126,7 @@ export async function meteredOpenAIFetch(
     reservation.reservation_id &&
     process.env.OPENAI_ADMIN_KEY &&
     providerUsageStale(reservation.provider_synced_at) &&
-    (await syncProviderUsage())
+    (await refreshProviderUsage())
   ) {
     await settleReservation(reservation.reservation_id, 0);
     reservation = await reserve();
@@ -191,5 +191,5 @@ export async function readPoolStatus(): Promise<PoolStatus | null> {
       !providerUsageStale(status.small.syncedAt))
   )
     return status;
-  return (await syncProviderUsage()) ? await readStatusOnce() : status;
+  return (await refreshProviderUsage()) ? await readStatusOnce() : status;
 }
