@@ -39,9 +39,7 @@ test.describe("authenticated ATLAS workflows", () => {
     await page.getByLabel("Amount in pesos").fill("125.50");
     await page.getByLabel("Merchant or source").fill(`E2E canteen ${unique}`);
     await page.getByRole("button", { name: "Record transaction" }).click();
-    await page
-      .getByRole("button", { name: "View transaction history" })
-      .click();
+    await page.getByRole("button", { name: "History", exact: true }).click();
     await expect(page.getByText(`E2E canteen ${unique}`)).toBeVisible();
   });
 

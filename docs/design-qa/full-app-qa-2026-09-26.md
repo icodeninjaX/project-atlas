@@ -96,6 +96,11 @@ per page, and no failed routes.
    Debts tabs now also expose `aria-current`.
 7. Transactions: "View transaction history" is the primary (blue) button while
    "Record a transaction" is secondary. The recording action should be primary.
+   **Done:** on closer look these were a two-way view toggle (`aria-pressed`),
+   so blue meant "selected", not "primary". Restyled as a segmented control
+   matching the app's tab bars, with the selected option marked by a blue
+   icon and border. Labels read "Record" / "History" on phones ("Record a
+   transaction" on wider screens and for screen readers).
 8. Dashboard: Next Best Action often proposes the same task shown as Dayline
    "Now", and Situation says "0 follow-ups" directly below a follow-up card.
 9. Capture: unstyled native file input ("Choose File No file chosen"), and

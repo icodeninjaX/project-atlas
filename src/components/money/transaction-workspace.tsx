@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { TooltipHint } from "@/components/ui/tooltip";
 import { formatCentavos } from "@/lib/money/money";
+import { cn } from "@/lib/utils";
 import { TransactionForm } from "./transaction-form";
 import { formatCalendarDate } from "@/lib/dates/dates";
 
@@ -52,30 +53,50 @@ export function TransactionWorkspace({
   return (
     <div className="mt-6">
       <div
-        className="grid gap-3 sm:grid-cols-2"
+        className="border-border bg-muted/60 grid grid-cols-2 gap-1 rounded-2xl border p-1"
         role="group"
-        aria-label="Transaction options"
+        aria-label="Transaction view"
       >
-        <Button
-          type="button"
-          size="lg"
-          variant={view === "record" ? "default" : "secondary"}
-          aria-pressed={view === "record"}
-          onClick={() => setView("record")}
-        >
-          <Plus className="size-4" />
-          Record a transaction
-        </Button>
-        <Button
-          type="button"
-          size="lg"
-          variant={view === "history" ? "default" : "secondary"}
-          aria-pressed={view === "history"}
-          onClick={() => setView("history")}
-        >
-          <History className="size-4" />
-          View transaction history
-        </Button>
+        {(
+          [
+            {
+              value: "record",
+              label: "Record a transaction",
+              shortLabel: "Record",
+              icon: Plus,
+            },
+            {
+              value: "history",
+              label: "History",
+              shortLabel: "History",
+              icon: History,
+            },
+          ] as const
+        ).map(({ value, label, shortLabel, icon: Icon }) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={view === value}
+            aria-label={label}
+            onClick={() => setView(value)}
+            className={cn(
+              "focus-visible:ring-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none",
+              view === value
+                ? "border-primary/40 bg-card text-foreground shadow-sm"
+                : "text-foreground/75 hover:bg-card/60 hover:text-foreground border-transparent",
+            )}
+          >
+            <Icon
+              aria-hidden="true"
+              className={cn(
+                "size-4 shrink-0",
+                view === value && "text-primary",
+              )}
+            />
+            <span className="sm:hidden">{shortLabel}</span>
+            <span className="hidden sm:inline">{label}</span>
+          </button>
+        ))}
       </div>
 
       {view === "record" && (
