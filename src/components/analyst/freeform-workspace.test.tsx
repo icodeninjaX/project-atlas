@@ -364,6 +364,64 @@ describe("Analyst conversation", () => {
     expect(ask()).toBeEnabled();
   });
 
+  it("names focus tasks with the owner's titles and readable dates", async () => {
+    const user = userEvent.setup();
+    const focusId = "getTaskFocus.tasks.focus.1.abc";
+    const focusItem = {
+      ...fact,
+      id: focusId,
+      metric: "Suggested focus task 1",
+      value: "high",
+      unit: "priority",
+      source: {
+        description: "Tasks",
+        recordIds: ["task-1"],
+        href: "/tasks?highlight=task-1",
+      },
+      claimType: "RECOMMENDATION",
+      provenance: { ...fact.provenance, tool: "getTaskFocus" },
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            status: "answered",
+            claims: [
+              {
+                kind: "suggestion",
+                text: "Suggested focus task 1 is due first as of 2026-09-27.",
+                evidenceIds: [focusId],
+                comparison: null,
+              },
+            ],
+            evidence: [focusItem],
+            limitations: [],
+            labels: {
+              [focusId]: { title: "File BIR return", date: "2026-09-29" },
+            },
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.type(box(), "What should I focus on this week?{Enter}");
+    expect(
+      await screen.findByText(
+        "“File BIR return” is due first as of Sep 27, 2026.",
+      ),
+    ).toBeVisible();
+    const list = screen.getByLabelText("This week's focus");
+    expect(list).toHaveTextContent("File BIR return");
+    expect(list).toHaveTextContent("high priority · Sep 29, 2026");
+    expect(
+      screen.getAllByRole("link", { name: /File BIR return/ })[0],
+    ).toHaveAttribute("href", "/tasks?highlight=task-1");
+    expect(screen.queryByText(/Suggested focus task/)).toBeNull();
+  });
+
   it("shows a request error inside the conversation", async () => {
     const user = userEvent.setup();
     vi.stubGlobal(

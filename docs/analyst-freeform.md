@@ -25,6 +25,16 @@ Phase 9 read-only tools. It cannot execute actions or arbitrary queries.
   payment scenarios) and shows a removable chip. Typing a goal or debt name also
   works.
 
+- **Focus task titles:** the model only sees "Suggested focus task N". After the
+  answer is generated and checked, the route looks up those task titles and dates
+  for the signed-in owner (`src/lib/analyst/freeform/display-labels.ts`) and
+  returns them as `labels`. The UI shows them in a "This week's focus" list, in
+  citations and sources, and in place of "focus task N" in claim text. Titles are
+  never sent to OpenAI.
+- **Readable dates:** ISO dates in claim text are shown as "Sep 27, 2026".
+- **Composer:** in a conversation the pinned composer is one row (focus icon,
+  question, new conversation, send); the data-sharing status sits below it.
+
 ## Request and evidence boundary
 
 The route requires a signed-in user, a question of 8–500 characters and explicit

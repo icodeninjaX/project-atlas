@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { focusTaskLabels } from "@/lib/analyst/freeform/display-labels";
 import { z } from "zod";
 import { AI_MODELS } from "@/lib/ai/models";
 import { runAnalystQueryPlanner } from "@/lib/analyst/planner/server";
@@ -292,8 +293,17 @@ export async function POST(request: Request) {
     }
     const evidence = plan.evidence;
     const limitations = [...plan.limitations];
-    const fallback = (message: string, failureCode: string) =>
-      json({ status: "fallback", failureCode, message, evidence, limitations });
+    // Owner-only task titles, added after any model call and never sent to it.
+    const labels = () => focusTaskLabels(supabase, user.id, evidence);
+    const fallback = async (message: string, failureCode: string) =>
+      json({
+        status: "fallback",
+        failureCode,
+        message,
+        evidence,
+        limitations,
+        labels: await labels(),
+      });
     const usesPattern = plan.calls.some(
       (call) => call.tool === "getPatternAssociation",
     );
@@ -444,6 +454,7 @@ export async function POST(request: Request) {
       claims: answer.claims,
       evidence,
       limitations,
+      labels: await labels(),
       ...(matchedEntity && {
         matchedEntity: { type: matchedEntity.type, name: matchedEntity.name },
       }),

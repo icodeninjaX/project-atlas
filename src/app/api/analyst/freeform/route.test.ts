@@ -19,7 +19,11 @@ vi.mock("@/lib/analyst/freeform/answer", () => ({
   requestGroundedAnswer: mocks.answer,
 }));
 
-const mentionRows: Record<string, unknown[]> = { goals: [], debts: [] };
+const mentionRows: Record<string, unknown[]> = {
+  goals: [],
+  debts: [],
+  tasks: [],
+};
 const question = "What needs attention in my finances?";
 const request = (body: unknown) =>
   new Request("http://localhost/api/analyst/freeform", {
@@ -68,6 +72,7 @@ beforeEach(() => {
   });
   mentionRows.goals = [];
   mentionRows.debts = [];
+  mentionRows.tasks = [];
   let table = "";
   const goalQuery = {
     select: vi.fn(),
@@ -76,6 +81,7 @@ beforeEach(() => {
       .fn()
       .mockResolvedValue({ data: { id: "goal" }, error: null }),
     limit: vi.fn(async () => ({ data: mentionRows[table], error: null })),
+    in: vi.fn(async () => ({ data: mentionRows[table] ?? [], error: null })),
   };
   goalQuery.select.mockReturnValue(goalQuery);
   goalQuery.eq.mockReturnValue(goalQuery);
@@ -456,6 +462,40 @@ describe("freeform Analyst route", () => {
       p_input_tokens: 100,
       p_output_tokens: 25,
     });
+  });
+  it("adds task titles to focus evidence without sending them to the model", async () => {
+    const focus = {
+      ...item,
+      id: "getTaskFocus.tasks.focus.1.abc",
+      metric: "Suggested focus task 1",
+      value: "high",
+      unit: "priority",
+      source: { description: "Tasks", recordIds: ["task-1"], href: "/tasks" },
+      claimType: "RECOMMENDATION",
+      provenance: { ...item.provenance, tool: "getTaskFocus" },
+    };
+    mentionRows.tasks = [
+      {
+        id: "task-1",
+        title: "File BIR return",
+        due_at: null,
+        scheduled_for: "2026-09-29",
+      },
+    ];
+    mocks.plan.mockResolvedValueOnce({
+      status: "ready",
+      calls: [],
+      evidence: [focus],
+      limitations: [],
+      metadata: {},
+    });
+    const body = await (await POST(request(valid))).json();
+    expect(body.labels).toEqual({
+      [focus.id]: { title: "File BIR return", date: "2026-09-29" },
+    });
+    expect(JSON.stringify(mocks.answer.mock.calls)).not.toContain(
+      "File BIR return",
+    );
   });
   it("explains complete facts when another tool finds no records", async () => {
     const reviews = {
