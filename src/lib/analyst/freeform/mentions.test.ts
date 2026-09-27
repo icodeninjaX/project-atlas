@@ -20,6 +20,14 @@ describe("resolveMentionedEntity", () => {
       resolveMentionedEntity("How is my car upgrade going?", options),
     ).toMatchObject({ id: "g3" });
   });
+  it("treats two separate names as ambiguous", () => {
+    expect(
+      resolveMentionedEntity(
+        "Compare my Emergency Fund and Car goals",
+        options,
+      ),
+    ).toBeNull();
+  });
   it("ignores partial words and disallowed kinds", () => {
     expect(resolveMentionedEntity("Any careers news?", options)).toBeNull();
     expect(

@@ -32,11 +32,14 @@ export function displayValue(item: Pick<ToolEvidence, "value" | "unit">) {
 }
 
 type Kind = "money" | "percent" | "plain";
-type Figure = { kind: Kind; value: number; decimals: number };
+type Figure = { value: number; decimals: number };
+/** Signed values copied from evidence, and unsigned derived magnitudes. */
+type Allowed = { values: number[]; magnitudes: number[] };
 
 const isoDate = /\b\d{4}-\d{2}(?:-\d{2})?\b/g;
+// A minus counts as a sign only at the start of a word, never inside a range.
 const figure =
-  /(₱\s?|\bPHP\s?)?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(\s?%|\s?percent\b|\s?pesos\b)?([kKmMbB]\b)?/g;
+  /(?:(?<=^|[\s(])([-−]))?(₱\s?|\bPHP\s?)?([-−])?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(\s?%|\s?percent\b|\s?pesos\b)?([kKmMbB]\b)?/g;
 
 function numeric(item: ToolEvidence) {
   return typeof item.value === "number" && Number.isFinite(item.value)
@@ -49,25 +52,29 @@ function round(value: number, decimals: number) {
   return Math.round(value * factor) / factor;
 }
 
-function matches(candidates: number[], { value, decimals }: Figure) {
-  return candidates.some((candidate) => {
-    const abs = Math.abs(candidate);
-    // Money may be rounded to whole pesos; other figures to the written precision.
-    return Math.abs(round(abs, decimals) - value) < 1e-9;
-  });
+function matches({ values, magnitudes }: Allowed, { value, decimals }: Figure) {
+  const same = (candidate: number) =>
+    Math.abs(round(candidate, decimals) - value) < 1e-9;
+  // A signed figure must copy a value with that sign; an unsigned figure may
+  // copy a non-negative value or state a difference or percent change.
+  return (
+    values.some(same) ||
+    (value >= 0 && magnitudes.some((magnitude) => same(Math.abs(magnitude))))
+  );
 }
 
 function candidates(cited: ToolEvidence[]) {
-  const money: number[] = [];
-  const percent: number[] = [];
-  const plain: number[] = [];
+  const allowed = (): Allowed => ({ values: [], magnitudes: [] });
+  const money = allowed();
+  const percent = allowed();
+  const plain = allowed();
   const byUnit = new Map<string, number[]>();
   for (const item of cited) {
     const value = numeric(item);
     for (const token of item.metric.match(/\d+(?:\.\d+)?/g) ?? [])
-      plain.push(Number(token));
+      plain.values.push(Number(token));
     for (const date of [item.period.from, item.period.through])
-      plain.push(Number(date.slice(0, 4)));
+      plain.values.push(Number(date.slice(0, 4)));
     if (value === null) continue;
     const scaled = item.unit === "centavos" ? value / 100 : value;
     (item.unit === "centavos"
@@ -75,7 +82,7 @@ function candidates(cited: ToolEvidence[]) {
       : item.unit === "percent"
         ? percent
         : plain
-    ).push(scaled);
+    ).values.push(scaled);
     byUnit.set(item.unit, [...(byUnit.get(item.unit) ?? []), scaled]);
   }
   for (const [unit, values] of byUnit) {
@@ -90,9 +97,9 @@ function candidates(cited: ToolEvidence[]) {
             : unit === "percent"
               ? percent
               : plain
-          ).push(a - b);
+          ).magnitudes.push(a - b);
         if (unit !== "percent" && unit !== "correlation" && b !== 0)
-          percent.push(((a - b) / b) * 100);
+          percent.magnitudes.push(((a - b) / b) * 100);
       }
     }
   }
@@ -114,7 +121,8 @@ export function figuresAreGrounded(text: string, cited: ToolEvidence[]) {
   const withoutDates = text.replace(isoDate, " ");
   const allowed = candidates(cited);
   for (const match of withoutDates.matchAll(figure)) {
-    const [, moneyPrefix, digits, suffix, magnitude] = match;
+    const [, leadingMinus, moneyPrefix, innerMinus, digits, suffix, magnitude] =
+      match;
     if (magnitude) return false;
     const unitSuffix = suffix?.trim().toLowerCase();
     const kind: Kind =
@@ -123,9 +131,10 @@ export function figuresAreGrounded(text: string, cited: ToolEvidence[]) {
         : unitSuffix === "%" || unitSuffix === "percent"
           ? "percent"
           : "plain";
-    const value = Number(digits!.replaceAll(",", ""));
+    const sign = leadingMinus || innerMinus ? -1 : 1;
+    const value = sign * Number(digits!.replaceAll(",", ""));
     const decimals = digits!.split(".")[1]?.length ?? 0;
-    if (!matches(allowed[kind], { kind, value, decimals })) return false;
+    if (!matches(allowed[kind], { value, decimals })) return false;
   }
   return true;
 }

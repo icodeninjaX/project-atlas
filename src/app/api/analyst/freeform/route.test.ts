@@ -138,6 +138,19 @@ describe("freeform Analyst route", () => {
       matchedEntity: { type: "goal", name: "Emergency Fund" },
     });
   });
+  it("resolves a named debt for an extra monthly payment question", async () => {
+    const debtId = "4a1d2c3b-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
+    mentionRows.debts = [{ id: debtId, creditor_name: "BPI Loan" }];
+    await POST(
+      request({
+        question: "Put an extra monthly ₱500 toward my BPI Loan",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(mocks.plan).toHaveBeenCalledWith(
+      expect.stringContaining(`Selected active debt ID: ${debtId}.`),
+    );
+  });
   it("does not guess when two goals match the question", async () => {
     mentionRows.goals = [
       { id: "a", title: "Savings" },

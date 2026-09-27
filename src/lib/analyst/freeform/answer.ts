@@ -124,9 +124,14 @@ export function validateGroundedAnswer(raw: unknown, evidence: ToolEvidence[]) {
     const citedTools = new Set(cited.map((item) => item.provenance.tool));
     if (
       citedTools.has("compareFinancialScenarios") &&
-      /\b(?:optimal|safe|should|recommend\w*|certain|pay\s+off|choose)\b/i.test(
+      (/\b(?:optimal|safe|should|recommend\w*|certain|pay\s+off|choos\w*|chose|better|worse|preferable|ideal|wise|smart\w*|go(?:ing)? with|opt(?:ing)? for)\b/i.test(
         claim.text,
-      )
+      ) ||
+        // Scenario suggestions may only point back to reviewing the inputs.
+        (claim.kind === "suggestion" &&
+          !/^Consider (?:reviewing|checking|comparing) (?:the |their |these )?(?:stated |calculated )?(?:assumptions|options)\b/i.test(
+            claim.text,
+          )))
     )
       return null;
     // Whole-domain history cannot be presented as evidence about a goal's links.

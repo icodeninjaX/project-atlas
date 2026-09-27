@@ -22,7 +22,7 @@ describe("Freeform Analyst workspace", () => {
             claims: [
               {
                 kind: "observation",
-                text: "Recorded expenses were ₱1,234.50 this month.",
+                text: "Recorded expenses were ₱1,234.50, PHP 99.00 and 12.50 pesos this month.",
                 evidenceIds: ["money.current"],
                 comparison: null,
               },
@@ -48,6 +48,8 @@ describe("Freeform Analyst workspace", () => {
     await user.click(screen.getByRole("button", { name: "Ask Analyst" }));
     const claim = await screen.findByText(/Recorded expenses were/);
     expect(claim).not.toHaveTextContent("1,234.50");
+    expect(claim).not.toHaveTextContent("99.00");
+    expect(claim).not.toHaveTextContent("12.50");
     expect(claim).toHaveTextContent("this month.");
     expect(
       screen.getByText(/matched your question to your goal/),

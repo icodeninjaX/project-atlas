@@ -25,10 +25,19 @@ function mentioned(question: string, items: Named[]) {
     const name = normalize(item.name);
     return name.trim().length >= 3 && text.includes(name);
   });
-  // Prefer the longest name when one mention contains another ("Car" vs "Car loan").
-  const longest = Math.max(0, ...found.map((item) => item.name.length));
-  const best = found.filter((item) => item.name.length === longest);
-  return best.length === 1 ? best[0]! : found.length === 0 ? null : undefined;
+  if (found.length === 0) return null;
+  // A name inside another matched name is the same mention ("Car" in "Car
+  // upgrade"); separate names ("Emergency Fund" and "Japan Trip") stay ambiguous.
+  const outer = found.filter(
+    (item) =>
+      !found.some(
+        (other) =>
+          other !== item &&
+          normalize(other.name).includes(normalize(item.name)) &&
+          normalize(other.name) !== normalize(item.name),
+      ),
+  );
+  return outer.length === 1 ? outer[0]! : undefined;
 }
 
 export function resolveMentionedEntity(

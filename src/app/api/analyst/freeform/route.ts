@@ -170,8 +170,10 @@ export async function POST(request: Request) {
           name: debt.creditor_name,
         })),
         allowGoal: !associationQuestion && !scenarioQuestion,
+        // Matches the planner's scenario phrasing, including "extra monthly".
         allowDebt:
-          scenarioQuestion &&
+          (scenarioQuestion ||
+            /\b(?:extra|additional)\b/i.test(parsed.data.question)) &&
           /\b(?:monthly|per month|each month)\b/i.test(parsed.data.question),
       });
       if (matchedEntity?.type === "goal") goalId = matchedEntity.id;

@@ -191,6 +191,33 @@ describe("verified figures and comparisons", () => {
         text,
       ).not.toBeNull();
   });
+  it("preserves the sign of a cited figure", () => {
+    expect(observe("Recorded expenses were -₱123.45 this month.")).toBeNull();
+    const refund = { ...income, id: "refund", value: -5000 };
+    const signed = (text: string) =>
+      validateGroundedAnswer(
+        {
+          claims: [
+            {
+              kind: "observation",
+              text,
+              evidenceIds: ["refund"],
+              comparison: null,
+            },
+          ],
+        },
+        [refund],
+      );
+    expect(
+      signed("The recorded change was -₱50.00 this month."),
+    ).not.toBeNull();
+    expect(signed("The recorded change was ₱50.00 this month.")).toBeNull();
+    expect(
+      observe(
+        "Income and expenses differ by ₱76.55 in 2026-09-01 to 2026-09-24.",
+      ),
+    ).not.toBeNull();
+  });
   it("rejects figures from uncited evidence and unknown dates", () => {
     expect(
       observe("Recorded income was ₱200.00.", null, ["money.current"]),
@@ -254,6 +281,33 @@ describe("verified figures and comparisons", () => {
     expect(
       validateGroundedAnswer(claim(["option"]), [current, option]),
     ).toBeNull();
+    const withClaim = (kind: string, text: string) =>
+      validateGroundedAnswer(
+        {
+          claims: [
+            claim(["current", "option"]).claims[0],
+            {
+              kind,
+              text,
+              evidenceIds: ["current", "option"],
+              comparison: null,
+            },
+          ],
+        },
+        [current, option],
+      );
+    expect(
+      withClaim("suggestion", "Consider using Option 1 for runway."),
+    ).toBeNull();
+    expect(
+      withClaim("interpretation", "Option 1 may be the better choice here."),
+    ).toBeNull();
+    expect(
+      withClaim(
+        "suggestion",
+        "Consider reviewing the stated assumptions first.",
+      ),
+    ).not.toBeNull();
   });
 });
 

@@ -21,7 +21,9 @@ type FreeformResult = {
 /** Hides peso figures in claim prose when privacy mode is on. */
 function ClaimText({ text }: { text: string }) {
   return text
-    .split(/(₱\s?[\d,]+(?:\.\d+)?)/)
+    .split(
+      /((?:[-−]\s?)?(?:₱|\bPHP\b)\s?[-−]?[\d,]*\d(?:\.\d+)?|[-−]?[\d,]*\d(?:\.\d+)?\s?pesos\b)/i,
+    )
     .map((part, index) =>
       index % 2 === 1 ? (
         <SensitiveValue key={index}>{part}</SensitiveValue>
@@ -129,8 +131,10 @@ export function FreeformWorkspace({
             payments are monthly.
           </p>
           <p className="text-muted-foreground mt-1 text-xs">
-            Freeform questions use GPT-4o mini for planning and explanation. The
-            model selector under Suggested questions applies to those presets.
+            Freeform questions are sent to GPT-5.4 mini to plan which ATLAS data
+            to read, and the retrieved evidence is sent to GPT-4o mini for the
+            explanation. The model selector under Suggested questions applies to
+            those presets.
           </p>
         </div>
         {goals.length > 0 && (
