@@ -107,7 +107,9 @@ export type PlannerFailureCode =
   | "provider_rate_limit"
   | "provider_error"
   | "invalid_response"
-  | "invalid_plan";
+  | "invalid_plan"
+  | "pool_exhausted"
+  | "meter_unavailable";
 
 export type PlannerProviderStatus =
   | "not_called"
@@ -121,7 +123,9 @@ export type PlannerProviderStatus =
   | "provider_rate_limit"
   | "provider_error"
   | "invalid_plan"
-  | "invalid_response";
+  | "invalid_response"
+  | "pool_exhausted"
+  | "meter_unavailable";
 
 export type PlannerMetadata = {
   version: "1";

@@ -2,6 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
 import { MAX_CAPTURE_FILE_BYTES } from "@/lib/capture/media";
 
+// The daily pool meter has its own tests; here it passes requests through.
+vi.mock("@/lib/ai/pool-meter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/ai/pool-meter")>()),
+  meteredOpenAIFetch: (
+    url: string,
+    init: RequestInit,
+    options: { fetch?: typeof fetch },
+  ) => (options.fetch ?? globalThis.fetch)(url, init),
+}));
+
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   getUser: vi.fn(),

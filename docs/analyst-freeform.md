@@ -34,6 +34,16 @@ Phase 9 read-only tools. It cannot execute actions or arbitrary queries.
 - **Readable dates:** ISO dates in claim text are shown as "Sep 27, 2026".
 - **Composer:** in a conversation the pinned composer is one row (focus icon,
   question, new conversation, send); the data-sharing status sits below it.
+- **Model choice:** a compact model button in the composer, next to Focus,
+  opens a panel (a bottom sheet on phones) grouped by OpenAI's free daily pools:
+  Everyday (GPT-4o mini, the default; GPT-5.4 mini; GPT-5.6 Terra; GPT-5.6
+  Luna) and Flagship (GPT-5.4, GPT-6 Sol, GPT-6 Luna). Each group shows today's
+  use of its pool, and a pool with too little room left for a question reads
+  "Used up today". The choice is remembered per user in this browser
+  (`atlas:analyst-model:<userId>`), sent as `model` with exact IDs only, and
+  shown on each answer card next to "ATLAS Analyst". The planner always runs on
+  GPT-5.4 mini; the model only writes the explanation, and every figure is
+  still checked. See [OpenAI free daily token pools](openai-free-pools.md).
 - **Live progress:** while Analyst works, the pending answer card shows the real
   stages as a short checklist inside `role="status"`: "Understanding your
   question", "Reading tasks and signals" (the domains of the tools the planner
@@ -258,3 +268,20 @@ questions. No model call is made.
   goals are these tasks linked to?" are left out.
 - The route skips the question just asked and the questions in `history`. The
   UI also skips any question already asked in the conversation.
+
+## Model choice and the daily pool meter (2026-09-27)
+
+- The request may include `model`, one of the seven exact IDs in
+  `ANALYST_MODEL_OPTIONS`. Aliases and other models are rejected with 400
+  before quota. The quota reservation records the chosen model.
+- Answered responses include `model: { id, label }` for the model that wrote
+  the explanation.
+- Every OpenAI call reserves its largest possible size in the pool's daily
+  meter first. A refused call sends nothing:
+  - a large-pool model that is used up falls back to GPT-4o mini, with a note
+    in `limitations`;
+  - a used-up small pool, for the planner or the answer, returns the facts-only
+    card with failure code `pool_exhausted`, recorded as the `pool_exhausted`
+    outcome.
+- `GET /api/analyst/pools` returns today's use of each pool and the next reset
+  for the picker.

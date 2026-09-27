@@ -281,6 +281,26 @@ describe("weekly insight route", () => {
     );
     expect(mocks.remove).not.toHaveBeenCalled();
   });
+  it("keeps the week open when the free daily pool refuses the request", async () => {
+    rows.preference = { weekly_insight_auto: true };
+    mocks.answer.mockResolvedValueOnce({
+      status: "error",
+      code: "pool_exhausted",
+    });
+    expect(
+      await (await POST(request({ mode: "previous" }))).json(),
+    ).toMatchObject({
+      status: "fallback",
+      failureCode: "pool_exhausted",
+      message: expect.stringMatching(/resets at 8:00 AM/),
+    });
+    expect(mocks.remove).toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(mocks.rpc).toHaveBeenCalledWith(
+      "finish_ai_analyst_request",
+      expect.objectContaining({ p_outcome: "pool_exhausted" }),
+    );
+  });
   it("shows an abandoned claim as not prepared instead of retrying", async () => {
     rows.stored = [
       {

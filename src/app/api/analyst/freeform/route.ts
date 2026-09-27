@@ -8,7 +8,12 @@ import {
 import { suggestFollowUps } from "@/lib/analyst/freeform/suggestions";
 import type { ToolName } from "@/lib/analyst/tools/contracts";
 import { z } from "zod";
-import { AI_MODELS } from "@/lib/ai/models";
+import {
+  AI_MODELS,
+  ANALYST_MODEL_OPTIONS,
+  resolveAnalystModel,
+} from "@/lib/ai/models";
+import { freePoolFor } from "@/lib/ai/pools";
 import { runAnalystQueryPlanner } from "@/lib/analyst/planner/server";
 import {
   isScenarioQuestion,
@@ -36,6 +41,8 @@ const MAX_REQUEST_CHARS = 8192;
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status, headers });
 type Reply = { body: unknown; status: number };
+const modelLabel = (id: string) =>
+  ANALYST_MODEL_OPTIONS.find((option) => option.id === id)?.label ?? id;
 const reply = (body: unknown, status = 200): Reply => ({ body, status });
 const inputSchema = z
   .object({
@@ -54,6 +61,8 @@ const inputSchema = z
       )
       .max(2)
       .optional(),
+    /** Exact ID of the model that writes the explanation. */
+    model: z.string().max(64).optional(),
     dataSharingAcknowledged: z.literal(true),
   })
   .strict();
@@ -96,6 +105,8 @@ export async function POST(request: Request) {
       { error: "Enter a question and acknowledge data sharing." },
       400,
     );
+  const model = resolveAnalystModel(parsed.data.model);
+  if (!model) return json({ error: "Choose an available Analyst model." }, 400);
   if (parsed.data.goalId && parsed.data.question.length > 400)
     return json(
       { error: "Use a shorter question when selecting a goal." },
@@ -218,7 +229,7 @@ export async function POST(request: Request) {
 
   const { data: reservation, error: reservationError } = await supabase.rpc(
     "reserve_ai_analyst_request_result",
-    { p_type: "freeform", p_model: AI_MODELS.analyst },
+    { p_type: "freeform", p_model: model },
   );
   if (reservationError)
     return json({ error: "Analyst quota is unavailable." }, 503);
@@ -301,7 +312,9 @@ export async function POST(request: Request) {
             ? "timeout"
             : code === "context_limit" || code === "cost_limit"
               ? "context_limit"
-              : "provider_error";
+              : code === "pool_exhausted"
+                ? "pool_exhausted"
+                : "provider_error";
         return reply({
           status: "fallback",
           failureCode: code ?? "retrieval_error",
@@ -449,20 +462,37 @@ export async function POST(request: Request) {
           "context_limit",
         );
       }
-      const answer =
-        history.length || onStage
-          ? await requestGroundedAnswer(
+      const explain = (explainer: typeof model) => {
+        const options = {
+          ...(history.length && { history }),
+          ...(onStage && { onStage }),
+          ...(explainer !== AI_MODELS.analyst && { model: explainer }),
+        };
+        return Object.keys(options).length > 0
+          ? requestGroundedAnswer(
               parsed.data.question,
               explanationEvidence,
-              {
-                ...(history.length && { history }),
-                ...(onStage && { onStage }),
-              },
+              options,
             )
-          : await requestGroundedAnswer(
-              parsed.data.question,
-              explanationEvidence,
-            );
+          : requestGroundedAnswer(parsed.data.question, explanationEvidence);
+      };
+      let explainer = model;
+      let answer = await explain(explainer);
+      // A used-up large pool refuses before anything is sent, so the default
+      // small-pool model can still explain this question.
+      if (
+        answer.status === "error" &&
+        answer.code === "pool_exhausted" &&
+        freePoolFor(model) === "large"
+      ) {
+        inputTokens = (inputTokens ?? 0) + (answer.inputTokens ?? 0);
+        outputTokens = (outputTokens ?? 0) + (answer.outputTokens ?? 0);
+        explainer = AI_MODELS.analyst;
+        limitations.push(
+          `${modelLabel(model)}'s free daily allowance is used up, so ${modelLabel(explainer)} wrote this explanation. It resets at 8:00 AM Manila time.`,
+        );
+        answer = await explain(explainer);
+      }
       if (answer.status === "error") {
         inputTokens = (inputTokens ?? 0) + (answer.inputTokens ?? 0);
         outputTokens = (outputTokens ?? 0) + (answer.outputTokens ?? 0);
@@ -473,9 +503,15 @@ export async function POST(request: Request) {
               ? "context_limit"
               : answer.code === "invalid_response"
                 ? "invalid_response"
-                : "provider_error";
+                : answer.code === "pool_exhausted"
+                  ? "pool_exhausted"
+                  : "provider_error";
         return fallback(
-          "An AI explanation is unavailable. The verified ATLAS facts are shown below.",
+          answer.code === "pool_exhausted"
+            ? "ATLAS's free daily AI allowance is used up, so only the verified facts are shown. It resets at 8:00 AM Manila time."
+            : answer.code === "meter_unavailable"
+              ? "ATLAS's AI usage meter is unavailable, so no explanation was requested. The verified facts are shown below."
+              : "An AI explanation is unavailable. The verified ATLAS facts are shown below.",
           answer.code,
         );
       }
@@ -489,6 +525,7 @@ export async function POST(request: Request) {
         limitations,
         labels: await labels(),
         suggestions,
+        model: { id: explainer, label: modelLabel(explainer) },
         ...(matchedEntity && {
           matchedEntity: { type: matchedEntity.type, name: matchedEntity.name },
         }),

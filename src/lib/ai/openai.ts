@@ -1,5 +1,11 @@
 import "server-only";
 import { reasoningEffortFor } from "./models";
+import {
+  meteredOpenAIFetch,
+  PoolExhaustedError,
+  PoolMeterError,
+  type PoolFeature,
+} from "./pool-meter";
 
 /**
  * Shared bounded call to OpenAI Chat Completions with strict JSON output.
@@ -15,7 +21,11 @@ export type StructuredCallFailure =
   | "model_access"
   | "provider_rate_limit"
   | "provider_error"
-  | "invalid_response";
+  | "invalid_response"
+  /** The model's free daily pool is used up; nothing was sent. */
+  | "pool_exhausted"
+  /** The daily pool meter could not reserve; nothing was sent. */
+  | "meter_unavailable";
 
 export type StructuredCallResult =
   | {
@@ -119,14 +129,28 @@ export async function requestStructuredJson(
     timeoutMs: number;
     responseBytes: number;
     fetch?: typeof globalThis.fetch;
+    /** Which feature's reservation this is in the daily pool ledger. */
+    feature: PoolFeature;
   },
 ): Promise<StructuredCallResult> {
   const key = process.env.OPENAI_API_KEY;
   if (!key) return { status: "error", code: "configuration_error" };
+  let request: { model?: unknown; max_completion_tokens?: unknown };
+  try {
+    request = JSON.parse(body);
+  } catch {
+    return { status: "error", code: "configuration_error" };
+  }
+  if (
+    typeof request.model !== "string" ||
+    !Number.isSafeInteger(request.max_completion_tokens)
+  )
+    return { status: "error", code: "configuration_error" };
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs);
   try {
-    const response = await (options.fetch ?? globalThis.fetch)(
+    // Bytes bound the prompt's tokens, so this is its largest possible size.
+    const response = await meteredOpenAIFetch(
       "https://api.openai.com/v1/chat/completions",
       {
         method: "POST",
@@ -136,6 +160,13 @@ export async function requestStructuredJson(
           "Content-Type": "application/json",
         },
         body,
+      },
+      {
+        model: request.model,
+        feature: options.feature,
+        reserveTokens:
+          Buffer.byteLength(body) + (request.max_completion_tokens as number),
+        fetch: options.fetch,
       },
     );
     if (!response.ok)
@@ -186,6 +217,10 @@ export async function requestStructuredJson(
       return failed;
     }
   } catch (error) {
+    if (error instanceof PoolExhaustedError)
+      return { status: "error", code: "pool_exhausted" };
+    if (error instanceof PoolMeterError)
+      return { status: "error", code: "meter_unavailable" };
     return {
       status: "error",
       code:

@@ -27,7 +27,10 @@ for (const width of [390, 1280]) {
     await expect(
       page.getByRole("heading", { name: "ATLAS Analyst" }),
     ).toBeVisible();
-    await expect(page.getByLabel("AI model")).toHaveCount(0);
+    // One compact model button; the default explains unless changed.
+    await expect(
+      page.getByRole("button", { name: "Model: GPT-4o mini. Change model" }),
+    ).toBeVisible();
     await page.route("**/api/analyst/freeform", async (route) =>
       route.fulfill({
         status: 200,
