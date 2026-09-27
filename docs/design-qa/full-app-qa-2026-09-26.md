@@ -58,6 +58,11 @@ per page, and no failed routes.
    "Record transfer"), Transfers ("Money movement", "Accounts"), Budget
    (3 buttons, 3rd wraps full-width), and Runway ("Accounts", "Budget") repeat
    links already in the tab bar. Keep one primary action per page.
+   **Done:** header buttons that repeated a tab were removed from
+   Transactions, Transfers, Budget, and Runway. Budget keeps a single "Money
+   timeline" link (not in the tabs), Accounts keeps "Add account"/"Archived",
+   and the Transfers eyebrow now matches its tab. The Money tab strip also
+   scrolls the current tab into view on narrow screens (part of #6).
 4. **Settings is 7,300px tall on mobile.** Add a section index or split into
    sub-pages (Profile, Appearance, Security, Offline, Reminders, Data).
 5. **Date formats are inconsistent app-wide:** `2026-10-01` (Dashboard, Debts,

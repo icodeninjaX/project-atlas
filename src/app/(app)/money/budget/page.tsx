@@ -1,3 +1,4 @@
+import { History } from "lucide-react";
 import Link from "next/link";
 import { BudgetForm } from "@/components/money/budget-form";
 import { PageHeading } from "@/components/shared/page-heading";
@@ -90,17 +91,12 @@ export default async function BudgetPage({
         title="Monthly plan"
         description="Planned and actual pesos remain visible together. Overspending is always named in text."
         actions={
-          <>
-            <Button asChild variant="secondary">
-              <Link href="/money/transactions">Transactions</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/money/runway">Runway</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/timeline?module=money">Timeline</Link>
-            </Button>
-          </>
+          <Button asChild variant="secondary">
+            <Link href="/timeline?module=money">
+              <History className="size-4" />
+              Money timeline
+            </Link>
+          </Button>
         }
       />
       <MoneyNavigation currentHref="/money/budget" />
