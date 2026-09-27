@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive,
   BookOpen,
@@ -26,6 +26,7 @@ import {
   type KnowledgeActionState,
   updateKnowledgeConceptAction,
 } from "@/lib/knowledge/actions";
+import { useScrollStrip } from "@/components/shared/scroll-strip";
 
 export type KnowledgeConcept = {
   id: string;
@@ -228,6 +229,9 @@ export function KnowledgeWorkspace({
     setEditing(false);
   };
 
+  const viewStrip = useRef<HTMLDivElement>(null);
+  useScrollStrip(viewStrip, { activeKey: view });
+
   const clearFilters = () => {
     setQuery("");
     setCategory("all");
@@ -263,7 +267,10 @@ export function KnowledgeWorkspace({
         className={concepts.length === 0 ? "hidden" : "space-y-3"}
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="border-border bg-card flex max-w-full gap-1 overflow-x-auto rounded-xl border p-1">
+          <div
+            ref={viewStrip}
+            className="border-border bg-card flex max-w-full [scrollbar-width:none] gap-1 overflow-x-auto rounded-xl border p-1 [&::-webkit-scrollbar]:hidden"
+          >
             {primaryViews.map(({ value, label }) => {
               const count =
                 value === "all"

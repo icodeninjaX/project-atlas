@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { updateApplicationStageAction } from "@/lib/career/actions";
 import { cn } from "@/lib/utils";
+import { useScrollStrip } from "@/components/shared/scroll-strip";
 
 const pipelineStages = [
   "interested",
@@ -540,6 +541,7 @@ export function CareerKanban({
     Partial<Record<CareerStage, HTMLButtonElement | null>>
   >({});
   const stageTabList = useRef<HTMLDivElement | null>(null);
+  useScrollStrip(stageTabList, { centerActive: false });
   const boardScroll = useRef<HTMLDivElement | null>(null);
   const customizationTrigger = useRef<HTMLButtonElement | null>(null);
   const customizationPanel = useRef<HTMLDivElement | null>(null);

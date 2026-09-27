@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useScrollStrip } from "@/components/shared/scroll-strip";
 import { cn } from "@/lib/utils";
 
 export const settingsSections = [
@@ -76,14 +77,10 @@ export function SettingsSectionNav({
   const [active, setActive] = useActiveSection();
   const stripRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    if (variant !== "strip") return;
-    const strip = stripRef.current;
-    const chip = strip?.querySelector<HTMLElement>('[aria-current="true"]');
-    if (!strip || !chip || strip.scrollWidth <= strip.clientWidth) return;
-    strip.scrollLeft =
-      chip.offsetLeft - (strip.clientWidth - chip.offsetWidth) / 2;
-  }, [active, variant]);
+  useScrollStrip(stripRef, {
+    activeKey: active,
+    centerActive: variant === "strip",
+  });
 
   const links = settingsSections.map(({ id, label }) => (
     <a

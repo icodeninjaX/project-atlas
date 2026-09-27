@@ -11,6 +11,7 @@ import { formatCalendarDate, manilaDateLabel } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
 import { getTaskPriorityBadgeClass } from "@/lib/tasks/priority";
 import { formatTaskTime, type ScheduledTaskSlot } from "@/lib/tasks/task-time";
+import { ScrollStrip } from "@/components/shared/scroll-strip";
 
 export const metadata = { title: "Tasks" };
 
@@ -191,14 +192,16 @@ export default async function TasksPage({
         initiallyOpen={params.create === "true"}
       />
 
-      <nav
+      <ScrollStrip
         aria-label="Task views"
+        activeKey={selected}
         className="border-border bg-muted/60 mt-5 flex [scrollbar-width:none] gap-1 overflow-x-auto rounded-2xl border p-1 sm:mt-6 [&::-webkit-scrollbar]:hidden"
       >
         {views.map((view) => (
           <Link
             key={view.value}
             href={`/tasks?view=${view.value}`}
+            aria-current={selected === view.value ? "page" : undefined}
             className={`min-h-11 shrink-0 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
               selected === view.value
                 ? "border-border bg-card text-foreground shadow-sm"
@@ -208,7 +211,7 @@ export default async function TasksPage({
             {view.label}
           </Link>
         ))}
-      </nav>
+      </ScrollStrip>
 
       <div className="mt-5 space-y-2">
         {tasks.length === 0 ? (

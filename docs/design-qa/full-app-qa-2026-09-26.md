@@ -88,6 +88,12 @@ per page, and no failed routes.
 6. Horizontally scrolling tab strips (Tasks, Money sub-nav, Signals, Knowledge)
    cut off the last tab with no hint. Add an edge fade, and scroll the active
    tab into view (Runway's tab is off-screen when you're on Runway).
+   **Done:** a shared `ScrollStrip` / `useScrollStrip`
+   (`src/components/shared/scroll-strip.tsx`) fades whichever edge has hidden
+   tabs and centers the current tab without moving the page. Applied to
+   Tasks, Signals, Debts strategy, Money, Settings sections, Knowledge views,
+   and the Career stage picker (fade only; it already centers). Tasks and
+   Debts tabs now also expose `aria-current`.
 7. Transactions: "View transaction history" is the primary (blue) button while
    "Record a transaction" is secondary. The recording action should be primary.
 8. Dashboard: Next Best Action often proposes the same task shown as Dayline

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { useScrollStrip } from "@/components/shared/scroll-strip";
 import { cn } from "@/lib/utils";
 
 const destinations = [
@@ -16,21 +17,13 @@ const destinations = [
 export function MoneyNavigation({ currentHref }: { currentHref: string }) {
   const navRef = useRef<HTMLElement>(null);
 
-  // On narrow screens the strip scrolls; bring the current tab into view
-  // without moving the page itself.
-  useEffect(() => {
-    const nav = navRef.current;
-    const active = nav?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (!nav || !active || nav.scrollWidth <= nav.clientWidth) return;
-    nav.scrollLeft =
-      active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
-  }, [currentHref]);
+  useScrollStrip(navRef, { activeKey: currentHref });
 
   return (
     <nav
       ref={navRef}
       aria-label="Money navigation"
-      className="border-border bg-muted/50 relative mt-6 flex [scrollbar-width:none] gap-1 overflow-x-auto rounded-xl border p-1 [&::-webkit-scrollbar]:hidden"
+      className="border-border bg-muted/50 mt-6 flex [scrollbar-width:none] gap-1 overflow-x-auto rounded-xl border p-1 [&::-webkit-scrollbar]:hidden"
     >
       {destinations.map(({ href, label }) => {
         const active = href === currentHref;
