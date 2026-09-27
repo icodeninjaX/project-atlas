@@ -49,7 +49,8 @@ describe("shared structured OpenAI call", () => {
     expect(estimatedCostUsdMicros("gpt-4o-mini-2024-07-18", 1000, 100)).toBe(
       210,
     );
-    expect(estimatedCostUsdMicros("gpt-5.4-mini", 1000, 100)).toBeNull();
+    expect(estimatedCostUsdMicros("gpt-5.4-mini", 1000, 100)).toBe(1200);
+    expect(estimatedCostUsdMicros("gpt-9-unknown", 1000, 100)).toBeNull();
   });
   it("parses JSON content and usage", async () => {
     process.env.OPENAI_API_KEY = "k";
