@@ -128,7 +128,18 @@ export async function meteredOpenAIFetch(
     providerUsageStale(reservation.provider_synced_at) &&
     (await refreshProviderUsage())
   ) {
-    await settleReservation(reservation.reservation_id, 0);
+    // Only a released reservation may be replaced; otherwise nothing is
+    // sent and the first one stays counted.
+    const { error: releaseError } = await admin
+      .rpc("settle_ai_pool_tokens", {
+        p_id: reservation.reservation_id,
+        p_used: 0,
+      })
+      .then(
+        (result) => result,
+        () => ({ error: true }),
+      );
+    if (releaseError) throw new PoolMeterError("release_failed");
     reservation = await reserve();
   }
   if (!reservation?.status) throw new PoolMeterError("unavailable");

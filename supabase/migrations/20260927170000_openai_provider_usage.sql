@@ -87,15 +87,32 @@ end; $$;
 revoke all on function public.claim_ai_pool_provider_sync() from public, anon, authenticated;
 grant execute on function public.claim_ai_pool_provider_sync() to service_role;
 
--- When OpenAI's figure for today was last recorded, for callers waiting on a
--- refresh another instance claimed.
-create function public.ai_pool_provider_synced_at()
-returns timestamptz language sql stable security definer set search_path = '' as $$
-  select min(synced_at) from public.ai_pool_provider_usage
-  where usage_day = (now() at time zone 'utc')::date
+-- Ends a claim once its refresh has finished, whether or not it succeeded,
+-- so waiting callers learn the outcome instead of timing out.
+create function public.release_ai_pool_provider_sync()
+returns void language sql security definer set search_path = '' as $$
+  update public.ai_pool_provider_sync set claimed_at = null where id
 $$;
-revoke all on function public.ai_pool_provider_synced_at() from public, anon, authenticated;
-grant execute on function public.ai_pool_provider_synced_at() to service_role;
+revoke all on function public.release_ai_pool_provider_sync() from public, anon, authenticated;
+grant execute on function public.release_ai_pool_provider_sync() to service_role;
+
+-- For callers waiting on another instance's refresh: when today's figure was
+-- last recorded, and whether a refresh is still claimed.
+create function public.ai_pool_provider_sync_state()
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object(
+    'syncedAt', (
+      select min(synced_at) from public.ai_pool_provider_usage
+      where usage_day = (now() at time zone 'utc')::date
+    ),
+    'claimActive', coalesce((
+      select claimed_at >= now() - interval '15 seconds'
+      from public.ai_pool_provider_sync where id
+    ), false)
+  )
+$$;
+revoke all on function public.ai_pool_provider_sync_state() from public, anon, authenticated;
+grant execute on function public.ai_pool_provider_sync_state() to service_role;
 
 create or replace function public.reserve_ai_pool_tokens(p_user_id uuid, p_model text, p_feature text, p_tokens integer)
 returns jsonb language plpgsql security definer set search_path = '' as $$

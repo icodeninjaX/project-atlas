@@ -15,6 +15,8 @@ export const PROVIDER_USAGE_MAX_AGE_MS = 5 * 60_000;
 
 const USAGE_URL = "https://api.openai.com/v1/organization/usage/completions";
 const SYNC_TIMEOUT_MS = 4_000;
+// A claim lapses after 15 seconds; waiters never give up before that.
+const CLAIM_WAIT_MS = 16_000;
 const MAX_PAGES = 5;
 
 type UsageResult = {
@@ -172,14 +174,32 @@ async function coordinatedRefresh(options: {
       "claim_ai_pool_provider_sync",
     );
     if (error) return false;
-    if (claimed === true) return syncProviderUsage(options);
-    const deadline = Date.now() + (options.waitMs ?? SYNC_TIMEOUT_MS);
+    if (claimed === true) {
+      try {
+        return await syncProviderUsage(options);
+      } finally {
+        // Waiting callers learn the outcome instead of timing out.
+        await admin.rpc("release_ai_pool_provider_sync");
+      }
+    }
+    // Another instance is refreshing: wait until its figure lands or its
+    // claim ends (released, or lapsed after 15 seconds).
+    const deadline = Date.now() + (options.waitMs ?? CLAIM_WAIT_MS);
     while (Date.now() < deadline) {
       await new Promise((resolve) =>
         setTimeout(resolve, options.pollMs ?? 400),
       );
-      const { data } = await admin.rpc("ai_pool_provider_synced_at");
-      if (typeof data === "string" && !providerUsageStale(data)) return true;
+      const { data } = await admin.rpc("ai_pool_provider_sync_state");
+      const state = (data ?? {}) as {
+        syncedAt?: unknown;
+        claimActive?: unknown;
+      };
+      if (
+        typeof state.syncedAt === "string" &&
+        !providerUsageStale(state.syncedAt)
+      )
+        return true;
+      if (state.claimActive !== true) return false;
     }
     return false;
   } catch {

@@ -87,9 +87,12 @@ records it per pool (`supabase/migrations/20260927170000_openai_provider_usage.s
   the ledger decision stands.
 - Refreshes are coalesced: callers in one server instance share a single
   in-flight refresh, and across instances only the caller that claims it
-  (`claim_ai_pool_provider_sync`, a 15-second claim) calls the Usage API.
-  The others wait up to four seconds for its figure, then keep their ledger
-  decision if it has not arrived.
+  (`claim_ai_pool_provider_sync`) calls the Usage API and releases the claim
+  when it finishes. The others wait until its figure lands or its claim
+  ends (released, or lapsed after 15 seconds), then keep their ledger
+  decision if no fresh figure arrived.
+- A replaced reservation must be released first; if the release fails,
+  nothing is sent and the first reservation stays counted.
 - `OPENAI_PROJECT_ID` (optional) narrows the count to ATLAS's project. Without
   it the whole organization counts, which can only stop ATLAS sooner.
 - Without the admin key, or when OpenAI cannot be reached, the meter keeps

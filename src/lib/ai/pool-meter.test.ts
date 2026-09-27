@@ -278,6 +278,31 @@ describe("free daily pool meter", () => {
       ["settle_ai_pool_tokens", { p_id: 9, p_used: 0 }],
     ]);
   });
+  it("sends nothing when the first reservation cannot be released", async () => {
+    process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
+    const fetch = vi.fn();
+    supabase.rpc.mockImplementation(async (name: string) =>
+      name === "reserve_ai_pool_tokens"
+        ? {
+            data: {
+              status: "reserved",
+              reservation_id: 9,
+              provider_synced_at: null,
+            },
+            error: null,
+          }
+        : { data: null, error: { message: "down" } },
+    );
+    await expect(
+      meteredOpenAIFetch(url, init, options(fetch)),
+    ).rejects.toBeInstanceOf(PoolMeterError);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(
+      supabase.rpc.mock.calls.filter(
+        ([name]) => name === "reserve_ai_pool_tokens",
+      ),
+    ).toHaveLength(1);
+  });
   it("keeps the ledger reservation when the refresh fails", async () => {
     process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
     usage.sync.mockResolvedValueOnce(false);
