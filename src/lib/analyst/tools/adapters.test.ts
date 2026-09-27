@@ -487,13 +487,18 @@ describe("tool evidence adapters", () => {
       { ...context, client: { rpc } as unknown as SupabaseClient },
     );
     expect(result.status).toBe("ready");
+    // Trimmed to the request and still in progress, but every record in the
+    // stated window is counted.
     expect(result.evidence).toMatchObject([
       {
         period: { from: "2026-09-10", through: "2026-09-24" },
-        completeness: "partial",
+        completeness: "complete",
         value: 3000,
       },
     ]);
+    expect(result.evidence[0]?.comparisonBasis).toContain(
+      "recorded for 2026-09-10 through 2026-09-24 only",
+    );
     expect(result.evidence[0]?.comparisonBasis).toContain(
       "Calendar bucket 2026-09-01 through 2026-09-30",
     );
