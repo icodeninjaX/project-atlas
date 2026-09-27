@@ -58,6 +58,21 @@ function proposal(overrides: Record<string, unknown> = {}) {
   };
 }
 
+const contextRows: Record<string, unknown[]> = {
+  financial_accounts: [],
+  transaction_categories: [],
+};
+
+function contextQuery(table: string) {
+  const query = {
+    select: () => query,
+    eq: () => query,
+    order: () => query,
+    limit: async () => ({ data: contextRows[table], error: null }),
+  };
+  return query;
+}
+
 function form(values: Record<string, string>) {
   const data = new FormData();
   for (const [key, value] of Object.entries(values)) data.set(key, value);
@@ -73,7 +88,10 @@ beforeEach(() => {
     if (name === "finish_capture_preview") return { data: true, error: null };
     return { data: null, error: null };
   });
+  contextRows.financial_accounts = [];
+  contextRows.transaction_categories = [];
   mocks.from.mockImplementation((table: string) => {
+    if (table in contextRows) return contextQuery(table);
     if (table === "capture_batch_previews") return { insert: mocks.insert };
     throw new Error(`Unexpected table ${table}`);
   });
@@ -96,6 +114,61 @@ afterEach(() => {
 });
 
 describe("Capture 2.0 actions", () => {
+  it("sends account and category names and maps informal account wording", async () => {
+    contextRows.financial_accounts = [
+      { name: "GCash Wallet", account_type: "e_wallet" },
+      { name: "BPI Savings", account_type: "bank" },
+    ];
+    contextRows.transaction_categories = [
+      { name: "Food & Dining", category_type: "expense" },
+      { name: "Salary", category_type: "income" },
+    ];
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            finish_reason: "stop",
+            message: {
+              content: JSON.stringify({
+                items: [
+                  {
+                    sourcePhrase: "Spent 250 on lunch using gcash",
+                    operation: "create",
+                    targetText: null,
+                    proposal: proposal({
+                      kind: "expense",
+                      amountText: "250",
+                      currency: "PHP",
+                      dateText: null,
+                      date: null,
+                      dateRole: "transaction",
+                      title: "Lunch",
+                      accountText: "gcash",
+                      categorySuggestion: "food & dining",
+                    }),
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal("fetch", fetch);
+    const state = await interpretCaptureBatchAction(
+      { message: "", batchId: null, items: [] },
+      form({ text: "Spent 250 on lunch using gcash" }),
+    );
+    const sent = JSON.parse(fetch.mock.calls[0]![1].body);
+    expect(sent.messages[1].content).toContain("GCash Wallet");
+    expect(sent.messages[1].content).toContain("Food & Dining");
+    expect(state.items[0]?.proposal).toMatchObject({
+      accountHint: "GCash Wallet",
+      categorySuggestion: "Food & Dining",
+    });
+  });
+
   it("warns when the same source file was previewed recently", async () => {
     const digest = "a".repeat(64);
     const source = {
@@ -104,19 +177,23 @@ describe("Capture 2.0 actions", () => {
       method: "vision",
       digest,
     };
-    mocks.from.mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          order: () => ({
-            limit: async () => ({
-              data: [{ proposal: { source: { digest } } }],
-              error: null,
+    mocks.from.mockImplementation((table: string) =>
+      table in contextRows
+        ? contextQuery(table)
+        : {
+            select: () => ({
+              eq: () => ({
+                order: () => ({
+                  limit: async () => ({
+                    data: [{ proposal: { source: { digest } } }],
+                    error: null,
+                  }),
+                }),
+              }),
             }),
-          }),
-        }),
-      }),
-      insert: mocks.insert,
-    });
+            insert: mocks.insert,
+          },
+    );
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
