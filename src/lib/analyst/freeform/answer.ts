@@ -1,6 +1,12 @@
 import "server-only";
 import { z } from "zod";
-import { AI_MODELS, estimatedCostUsdMicros } from "@/lib/ai/models";
+import {
+  AI_MODELS,
+  ANSWER_COST_CEILING_USD_MICROS,
+  estimatedCostUsdMicros,
+  type AnalystModelId,
+} from "@/lib/ai/models";
+import { freePoolFor } from "@/lib/ai/pools";
 import {
   requestStructuredJson,
   structuredRequestBody,
@@ -19,7 +25,6 @@ export const ANSWER_LIMITS = Object.freeze({
   payloadChars: 14_000,
   inputTokens: 16_000,
   outputTokens: 700,
-  costUsdMicros: 3_000,
   responseBytes: 24_000,
   timeoutMs: 12_000,
 });
@@ -61,7 +66,9 @@ export type AnswerResult =
         | "model_access"
         | "provider_rate_limit"
         | "provider_error"
-        | "invalid_response";
+        | "invalid_response"
+        | "pool_exhausted"
+        | "meter_unavailable";
       inputTokens?: number;
       outputTokens?: number;
     };
@@ -208,6 +215,8 @@ export async function requestGroundedAnswer(
     history?: Array<{ question: string; answer: string }>;
     /** Reports writing, checking and the repair attempt as they start. */
     onStage?: AnalystStageHook;
+    /** The explaining model; defaults to `AI_MODELS.analyst`. */
+    model?: AnalystModelId;
   } = {},
 ): Promise<AnswerResult> {
   const key = process.env.OPENAI_API_KEY;
@@ -244,7 +253,11 @@ export async function requestGroundedAnswer(
   });
   if (payload.length > ANSWER_LIMITS.payloadChars)
     return { status: "error", code: "context_limit" };
-  const model = AI_MODELS.analyst;
+  const model = options.model ?? AI_MODELS.analyst;
+  const pool = freePoolFor(model);
+  if (!pool) return { status: "error", code: "configuration_error" };
+  // Bounds what one attempt could cost if it were ever billed.
+  const costCeiling = ANSWER_COST_CEILING_USD_MICROS[pool];
   const schema = {
     type: "object",
     additionalProperties: false,
@@ -329,7 +342,7 @@ export async function requestGroundedAnswer(
       return { status: "error", code: "configuration_error" };
     if (
       estimatedInput > ANSWER_LIMITS.inputTokens ||
-      estimatedCost > ANSWER_LIMITS.costUsdMicros
+      estimatedCost > costCeiling
     )
       return attempt === 0
         ? { status: "error", code: "context_limit" }
@@ -343,6 +356,7 @@ export async function requestGroundedAnswer(
       timeoutMs: ANSWER_LIMITS.timeoutMs,
       responseBytes: ANSWER_LIMITS.responseBytes,
       fetch: options.fetch,
+      feature: "analyst_answer",
     });
     if (result.status === "error")
       return {
@@ -363,7 +377,7 @@ export async function requestGroundedAnswer(
       result.inputTokens > ANSWER_LIMITS.inputTokens ||
       result.outputTokens > ANSWER_LIMITS.outputTokens ||
       (estimatedCostUsdMicros(model, result.inputTokens, result.outputTokens) ??
-        Infinity) > ANSWER_LIMITS.costUsdMicros
+        Infinity) > costCeiling
     )
       return { status: "error", code: "cost_limit", inputTokens, outputTokens };
     // The repair attempt stays on "Correcting…" while it is checked.

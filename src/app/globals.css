@@ -25,6 +25,29 @@
   --font-mono: var(--font-app);
   /* Analyst progress steps and follow-up chips settle in from below. */
   --animate-analyst-rise: analyst-rise 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-analyst-sheet: analyst-sheet 0.42s cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+  --animate-analyst-fade: analyst-fade 0.24s ease-out both;
+}
+
+@keyframes analyst-sheet {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes analyst-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes analyst-rise {

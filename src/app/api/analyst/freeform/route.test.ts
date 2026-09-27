@@ -635,6 +635,74 @@ describe("freeform Analyst route", () => {
   });
 });
 
+describe("freeform Analyst model choice", () => {
+  it("explains with the chosen exact model and records it on the quota", async () => {
+    const response = await POST(request({ ...valid, model: "gpt-6-sol" }));
+    expect(mocks.rpc).toHaveBeenCalledWith(
+      "reserve_ai_analyst_request_result",
+      { p_type: "freeform", p_model: "gpt-6-sol" },
+    );
+    expect(mocks.answer).toHaveBeenCalledWith(question, [item], {
+      model: "gpt-6-sol",
+    });
+    expect(await response.json()).toMatchObject({
+      status: "answered",
+      model: { id: "gpt-6-sol", label: "GPT-6 Sol" },
+    });
+  });
+  it("rejects an alias or unknown model before quota", async () => {
+    for (const model of ["gpt-4o-mini", "gpt-6-astra", "unknown"]) {
+      const response = await POST(request({ ...valid, model }));
+      expect(response.status).toBe(400);
+    }
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it("falls back to GPT-4o mini when a large-pool model is used up", async () => {
+    mocks.answer.mockResolvedValueOnce({
+      status: "error",
+      code: "pool_exhausted",
+    });
+    const body = await (
+      await POST(request({ ...valid, model: "gpt-5.4-2026-03-05" }))
+    ).json();
+    expect(mocks.answer).toHaveBeenNthCalledWith(1, question, [item], {
+      model: "gpt-5.4-2026-03-05",
+    });
+    expect(mocks.answer).toHaveBeenNthCalledWith(2, question, [item]);
+    expect(body).toMatchObject({
+      status: "answered",
+      model: { id: "gpt-4o-mini-2024-07-18", label: "GPT-4o mini" },
+    });
+    expect(body.limitations.join(" ")).toMatch(
+      /GPT-5\.4's free daily allowance is used up, so GPT-4o mini wrote/,
+    );
+  });
+  it("shows facts only when the small pool is used up", async () => {
+    mocks.answer.mockResolvedValueOnce({
+      status: "error",
+      code: "pool_exhausted",
+    });
+    const body = await (await POST(request(valid))).json();
+    expect(mocks.answer).toHaveBeenCalledTimes(1);
+    expect(body).toMatchObject({
+      status: "fallback",
+      failureCode: "pool_exhausted",
+      message: expect.stringMatching(/free daily AI allowance is used up/),
+    });
+    expect(finishCalls()[0]![1]).toMatchObject({ p_outcome: "pool_exhausted" });
+    mocks.plan.mockResolvedValueOnce({
+      status: "error",
+      error: {
+        code: "pool_exhausted",
+        message: "ATLAS's free daily AI allowance is used up.",
+      },
+      metadata: { inputTokens: 0, outputTokens: 0 },
+    });
+    await POST(request(valid));
+    expect(finishCalls()[1]![1]).toMatchObject({ p_outcome: "pool_exhausted" });
+  });
+});
+
 describe("freeform Analyst progress stream", () => {
   it("streams stages in order and ends with the JSON result", async () => {
     mocks.plan.mockImplementationOnce(async (_question, options) => {

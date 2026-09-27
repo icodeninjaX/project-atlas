@@ -40,6 +40,8 @@ import {
   type AnalystStage,
 } from "@/lib/analyst/freeform/progress";
 import { questionKey } from "@/lib/analyst/freeform/suggestions";
+import { AI_MODELS, type AnalystModelId } from "@/lib/ai/models";
+import { ModelPicker, optionFor } from "@/components/analyst/model-picker";
 import { formatPeriodLabel } from "@/lib/history/period-label";
 import { cn } from "@/lib/utils";
 
@@ -54,6 +56,8 @@ type FreeformResult = {
   labels?: Record<string, { title: string; date: string | null }>;
   /** Fixed follow-up questions from the tools that ran; no record text. */
   suggestions?: string[];
+  /** The model that wrote the explanation (it can differ after a fallback). */
+  model?: { id: string; label: string };
 };
 
 /** The owner's own name for an evidence item, or its model-safe metric. */
@@ -86,6 +90,8 @@ type Turn = {
   /** Furthest live stage reached while pending, with the domains read. */
   stage: AnalystStage;
   domains: AnalystDomain[];
+  /** The model chosen when this question was asked. */
+  model: AnalystModelId;
 };
 
 /** Starter questions; each goes through the same verified Analyst flow. */
@@ -114,6 +120,28 @@ function readConsent(userId: string) {
     return window.localStorage.getItem(consentKey(userId)) === "granted";
   } catch {
     return false;
+  }
+}
+
+const modelKey = (userId: string) => `atlas:analyst-model:${userId}`;
+
+function readModel(userId: string): AnalystModelId {
+  try {
+    const saved = window.localStorage.getItem(modelKey(userId));
+    // A model no longer offered falls back to the default.
+    return saved && optionFor(saved).id === saved
+      ? (saved as AnalystModelId)
+      : AI_MODELS.analyst;
+  } catch {
+    return AI_MODELS.analyst;
+  }
+}
+
+function writeModel(userId: string, model: AnalystModelId) {
+  try {
+    window.localStorage.setItem(modelKey(userId), model);
+  } catch {
+    /* The choice still applies for this page view. */
   }
 }
 
@@ -615,6 +643,10 @@ function AnswerCard({ turn }: { turn: Turn }) {
           <div className="min-w-0">
             <p className="text-sm font-semibold whitespace-nowrap">
               ATLAS Analyst
+              <span className="text-muted-foreground font-normal">
+                {" · "}
+                {turn.result?.model?.label ?? optionFor(turn.model).label}
+              </span>
             </p>
             {turn.result?.matchedEntity && (
               <p className="text-muted-foreground truncate text-xs">
@@ -668,6 +700,7 @@ function Composer({
   goals,
   debts,
   children,
+  modelPicker,
 }: {
   question: string;
   setQuestion: (value: string) => void;
@@ -683,6 +716,8 @@ function Composer({
   goals: Array<{ id: string; title: string }>;
   debts: Array<{ id: string; creditor_name: string }>;
   children?: ReactNode;
+  /** The model button, shown beside the focus control. */
+  modelPicker?: ReactNode;
 }) {
   const length = question.trim().length;
   const tooLong = length > maxLength;
@@ -803,6 +838,7 @@ function Composer({
           {/* One compact row keeps the pinned composer short on phones. */}
           <div className="flex items-end gap-1 p-1.5">
             {focusPicker}
+            {modelPicker}
             {textarea}
             {children}
             {send}
@@ -817,6 +853,7 @@ function Composer({
             <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               {focusChip}
               {focusPicker}
+              {modelPicker}
               {children}
             </div>
             {send}
@@ -876,14 +913,24 @@ export function FreeformWorkspace({
   const [question, setQuestion] = useState("");
   const [focus, setFocus] = useState("");
   const [consent, setConsent] = useState(false);
+  const [model, setModel] = useState<AnalystModelId>(AI_MODELS.analyst);
   const [turns, setTurns] = useState<Turn[]>([]);
   const pending = turns.some((turn) => turn.pending);
   const asked = new Set(turns.map((turn) => questionKey(turn.question)));
 
   useEffect(() => {
     const saved = readConsent(userId);
-    queueMicrotask(() => setConsent(saved));
+    const savedModel = readModel(userId);
+    queueMicrotask(() => {
+      setConsent(saved);
+      setModel(savedModel);
+    });
   }, [userId]);
+
+  function chooseModel(next: AnalystModelId) {
+    setModel(next);
+    writeModel(userId, next);
+  }
 
   // Bring each new question into view as it is asked.
   useEffect(() => {
@@ -950,6 +997,7 @@ export function FreeformWorkspace({
         pending: true,
         stage: "understanding",
         domains: [],
+        model,
       },
     ]);
     setQuestion("");
@@ -982,6 +1030,7 @@ export function FreeformWorkspace({
           ...(target.type === "goal" && target.id && { goalId: target.id }),
           ...(target.type === "debt" && target.id && { debtId: target.id }),
           ...(history.length > 0 && { history }),
+          ...(model !== AI_MODELS.analyst && { model }),
           dataSharingAcknowledged: true,
         }),
       });
@@ -1016,6 +1065,14 @@ export function FreeformWorkspace({
       focus={focus}
       setFocus={setFocus}
       focusLabel={focusLabel}
+      modelPicker={
+        <ModelPicker
+          value={model}
+          onChange={chooseModel}
+          compact={followUp}
+          disabled={pending}
+        />
+      }
       goals={goals}
       debts={debts}
     >
@@ -1040,8 +1097,9 @@ export function FreeformWorkspace({
       </span>
       <p className="text-muted-foreground min-w-0 flex-1 text-xs leading-5">
         To answer, Analyst shares the relevant facts from your records with
-        OpenAI under your organization’s data-sharing settings. You choose once
-        on this device and can turn it off anytime.
+        OpenAI, never task titles or notes. ATLAS shares this traffic with
+        OpenAI for free daily usage, so OpenAI may use these facts to improve
+        its models. You choose once on this device and can turn it off anytime.
       </p>
       <button
         type="button"
@@ -1180,9 +1238,10 @@ export function FreeformWorkspace({
         <div className="mt-1 max-w-2xl space-y-1 leading-5">
           <p>
             ATLAS calculates every figure from your records. GPT-5.4 mini plans
-            which records to read, and GPT-4o mini explains them; every number
-            it writes is checked against the facts it cites. Follow-ups use your
-            last two answers as context.
+            which records to read, and the model you choose explains them; every
+            number it writes is checked against the facts it cites. Models run
+            on OpenAI’s free daily token pools, and ATLAS stops before a pool is
+            used up. Follow-ups use your last two answers as context.
           </p>
           <p>
             Scenarios are estimates, and extra debt payments are treated as

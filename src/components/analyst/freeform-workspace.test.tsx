@@ -657,4 +657,109 @@ describe("Analyst conversation", () => {
     expect(sent).not.toHaveProperty("goalId");
     expect(screen.queryByRole("button", { name: "Clear focus" })).toBeNull();
   });
+
+  it("chooses a model from the free pools and asks with it", async () => {
+    const user = userEvent.setup();
+    const pools = {
+      pools: {
+        large: { used: 45000, budget: 225000, dailyTokens: 250000 },
+        small: { used: 225000, budget: 2250000, dailyTokens: 2500000 },
+      },
+      resetsAt: "2026-09-28T00:00:00.000Z",
+    };
+    const fetch = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(
+      async (url) =>
+        url === "/api/analyst/pools"
+          ? Response.json(pools)
+          : answered("The recorded expenses may be worth a look.", {
+              model: { id: "gpt-6-sol", label: "GPT-6 Sol" },
+            }),
+    );
+    vi.stubGlobal("fetch", fetch);
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.click(
+      screen.getByRole("button", { name: "Model: GPT-4o mini. Change model" }),
+    );
+    const dialog = await screen.findByRole("dialog", { name: "Explain with" });
+    const radios = within(dialog).getAllByRole("radio");
+    expect(radios.map((radio) => radio.textContent)).toEqual([
+      expect.stringContaining("GPT-4o mini"),
+      expect.stringContaining("GPT-5.4 mini"),
+      expect.stringContaining("GPT-5.6 Terra"),
+      expect.stringContaining("GPT-5.6 Luna"),
+      expect.stringContaining("GPT-5.4"),
+      expect.stringContaining("GPT-6 Sol"),
+      expect.stringContaining("GPT-6 Luna"),
+    ]);
+    expect(within(dialog).getByRole("radio", { checked: true })).toHaveFocus();
+    // Today's use of each pool, as a share of ATLAS's stop point.
+    await waitFor(() =>
+      expect(
+        within(dialog)
+          .getAllByRole("meter")
+          .map((meter) => meter.getAttribute("aria-valuenow")),
+      ).toEqual(["10", "20"]),
+    );
+    await user.click(within(dialog).getByRole("radio", { name: /GPT-6 Sol/ }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(window.localStorage.getItem("atlas:analyst-model:owner-a")).toBe(
+      "gpt-6-sol",
+    );
+    await user.type(box(), "How did my spending change?{Enter}");
+    await screen.findByText("The recorded expenses may be worth a look.");
+    const sent = fetch.mock.calls.find(
+      ([url]) => url === "/api/analyst/freeform",
+    )!;
+    expect(JSON.parse(sent[1]!.body as string)).toMatchObject({
+      model: "gpt-6-sol",
+    });
+    expect(
+      screen.getByRole("article", { name: "Analyst answer" }),
+    ).toHaveTextContent("ATLAS Analyst · GPT-6 Sol");
+  });
+
+  it("marks a used-up pool and restores the saved model", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem("atlas:analyst-model:owner-a", "gpt-5.6-terra");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          pools: {
+            large: { used: 220000, budget: 225000, dailyTokens: 250000 },
+            small: { used: 0, budget: 2250000, dailyTokens: 2500000 },
+          },
+          resetsAt: "2026-09-28T00:00:00.000Z",
+        }),
+      ),
+    );
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Model: GPT-5.6 Terra. Change model",
+      }),
+    );
+    const dialog = await screen.findByRole("dialog", { name: "Explain with" });
+    await waitFor(() =>
+      expect(
+        within(dialog).getByRole("radio", { name: /GPT-6 Sol/ }),
+      ).toBeDisabled(),
+    );
+    expect(
+      within(dialog).getByRole("radio", { name: /GPT-6 Sol/ }),
+    ).toHaveTextContent(/Used up today/);
+    expect(
+      within(dialog).getByRole("radio", { name: /GPT-5\.6 Luna/ }),
+    ).toBeEnabled();
+    // An unknown saved value falls back to the default.
+    cleanup();
+    window.localStorage.setItem("atlas:analyst-model:owner-a", "gpt-4o");
+    render(<FreeformWorkspace userId="owner-a" />);
+    expect(
+      await screen.findByRole("button", {
+        name: "Model: GPT-4o mini. Change model",
+      }),
+    ).toBeVisible();
+  });
 });

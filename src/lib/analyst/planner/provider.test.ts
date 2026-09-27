@@ -2,10 +2,28 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { requestAnalystPlan } from "./provider";
 import { PLANNER_LIMITS } from "./contracts";
 
+// The daily pool meter has its own tests; here it passes requests through.
+const meter = vi.hoisted(() => ({ refuse: false }));
+vi.mock("@/lib/ai/pool-meter", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/ai/pool-meter")>();
+  return {
+    ...actual,
+    meteredOpenAIFetch: (
+      url: string,
+      init: RequestInit,
+      options: { fetch?: typeof fetch },
+    ) => {
+      if (meter.refuse) throw new actual.PoolExhaustedError("small");
+      return (options.fetch ?? globalThis.fetch)(url, init);
+    },
+  };
+});
+
 vi.mock("server-only", () => ({}));
 
 const oldKey = process.env.OPENAI_API_KEY;
 afterEach(() => {
+  meter.refuse = false;
   vi.unstubAllGlobals();
   vi.useRealTimers();
   if (oldKey === undefined) delete process.env.OPENAI_API_KEY;
@@ -29,6 +47,23 @@ function providerBody(
 }
 
 describe("Analyst planner provider boundary", () => {
+  it("reports a used-up pool without counting a model call", async () => {
+    process.env.OPENAI_API_KEY = "test-key";
+    meter.refuse = true;
+    const fetch = vi.fn();
+    const response = await requestAnalystPlan("What is my current runway?", {
+      fetch,
+    });
+    expect(response).toMatchObject({
+      status: "error",
+      error: {
+        code: "pool_exhausted",
+        message: expect.stringMatching(/resets at 8:00 AM/),
+      },
+      metadata: { modelCalls: 0, providerStatus: "pool_exhausted" },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
   it("sends an untrusted question under strict structured output and returns a validated plan", async () => {
     process.env.OPENAI_API_KEY = "test-key";
     const fetch = vi.fn().mockResolvedValue(

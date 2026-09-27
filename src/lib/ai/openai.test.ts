@@ -1,8 +1,21 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { estimatedCostUsdMicros } from "./models";
 import { requestStructuredJson, structuredRequestBody } from "./openai";
+import { PoolExhaustedError, PoolMeterError } from "./pool-meter";
 
 vi.mock("server-only", () => ({}));
+const meter = vi.hoisted(() => ({ fetch: vi.fn() }));
+vi.mock("./pool-meter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./pool-meter")>()),
+  meteredOpenAIFetch: meter.fetch,
+}));
+beforeEach(() => {
+  meter.fetch.mockReset();
+  meter.fetch.mockImplementation(
+    (url: string, init: RequestInit, o: { fetch?: typeof fetch }) =>
+      (o.fetch ?? globalThis.fetch)(url, init),
+  );
+});
 const oldKey = process.env.OPENAI_API_KEY;
 afterEach(() => {
   if (oldKey === undefined) delete process.env.OPENAI_API_KEY;
@@ -33,7 +46,15 @@ const completion = (
       choices: [{ finish_reason: "stop", message: { content } }],
     }),
   );
-const options = { timeoutMs: 1000, responseBytes: 10_000 };
+const options = {
+  timeoutMs: 1000,
+  responseBytes: 10_000,
+  feature: "analyst_answer" as const,
+};
+const body = JSON.stringify({
+  model: "gpt-4o-mini-2024-07-18",
+  max_completion_tokens: 50,
+});
 
 describe("shared structured OpenAI call", () => {
   it("uses temperature for standard models and reasoning effort otherwise", () => {
@@ -55,7 +76,7 @@ describe("shared structured OpenAI call", () => {
   it("parses JSON content and usage", async () => {
     process.env.OPENAI_API_KEY = "k";
     expect(
-      await requestStructuredJson("{}", {
+      await requestStructuredJson(body, {
         ...options,
         fetch: completion('{"a":1}'),
       }),
@@ -70,19 +91,19 @@ describe("shared structured OpenAI call", () => {
   it("maps failures without provider text", async () => {
     process.env.OPENAI_API_KEY = "k";
     expect(
-      await requestStructuredJson("{}", {
+      await requestStructuredJson(body, {
         ...options,
         fetch: completion("not json"),
       }),
     ).toMatchObject({ status: "error", code: "invalid_response" });
     expect(
-      await requestStructuredJson("{}", {
+      await requestStructuredJson(body, {
         ...options,
         fetch: completion("{}", { prompt_tokens: -1 }),
       }),
     ).toMatchObject({ status: "error", code: "invalid_response" });
     expect(
-      await requestStructuredJson("{}", {
+      await requestStructuredJson(body, {
         ...options,
         fetch: vi
           .fn()
@@ -90,17 +111,59 @@ describe("shared structured OpenAI call", () => {
       }),
     ).toEqual({ status: "error", code: "provider_rate_limit" });
     expect(
-      await requestStructuredJson("{}", {
-        timeoutMs: 1000,
+      await requestStructuredJson(body, {
+        ...options,
         responseBytes: 10,
         fetch: completion('{"a":1}'),
       }),
     ).toMatchObject({ status: "error", code: "invalid_response" });
     delete process.env.OPENAI_API_KEY;
+    expect(await requestStructuredJson(body, options)).toEqual({
+      status: "error",
+      code: "configuration_error",
+    });
+  });
+});
+
+describe("daily pool meter", () => {
+  it("reserves the prompt bytes plus the output cap under the model", async () => {
+    process.env.OPENAI_API_KEY = "k";
+    await requestStructuredJson(body, {
+      ...options,
+      fetch: completion('{"a":1}'),
+    });
+    expect(meter.fetch).toHaveBeenCalledWith(
+      "https://api.openai.com/v1/chat/completions",
+      expect.objectContaining({ body }),
+      expect.objectContaining({
+        model: "gpt-4o-mini-2024-07-18",
+        feature: "analyst_answer",
+        reserveTokens: Buffer.byteLength(body) + 50,
+      }),
+    );
+  });
+  it("reports a used-up pool or an unavailable meter without calling OpenAI", async () => {
+    process.env.OPENAI_API_KEY = "k";
+    const fetch = completion('{"a":1}');
+    meter.fetch.mockRejectedValueOnce(new PoolExhaustedError("large"));
+    expect(await requestStructuredJson(body, { ...options, fetch })).toEqual({
+      status: "error",
+      code: "pool_exhausted",
+    });
+    meter.fetch.mockRejectedValueOnce(new PoolMeterError("unavailable"));
+    expect(await requestStructuredJson(body, { ...options, fetch })).toEqual({
+      status: "error",
+      code: "meter_unavailable",
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("refuses a body without a model and output cap", async () => {
+    process.env.OPENAI_API_KEY = "k";
     expect(await requestStructuredJson("{}", options)).toEqual({
       status: "error",
       code: "configuration_error",
     });
+    expect(meter.fetch).not.toHaveBeenCalled();
   });
 });
 

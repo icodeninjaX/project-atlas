@@ -1,6 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
 import { ANALYST_MODEL_OPTIONS, CAPTURE_MODEL_OPTIONS } from "@/lib/ai/models";
+import { freePoolFor } from "@/lib/ai/pools";
+
+// The daily pool meter has its own tests; here it passes requests through.
+vi.mock("@/lib/ai/pool-meter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/ai/pool-meter")>()),
+  meteredOpenAIFetch: (
+    url: string,
+    init: RequestInit,
+    options: { fetch?: typeof fetch },
+  ) => (options.fetch ?? globalThis.fetch)(url, init),
+}));
 
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
@@ -70,19 +81,18 @@ afterEach(() => {
 });
 
 describe("Analyst request", () => {
-  it("keeps Analyst's allowlist independent of Capture's pinned snapshots", () => {
-    expect(ANALYST_MODEL_OPTIONS.map(({ id }) => id)).toContain("gpt-5.4-mini");
+  it("offers only exact model IDs from the free daily pools", () => {
     expect(ANALYST_MODEL_OPTIONS.map(({ id }) => id)).toEqual([
       "gpt-4o-mini-2024-07-18",
-      "gpt-4.1-mini",
-      "gpt-5.4-nano",
-      "gpt-5.4-mini",
-      "gpt-4o",
-      "gpt-5.4",
-      "gpt-6-astra",
+      "gpt-5.4-mini-2026-03-17",
+      "gpt-5.6-terra",
+      "gpt-5.6-luna",
+      "gpt-5.4-2026-03-05",
       "gpt-6-sol",
       "gpt-6-luna",
     ]);
+    for (const option of ANALYST_MODEL_OPTIONS)
+      expect(freePoolFor(option.id)).toBe(option.pool);
     expect(CAPTURE_MODEL_OPTIONS.map(({ id }) => id)).toContain(
       "gpt-5.4-mini-2026-03-17",
     );
@@ -137,7 +147,9 @@ describe("Analyst request", () => {
       data: null,
       error: { code: "PGRST202" },
     });
-    const response = await POST(ask({ ...valid, model: "gpt-4.1-mini" }));
+    const response = await POST(
+      ask({ ...valid, model: "gpt-5.4-mini-2026-03-17" }),
+    );
     expect(response.status).toBe(503);
     const body = await response.json();
     expect(body.providerStatus).toBe("setup_required");
@@ -175,7 +187,7 @@ describe("Analyst request", () => {
     expect(mocks.retrieve).not.toHaveBeenCalled();
   });
   it.each([
-    ["gpt-6-astra", "low"],
+    ["gpt-5.6-terra", "none"],
     ["gpt-6-sol", "none"],
     ["gpt-6-luna", "none"],
     ["gpt-4o-mini-2024-07-18", undefined],

@@ -38,6 +38,10 @@ const safeMessages: Record<PlannerFailureCode, string> = {
   provider_error: "The planner provider is temporarily unavailable.",
   invalid_response: "The planner did not return a valid bounded plan.",
   invalid_plan: "The plan requested invalid or disallowed retrieval.",
+  pool_exhausted:
+    "ATLAS's free daily AI allowance is used up. It resets at 8:00 AM Manila time.",
+  meter_unavailable:
+    "ATLAS's AI usage meter is unavailable, so nothing was sent.",
 };
 
 function manilaDate(now: Date) {
@@ -208,9 +212,15 @@ export async function requestAnalystPlan(
     timeoutMs: PLANNER_LIMITS.modelTimeoutMs,
     responseBytes: PLANNER_LIMITS.providerResponseBytes,
     fetch: options.fetch,
+    feature: "analyst_planner",
   });
   resolvedModel = result.resolvedModel ?? null;
-  if (result.status === "error") return fail(result.code);
+  if (result.status === "error") {
+    // The meter refuses before anything reaches OpenAI.
+    if (result.code === "pool_exhausted" || result.code === "meter_unavailable")
+      modelCalls = 0;
+    return fail(result.code);
+  }
   inputTokens = result.inputTokens ?? estimatedInputTokens;
   outputTokens = result.outputTokens ?? PLANNER_LIMITS.outputTokens;
   cost = estimatedCostUsdMicros(model, inputTokens, outputTokens) ?? Infinity;

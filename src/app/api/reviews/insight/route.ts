@@ -211,6 +211,21 @@ export async function POST(request: Request) {
       WEEKLY_INSIGHT_QUESTIONS[mode],
       evidence,
     );
+    // A refused pool sent nothing, so the week stays open for a later try.
+    if (
+      answer.status === "error" &&
+      (answer.code === "pool_exhausted" || answer.code === "meter_unavailable")
+    ) {
+      outcome =
+        answer.code === "pool_exhausted" ? "pool_exhausted" : "provider_error";
+      await releaseClaim();
+      return fallback(
+        answer.code === "pool_exhausted"
+          ? "ATLAS's free daily AI allowance is used up, so this insight will be prepared after it resets at 8:00 AM Manila time."
+          : "An AI insight is unavailable right now. The verified weekly facts are shown below.",
+        answer.code,
+      );
+    }
     if (answer.status === "error") {
       inputTokens = answer.inputTokens ?? null;
       outputTokens = answer.outputTokens ?? null;

@@ -6,6 +6,16 @@ import {
   validateGroundedAnswer,
 } from "./answer";
 
+// The daily pool meter has its own tests; here it passes requests through.
+vi.mock("@/lib/ai/pool-meter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/ai/pool-meter")>()),
+  meteredOpenAIFetch: (
+    url: string,
+    init: RequestInit,
+    options: { fetch?: typeof fetch },
+  ) => (options.fetch ?? globalThis.fetch)(url, init),
+}));
+
 vi.mock("server-only", () => ({}));
 const priorKey = process.env.OPENAI_API_KEY;
 const evidence: ToolEvidence[] = [
@@ -492,6 +502,50 @@ describe("freeform provider boundary", () => {
     expect(JSON.parse(plain.messages.at(-1).content)).not.toHaveProperty(
       "previousExchanges",
     );
+  });
+  it("explains with the chosen pooled model under its pool's cost ceiling", async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          usage: { prompt_tokens: 3000, completion_tokens: 300 },
+          choices: [
+            {
+              finish_reason: "stop",
+              message: { content: JSON.stringify(valid) },
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    // Flagship rates pass the large-pool ceiling a small-model cap would fail.
+    expect(
+      await requestGroundedAnswer("How is my money?", evidence, {
+        fetch,
+        model: "gpt-5.4-2026-03-05",
+      }),
+    ).toMatchObject({ status: "answered" });
+    const sent = JSON.parse(fetch.mock.calls[0]![1].body);
+    expect(sent.model).toBe("gpt-5.4-2026-03-05");
+    expect(sent.reasoning_effort).toBe("none");
+    expect(sent).not.toHaveProperty("temperature");
+    await requestGroundedAnswer("How is my money?", evidence, {
+      fetch,
+      model: "gpt-5.6-terra",
+    });
+    expect(JSON.parse(fetch.mock.calls[1]![1].body).reasoning_effort).toBe(
+      "none",
+    );
+  });
+  it("does not send a model outside the free pools", async () => {
+    const fetch = vi.fn();
+    expect(
+      await requestGroundedAnswer("How is my money?", evidence, {
+        fetch,
+        model: "gpt-4o" as never,
+      }),
+    ).toEqual({ status: "error", code: "configuration_error" });
+    expect(fetch).not.toHaveBeenCalled();
   });
   it("does not contact the provider when evidence exceeds the bounded context", async () => {
     const fetch = vi.fn();
