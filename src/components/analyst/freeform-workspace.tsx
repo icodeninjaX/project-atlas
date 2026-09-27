@@ -39,7 +39,29 @@ type FreeformResult = {
   evidence: ToolEvidence[];
   limitations: string[];
   matchedEntity?: { type: "goal" | "debt"; name: string };
+  /** Owner-only display titles (focus tasks); never sent to the model. */
+  labels?: Record<string, { title: string; date: string | null }>;
 };
+
+/** The owner's own name for an evidence item, or its model-safe metric. */
+function nameOf(result: FreeformResult, item: ToolEvidence) {
+  return result.labels?.[item.id]?.title ?? item.metric;
+}
+
+/** Replaces "Suggested focus task N" in claim prose with the task's title. */
+function personalize(text: string, result: FreeformResult) {
+  let next = text;
+  for (const item of result.evidence) {
+    const title = result.labels?.[item.id]?.title;
+    const index = item.metric.match(/focus task (\d+)$/i)?.[1];
+    if (!title || !index) continue;
+    next = next.replace(
+      new RegExp(`\\b(?:suggested\\s+)?focus\\s+task\\s+${index}\\b`, "gi"),
+      `“${title}”`,
+    );
+  }
+  return next;
+}
 
 type Turn = {
   id: number;
@@ -136,12 +158,12 @@ const claimStyles: Record<
 
 function Citations({
   ids,
-  evidence,
+  result,
   anchor,
   onOpen,
 }: {
   ids: string[];
-  evidence: ToolEvidence[];
+  result: FreeformResult;
   anchor: (id: string) => string;
   onOpen: () => void;
 }) {
@@ -161,7 +183,10 @@ function Citations({
             aria-hidden="true"
             className="bg-primary/70 size-1 rounded-full"
           />
-          {evidence.find((item) => item.id === id)?.metric ?? "Evidence"}
+          {(() => {
+            const item = result.evidence.find((entry) => entry.id === id);
+            return item ? nameOf(result, item) : "Evidence";
+          })()}
         </a>
       ))}
     </span>
@@ -178,6 +203,9 @@ function AnswerBody({ turn }: { turn: Turn }) {
   };
   const groups = scenarioGroups(result.evidence);
   const figures = keyFigures(result);
+  const focusTasks = result.evidence.filter(
+    (item) => result.labels?.[item.id] && item.completeness === "complete",
+  );
   const claims = result.claims ?? [];
   const lead = claims.filter((claim) => claim.kind === "observation");
   const insights = claims.filter((claim) => claim.kind !== "observation");
@@ -199,16 +227,54 @@ function AnswerBody({ turn }: { turn: Turn }) {
         {lead.map((claim, index) => (
           <div key={`lead-${index}`}>
             <p className="text-[0.9375rem] leading-7 text-pretty">
-              <ClaimText text={claim.text} />
+              <ClaimText text={personalize(claim.text, result)} />
             </p>
             <Citations
               ids={claim.evidenceIds}
-              evidence={result.evidence}
+              result={result}
               anchor={anchor}
               onOpen={openSources}
             />
           </div>
         ))}
+        {focusTasks.length > 0 && (
+          <div aria-label="This week's focus">
+            <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.1em] uppercase">
+              This week’s focus
+            </p>
+            <ol className="border-border mt-2 divide-y overflow-hidden rounded-2xl border">
+              {focusTasks.map((item, index) => {
+                const label = result.labels![item.id]!;
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href={item.source.href as Route}
+                      className="hover:bg-primary/5 flex min-h-14 items-center gap-3 px-3.5 py-2.5 transition-colors"
+                    >
+                      <span className="bg-primary/12 text-primary grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold">
+                        {index + 1}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">
+                          {label.title}
+                        </span>
+                        <span className="text-muted-foreground block text-[11px] first-letter:uppercase">
+                          {String(item.value)} priority
+                          {label.date &&
+                            ` · ${formatPeriodLabel(label.date, label.date)}`}
+                        </span>
+                      </span>
+                      <ArrowUpRight
+                        aria-hidden="true"
+                        className="text-muted-foreground size-4 shrink-0"
+                      />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        )}
         {figures.length > 0 && (
           <dl
             aria-label="Key figures"
@@ -223,7 +289,7 @@ function AnswerBody({ turn }: { turn: Turn }) {
                 key={item.id}
                 className="border-border bg-background/40 min-w-0 border-t border-l p-3.5 sm:first:border-l-0 [&:nth-child(-n+2)]:border-t-0 sm:[&:nth-child(-n+4)]:border-t-0 [&:nth-child(odd)]:border-l-0 sm:[&:nth-child(odd)]:border-l"
               >
-                <dt className="text-muted-foreground truncate text-xs">
+                <dt className="text-muted-foreground line-clamp-2 text-xs leading-4">
                   {item.metric}
                 </dt>
                 <dd className="mt-1.5 font-mono text-lg font-semibold tracking-tight tabular-nums">
@@ -250,11 +316,11 @@ function AnswerBody({ turn }: { turn: Turn }) {
                 <span className="sr-only">({claim.kind})</span>
               </p>
               <p className="text-muted-foreground mt-1.5 text-sm leading-6 text-pretty">
-                <ClaimText text={claim.text} />
+                <ClaimText text={personalize(claim.text, result)} />
               </p>
               <Citations
                 ids={claim.evidenceIds}
-                evidence={result.evidence}
+                result={result}
                 anchor={anchor}
                 onOpen={openSources}
               />
@@ -348,7 +414,7 @@ function AnswerBody({ turn }: { turn: Turn }) {
                     className="border-border bg-card min-w-0 scroll-mt-24 rounded-xl border p-3.5"
                   >
                     <h4 className="text-muted-foreground text-xs font-medium">
-                      {item.metric}
+                      {nameOf(result, item)}
                     </h4>
                     <p className="mt-1 font-mono text-base font-semibold tabular-nums">
                       <SensitiveValue>{displayValue(item)}</SensitiveValue>
@@ -436,7 +502,7 @@ function AnswerCard({ turn }: { turn: Turn }) {
           >
             <ShieldCheck aria-hidden="true" className="size-3.5" />
             Checked
-            <span className="hidden sm:inline">&nbsp;against your records</span>
+            <span className="hidden sm:inline">against your records</span>
           </span>
         )}
         {turn.result?.status === "fallback" && (
@@ -499,6 +565,105 @@ function Composer({
   const length = question.trim().length;
   const tooLong = length > maxLength;
   const canAsk = !pending && consent && length >= 8 && !tooLong;
+  const hasTargets = goals.length > 0 || debts.length > 0;
+  const focusChip = focusLabel && (
+    <span className="bg-primary/10 text-primary inline-flex min-h-8 max-w-[14rem] items-center gap-1.5 rounded-full pr-1 pl-3 text-xs font-medium">
+      <Crosshair aria-hidden="true" className="size-3.5 shrink-0" />
+      <span className="truncate">Focus: {focusLabel}</span>
+      <button
+        type="button"
+        aria-label="Clear focus"
+        onClick={() => setFocus("")}
+        className="hover:bg-primary/15 grid size-6 place-items-center rounded-full"
+      >
+        <X aria-hidden="true" className="size-3" />
+      </button>
+    </span>
+  );
+  const focusPicker = hasTargets && !focusLabel && (
+    <label
+      title="Focus on a goal or debt"
+      className={cn(
+        "text-muted-foreground hover:text-foreground hover:bg-muted relative inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full text-xs font-medium",
+        followUp ? "size-10 justify-center" : "min-h-8 px-3",
+      )}
+    >
+      <Crosshair aria-hidden="true" className="size-4" />
+      <span className={cn(followUp && "sr-only")}>Focus</span>
+      <select
+        aria-label="Focus on a goal or debt"
+        value={focus}
+        onChange={(event) => setFocus(event.target.value)}
+        className="absolute inset-0 cursor-pointer opacity-0"
+      >
+        <option value="">All records</option>
+        {goals.length > 0 && (
+          <optgroup label="Goals">
+            {goals.map((goal) => (
+              <option key={goal.id} value={`goal:${goal.id}`}>
+                {goal.title}
+              </option>
+            ))}
+          </optgroup>
+        )}
+        {debts.length > 0 && (
+          <optgroup label="Debts (monthly payment scenarios)">
+            {debts.map((debt) => (
+              <option key={debt.id} value={`debt:${debt.id}`}>
+                {debt.creditor_name}
+              </option>
+            ))}
+          </optgroup>
+        )}
+      </select>
+    </label>
+  );
+  const textarea = (
+    <textarea
+      id="analyst-question"
+      ref={input}
+      value={question}
+      maxLength={maxLength}
+      rows={followUp ? 1 : 2}
+      onChange={(event) => setQuestion(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          onAsk();
+        }
+      }}
+      placeholder={
+        followUp
+          ? "Ask a follow-up…"
+          : "Ask about your money, goals, tasks or reviews…"
+      }
+      className={cn(
+        "placeholder:text-muted-foreground/80 block w-full resize-none bg-transparent text-[0.9375rem] leading-6 focus:outline-none",
+        followUp ? "min-w-0 flex-1 px-1 py-2" : "px-4 pt-3.5 pb-1",
+      )}
+    />
+  );
+  const send = (
+    <button
+      type="submit"
+      aria-label={pending ? "Analyzing…" : "Ask Analyst"}
+      disabled={!canAsk}
+      className={cn(
+        "grid size-10 shrink-0 place-items-center rounded-full transition-all",
+        canAsk
+          ? "bg-primary-solid text-primary-solid-foreground shadow-[0_8px_20px_rgb(43_102_242/0.35)] hover:brightness-110"
+          : "bg-muted text-muted-foreground",
+      )}
+    >
+      <ArrowUp aria-hidden="true" className="size-4.5" />
+    </button>
+  );
+  const warning = tooLong && (
+    <p role="status" className="text-destructive px-4 pb-2 text-xs">
+      Questions with a focus can be up to {maxLength} characters. Shorten it or
+      clear the focus.
+    </p>
+  );
   return (
     <form
       onSubmit={(event) => {
@@ -510,96 +675,32 @@ function Composer({
       <label htmlFor="analyst-question" className="sr-only">
         Ask about your ATLAS records
       </label>
-      <textarea
-        id="analyst-question"
-        ref={input}
-        value={question}
-        maxLength={maxLength}
-        rows={followUp ? 1 : 2}
-        onChange={(event) => setQuestion(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            onAsk();
-          }
-        }}
-        placeholder={
-          followUp
-            ? "Ask a follow-up…"
-            : "Ask about your money, goals, tasks or reviews…"
-        }
-        className="placeholder:text-muted-foreground/80 block w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-[0.9375rem] leading-6 focus:outline-none"
-      />
-      {tooLong && (
-        <p role="status" className="text-destructive px-4 text-xs">
-          Questions with a focus can be up to {maxLength} characters. Shorten it
-          or clear the focus.
-        </p>
+      {followUp ? (
+        <>
+          {focusChip && <div className="px-2 pt-2">{focusChip}</div>}
+          {/* One compact row keeps the pinned composer short on phones. */}
+          <div className="flex items-end gap-1 p-1.5">
+            {focusPicker}
+            {textarea}
+            {children}
+            {send}
+          </div>
+          {warning}
+        </>
+      ) : (
+        <>
+          {textarea}
+          {warning}
+          <div className="flex items-center justify-between gap-2 px-2.5 pb-2.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              {focusChip}
+              {focusPicker}
+              {children}
+            </div>
+            {send}
+          </div>
+        </>
       )}
-      <div className="flex items-center justify-between gap-2 px-2.5 pb-2.5">
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-          {(goals.length > 0 || debts.length > 0) &&
-            (focusLabel ? (
-              <span className="bg-primary/10 text-primary inline-flex min-h-8 max-w-[14rem] items-center gap-1.5 rounded-full pr-1 pl-3 text-xs font-medium">
-                <Crosshair aria-hidden="true" className="size-3.5 shrink-0" />
-                <span className="truncate">Focus: {focusLabel}</span>
-                <button
-                  type="button"
-                  aria-label="Clear focus"
-                  onClick={() => setFocus("")}
-                  className="hover:bg-primary/15 grid size-6 place-items-center rounded-full"
-                >
-                  <X aria-hidden="true" className="size-3" />
-                </button>
-              </span>
-            ) : (
-              <label className="text-muted-foreground hover:text-foreground hover:bg-muted relative inline-flex min-h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-medium">
-                <Crosshair aria-hidden="true" className="size-3.5" />
-                Focus
-                <select
-                  aria-label="Focus on a goal or debt"
-                  value={focus}
-                  onChange={(event) => setFocus(event.target.value)}
-                  className="absolute inset-0 cursor-pointer opacity-0"
-                >
-                  <option value="">All records</option>
-                  {goals.length > 0 && (
-                    <optgroup label="Goals">
-                      {goals.map((goal) => (
-                        <option key={goal.id} value={`goal:${goal.id}`}>
-                          {goal.title}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {debts.length > 0 && (
-                    <optgroup label="Debts (monthly payment scenarios)">
-                      {debts.map((debt) => (
-                        <option key={debt.id} value={`debt:${debt.id}`}>
-                          {debt.creditor_name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-              </label>
-            ))}
-          {children}
-        </div>
-        <button
-          type="submit"
-          aria-label={pending ? "Analyzing…" : "Ask Analyst"}
-          disabled={!canAsk}
-          className={cn(
-            "grid size-10 shrink-0 place-items-center rounded-full transition-all",
-            canAsk
-              ? "bg-primary-solid text-primary-solid-foreground shadow-[0_8px_20px_rgb(43_102_242/0.35)] hover:brightness-110"
-              : "bg-muted text-muted-foreground",
-          )}
-        >
-          <ArrowUp aria-hidden="true" className="size-4.5" />
-        </button>
-      </div>
     </form>
   );
 }
@@ -737,10 +838,11 @@ export function FreeformWorkspace({
         <button
           type="button"
           onClick={startOver}
-          className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium"
+          aria-label="New conversation"
+          title="New conversation"
+          className="text-muted-foreground hover:text-foreground hover:bg-muted grid size-10 shrink-0 place-items-center rounded-full"
         >
-          <RotateCcw aria-hidden="true" className="size-3.5" />
-          New conversation
+          <RotateCcw aria-hidden="true" className="size-4" />
         </button>
       )}
     </Composer>
@@ -863,11 +965,11 @@ export function FreeformWorkspace({
               </li>
             ))}
           </ol>
-          <div className="border-border bg-card/90 sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 space-y-2 rounded-[1.5rem] border p-2.5 shadow-[0_18px_50px_rgb(7_10_15/0.18)] backdrop-blur lg:bottom-4">
-            {consentNotice}
+          {consentNotice}
+          <div className="bg-card/95 sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 rounded-2xl shadow-[0_18px_50px_rgb(7_10_15/0.22)] backdrop-blur lg:bottom-4">
             {composer(true)}
-            {sharingStatus}
           </div>
+          {sharingStatus}
         </>
       )}
 
