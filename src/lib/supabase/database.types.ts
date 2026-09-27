@@ -1235,7 +1235,7 @@ export type Database = {
         Insert: {
           claims?: Json;
           created_at?: string;
-          evidence: Json;
+          evidence?: Json;
           id?: string;
           limitations?: Json;
           status: string;

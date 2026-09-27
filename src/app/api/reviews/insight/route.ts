@@ -10,6 +10,7 @@ import {
   gatherWeeklyInsightEvidence,
   previousWeekWindows,
 } from "@/lib/reviews/insight";
+import { storedResponse } from "@/lib/reviews/insight-storage";
 import type { Json } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -64,27 +65,20 @@ export async function POST(request: Request) {
   const { mode } = parsed.data;
   const weekStart =
     mode === "previous" ? previousWeekWindows(new Date()).current.from : null;
+  const readStored = async () =>
+    weekStart
+      ? (
+          await supabase
+            .from("weekly_insights")
+            .select("status,claims,evidence,limitations,created_at")
+            .eq("user_id", user.id)
+            .eq("week_start", weekStart)
+            .maybeSingle()
+        ).data
+      : null;
   if (weekStart) {
-    const stored = await supabase
-      .from("weekly_insights")
-      .select("status,claims,evidence,limitations")
-      .eq("user_id", user.id)
-      .eq("week_start", weekStart)
-      .maybeSingle();
-    if (stored.data)
-      return json({
-        status: stored.data.status === "answered" ? "answered" : "fallback",
-        ...(stored.data.status !== "answered" && {
-          failureCode: "insufficient_evidence",
-          message:
-            "Last week's records were not complete enough for an insight. Review the facts below.",
-        }),
-        claims: stored.data.claims,
-        evidence: stored.data.evidence,
-        limitations: stored.data.limitations,
-        weekStart,
-        stored: true,
-      });
+    const stored = await readStored();
+    if (stored) return json(storedResponse(stored, weekStart));
   }
   // A saved opt-in is standing consent for last week's automatic insight.
   let consented = parsed.data.dataSharingAcknowledged === true;
@@ -101,17 +95,48 @@ export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY)
     return json({ error: "AI insights are not configured." }, 503);
 
+  // Claim last week before any quota or provider call: the unique row makes
+  // concurrent first visits prepare it once, and a provider attempt is final.
+  if (weekStart) {
+    const claim = await supabase.from("weekly_insights").insert({
+      user_id: user.id,
+      week_start: weekStart,
+      status: "pending",
+    });
+    if (claim.error) {
+      const stored = claim.error.code === "23505" ? await readStored() : null;
+      return stored
+        ? json(storedResponse(stored, weekStart))
+        : json(
+            { error: "Last week's insight could not be started. Try again." },
+            503,
+          );
+    }
+  }
+  // Drops an unused claim so a later visit can retry; only before any
+  // evidence reaches the provider.
+  const releaseClaim = async () => {
+    if (!weekStart) return;
+    await supabase
+      .from("weekly_insights")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("week_start", weekStart)
+      .eq("status", "pending");
+  };
+
   // Insights share the freeform Analyst allowance and audit ledger.
   const { data: reservation, error: reservationError } = await supabase.rpc(
     "reserve_ai_analyst_request_result",
     { p_type: "freeform", p_model: AI_MODELS.analyst },
   );
-  if (reservationError)
-    return json({ error: "Insight quota is unavailable." }, 503);
   const allowed = reservationSchema.safeParse(reservation);
-  if (!allowed.success)
+  if (reservationError || !allowed.success) {
+    await releaseClaim();
     return json({ error: "Insight quota is unavailable." }, 503);
+  }
   if (allowed.data.status !== "reserved") {
+    await releaseClaim();
     const status = allowed.data.status;
     const quota =
       status === "hourly_quota" ||
@@ -144,24 +169,29 @@ export async function POST(request: Request) {
         limitations,
         ...(weekStart && { weekStart }),
       });
-    // Stores last week's result so later visits reuse it without a model call.
-    const store = async (
-      status: "answered" | "insufficient",
+    // Completes the claim; a finished week is reused with no model call.
+    const finish = async (
+      status: "answered" | "insufficient" | "failed",
       claims: unknown[] = [],
     ) => {
       if (!weekStart) return;
-      await supabase.from("weekly_insights").insert({
-        user_id: user.id,
-        week_start: weekStart,
-        status,
-        claims: claims as Json,
-        evidence: evidence as unknown as Json,
-        limitations,
-      });
+      const { error } = await supabase
+        .from("weekly_insights")
+        .update({
+          status,
+          claims: claims as Json,
+          evidence: evidence as unknown as Json,
+          limitations,
+        })
+        .eq("user_id", user.id)
+        .eq("week_start", weekStart)
+        .eq("status", "pending");
+      // An unfinished claim still blocks repeat attempts and reads as failed.
+      if (error) console.error("Weekly insight could not be stored");
     };
     if (!complete || evidence.length === 0) {
       outcome = "insufficient";
-      await store("insufficient");
+      await finish("insufficient");
       return fallback(
         "ATLAS could not gather complete weekly evidence for an insight. Review the available facts below.",
         "insufficient_evidence",
@@ -169,6 +199,7 @@ export async function POST(request: Request) {
     }
     if (evidence.length > ANSWER_LIMITS.evidenceItems) {
       outcome = "context_limit";
+      await finish("failed");
       return fallback(
         "The weekly evidence exceeds the explanation limit. Review the facts below.",
         "context_limit",
@@ -189,6 +220,7 @@ export async function POST(request: Request) {
             : answer.code === "invalid_response"
               ? "invalid_response"
               : "provider_error";
+      await finish("failed");
       return fallback(
         "An AI insight is unavailable. The verified weekly facts are shown below.",
         answer.code,
@@ -197,7 +229,7 @@ export async function POST(request: Request) {
     outcome = "success";
     inputTokens = answer.inputTokens;
     outputTokens = answer.outputTokens;
-    await store("answered", answer.claims);
+    await finish("answered", answer.claims);
     return json({
       status: "answered",
       claims: answer.claims,
@@ -206,6 +238,8 @@ export async function POST(request: Request) {
       ...(weekStart && { weekStart }),
     });
   } catch {
+    // Evidence gathering failed before any provider call.
+    await releaseClaim();
     return json(
       {
         status: "fallback",
