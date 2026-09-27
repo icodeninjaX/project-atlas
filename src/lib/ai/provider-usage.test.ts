@@ -188,7 +188,7 @@ describe("OpenAI usage sync", () => {
       refreshProviderUsage({ fetch, now }),
       refreshProviderUsage({ fetch, now }),
     ]);
-    expect(results).toEqual([true, true, true]);
+    expect(results).toEqual(["fresh", "fresh", "fresh"]);
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(
       admin.rpc.mock.calls.filter(
@@ -232,7 +232,7 @@ describe("OpenAI usage sync", () => {
         fetch: vi.fn().mockResolvedValue(page([])),
         now,
       }),
-    ).toBe(false);
+    ).toBe("failed");
     expect(admin.rpc).toHaveBeenCalledWith("release_ai_pool_provider_sync", {
       p_token: TOKEN,
     });
@@ -253,7 +253,7 @@ describe("OpenAI usage sync", () => {
           : { data: true, error: null },
     );
     const fetch = vi.fn();
-    expect(await refreshProviderUsage({ fetch, now, pollMs: 1 })).toBe(true);
+    expect(await refreshProviderUsage({ fetch, now, pollMs: 1 })).toBe("fresh");
     expect(fetch).not.toHaveBeenCalled();
     expect(states).toHaveLength(0);
   });
@@ -266,7 +266,9 @@ describe("OpenAI usage sync", () => {
           : { data: true, error: null },
     );
     const fetch = vi.fn();
-    expect(await refreshProviderUsage({ fetch, now, pollMs: 1 })).toBe(false);
+    expect(await refreshProviderUsage({ fetch, now, pollMs: 1 })).toBe(
+      "failed",
+    );
     expect(fetch).not.toHaveBeenCalled();
   });
   it("keeps waiting through a failed check instead of treating it as released", async () => {
@@ -286,11 +288,11 @@ describe("OpenAI usage sync", () => {
           : { data: true, error: null },
     );
     expect(await refreshProviderUsage({ fetch: vi.fn(), now, pollMs: 1 })).toBe(
-      true,
+      "fresh",
     );
     expect(polls).toHaveLength(0);
   });
-  it("falls back to the ledger only once the wait for a claim runs out", async () => {
+  it("reports the outcome as unknown once the wait for a claim runs out", async () => {
     admin.rpc.mockImplementation(async (name: string) =>
       name === "claim_ai_pool_provider_sync"
         ? { data: null, error: null }
@@ -303,7 +305,55 @@ describe("OpenAI usage sync", () => {
         pollMs: 1,
         waitMs: 20,
       }),
-    ).toBe(false);
+    ).toBe("pending");
+  });
+  it("keeps waiting when a claim is taken over after a lapse, up to the cap", async () => {
+    const stale = new Date(Date.now() - 10 * 60_000).toISOString();
+    const fresh = new Date().toISOString();
+    let polls = 0;
+    admin.rpc.mockImplementation(async (name: string) => {
+      if (name === "claim_ai_pool_provider_sync")
+        return { data: null, error: null };
+      polls += 1;
+      // The successor's claim stays active past the first wait, then its
+      // figure lands.
+      return polls < 30
+        ? {
+            data: { syncedAt: stale, claimActive: true, claimRemainingMs: 50 },
+            error: null,
+          }
+        : { data: { syncedAt: fresh, claimActive: false }, error: null };
+    });
+    expect(
+      await refreshProviderUsage({
+        fetch: vi.fn(),
+        now,
+        pollMs: 2,
+        waitMs: 20,
+        maxWaitMs: 2_000,
+      }),
+    ).toBe("fresh");
+    expect(polls).toBe(30);
+
+    // A claim that never ends leaves the outcome unknown at the cap.
+    vi.setSystemTime(Date.now() + 120_000);
+    admin.rpc.mockImplementation(async (name: string) =>
+      name === "claim_ai_pool_provider_sync"
+        ? { data: null, error: null }
+        : {
+            data: { syncedAt: stale, claimActive: true, claimRemainingMs: 50 },
+            error: null,
+          },
+    );
+    expect(
+      await refreshProviderUsage({
+        fetch: vi.fn(),
+        now,
+        pollMs: 2,
+        waitMs: 20,
+        maxWaitMs: 200,
+      }),
+    ).toBe("pending");
   });
   it("waits a minute after a failed refresh before asking OpenAI again", async () => {
     admin.rpc.mockImplementation(async (name: string) =>
@@ -314,12 +364,12 @@ describe("OpenAI usage sync", () => {
     const failing = vi
       .fn()
       .mockResolvedValue(new Response("{}", { status: 401 }));
-    expect(await refreshProviderUsage({ fetch: failing, now })).toBe(false);
-    expect(await refreshProviderUsage({ fetch: failing, now })).toBe(false);
+    expect(await refreshProviderUsage({ fetch: failing, now })).toBe("failed");
+    expect(await refreshProviderUsage({ fetch: failing, now })).toBe("failed");
     expect(failing).toHaveBeenCalledTimes(1);
     vi.setSystemTime(Date.now() + 61_000);
     const working = vi.fn().mockResolvedValue(page([]));
-    expect(await refreshProviderUsage({ fetch: working, now })).toBe(true);
+    expect(await refreshProviderUsage({ fetch: working, now })).toBe("fresh");
     expect(working).toHaveBeenCalledTimes(1);
   });
 });

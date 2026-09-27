@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(24);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password,
   email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
@@ -75,6 +75,8 @@ select is((public.ai_pool_provider_sync_state()->>'claimActive')::boolean, true,
   'waiting callers see an active claim');
 select isnt(public.ai_pool_provider_sync_state()->>'syncedAt', null,
   'waiting callers see when the figure was recorded');
+select ok((public.ai_pool_provider_sync_state()->>'claimRemainingMs')::bigint between 1 and 15000,
+  'waiting callers see how long the claim has left');
 reset role;
 update public.ai_pool_provider_sync set claimed_at = now() - interval '20 seconds';
 set local role service_role;
@@ -92,6 +94,8 @@ select is(public.claim_ai_pool_provider_sync(), null,
 select public.release_ai_pool_provider_sync((select token from claims where name = 'third'));
 select is((public.ai_pool_provider_sync_state()->>'claimActive')::boolean, false,
   'a finished refresh releases its claim');
+select is((public.ai_pool_provider_sync_state()->>'claimRemainingMs')::bigint, 0::bigint,
+  'a released claim has no time left');
 insert into claims values ('fourth', public.claim_ai_pool_provider_sync());
 select isnt((select token from claims where name = 'fourth'), null,
   'the next refresh can claim at once');

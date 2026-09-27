@@ -17,6 +17,8 @@ const USAGE_URL = "https://api.openai.com/v1/organization/usage/completions";
 const SYNC_TIMEOUT_MS = 4_000;
 // A claim lapses after 15 seconds; waiters never give up before that.
 const CLAIM_WAIT_MS = 16_000;
+// However many times a claim changes hands, a request waits no longer.
+const MAX_CLAIM_WAIT_MS = 32_000;
 const MAX_PAGES = 5;
 
 type UsageResult = {
@@ -143,7 +145,15 @@ export async function syncProviderUsage(options: {
   }
 }
 
-let inflight: Promise<boolean> | null = null;
+/**
+ * How a refresh ended: `fresh` once a new figure is recorded, `failed` when
+ * the caller should keep its ledger decision, and `pending` when another
+ * instance's refresh was still under way after the longest wait, so its
+ * outcome is unknown.
+ */
+export type RefreshResult = "fresh" | "failed" | "pending";
+
+let inflight: Promise<RefreshResult> | null = null;
 // After a failed refresh (a revoked key, say), requests keep the ledger
 // decision for a minute instead of each waiting on OpenAI again.
 const FAILURE_BACKOFF_MS = 60_000;
@@ -152,9 +162,8 @@ let failedAt = 0;
 /**
  * Refreshes OpenAI's figure once for everyone waiting on it. Callers in this
  * server instance share one in-flight refresh, and across instances only the
- * caller that claims the refresh calls the Usage API; the rest wait up to
- * `waitMs` for its figure. Resolves true once a fresh figure is recorded,
- * false when the caller should keep its ledger decision.
+ * caller that claims the refresh calls the Usage API; the rest wait for its
+ * figure while a claim is active, up to `maxWaitMs` in all.
  */
 export function refreshProviderUsage(
   options: {
@@ -162,13 +171,15 @@ export function refreshProviderUsage(
     now?: Date;
     pollMs?: number;
     waitMs?: number;
+    maxWaitMs?: number;
   } = {},
-): Promise<boolean> {
-  if (Date.now() - failedAt < FAILURE_BACKOFF_MS) return Promise.resolve(false);
+): Promise<RefreshResult> {
+  if (Date.now() - failedAt < FAILURE_BACKOFF_MS)
+    return Promise.resolve("failed");
   inflight ??= coordinatedRefresh(options)
-    .then((fresh) => {
-      if (!fresh) failedAt = Date.now();
-      return fresh;
+    .then((result) => {
+      if (result === "failed") failedAt = Date.now();
+      return result;
     })
     .finally(() => {
       inflight = null;
@@ -181,17 +192,20 @@ async function coordinatedRefresh(options: {
   now?: Date;
   pollMs?: number;
   waitMs?: number;
-}) {
+  maxWaitMs?: number;
+}): Promise<RefreshResult> {
   const admin = createAdminClient();
-  if (!admin) return false;
+  if (!admin) return "failed";
   try {
     const { data: token, error } = await admin.rpc(
       "claim_ai_pool_provider_sync",
     );
-    if (error) return false;
+    if (error) return "failed";
     if (typeof token === "string") {
       try {
-        return await syncProviderUsage({ ...options, token });
+        return (await syncProviderUsage({ ...options, token }))
+          ? "fresh"
+          : "failed";
       } finally {
         // Waiting callers learn the outcome instead of timing out. Only this
         // claim is released, never one taken after it lapsed.
@@ -201,8 +215,11 @@ async function coordinatedRefresh(options: {
       }
     }
     // Another instance is refreshing: wait until its figure lands or its
-    // claim ends (released, or lapsed after 15 seconds).
-    const deadline = Date.now() + (options.waitMs ?? CLAIM_WAIT_MS);
+    // claim ends (released, or lapsed after 15 seconds). A claim taken over
+    // after a lapse extends the wait to its own lease, up to the cap.
+    const start = Date.now();
+    const cap = start + (options.maxWaitMs ?? MAX_CLAIM_WAIT_MS);
+    let deadline = Math.min(cap, start + (options.waitMs ?? CLAIM_WAIT_MS));
     while (Date.now() < deadline) {
       await new Promise((resolve) =>
         setTimeout(resolve, options.pollMs ?? 400),
@@ -215,16 +232,23 @@ async function coordinatedRefresh(options: {
       const state = polled.data as {
         syncedAt?: unknown;
         claimActive?: unknown;
+        claimRemainingMs?: unknown;
       };
       if (
         typeof state.syncedAt === "string" &&
         !providerUsageStale(state.syncedAt)
       )
-        return true;
-      if (state.claimActive !== true) return false;
+        return "fresh";
+      if (state.claimActive !== true) return "failed";
+      if (typeof state.claimRemainingMs === "number")
+        deadline = Math.min(
+          cap,
+          Math.max(deadline, Date.now() + state.claimRemainingMs + 1_000),
+        );
     }
-    return false;
+    // Still claimed, or unknown: the refresh may yet show the pool is full.
+    return "pending";
   } catch {
-    return false;
+    return "failed";
   }
 }

@@ -44,7 +44,7 @@ const settleCalls = () =>
 beforeEach(() => {
   delete process.env.OPENAI_ADMIN_KEY;
   usage.sync.mockReset();
-  usage.sync.mockResolvedValue(true);
+  usage.sync.mockResolvedValue("fresh");
   supabase.admin = true;
   supabase.getUser.mockResolvedValue({ data: { user: { id: "owner-a" } } });
   supabase.statusRpc.mockReset();
@@ -348,9 +348,34 @@ describe("free daily pool meter", () => {
       ),
     ).toHaveLength(1);
   });
+  it("sends nothing while another instance's refresh is still unresolved", async () => {
+    process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
+    usage.sync.mockResolvedValueOnce("pending");
+    const fetch = vi.fn();
+    supabase.rpc.mockImplementation(async (name: string) =>
+      name === "reserve_ai_pool_tokens"
+        ? {
+            data: {
+              status: "reserved",
+              reservation_id: 9,
+              provider_synced_at: null,
+            },
+            error: null,
+          }
+        : { data: null, error: null },
+    );
+    await expect(
+      meteredOpenAIFetch(url, init, options(fetch)),
+    ).rejects.toBeInstanceOf(PoolMeterError);
+    expect(fetch).not.toHaveBeenCalled();
+    // The reservation is released rather than left counted.
+    expect(settleCalls()).toEqual([
+      ["settle_ai_pool_tokens", { p_id: 9, p_used: 0 }],
+    ]);
+  });
   it("keeps the ledger reservation when the refresh fails", async () => {
     process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
-    usage.sync.mockResolvedValueOnce(false);
+    usage.sync.mockResolvedValueOnce("failed");
     const fetch = vi
       .fn()
       .mockResolvedValue(Response.json({ usage: {}, choices: [] }));

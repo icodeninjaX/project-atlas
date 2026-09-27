@@ -121,29 +121,34 @@ export async function meteredOpenAIFetch(
   // request reserves again against it, so usage outside the meter cannot
   // let this request cross the limit. A refusal against a stale count is
   // retried too, since a newer count can free room. If the refresh fails,
-  // the ledger decision stands.
+  // the ledger decision stands; if its outcome is still unknown, nothing is
+  // sent.
   if (
     (reservation?.status === "exhausted" ||
       (reservation?.status === "reserved" && reservation.reservation_id)) &&
     process.env.OPENAI_ADMIN_KEY &&
-    providerUsageStale(reservation.provider_synced_at) &&
-    (await refreshProviderUsage())
+    providerUsageStale(reservation.provider_synced_at)
   ) {
-    if (reservation.status === "reserved" && reservation.reservation_id) {
-      // Only a released reservation may be replaced; otherwise nothing is
-      // sent and the first one stays counted.
-      const { error: releaseError } = await admin
-        .rpc("settle_ai_pool_tokens", {
-          p_id: reservation.reservation_id,
-          p_used: 0,
-        })
-        .then(
-          (result) => result,
-          () => ({ error: true }),
-        );
-      if (releaseError) throw new PoolMeterError("release_failed");
+    const refresh = await refreshProviderUsage();
+    if (refresh !== "failed") {
+      if (reservation.status === "reserved" && reservation.reservation_id) {
+        // Only a released reservation may be replaced; otherwise nothing is
+        // sent and the first one stays counted.
+        const { error: releaseError } = await admin
+          .rpc("settle_ai_pool_tokens", {
+            p_id: reservation.reservation_id,
+            p_used: 0,
+          })
+          .then(
+            (result) => result,
+            () => ({ error: true }),
+          );
+        if (releaseError) throw new PoolMeterError("release_failed");
+      }
+      if (refresh === "pending")
+        throw new PoolMeterError("usage_refresh_pending");
+      reservation = await reserve();
     }
-    reservation = await reserve();
   }
   if (!reservation?.status) throw new PoolMeterError("unavailable");
   if (reservation.status === "exhausted") throw new PoolExhaustedError(pool);
@@ -205,5 +210,7 @@ export async function readPoolStatus(): Promise<PoolStatus | null> {
       !providerUsageStale(status.small.syncedAt))
   )
     return status;
-  return (await refreshProviderUsage()) ? await readStatusOnce() : status;
+  return (await refreshProviderUsage()) === "fresh"
+    ? await readStatusOnce()
+    : status;
 }

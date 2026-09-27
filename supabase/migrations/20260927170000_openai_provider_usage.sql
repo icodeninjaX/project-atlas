@@ -114,7 +114,8 @@ revoke all on function public.release_ai_pool_provider_sync(uuid) from public, a
 grant execute on function public.release_ai_pool_provider_sync(uuid) to service_role;
 
 -- For callers waiting on another instance's refresh: when today's figure was
--- last recorded, and whether a refresh is still claimed.
+-- last recorded, whether a refresh is still claimed, and how long that claim
+-- has left, so a waiter can outlast a claim taken over after a lapse.
 create function public.ai_pool_provider_sync_state()
 returns jsonb language sql stable security definer set search_path = '' as $$
   select jsonb_build_object(
@@ -125,7 +126,12 @@ returns jsonb language sql stable security definer set search_path = '' as $$
     'claimActive', coalesce((
       select claimed_at >= now() - interval '15 seconds'
       from public.ai_pool_provider_sync where id
-    ), false)
+    ), false),
+    'claimRemainingMs', coalesce((
+      select greatest(0, ceil(extract(epoch from
+        claimed_at + interval '15 seconds' - now()) * 1000))::bigint
+      from public.ai_pool_provider_sync where id and claimed_at is not null
+    ), 0)
   )
 $$;
 revoke all on function public.ai_pool_provider_sync_state() from public, anon, authenticated;
