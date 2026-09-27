@@ -64,15 +64,16 @@ per week.
 
 ### Database
 
-Migration `20260927070000_weekly_insights.sql` adds the preference column and
+Migration `20260927100211_weekly_insights.sql` adds the preference column and
 the `weekly_insights` table: owner-only select, insert and delete under forced
 RLS, a Monday `week_start`, JSON array checks, and a 64 KB payload
 cap. The table is included in the JSON account export and cascades on account
-deletion. Migration `20260927100000_weekly_insight_claims.sql` adds the `pending` and
+deletion. Migration `20260927100221_weekly_insight_claims.sql` adds the `pending` and
 `failed` statuses and an update policy that only lets the owner complete their
 own `pending` claim to a final status; finished rows stay read-only.
 `supabase/tests/weekly_insights.sql` covers the default, ownership, uniqueness,
 Monday check, size cap, read/delete isolation, one claim per week, completing a
-claim once and cross-owner completion. **Apply both migrations before deploying
-this code**; otherwise the JSON export fails on the
-missing table.
+claim once and cross-owner completion. Both migrations were applied to the hosted ProjectAtlas project on
+2026-09-27 through the Supabase connector and verified (forced RLS, four
+owner-only policies, update limited to the completion columns, no new security
+advisor findings). Their filenames match the hosted migration versions.
