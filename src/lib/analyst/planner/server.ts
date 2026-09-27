@@ -283,6 +283,7 @@ export async function executeAnalystPlan(
 
 export async function runAnalystQueryPlanner(
   question: unknown,
+  options: { previousQuestion?: string } = {},
 ): Promise<PlannerRunResult> {
   const started = new Date();
   const authTimeout = Symbol("auth-timeout");
@@ -321,7 +322,7 @@ export async function runAnalystQueryPlanner(
   if (user === authTimeout) return boundaryError("timeout", started);
   if (!user || user.error || !user.data.user)
     return boundaryError("unauthenticated", started);
-  const planning = await requestAnalystPlan(question);
+  const planning = await requestAnalystPlan(question, options);
   if (planning.status !== "planned") return planning;
   return executeAnalystPlan(planning.plan, {
     plannerMetadata: planning.metadata,
