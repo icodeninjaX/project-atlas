@@ -51,12 +51,17 @@ the cited evidence instead of banning figures outright:
   between them, a number in a cited metric label, or a year of a cited period.
   ISO dates must be cited period dates. Magnitude suffixes (`k`, `M`) and
   number words (`thousand`, `double`) are rejected.
+- A figure with a minus sign must copy a negative cited value. An unsigned
+  figure may copy a non-negative value or state a difference or percent change,
+  so a sign cannot be dropped or reversed.
 - Directional words (higher, lower, increased, fell, unchanged…) require a
   structured `comparison` of two cited same-unit items whose values confirm
   the stated direction.
 - Causal language, forecasts, certainty, significance/strength, superlatives,
   suggestions from incomplete evidence, and scenario recommendations remain
-  rejected. Scenario answers must cite a Current and an Option item.
+  rejected. Scenario answers must cite a Current and an Option item, cannot call
+  an option better or say to go with it, and may only suggest reviewing the
+  stated assumptions or options.
 
 The UI still shows every figure from ATLAS evidence alongside the claims. An
 invalid response falls back to the calculated evidence.
