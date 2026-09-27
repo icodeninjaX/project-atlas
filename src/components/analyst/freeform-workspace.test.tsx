@@ -12,7 +12,8 @@ afterEach(() => {
 
 const box = () =>
   screen.getByRole("textbox", { name: "Ask about your ATLAS records" });
-const consent = () => screen.getByRole("checkbox");
+const consent = () =>
+  screen.getByRole("button", { name: "Allow data sharing" });
 const ask = () => screen.getByRole("button", { name: "Ask Analyst" });
 
 const fact = {
@@ -70,11 +71,13 @@ describe("Analyst conversation", () => {
 
     render(<FreeformWorkspace userId="owner-a" />);
     await waitFor(() =>
-      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument(),
+      expect(
+        screen.queryByRole("button", { name: "Allow data sharing" }),
+      ).not.toBeInTheDocument(),
     );
     expect(screen.getByText(/Data sharing on/)).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Turn off" }));
-    expect(consent()).not.toBeChecked();
+    expect(consent()).toBeVisible();
     expect(
       window.localStorage.getItem("atlas:analyst-consent:owner-a"),
     ).toBeNull();
@@ -89,7 +92,9 @@ describe("Analyst conversation", () => {
     vi.stubGlobal("fetch", fetch);
     render(<FreeformWorkspace userId="owner-a" />);
     await waitFor(() =>
-      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument(),
+      expect(
+        screen.queryByRole("button", { name: "Allow data sharing" }),
+      ).not.toBeInTheDocument(),
     );
     await user.click(
       screen.getByRole("button", { name: SUGGESTED_QUESTIONS[0] }),

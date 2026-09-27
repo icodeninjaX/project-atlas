@@ -11,7 +11,7 @@ Phase 9 read-only tools. It cannot execute actions or arbitrary queries.
 - **Starters:** suggested-question chips go through the same freeform flow. The
   older preset form and its model picker were removed from the page;
   `POST /api/analyst` and its tests remain but no page calls it.
-- **Consent once:** the first question needs a data-sharing checkbox. The choice
+- **Consent once:** the first question needs one "Allow data sharing" tap. The choice
   is remembered per user in this browser (`atlas:analyst-consent:<userId>` in
   local storage) and shown as "Data sharing on · Turn off". Until consent is
   given, a starter chip only fills the box. The route still requires

@@ -77,7 +77,7 @@ for (const width of [390, 1280]) {
     await expect(
       page.getByRole("button", { name: "Ask Analyst" }),
     ).toBeDisabled();
-    await page.getByRole("checkbox").check();
+    await page.getByRole("button", { name: "Allow data sharing" }).click();
     await page.getByRole("button", { name: "Ask Analyst" }).click();
     await expect(
       page.getByText("Recorded expenses were ₱123.45 this month."),
@@ -85,7 +85,9 @@ for (const width of [390, 1280]) {
     // Consent is remembered on this device.
     await page.reload();
     await expect(page.getByText(/Data sharing on/)).toBeVisible();
-    await expect(page.getByRole("checkbox")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Allow data sharing" }),
+    ).toHaveCount(0);
     const dimensions = await page.evaluate(() => ({
       width: document.documentElement.clientWidth,
       scroll: document.documentElement.scrollWidth,
@@ -105,7 +107,7 @@ for (const width of [390, 1280]) {
     await page
       .getByRole("textbox", { name: "Ask about your ATLAS records" })
       .fill("What needs attention in my finances?");
-    await page.getByRole("checkbox").first().check();
+    await page.getByRole("button", { name: "Allow data sharing" }).click();
     await page.route("**/api/analyst/freeform", async (route) =>
       route.fulfill({
         status: 200,
@@ -172,7 +174,7 @@ for (const width of [320, 1280]) {
     await page
       .getByRole("textbox", { name: "Ask about your ATLAS records" })
       .fill("What if monthly income falls by 20%?");
-    await page.getByRole("checkbox").first().check();
+    await page.getByRole("button", { name: "Allow data sharing" }).click();
     const evidence = ["Current", "Option 1", "Option 2"].flatMap(
       (label, index) =>
         ["Runway estimate", "Monthly income"].map((metric) => ({
@@ -292,7 +294,7 @@ test("selected goal reaches freeform Analyst and shows its current path", async 
   await page
     .getByRole("textbox", { name: "Ask about your ATLAS records" })
     .fill("What changed around this goal?");
-  await page.getByRole("checkbox").first().check();
+  await page.getByRole("button", { name: "Allow data sharing" }).click();
   await page.getByRole("button", { name: "Ask Analyst" }).click();
   await expect(page.getByText("Linked task completion")).toBeVisible();
   await expect(
