@@ -15,8 +15,10 @@ export const PLANNER_LIMITS = Object.freeze({
   questionChars: 500,
   providerInputChars: 19_500,
   inputTokens: 18_000,
-  outputTokens: 500,
-  estimatedCostUsdMicros: 3_000,
+  // Reasoning tokens count as output; 1,400 covers low effort plus the plan.
+  outputTokens: 1_400,
+  // GPT-5.4 mini worst case: 18,000 byte-estimated input + 1,400 output.
+  estimatedCostUsdMicros: 20_000,
   authenticationTimeoutMs: 5_000,
   modelTimeoutMs: 12_000,
   executionTimeoutMs: 11_000,

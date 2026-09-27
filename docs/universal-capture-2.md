@@ -95,3 +95,15 @@ The database also caps each preview payload and active previews per owner.
 
 The Phase 6 Capture closeout checklist remains separate. Phase 17 acceptance
 does not establish that all earlier single-action release scenarios passed.
+
+## Account and category context
+
+Batch capture sends the signed-in user's non-archived account names and types
+(up to 40) and transaction category names (up to 80), each clipped to 60
+characters, as JSON data in a separate system message. The model still copies
+`accountText` from the user's words; ATLAS then maps an informal phrase such as
+"gcash" to exactly one account name (`src/lib/capture/context.ts`) and
+normalizes a category suggestion to a listed name of the same type. Ambiguous
+phrases stay unchanged. No record IDs or balances are sent, the rows are
+owner-filtered, and the user still picks and confirms the account and category.
+If the lookups fail, capture continues without context.

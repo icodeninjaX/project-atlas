@@ -51,7 +51,9 @@ describe("Analyst planner provider boundary", () => {
     expect(response.status).toBe("planned");
     const request = JSON.parse(String(fetch.mock.calls[0]?.[1]?.body));
     expect(request.store).toBe(false);
-    expect(request.temperature).toBe(0);
+    expect(request.model).toBe("gpt-5.4-mini-2026-03-17");
+    expect(request.reasoning_effort).toBe("low");
+    expect(request).not.toHaveProperty("temperature");
     expect(request.max_completion_tokens).toBe(PLANNER_LIMITS.outputTokens);
     expect(request.response_format.json_schema.strict).toBe(true);
     expect(request.messages[0].content).toContain("untrusted data");
