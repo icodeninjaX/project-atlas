@@ -9,6 +9,7 @@ import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { TooltipHint } from "@/components/ui/tooltip";
 import { formatCentavos } from "@/lib/money/money";
 import { TransactionForm } from "./transaction-form";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 export type TransactionWorkspaceView = "record" | "history";
 
@@ -170,7 +171,7 @@ function TransactionHistory({
                   "Transaction"}
               </p>
               <p className="text-muted-foreground mt-1 truncate text-xs">
-                {transaction.transaction_date} ·{" "}
+                {formatCalendarDate(transaction.transaction_date)} ·{" "}
                 {transaction.account_name ?? "Account"} ·{" "}
                 {transaction.category_name ?? "Category"}
               </p>

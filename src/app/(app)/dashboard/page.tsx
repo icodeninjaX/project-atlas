@@ -12,7 +12,7 @@ import { GratitudeCard } from "@/components/dashboard/gratitude-card";
 import { SituationStrip } from "@/components/dashboard/situation-strip";
 import { SignalsPanel } from "@/components/signals/signals-panel";
 import { Button } from "@/components/ui/button";
-import { manilaDateLabel } from "@/lib/dates/dates";
+import { formatCalendarDate, manilaDateLabel } from "@/lib/dates/dates";
 import { loadDayline } from "@/lib/dayline/server";
 import { getRandomWisdomQuote } from "@/lib/gratitude/gratitude-reflections";
 import { formatCentavos } from "@/lib/money/money";
@@ -160,7 +160,7 @@ export default async function DashboardPage() {
       label: "Debt remaining",
       value: formatCentavos(dashboard.financial.debt_remaining_centavos),
       note: dashboard.financial.next_financial_deadline
-        ? `Next due ${dashboard.financial.next_financial_deadline}`
+        ? `Next due ${formatCalendarDate(dashboard.financial.next_financial_deadline)}`
         : "No active deadline",
     },
   ];

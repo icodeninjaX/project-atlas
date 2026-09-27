@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SearchInput } from "@/components/search/search-input";
 import { getSearchGoalContext, searchResultGraphKey } from "@/lib/graph/server";
 import { createClient } from "@/lib/supabase/server";
+import { formatWeekOfTitle } from "@/lib/dates/dates";
 
 export const metadata = { title: "Search" };
 
@@ -126,7 +127,7 @@ export default async function SearchPage({
                     >
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">
-                          {result.title}
+                          {formatWeekOfTitle(result.title)}
                         </p>
                         {result.subtitle && (
                           <p className="text-muted-foreground mt-1 truncate text-xs">

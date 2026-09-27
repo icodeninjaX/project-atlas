@@ -9,6 +9,7 @@ import { GoalForm } from "@/components/goals/goal-form";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { TooltipHint } from "@/components/ui/tooltip";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 type Goal = {
   id: string;
@@ -41,14 +42,6 @@ const goalAreaBadgeStyles: Record<string, string> = {
 
 const fallbackGoalAreaBadgeStyle =
   "border-border bg-muted text-muted-foreground";
-
-function formatTargetDate(value: string) {
-  return new Intl.DateTimeFormat("en-PH", {
-    timeZone: "Asia/Manila",
-    month: "short",
-    day: "numeric",
-  }).format(new Date(`${value}T12:00:00+08:00`));
-}
 
 function GoalAreaBadge({ area }: { area: string }) {
   const areaLabel = area.charAt(0).toUpperCase() + area.slice(1);
@@ -213,7 +206,7 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
         {goal.target_date ? (
           <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px]">
             <CalendarDays className="size-3.5" aria-hidden="true" />
-            Target {formatTargetDate(goal.target_date)}
+            Target {formatCalendarDate(goal.target_date)}
           </span>
         ) : null}
       </div>

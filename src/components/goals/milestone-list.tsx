@@ -19,6 +19,7 @@ import { MilestoneRichTextReader } from "@/components/goals/milestone-rich-text-
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { TooltipHint } from "@/components/ui/tooltip";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 type Milestone = {
   id: string;
@@ -34,20 +35,6 @@ type MilestoneDialogState = {
   mode: MilestoneDialogMode;
   milestone: Milestone;
 } | null;
-
-const milestoneDate = new Intl.DateTimeFormat("en-PH", {
-  timeZone: "Asia/Manila",
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-});
-
-function formatMilestoneDate(value: string) {
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(value)
-    ? new Date(`${value}T00:00:00+08:00`)
-    : new Date(value);
-  return Number.isNaN(date.getTime()) ? value : milestoneDate.format(date);
-}
 
 const actionMenuClassName =
   "absolute top-10 right-0 z-30 w-52 rounded-2xl border border-slate-300 bg-white p-1.5 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/10 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:shadow-[0_20px_55px_rgba(0,0,0,0.75)] dark:ring-white/10";
@@ -369,13 +356,13 @@ function MilestoneActionDialog({
                       )}
                       <span>
                         {milestone.completed_at
-                          ? `Completed ${formatMilestoneDate(milestone.completed_at)}`
+                          ? `Completed ${formatCalendarDate(milestone.completed_at)}`
                           : "In progress"}
                       </span>
                     </div>
                     {milestone.target_date ? (
                       <span>
-                        Target: {formatMilestoneDate(milestone.target_date)}
+                        Target: {formatCalendarDate(milestone.target_date)}
                       </span>
                     ) : null}
                   </div>

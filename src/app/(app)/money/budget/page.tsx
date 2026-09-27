@@ -6,7 +6,7 @@ import { MoneyNavigation } from "@/components/money/money-navigation";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { resolveCalendarMonth } from "@/lib/dates/dates";
+import { formatCalendarMonth, resolveCalendarMonth } from "@/lib/dates/dates";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 
@@ -87,7 +87,7 @@ export default async function BudgetPage({
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
       <PageHeading
-        eyebrow={`Money / Budget / ${month}`}
+        eyebrow={`Money / Budget / ${formatCalendarMonth(month)}`}
         title="Monthly plan"
         description="Planned and actual pesos remain visible together. Overspending is always named in text."
         actions={

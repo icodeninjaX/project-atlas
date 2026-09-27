@@ -1,3 +1,5 @@
+import { formatCalendarDate } from "@/lib/dates/dates";
+
 export const graphEntityTypes = [
   "goal",
   "task",
@@ -155,7 +157,9 @@ export const graphRegistry: Record<GraphEntityType, EntityDefinition> = {
       summary(
         "weekly_review",
         r,
-        `Week of ${r.week_start ?? "unknown"}`,
+        r.week_start
+          ? `Week of ${formatCalendarDate(r.week_start)}`
+          : "Weekly review",
         null,
         `/reviews?highlight=${r.id}`,
       ),
@@ -170,7 +174,15 @@ export const graphRegistry: Record<GraphEntityType, EntityDefinition> = {
         "transaction",
         r,
         r.merchant_or_source || r.description || "Transaction",
-        `${r.transaction_type ?? "Transaction"} · ${r.transaction_date ?? ""}`,
+        [
+          r.transaction_type
+            ? r.transaction_type.charAt(0).toUpperCase() +
+              r.transaction_type.slice(1)
+            : "Transaction",
+          r.transaction_date ? formatCalendarDate(r.transaction_date) : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
         `/money/transactions?highlight=${r.id}`,
       ),
   },

@@ -6,6 +6,7 @@ import { MoneyNavigation } from "@/components/money/money-navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { formatCentavos } from "@/lib/money/money";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 export const metadata = { title: "Record transfer" };
 
@@ -121,7 +122,7 @@ export default async function TransfersPage({
                       "Account"}
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {transfer.transfer_date}
+                    {formatCalendarDate(transfer.transfer_date)}
                     {transfer.description ? ` · ${transfer.description}` : ""}
                   </p>
                 </div>

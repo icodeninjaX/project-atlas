@@ -10,6 +10,7 @@ import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { projectDebtPayoff } from "@/lib/debts/debt";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 function todayInManila() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -148,7 +149,7 @@ export default async function DebtDetailPage({
                     </SensitiveValue>
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {payment.payment_date}
+                    {formatCalendarDate(payment.payment_date)}
                     {payment.notes ? ` · ${payment.notes}` : ""}
                   </p>
                 </div>

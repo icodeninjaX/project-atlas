@@ -12,6 +12,7 @@ import {
   type TimelineEvent,
   type TimelineFilters,
 } from "@/lib/timeline/timeline";
+import { formatWeekOfTitle } from "@/lib/dates/dates";
 
 const dayFormatter = new Intl.DateTimeFormat("en-PH", {
   timeZone: "UTC",
@@ -73,7 +74,7 @@ function TimelineEventCard({ event }: { event: TimelineEvent }) {
               ) : null}
             </div>
             <h3 className="mt-2 text-sm font-semibold break-words">
-              {event.title}
+              {formatWeekOfTitle(event.title)}
             </h3>
             {event.description ? (
               <p className="text-muted-foreground mt-1 text-xs leading-5 break-words">

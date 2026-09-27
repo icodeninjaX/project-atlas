@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { orderDebts, resolveDebtStrategy } from "@/lib/debts/debt";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 export const metadata = { title: "Debts" };
 
@@ -141,7 +142,9 @@ export default async function DebtsPage({
                 <p className="text-muted-foreground mt-1 text-xs capitalize">
                   {String(debt.debt_type).replaceAll("_", " ")} ·{" "}
                   {Number(debt.interest_rate_percent)}% APR
-                  {debt.next_due_date ? ` · due ${debt.next_due_date}` : ""}
+                  {debt.next_due_date
+                    ? ` · due ${formatCalendarDate(debt.next_due_date)}`
+                    : ""}
                 </p>
               </div>
               <TooltipHint

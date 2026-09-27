@@ -74,6 +74,14 @@ per page, and no failed routes.
 5. **Date formats are inconsistent app-wide:** `2026-10-01` (Dashboard, Debts,
    Transactions, History), `Sep 30, 2026` (Career), `Nov 25` (Goals),
    `mm/dd/yyyy` native inputs. Pick one display helper for the en-PH locale.
+   **Done:** calendar dates now use one helper, `formatCalendarDate`
+   (`Sep 30, 2026`), across Dashboard, Tasks, Goals, Milestones, Debts,
+   Transactions, Transfers, Career, Decisions, Signals, and goal
+   relationships; months read `Sep 2026` and stored "Week of 2026-09-14"
+   titles display as "Week of Sep 14, 2026". A sweep of every page found no
+   remaining ISO or `m/d/yyyy` text. Native date inputs still follow the
+   browser's locale (`mm/dd/yyyy` in US-English browsers); changing that
+   needs a custom date picker.
 
 ### Medium
 

@@ -7,7 +7,7 @@ import { TaskStatusForm } from "@/components/tasks/task-status-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
-import { manilaDateLabel } from "@/lib/dates/dates";
+import { formatCalendarDate, manilaDateLabel } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
 import { getTaskPriorityBadgeClass } from "@/lib/tasks/priority";
 import { formatTaskTime, type ScheduledTaskSlot } from "@/lib/tasks/task-time";
@@ -242,7 +242,7 @@ export default async function TasksPage({
                 }`
               : null;
             const mobileScheduleLabel = task.scheduled_for
-              ? `${overdue ? "Overdue · " : ""}${task.scheduled_for}${
+              ? `${overdue ? "Overdue · " : ""}${formatCalendarDate(task.scheduled_for)}${
                   task.scheduled_time
                     ? ` at ${formatTaskTime(task.scheduled_time)}`
                     : ""

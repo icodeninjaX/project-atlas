@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 export const metadata = { title: "Career" };
 
@@ -77,15 +78,7 @@ function ApplicationCards({
                       }`}
                     >
                       {overdue ? "Follow-up overdue · " : ""}
-                      {new Date(application.next_action_at).toLocaleDateString(
-                        "en-PH",
-                        {
-                          timeZone: "Asia/Manila",
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        },
-                      )}
+                      {formatCalendarDate(application.next_action_at)}
                     </p>
                   )}
                 </div>
@@ -322,14 +315,7 @@ export default async function CareerPage({
                               className={`mt-1 text-xs ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
                             >
                               {overdue ? "Follow-up overdue · " : ""}
-                              {new Date(
-                                application.next_action_at,
-                              ).toLocaleDateString("en-PH", {
-                                timeZone: "Asia/Manila",
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })}
+                              {formatCalendarDate(application.next_action_at)}
                             </p>
                           )}
                         </td>

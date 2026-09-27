@@ -3,6 +3,7 @@ import { DecisionCreatePanel } from "@/components/decisions/decision-create-pane
 import { PageHeading } from "@/components/shared/page-heading";
 import { manilaToday } from "@/lib/analyst/evidence";
 import { loadDecisionGoals, loadDecisionList } from "@/lib/decisions/server";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 export const metadata = { title: "Decision journal" };
 
@@ -47,7 +48,8 @@ export default async function DecisionsPage({
                 className="border-border bg-card min-w-0 rounded-2xl border p-4"
               >
                 <p className="text-muted-foreground text-xs">
-                  Decided {decision.decision_on} · Review {decision.review_on}
+                  Decided {formatCalendarDate(decision.decision_on)} · Review{" "}
+                  {formatCalendarDate(decision.review_on)}
                 </p>
                 <h3 className="mt-1 font-semibold break-words">
                   {decision.title}
