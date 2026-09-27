@@ -1,5 +1,12 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { focusTaskLabels } from "@/lib/analyst/freeform/display-labels";
+import {
+  NDJSON_TYPE,
+  type AnalystStageHook,
+  type AnalystStreamEvent,
+} from "@/lib/analyst/freeform/progress";
+import { suggestFollowUps } from "@/lib/analyst/freeform/suggestions";
+import type { ToolName } from "@/lib/analyst/tools/contracts";
 import { z } from "zod";
 import { AI_MODELS } from "@/lib/ai/models";
 import { runAnalystQueryPlanner } from "@/lib/analyst/planner/server";
@@ -28,6 +35,8 @@ const headers = { "Cache-Control": "private, no-store" };
 const MAX_REQUEST_CHARS = 8192;
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status, headers });
+type Reply = { body: unknown; status: number };
+const reply = (body: unknown, status = 200): Reply => ({ body, status });
 const inputSchema = z
   .object({
     question: plannerQuestionSchema,
@@ -236,250 +245,317 @@ export async function POST(request: Request) {
     );
   }
 
-  let outcome = "provider_error";
-  let inputTokens: number | null = null;
-  let outputTokens: number | null = null;
-  try {
-    const plannerQuestion = goalId
-      ? `${parsed.data.question} Selected goal ID: ${goalId}.`
-      : debtId
-        ? `${parsed.data.question} Selected active debt ID: ${debtId}. Extra payments are monthly.`
-        : parsed.data.question;
-    const history = parsed.data.history ?? [];
-    const plan = history.length
-      ? await runAnalystQueryPlanner(plannerQuestion, {
-          previousQuestion: history.at(-1)!.question,
-        })
-      : await runAnalystQueryPlanner(plannerQuestion);
-    const plannerUsage =
-      "calls" in plan ? plan.metadata.planner : plan.metadata;
-    inputTokens = plannerUsage?.inputTokens ?? null;
-    outputTokens = plannerUsage?.outputTokens ?? null;
-    if (plan.status === "clarification_required") {
-      outcome = "insufficient";
-      return json({
-        status: "clarification_required",
-        failureCode: "clarification_required",
-        message: plan.clarification,
-        evidence: [],
-        limitations: [],
-      });
-    }
-    if (plan.status === "unsupported") {
-      outcome = "insufficient";
-      return json({
-        status: "unsupported",
-        failureCode: "unsupported_question",
-        message: plan.unsupportedReason,
-        evidence: [],
-        limitations: plan.missingCapabilities,
-      });
-    }
-    if (plan.status === "error") {
-      const code = plan.error?.code;
-      outcome =
-        code === "timeout" || code === "execution_timeout"
-          ? "timeout"
-          : code === "context_limit" || code === "cost_limit"
-            ? "context_limit"
-            : "provider_error";
-      return json({
-        status: "fallback",
-        failureCode: code ?? "retrieval_error",
-        message: plan.error?.message ?? "Analysis could not be completed.",
-        evidence: [],
-        limitations: [],
-      });
-    }
-    const evidence = plan.evidence;
-    const limitations = [...plan.limitations];
-    // Owner-only task titles, added after any model call and never sent to it.
-    const labels = () => focusTaskLabels(supabase, user.id, evidence);
-    const fallback = async (message: string, failureCode: string) =>
-      json({
-        status: "fallback",
-        failureCode,
-        message,
+  const requestId = allowed.data.request_id;
+  const history = parsed.data.history ?? [];
+  // Ideas under an answered or fallback turn; fixed text, never record data.
+  const followUps = (calls: Array<{ tool: ToolName; input: unknown }>) =>
+    suggestFollowUps({ question: parsed.data.question, history, calls });
+  /** Plans, reads and explains once, then records the outcome exactly once. */
+  const run = async (onStage?: AnalystStageHook): Promise<Reply> => {
+    let outcome = "provider_error";
+    let inputTokens: number | null = null;
+    let outputTokens: number | null = null;
+    try {
+      const plannerQuestion = goalId
+        ? `${parsed.data.question} Selected goal ID: ${goalId}.`
+        : debtId
+          ? `${parsed.data.question} Selected active debt ID: ${debtId}. Extra payments are monthly.`
+          : parsed.data.question;
+      const plan =
+        history.length || onStage
+          ? await runAnalystQueryPlanner(plannerQuestion, {
+              ...(history.length && {
+                previousQuestion: history.at(-1)!.question,
+              }),
+              ...(onStage && { onStage }),
+            })
+          : await runAnalystQueryPlanner(plannerQuestion);
+      const plannerUsage =
+        "calls" in plan ? plan.metadata.planner : plan.metadata;
+      inputTokens = plannerUsage?.inputTokens ?? null;
+      outputTokens = plannerUsage?.outputTokens ?? null;
+      if (plan.status === "clarification_required") {
+        outcome = "insufficient";
+        return reply({
+          status: "clarification_required",
+          failureCode: "clarification_required",
+          message: plan.clarification,
+          evidence: [],
+          limitations: [],
+        });
+      }
+      if (plan.status === "unsupported") {
+        outcome = "insufficient";
+        return reply({
+          status: "unsupported",
+          failureCode: "unsupported_question",
+          message: plan.unsupportedReason,
+          evidence: [],
+          limitations: plan.missingCapabilities,
+        });
+      }
+      if (plan.status === "error") {
+        const code = plan.error?.code;
+        outcome =
+          code === "timeout" || code === "execution_timeout"
+            ? "timeout"
+            : code === "context_limit" || code === "cost_limit"
+              ? "context_limit"
+              : "provider_error";
+        return reply({
+          status: "fallback",
+          failureCode: code ?? "retrieval_error",
+          message: plan.error?.message ?? "Analysis could not be completed.",
+          evidence: [],
+          limitations: [],
+          suggestions: followUps([]),
+        });
+      }
+      const evidence = plan.evidence;
+      const limitations = [...plan.limitations];
+      // Owner-only task titles, added after any model call and never sent to it.
+      const labels = () => focusTaskLabels(supabase, user.id, evidence);
+      const suggestions = followUps(plan.calls);
+      const fallback = async (message: string, failureCode: string) =>
+        reply({
+          status: "fallback",
+          failureCode,
+          message,
+          evidence,
+          limitations,
+          labels: await labels(),
+          suggestions,
+        });
+      const usesPattern = plan.calls.some(
+        (call) => call.tool === "getPatternAssociation",
+      );
+      const usesScenario = plan.calls.some(
+        (call) => call.tool === "compareFinancialScenarios",
+      );
+      if (usesPattern && goalId) {
+        outcome = "insufficient";
+        return fallback(
+          "The pattern test covers whole-domain history and cannot establish an association for the selected goal.",
+          "unsupported_goal_pattern",
+        );
+      }
+      if (usesScenario && goalId) {
+        outcome = "insufficient";
+        return fallback(
+          "Runway scenarios cover the whole financial baseline, not the selected goal.",
+          "unsupported_goal_scenario",
+        );
+      }
+      if (associationQuestion && !usesPattern) {
+        outcome = "insufficient";
+        return fallback(
+          "A reliable association requires the approved pattern test. Review the available facts below.",
+          "missing_pattern_test",
+        );
+      }
+      if (scenarioQuestion && !usesScenario) {
+        outcome = "insufficient";
+        return fallback(
+          "A financial what-if needs the approved scenario comparison. Review the available facts below or edit your assumptions.",
+          "missing_scenario_comparison",
+        );
+      }
+      if (debtId) {
+        const selectedDebtUsed = plan.calls.some((call) => {
+          if (call.tool !== "compareFinancialScenarios") return false;
+          const input = call.input as {
+            alternatives?: Array<{
+              extraDebtPayment?: { debtId: string } | null;
+            }>;
+          };
+          return input.alternatives?.some(
+            (option) => option.extraDebtPayment?.debtId === debtId,
+          );
+        });
+        if (!selectedDebtUsed) {
+          outcome = "insufficient";
+          return fallback(
+            "A monthly debt scenario needs the selected active debt. Review the available facts below or edit your question.",
+            "missing_selected_debt",
+          );
+        }
+      }
+      if (
+        goalId &&
+        !plan.calls.some((call) => call.tool === "getGoalLinkedActivity")
+      ) {
+        outcome = "insufficient";
+        return fallback(
+          "This answer needs the selected goal's linked activity. Review the available facts below.",
+          "missing_goal_context",
+        );
+      }
+      // A tool that finds no or incomplete records (no reviews yet, say) should
+      // not block the whole answer: explain only complete facts from tools that
+      // finished, and say so. Missing capabilities still fall back.
+      const readyIds = new Set(
+        plan.calls
+          .filter((call) => call.status === "ready")
+          .flatMap((call) => call.result.evidence.map((item) => item.id)),
+      );
+      const completeEvidence =
+        plan.status === "partial"
+          ? evidence.filter(
+              (item) =>
+                readyIds.has(item.id) && item.completeness === "complete",
+            )
+          : evidence;
+      const missingCapability =
+        plan.status === "partial" &&
+        (plan.missingCapabilities?.length ?? 0) > 0;
+      const scoped = goalId
+        ? completeEvidence.filter(
+            (item) => item.provenance.tool === "getGoalLinkedActivity",
+          )
+        : usesPattern
+          ? completeEvidence.filter(
+              (item) => item.provenance.tool === "getPatternAssociation",
+            )
+          : usesScenario
+            ? completeEvidence.filter(
+                (item) => item.provenance.tool === "compareFinancialScenarios",
+              )
+            : completeEvidence;
+      // A focused, pattern or scenario answer needs its own tool to be complete.
+      const coreIncomplete =
+        plan.status === "partial" &&
+        (goalId || usesPattern || usesScenario) &&
+        plan.calls.some(
+          (call) =>
+            call.status !== "ready" &&
+            (call.tool === "getGoalLinkedActivity" ||
+              call.tool === "getPatternAssociation" ||
+              call.tool === "compareFinancialScenarios"),
+        );
+      if (missingCapability || coreIncomplete || scoped.length === 0) {
+        outcome = "insufficient";
+        return fallback(
+          "ATLAS could not gather complete evidence for an AI explanation. Review the available facts below.",
+          "insufficient_evidence",
+        );
+      }
+      if (scoped.length < evidence.length && plan.status === "partial")
+        limitations.push(partialEvidenceNote);
+      const explanationEvidence = scoped;
+      if (explanationEvidence.length > ANSWER_LIMITS.evidenceItems) {
+        outcome = "context_limit";
+        return fallback(
+          "The evidence exceeds the explanation limit. Review the ATLAS facts below.",
+          "context_limit",
+        );
+      }
+      const answer =
+        history.length || onStage
+          ? await requestGroundedAnswer(
+              parsed.data.question,
+              explanationEvidence,
+              {
+                ...(history.length && { history }),
+                ...(onStage && { onStage }),
+              },
+            )
+          : await requestGroundedAnswer(
+              parsed.data.question,
+              explanationEvidence,
+            );
+      if (answer.status === "error") {
+        inputTokens = (inputTokens ?? 0) + (answer.inputTokens ?? 0);
+        outputTokens = (outputTokens ?? 0) + (answer.outputTokens ?? 0);
+        outcome =
+          answer.code === "timeout"
+            ? "timeout"
+            : answer.code === "context_limit" || answer.code === "cost_limit"
+              ? "context_limit"
+              : answer.code === "invalid_response"
+                ? "invalid_response"
+                : "provider_error";
+        return fallback(
+          "An AI explanation is unavailable. The verified ATLAS facts are shown below.",
+          answer.code,
+        );
+      }
+      outcome = "success";
+      inputTokens = (inputTokens ?? 0) + answer.inputTokens;
+      outputTokens = (outputTokens ?? 0) + answer.outputTokens;
+      return reply({
+        status: "answered",
+        claims: answer.claims,
         evidence,
         limitations,
         labels: await labels(),
-      });
-    const usesPattern = plan.calls.some(
-      (call) => call.tool === "getPatternAssociation",
-    );
-    const usesScenario = plan.calls.some(
-      (call) => call.tool === "compareFinancialScenarios",
-    );
-    if (usesPattern && goalId) {
-      outcome = "insufficient";
-      return fallback(
-        "The pattern test covers whole-domain history and cannot establish an association for the selected goal.",
-        "unsupported_goal_pattern",
-      );
-    }
-    if (usesScenario && goalId) {
-      outcome = "insufficient";
-      return fallback(
-        "Runway scenarios cover the whole financial baseline, not the selected goal.",
-        "unsupported_goal_scenario",
-      );
-    }
-    if (associationQuestion && !usesPattern) {
-      outcome = "insufficient";
-      return fallback(
-        "A reliable association requires the approved pattern test. Review the available facts below.",
-        "missing_pattern_test",
-      );
-    }
-    if (scenarioQuestion && !usesScenario) {
-      outcome = "insufficient";
-      return fallback(
-        "A financial what-if needs the approved scenario comparison. Review the available facts below or edit your assumptions.",
-        "missing_scenario_comparison",
-      );
-    }
-    if (debtId) {
-      const selectedDebtUsed = plan.calls.some((call) => {
-        if (call.tool !== "compareFinancialScenarios") return false;
-        const input = call.input as {
-          alternatives?: Array<{
-            extraDebtPayment?: { debtId: string } | null;
-          }>;
-        };
-        return input.alternatives?.some(
-          (option) => option.extraDebtPayment?.debtId === debtId,
-        );
-      });
-      if (!selectedDebtUsed) {
-        outcome = "insufficient";
-        return fallback(
-          "A monthly debt scenario needs the selected active debt. Review the available facts below or edit your question.",
-          "missing_selected_debt",
-        );
-      }
-    }
-    if (
-      goalId &&
-      !plan.calls.some((call) => call.tool === "getGoalLinkedActivity")
-    ) {
-      outcome = "insufficient";
-      return fallback(
-        "This answer needs the selected goal's linked activity. Review the available facts below.",
-        "missing_goal_context",
-      );
-    }
-    // A tool that finds no or incomplete records (no reviews yet, say) should
-    // not block the whole answer: explain only complete facts from tools that
-    // finished, and say so. Missing capabilities still fall back.
-    const readyIds = new Set(
-      plan.calls
-        .filter((call) => call.status === "ready")
-        .flatMap((call) => call.result.evidence.map((item) => item.id)),
-    );
-    const completeEvidence =
-      plan.status === "partial"
-        ? evidence.filter(
-            (item) => readyIds.has(item.id) && item.completeness === "complete",
-          )
-        : evidence;
-    const missingCapability =
-      plan.status === "partial" && (plan.missingCapabilities?.length ?? 0) > 0;
-    const scoped = goalId
-      ? completeEvidence.filter(
-          (item) => item.provenance.tool === "getGoalLinkedActivity",
-        )
-      : usesPattern
-        ? completeEvidence.filter(
-            (item) => item.provenance.tool === "getPatternAssociation",
-          )
-        : usesScenario
-          ? completeEvidence.filter(
-              (item) => item.provenance.tool === "compareFinancialScenarios",
-            )
-          : completeEvidence;
-    // A focused, pattern or scenario answer needs its own tool to be complete.
-    const coreIncomplete =
-      plan.status === "partial" &&
-      (goalId || usesPattern || usesScenario) &&
-      plan.calls.some(
-        (call) =>
-          call.status !== "ready" &&
-          (call.tool === "getGoalLinkedActivity" ||
-            call.tool === "getPatternAssociation" ||
-            call.tool === "compareFinancialScenarios"),
-      );
-    if (missingCapability || coreIncomplete || scoped.length === 0) {
-      outcome = "insufficient";
-      return fallback(
-        "ATLAS could not gather complete evidence for an AI explanation. Review the available facts below.",
-        "insufficient_evidence",
-      );
-    }
-    if (scoped.length < evidence.length && plan.status === "partial")
-      limitations.push(partialEvidenceNote);
-    const explanationEvidence = scoped;
-    if (explanationEvidence.length > ANSWER_LIMITS.evidenceItems) {
-      outcome = "context_limit";
-      return fallback(
-        "The evidence exceeds the explanation limit. Review the ATLAS facts below.",
-        "context_limit",
-      );
-    }
-    const answer = history.length
-      ? await requestGroundedAnswer(parsed.data.question, explanationEvidence, {
-          history,
-        })
-      : await requestGroundedAnswer(parsed.data.question, explanationEvidence);
-    if (answer.status === "error") {
-      inputTokens = (inputTokens ?? 0) + (answer.inputTokens ?? 0);
-      outputTokens = (outputTokens ?? 0) + (answer.outputTokens ?? 0);
-      outcome =
-        answer.code === "timeout"
-          ? "timeout"
-          : answer.code === "context_limit" || answer.code === "cost_limit"
-            ? "context_limit"
-            : answer.code === "invalid_response"
-              ? "invalid_response"
-              : "provider_error";
-      return fallback(
-        "An AI explanation is unavailable. The verified ATLAS facts are shown below.",
-        answer.code,
-      );
-    }
-    outcome = "success";
-    inputTokens = (inputTokens ?? 0) + answer.inputTokens;
-    outputTokens = (outputTokens ?? 0) + answer.outputTokens;
-    return json({
-      status: "answered",
-      claims: answer.claims,
-      evidence,
-      limitations,
-      labels: await labels(),
-      ...(matchedEntity && {
-        matchedEntity: { type: matchedEntity.type, name: matchedEntity.name },
-      }),
-    });
-  } catch {
-    return json(
-      {
-        status: "fallback",
-        failureCode: "retrieval_error",
-        message: "Analysis could not be completed. Try again.",
-        evidence: [],
-        limitations: [],
-      },
-      503,
-    );
-  } finally {
-    try {
-      await supabase.rpc("finish_ai_analyst_request", {
-        p_id: allowed.data.request_id,
-        p_outcome: outcome,
-        p_input_tokens: inputTokens,
-        p_output_tokens: outputTokens,
+        suggestions,
+        ...(matchedEntity && {
+          matchedEntity: { type: matchedEntity.type, name: matchedEntity.name },
+        }),
       });
     } catch {
-      /* Audit failure must not replace the answer. */
+      return reply(
+        {
+          status: "fallback",
+          failureCode: "retrieval_error",
+          message: "Analysis could not be completed. Try again.",
+          evidence: [],
+          limitations: [],
+        },
+        503,
+      );
+    } finally {
+      try {
+        await supabase.rpc("finish_ai_analyst_request", {
+          p_id: requestId,
+          p_outcome: outcome,
+          p_input_tokens: inputTokens,
+          p_output_tokens: outputTokens,
+        });
+      } catch {
+        /* Audit failure must not replace the answer. */
+      }
     }
+  };
+
+  if (!request.headers.get("accept")?.includes(NDJSON_TYPE)) {
+    const result = await run();
+    return json(result.body, result.status);
   }
+  // Streamed progress: one JSON line per stage, then the same result the
+  // JSON response carries. A client that leaves early only stops the writes;
+  // the run continues under `after` so the quota is still finished once.
+  const encoder = new TextEncoder();
+  let open = true;
+  let controller!: ReadableStreamDefaultController<Uint8Array>;
+  const stream = new ReadableStream<Uint8Array>({
+    start(value) {
+      controller = value;
+    },
+    cancel() {
+      open = false;
+    },
+  });
+  const send = (event: AnalystStreamEvent) => {
+    if (!open) return;
+    try {
+      controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+    } catch {
+      open = false;
+    }
+  };
+  const work = run(send).then((result) => {
+    send({ type: "result", status: result.status, body: result.body });
+    if (!open) return;
+    open = false;
+    try {
+      controller.close();
+    } catch {
+      /* The client already left. */
+    }
+  });
+  after(work);
+  return new Response(stream, {
+    headers: { ...headers, "Content-Type": `${NDJSON_TYPE}; charset=utf-8` },
+  });
 }

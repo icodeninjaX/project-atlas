@@ -152,6 +152,22 @@ describe("Analyst query planner execution", () => {
     expect(response).not.toHaveProperty("question");
   });
 
+  it("reports planning and the domains it reads, without the question", async () => {
+    const onStage = vi.fn();
+    await runAnalystQueryPlanner("What is blocking my career goal?", {
+      onStage,
+    });
+    expect(onStage.mock.calls).toEqual([
+      [{ type: "stage", stage: "understanding" }],
+      [{ type: "stage", stage: "reading", domains: ["goals", "career"] }],
+    ]);
+    // The provider sees the same options as before, without the hook.
+    expect(provider.request).toHaveBeenCalledWith(
+      "What is blocking my career goal?",
+      {},
+    );
+  });
+
   it("preserves a tool failure as partial evidence", async () => {
     tools.invoke.mockImplementation(
       async (name: "getGoalProgress" | "getCareerPipeline") =>

@@ -8,8 +8,13 @@ const mocks = vi.hoisted(() => ({
   plan: vi.fn(),
   answer: vi.fn(),
   from: vi.fn(),
+  after: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  after: mocks.after,
+}));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 vi.mock("@/lib/analyst/planner/server", () => ({
   runAnalystQueryPlanner: mocks.plan,
@@ -32,6 +37,24 @@ const request = (body: unknown) =>
     body: JSON.stringify(body),
   });
 const valid = { question, dataSharingAcknowledged: true };
+const streamRequest = (body: unknown) =>
+  new Request("http://localhost/api/analyst/freeform", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/x-ndjson",
+    },
+    body: JSON.stringify(body),
+  });
+async function readLines(response: Response) {
+  const text = await response.text();
+  return text
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+}
+const finishCalls = () =>
+  mocks.rpc.mock.calls.filter(([name]) => name === "finish_ai_analyst_request");
 const item = {
   id: "money.current",
   metric: "Recorded expenses",
@@ -609,5 +632,136 @@ describe("freeform Analyst route", () => {
       status: "answered",
       evidence: [goalFact, historyFact],
     });
+  });
+});
+
+describe("freeform Analyst progress stream", () => {
+  it("streams stages in order and ends with the JSON result", async () => {
+    mocks.plan.mockImplementationOnce(async (_question, options) => {
+      options.onStage({ type: "stage", stage: "understanding" });
+      options.onStage({
+        type: "stage",
+        stage: "reading",
+        domains: ["spending"],
+      });
+      return {
+        status: "ready",
+        calls: [{ tool: "getMoneySummary", input: { kind: "expense" } }],
+        evidence: [item],
+        limitations: [],
+        metadata: { planner: { inputTokens: 90, outputTokens: 20 } },
+      };
+    });
+    mocks.answer.mockImplementationOnce(
+      async (_question, _evidence, options) => {
+        options.onStage({ type: "stage", stage: "writing" });
+        options.onStage({ type: "stage", stage: "checking" });
+        options.onStage({ type: "stage", stage: "repairing" });
+        return {
+          status: "answered",
+          claims: [
+            {
+              kind: "interpretation",
+              text: "This may warrant a closer look.",
+              evidenceIds: [item.id],
+            },
+          ],
+          inputTokens: 100,
+          outputTokens: 30,
+        };
+      },
+    );
+    const response = await POST(streamRequest(valid));
+    expect(response.headers.get("content-type")).toContain(
+      "application/x-ndjson",
+    );
+    const lines = await readLines(response);
+    expect(lines.slice(0, -1)).toEqual([
+      { type: "stage", stage: "understanding" },
+      { type: "stage", stage: "reading", domains: ["spending"] },
+      { type: "stage", stage: "writing" },
+      { type: "stage", stage: "checking" },
+      { type: "stage", stage: "repairing" },
+    ]);
+    expect(lines.at(-1)).toMatchObject({
+      type: "result",
+      status: 200,
+      body: {
+        status: "answered",
+        evidence: [item],
+        suggestions: expect.arrayContaining([
+          "How does this compare to last month?",
+        ]),
+      },
+    });
+    expect(finishCalls()).toHaveLength(1);
+    expect(mocks.after).toHaveBeenCalledTimes(1);
+  });
+  it("keeps the plain JSON response and call shape without the stream header", async () => {
+    const response = await POST(request(valid));
+    expect(response.headers.get("content-type")).toContain("application/json");
+    expect(mocks.plan).toHaveBeenCalledWith(question);
+    expect(mocks.answer).toHaveBeenCalledWith(question, [item]);
+    expect(mocks.after).not.toHaveBeenCalled();
+    expect(await response.json()).toMatchObject({ status: "answered" });
+  });
+  it("returns validation errors as JSON to a streaming caller", async () => {
+    const response = await POST(streamRequest({ question }));
+    expect(response.status).toBe(400);
+    expect(response.headers.get("content-type")).toContain("application/json");
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it("finishes the quota once when the client leaves mid-stream", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    mocks.answer.mockImplementationOnce(
+      async (_question, _evidence, options) => {
+        options.onStage({ type: "stage", stage: "writing" });
+        await gate;
+        options.onStage({ type: "stage", stage: "checking" });
+        return {
+          status: "answered",
+          claims: [
+            {
+              kind: "interpretation",
+              text: "This may warrant a closer look.",
+              evidenceIds: [item.id],
+            },
+          ],
+          inputTokens: 100,
+          outputTokens: 30,
+        };
+      },
+    );
+    const response = await POST(streamRequest(valid));
+    const reader = response.body!.getReader();
+    const first = await reader.read();
+    expect(new TextDecoder().decode(first.value)).toContain('"writing"');
+    await reader.cancel();
+    expect(finishCalls()).toHaveLength(0);
+    release();
+    // The run continues under after() and records its real outcome once.
+    await mocks.after.mock.calls[0]![0];
+    expect(finishCalls()).toEqual([
+      [
+        "finish_ai_analyst_request",
+        {
+          p_id: 7,
+          p_outcome: "success",
+          p_input_tokens: 190,
+          p_output_tokens: 50,
+        },
+      ],
+    ]);
+  });
+  it("finishes the quota once when the run fails mid-stream", async () => {
+    mocks.answer.mockRejectedValueOnce(new Error("network"));
+    const lines = await readLines(await POST(streamRequest(valid)));
+    expect(lines.at(-1)).toMatchObject({
+      type: "result",
+      status: 503,
+      body: { status: "fallback", failureCode: "retrieval_error" },
+    });
+    expect(finishCalls()).toHaveLength(1);
   });
 });

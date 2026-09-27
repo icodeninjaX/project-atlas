@@ -7,6 +7,7 @@ import {
   type StructuredMessage,
 } from "@/lib/ai/openai";
 import type { ToolEvidence } from "@/lib/analyst/tools/contracts";
+import type { AnalystStageHook } from "./progress";
 import {
   comparisonIsGrounded,
   displayValue,
@@ -205,6 +206,8 @@ export async function requestGroundedAnswer(
     fetch?: typeof globalThis.fetch;
     /** Earlier exchanges in this conversation, oldest first. */
     history?: Array<{ question: string; answer: string }>;
+    /** Reports writing, checking and the repair attempt as they start. */
+    onStage?: AnalystStageHook;
   } = {},
 ): Promise<AnswerResult> {
   const key = process.env.OPENAI_API_KEY;
@@ -305,6 +308,10 @@ export async function requestGroundedAnswer(
   let messages = baseMessages;
   // One repair attempt: the model sees why its claims were rejected.
   for (let attempt = 0; attempt < 2; attempt += 1) {
+    options.onStage?.({
+      type: "stage",
+      stage: attempt === 0 ? "writing" : "repairing",
+    });
     const body = structuredRequestBody({
       model,
       maxOutputTokens: ANSWER_LIMITS.outputTokens,
@@ -359,6 +366,8 @@ export async function requestGroundedAnswer(
         Infinity) > ANSWER_LIMITS.costUsdMicros
     )
       return { status: "error", code: "cost_limit", inputTokens, outputTokens };
+    // The repair attempt stays on "Correcting…" while it is checked.
+    if (attempt === 0) options.onStage?.({ type: "stage", stage: "checking" });
     const review = reviewGroundedAnswer(result.content, evidence);
     if (review && review.claims.length > 0) {
       if (review.rejections.length > 0)

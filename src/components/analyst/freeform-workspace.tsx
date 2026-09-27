@@ -7,6 +7,7 @@ import {
   ArrowUp,
   ArrowUpRight,
   CalendarCheck,
+  Check,
   ChevronDown,
   Compass,
   Crosshair,
@@ -21,6 +22,7 @@ import {
   X,
   type LucideIcon,
   Info,
+  CornerDownRight,
 } from "lucide-react";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import {
@@ -29,6 +31,15 @@ import {
 } from "@/components/analyst/evidence-display";
 import type { ToolEvidence } from "@/lib/analyst/tools/contracts";
 import type { GroundedClaim } from "@/lib/analyst/freeform/answer";
+import {
+  ANALYST_STAGES,
+  NDJSON_TYPE,
+  parseStreamEvent,
+  stageLabel,
+  type AnalystDomain,
+  type AnalystStage,
+} from "@/lib/analyst/freeform/progress";
+import { questionKey } from "@/lib/analyst/freeform/suggestions";
 import { formatPeriodLabel } from "@/lib/history/period-label";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +52,8 @@ type FreeformResult = {
   matchedEntity?: { type: "goal" | "debt"; name: string };
   /** Owner-only display titles (focus tasks); never sent to the model. */
   labels?: Record<string, { title: string; date: string | null }>;
+  /** Fixed follow-up questions from the tools that ran; no record text. */
+  suggestions?: string[];
 };
 
 /** The owner's own name for an evidence item, or its model-safe metric. */
@@ -70,6 +83,9 @@ type Turn = {
   result: FreeformResult | null;
   error: string;
   pending: boolean;
+  /** Furthest live stage reached while pending, with the domains read. */
+  stage: AnalystStage;
+  domains: AnalystDomain[];
 };
 
 /** Starter questions; each goes through the same verified Analyst flow. */
@@ -470,6 +486,119 @@ function AnswerBody({ turn }: { turn: Turn }) {
   );
 }
 
+const baseStages: AnalystStage[] = [
+  "understanding",
+  "reading",
+  "writing",
+  "checking",
+];
+
+/** The real stages as the route reports them, as a short checklist. */
+function ProgressChecklist({ turn }: { turn: Turn }) {
+  const steps =
+    turn.stage === "repairing"
+      ? [...baseStages, "repairing" as const]
+      : baseStages;
+  const active = steps.indexOf(turn.stage);
+  return (
+    <div className="px-5 pb-6 sm:px-6" role="status">
+      <ol aria-label="Analyst progress" className="space-y-1">
+        {steps.map((step, index) => {
+          const state =
+            index < active ? "done" : index === active ? "active" : "upcoming";
+          return (
+            <li
+              key={step}
+              data-state={state}
+              aria-current={state === "active" ? "step" : undefined}
+              className={cn(
+                "flex min-h-9 items-center gap-3 text-sm transition-colors duration-300",
+                state === "upcoming" && "text-muted-foreground/60",
+                state === "done" && "text-muted-foreground",
+                state === "active" &&
+                  "text-foreground motion-safe:animate-analyst-rise font-medium",
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "relative grid size-5 shrink-0 place-items-center rounded-full",
+                  state === "done" && "bg-primary/12 text-primary",
+                  state === "active" && "bg-primary/15",
+                  state === "upcoming" && "border-border border",
+                )}
+              >
+                {state === "done" ? (
+                  <Check className="size-3" strokeWidth={3} />
+                ) : state === "active" ? (
+                  <>
+                    <span className="bg-primary/35 absolute inset-0 rounded-full motion-safe:animate-ping" />
+                    <span className="bg-primary relative size-2 rounded-full" />
+                  </>
+                ) : null}
+              </span>
+              <span className="min-w-0 leading-5">
+                {stageLabel(step, step === "reading" ? turn.domains : [])}
+                {state === "active" && <span aria-hidden="true">…</span>}
+                {state === "done" && <span className="sr-only"> (done)</span>}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+      <div
+        className="mt-4 space-y-2.5 motion-safe:animate-pulse"
+        aria-hidden="true"
+      >
+        <div className="bg-muted h-2.5 w-11/12 rounded-full" />
+        <div className="bg-muted h-2.5 w-3/5 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
+/** Tappable follow-ups under the latest answered or fallback turn. */
+function FollowUps({
+  suggestions,
+  disabled,
+  onAsk,
+}: {
+  suggestions: string[];
+  disabled: boolean;
+  onAsk: (text: string) => void;
+}) {
+  if (suggestions.length === 0) return null;
+  return (
+    <div aria-label="Suggested follow-ups" role="group" className="pl-1">
+      <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.1em] uppercase">
+        Ask next
+      </p>
+      <ul className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        {suggestions.map((text, index) => (
+          <li
+            key={text}
+            className="motion-safe:animate-analyst-rise min-w-0"
+            style={{ animationDelay: `${index * 60}ms` }}
+          >
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => onAsk(text)}
+              className="group border-border bg-card hover:border-primary/40 hover:bg-primary/5 focus-visible:ring-ring flex min-h-11 w-full items-center gap-2 rounded-2xl border px-3.5 py-2 text-left text-sm leading-5 shadow-[0_6px_18px_rgb(7_10_15/0.06)] transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60 sm:w-auto sm:rounded-full"
+            >
+              <CornerDownRight
+                aria-hidden="true"
+                className="text-muted-foreground group-hover:text-primary size-3.5 shrink-0 transition-colors"
+              />
+              <span className="min-w-0">{text}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function AnswerCard({ turn }: { turn: Turn }) {
   const verified = turn.result?.status === "answered";
   return (
@@ -512,14 +641,7 @@ function AnswerCard({ turn }: { turn: Turn }) {
         )}
       </header>
       {turn.pending ? (
-        <div className="px-5 pb-6 sm:px-6" role="status">
-          <p className="text-muted-foreground text-sm">Reading your records…</p>
-          <div className="mt-4 space-y-2.5 motion-safe:animate-pulse">
-            <div className="bg-muted h-3 w-11/12 rounded-full" />
-            <div className="bg-muted h-3 w-4/5 rounded-full" />
-            <div className="bg-muted h-3 w-3/5 rounded-full" />
-          </div>
-        </div>
+        <ProgressChecklist turn={turn} />
       ) : turn.error ? (
         <p role="alert" className="text-destructive px-5 pb-5 text-sm sm:px-6">
           {turn.error}
@@ -705,6 +827,39 @@ function Composer({
   );
 }
 
+/** Applies stage lines as they arrive and returns the final result body. */
+async function readStream(
+  response: Response,
+  onStage: (stage: AnalystStage, domains?: AnalystDomain[]) => void,
+) {
+  const reader = response.body?.getReader();
+  if (!reader) return null;
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let result: unknown = null;
+  const take = (line: string) => {
+    if (!line.trim()) return;
+    const event = parseStreamEvent(line);
+    if (!event) return;
+    if (event.type === "result") result = event.body;
+    else
+      onStage(
+        event.stage,
+        event.stage === "reading" ? event.domains : undefined,
+      );
+  };
+  for (;;) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    lines.forEach(take);
+    if (done) break;
+  }
+  take(buffer);
+  return result as { status?: string; error?: string } | null;
+}
+
 /** One conversation: suggested starters, a thread of answers and one composer. */
 export function FreeformWorkspace({
   goals = [],
@@ -723,6 +878,7 @@ export function FreeformWorkspace({
   const [consent, setConsent] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const pending = turns.some((turn) => turn.pending);
+  const asked = new Set(turns.map((turn) => questionKey(turn.question)));
 
   useEffect(() => {
     const saved = readConsent(userId);
@@ -781,6 +937,8 @@ export function FreeformWorkspace({
         result: null,
         error: "",
         pending: true,
+        stage: "understanding",
+        domains: [],
       },
     ]);
     setQuestion("");
@@ -790,10 +948,24 @@ export function FreeformWorkspace({
           turn.id === id ? { ...turn, ...patch, pending: false } : turn,
         ),
       );
+    // Stages only move forward; a late or repeated event never rewinds.
+    const advance = (stage: AnalystStage, domains?: AnalystDomain[]) =>
+      setTurns((current) =>
+        current.map((turn) =>
+          turn.id === id &&
+          turn.pending &&
+          ANALYST_STAGES.indexOf(stage) >= ANALYST_STAGES.indexOf(turn.stage)
+            ? { ...turn, stage, ...(domains && { domains }) }
+            : turn,
+        ),
+      );
     try {
       const response = await fetch("/api/analyst/freeform", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: `${NDJSON_TYPE}, application/json`,
+        },
         body: JSON.stringify({
           question: trimmed,
           ...(focusType === "goal" && focusId && { goalId: focusId }),
@@ -802,10 +974,12 @@ export function FreeformWorkspace({
           dataSharingAcknowledged: true,
         }),
       });
-      const body = await response.json();
-      if (body.status) update({ result: body as FreeformResult });
+      const body = response.headers.get("content-type")?.includes(NDJSON_TYPE)
+        ? await readStream(response, advance)
+        : await response.json();
+      if (body?.status) update({ result: body as FreeformResult });
       else
-        update({ error: body.error ?? "Analyst is unavailable. Try again." });
+        update({ error: body?.error ?? "Analyst is unavailable. Try again." });
     } catch {
       update({ error: "Analyst is unavailable. Try again." });
     }
@@ -962,6 +1136,17 @@ export function FreeformWorkspace({
                   </p>
                 </div>
                 <AnswerCard turn={turn} />
+                {index === turns.length - 1 &&
+                  (turn.result?.status === "answered" ||
+                    turn.result?.status === "fallback") && (
+                    <FollowUps
+                      suggestions={(turn.result.suggestions ?? [])
+                        .filter((text) => !asked.has(questionKey(text)))
+                        .slice(0, 3)}
+                      disabled={pending || !consent}
+                      onAsk={(text) => void ask(text)}
+                    />
+                  )}
               </li>
             ))}
           </ol>

@@ -34,6 +34,16 @@ Phase 9 read-only tools. It cannot execute actions or arbitrary queries.
 - **Readable dates:** ISO dates in claim text are shown as "Sep 27, 2026".
 - **Composer:** in a conversation the pinned composer is one row (focus icon,
   question, new conversation, send); the data-sharing status sits below it.
+- **Live progress:** while Analyst works, the pending answer card shows the real
+  stages as a short checklist inside `role="status"`: "Understanding your
+  question", "Reading tasks and signals" (the domains of the tools the planner
+  chose), "Writing the explanation", "Checking every figure", and "Correcting an
+  answer that failed checks" when the one repair attempt runs. Steps only move
+  forward, and the entry animation uses `motion-safe:`.
+- **Suggested follow-ups:** under the latest answered or fallback turn, two or
+  three "Ask next" chips ask a follow-up straight away (consent is already
+  given), with the usual `history`. Chips on older turns are hidden, and a
+  question already asked in the conversation is never offered.
 
 ## Request and evidence boundary
 
@@ -191,3 +201,58 @@ $env:ATLAS_FREEFORM_LIVE_EVALS = '1'
 npx vitest run src/lib/analyst/freeform/answer.live.eval.test.ts
 Remove-Item Env:ATLAS_FREEFORM_LIVE_EVALS
 ```
+
+## Live progress stream (2026-09-27)
+
+`POST /api/analyst/freeform` streams progress when the request sends
+`Accept: application/x-ndjson`. Other callers, including existing tests and e2e
+mocks, still get one JSON body. Validation, consent, quota and configuration
+errors are returned as plain JSON before any stream starts.
+
+The stream is one JSON object per line:
+
+```
+{"type":"stage","stage":"understanding"}
+{"type":"stage","stage":"reading","domains":["tasks","signals"]}
+{"type":"stage","stage":"writing"}
+{"type":"stage","stage":"checking"}
+{"type":"stage","stage":"repairing"}
+{"type":"result","status":200,"body":{ ...the JSON response... }}
+```
+
+- Stages come from an optional `onStage` hook
+  (`src/lib/analyst/freeform/progress.ts`). `runAnalystQueryPlanner` reports
+  `understanding` and then `reading` with the domains of the planned calls.
+  `requestGroundedAnswer` reports `writing`, `checking` after the first answer,
+  and `repairing` before the repair attempt. Without the hook, both functions
+  and the route behave exactly as before.
+- Domains come from a fixed vocabulary keyed by tool name and metric key
+  (`spending`, `tasks`, `goals`, …). No question text, record title or figure
+  ever reaches a progress event. The client also drops any stage or domain it
+  does not know.
+- The last line is `result`: the same body and HTTP status the JSON response
+  would have had. It is sent after the quota is finished.
+- **Client disconnect:** leaving mid-stream only stops the writes. The run is
+  kept alive with `after()` and continues to its real outcome. The quota is
+  finished exactly once in the run's `finally`, whether the client stays,
+  leaves or the run fails. The run stays inside the route's 60-second
+  `maxDuration`, the same as the JSON path, because the planner and answer
+  steps keep their own time limits.
+
+## Suggested follow-ups (2026-09-27)
+
+Answered and fallback responses include `suggestions`: up to three follow-up
+questions from `src/lib/analyst/freeform/suggestions.ts`. They are picked
+deterministically from the tools that ran, taking one idea per domain in turn
+(for example, spending gives "How does this compare to last month?" and runway
+gives "What if my monthly income falls by 20%?"), and topped up with general
+questions. No model call is made.
+
+- Every question is fixed text of at most 80 characters, with no recorded
+  figure, amount, date or record text. The only digits are the stated what-if
+  percentages, which are assumptions, not recorded data.
+- Every question can be planned without a literal record ID. The planner asks
+  for clarification when an entity ID is missing, so questions such as "Which
+  goals are these tasks linked to?" are left out.
+- The route skips the question just asked and the questions in `history`. The
+  UI also skips any question already asked in the conversation.

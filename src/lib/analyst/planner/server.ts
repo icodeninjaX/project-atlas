@@ -16,6 +16,10 @@ import {
   type PlannerRequestResult,
 } from "./contracts";
 import { requestAnalystPlan } from "./provider";
+import {
+  domainsForCalls,
+  type AnalystStageHook,
+} from "@/lib/analyst/freeform/progress";
 
 export type PlannerCallExecution = {
   callId: string;
@@ -286,8 +290,14 @@ export async function executeAnalystPlan(
 
 export async function runAnalystQueryPlanner(
   question: unknown,
-  options: { previousQuestion?: string } = {},
+  options: {
+    previousQuestion?: string;
+    /** Reports planning and the domains about to be read; never record text. */
+    onStage?: AnalystStageHook;
+  } = {},
 ): Promise<PlannerRunResult> {
+  const { onStage, ...planOptions } = options;
+  onStage?.({ type: "stage", stage: "understanding" });
   const started = new Date();
   const authTimeout = Symbol("auth-timeout");
   const authController = new AbortController();
@@ -325,8 +335,14 @@ export async function runAnalystQueryPlanner(
   if (user === authTimeout) return boundaryError("timeout", started);
   if (!user || user.error || !user.data.user)
     return boundaryError("unauthenticated", started);
-  const planning = await requestAnalystPlan(question, options);
+  const planning = await requestAnalystPlan(question, planOptions);
   if (planning.status !== "planned") return planning;
+  if (planning.plan.outcome === "plan")
+    onStage?.({
+      type: "stage",
+      stage: "reading",
+      domains: domainsForCalls(planning.plan.calls),
+    });
   return executeAnalystPlan(planning.plan, {
     plannerMetadata: planning.metadata,
   });
