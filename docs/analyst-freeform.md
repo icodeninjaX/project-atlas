@@ -85,8 +85,9 @@ a Current item with an Option item). In that case the model gets one repair
 attempt: the same request plus its rejected output and the rule each claim
 broke, for example "contains a number or date that is not a cited value". Only
 the rule names are logged (`Grounded answer rejected` / `claims dropped`), never
-claim text, questions or evidence. Numbers that are the day of a cited period's
-start or end date ("September 1 to September 24") are accepted. The freeform and
+claim text, questions or evidence. A day number is accepted only inside a month-day
+date ("September 1", "Sept 1–24") whose month and day match a cited period's
+start or end; a bare day number is never treated as a verified figure. The freeform and
 weekly insight routes allow 60 seconds for planning, retrieval and a repaired
 answer.
 

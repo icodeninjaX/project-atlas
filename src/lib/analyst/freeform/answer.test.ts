@@ -416,6 +416,27 @@ describe("per-claim review", () => {
       { index: 2, reason: "unhedged_interpretation" },
     ]);
   });
+  it("allows cited period days only inside month-day dates", () => {
+    const one = (text: string) =>
+      validateGroundedAnswer(
+        {
+          claims: [
+            {
+              kind: "observation",
+              text,
+              evidenceIds: ["money.current"],
+              comparison: null,
+            },
+          ],
+        },
+        evidence,
+      );
+    expect(one("Recorded expenses were ₱123.45 for Sept 1–24.")).not.toBeNull();
+    // A bare period day is not a count, and an uncited day is not a period.
+    expect(one("There were 24 recorded expense transactions.")).toBeNull();
+    expect(one("Recorded expenses were ₱123.45 by September 10.")).toBeNull();
+    expect(one("Recorded expenses were ₱123.45 by October 24.")).toBeNull();
+  });
   it("allows day numbers of cited period dates", () => {
     expect(
       validateGroundedAnswer(
