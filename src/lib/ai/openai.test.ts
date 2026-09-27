@@ -103,3 +103,24 @@ describe("shared structured OpenAI call", () => {
     });
   });
 });
+
+describe("reasoning effort override", () => {
+  it("applies only to reasoning models", () => {
+    const body = (model: string) =>
+      JSON.parse(
+        structuredRequestBody({
+          model,
+          schemaName: "t",
+          schema: {},
+          messages: [],
+          maxOutputTokens: 1,
+          reasoningEffort: "low",
+        }),
+      );
+    expect(body("gpt-5.4-mini-2026-03-17").reasoning_effort).toBe("low");
+    expect(body("gpt-4o-mini-2024-07-18")).toMatchObject({ temperature: 0 });
+    expect(body("gpt-4o-mini-2024-07-18")).not.toHaveProperty(
+      "reasoning_effort",
+    );
+  });
+});

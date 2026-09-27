@@ -120,6 +120,7 @@ export async function requestAnalystPlan(
   const requestBody = structuredRequestBody({
     model,
     maxOutputTokens: PLANNER_LIMITS.outputTokens,
+    reasoningEffort: "low",
     schemaName: "atlas_analyst_query_plan",
     schema: plannerResponseJsonSchema(),
     messages: [

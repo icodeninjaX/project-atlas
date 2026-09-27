@@ -39,11 +39,14 @@ export type StructuredCallRequest = {
   schema: unknown;
   messages: Array<{ role: "system" | "user"; content: string }>;
   maxOutputTokens: number;
+  /** Overrides the model's default effort; ignored for non-reasoning models. */
+  reasoningEffort?: "none" | "low" | "medium";
 };
 
 /** The request body, exposed so callers can bound its size before sending. */
 export function structuredRequestBody(request: StructuredCallRequest) {
-  const effort = reasoningEffortFor(request.model);
+  const defaultEffort = reasoningEffortFor(request.model);
+  const effort = defaultEffort && (request.reasoningEffort ?? defaultEffort);
   return JSON.stringify({
     model: request.model,
     store: false,

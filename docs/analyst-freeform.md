@@ -12,8 +12,9 @@ data-sharing acknowledgement. It reserves one request from the existing Analyst
 allowance before any planner or answer model call. Migration
 `20260924161640_analyst_freeform_quota.sql` adds `freeform` to the ledger's
 analysis types and typed reservation RPC; the same hourly, daily and site-wide
-limits apply. The reservation model is the pinned `gpt-4o-mini-2024-07-18` used
-by both planner and answer generation. No prompt, question, evidence or answer is
+limits apply. The reservation records the answer model, the pinned
+`gpt-4o-mini-2024-07-18`; the planner runs on `gpt-5.4-mini-2026-03-17` (see
+[the planner doc](analyst-query-planner.md)). No prompt, question, evidence or answer is
 stored in the ledger.
 
 The planner authenticates again and invokes only approved tools. Every tool
