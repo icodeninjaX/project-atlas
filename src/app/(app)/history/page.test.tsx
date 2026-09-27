@@ -40,7 +40,7 @@ describe("recorded history page", () => {
     const container = document.createElement("div");
     container.innerHTML = html;
     const period = container.querySelector("table tbody tr th");
-    expect(period?.textContent).toContain("2026-09-01 – 2026-09-30");
-    expect(period?.textContent).toContain("Counted 2026-09-03 – 2026-09-24");
+    expect(period?.textContent).toContain("Sep 2026");
+    expect(period?.textContent).toContain("Counted Sep 3–24");
   });
 });

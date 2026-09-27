@@ -49,6 +49,11 @@ per page, and no failed routes.
 2. **History tables on mobile.** Period cells wrap to 4 lines
    (`2026-` / `09-01` / `–` …) and the Coverage column is cut off. Use short
    labels (`Sep 2026`) or stacked cards under `sm`.
+   **Done:** periods read `Sep 2026`, `Sep 21–27`, or `Sep 26` (the year shows
+   in the window line), empty values show a dash (screen readers still hear
+   "No supported history"), and coverage is a colored pill. Tables no longer
+   scroll sideways at 390px; at 320px, rows with five-digit peso amounts still
+   scroll up to ~33px inside their focusable region.
 3. **Header actions duplicate the Money sub-nav.** Transactions ("Accounts",
    "Record transfer"), Transfers ("Money movement", "Accounts"), Budget
    (3 buttons, 3rd wraps full-width), and Runway ("Accounts", "Budget") repeat
