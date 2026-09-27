@@ -112,6 +112,12 @@ per page, and no failed routes.
 9. Capture: unstyled native file input ("Choose File No file chosen"), and
    "Extract text" is enabled before a file is chosen. Manual-form links are a
    dense row of underlined text; chips or buttons would scan better.
+   **Done:** the native file box is replaced by a styled drop zone (tap or
+   click to choose, drop a file on desktop) that then shows the file name,
+   size, and a Remove button; the input itself stays for labels and the
+   mobile Camera/Files sheet. "Extract text" is disabled until a file is
+   chosen. Manual forms are an icon grid, and "Task" now opens the task form
+   directly (`/tasks?create=true`).
 10. Analyst: dense helper copy and model names (`GPT-4o mini`) up front.
     Move provider/model details into a disclosure.
 11. Onboarding shows the app's bottom navigation and header; a focused setup

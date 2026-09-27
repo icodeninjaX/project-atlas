@@ -84,6 +84,50 @@ afterEach(() => {
 });
 
 describe("Capture 2.0 review", () => {
+  it("enables extraction only after a file is chosen, and can remove it", () => {
+    render(
+      <CaptureBatchWorkspace
+        accounts={[]}
+        categories={[]}
+        models={[{ id: "model-1", label: "Model", pool: "small" }]}
+        defaultModel="model-1"
+      />,
+    );
+    const extract = screen.getByRole("button", { name: "Extract text" });
+    expect(extract).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /Choose a file/ }),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Photo, document, or voice note"), {
+      target: { files: [new File(["receipt"], "receipt.png")] },
+    });
+    expect(screen.getByText("receipt.png")).toBeInTheDocument();
+    expect(extract).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove receipt.png" }));
+    expect(screen.queryByText("receipt.png")).not.toBeInTheDocument();
+    expect(extract).toBeDisabled();
+  });
+
+  it("offers every manual form as a labelled link", () => {
+    render(
+      <CaptureBatchWorkspace
+        accounts={[]}
+        categories={[]}
+        models={[{ id: "model-1", label: "Model", pool: "small" }]}
+        defaultModel="model-1"
+      />,
+    );
+    expect(screen.getByRole("link", { name: "Task" })).toHaveAttribute(
+      "href",
+      "/tasks?create=true",
+    );
+    expect(
+      screen.getByRole("link", { name: "Income or expense" }),
+    ).toHaveAttribute("href", "/money/transactions?create=true");
+  });
+
   it("stops files above the hosting upload limit before transfer", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

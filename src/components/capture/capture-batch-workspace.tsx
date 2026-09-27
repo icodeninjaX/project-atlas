@@ -1,8 +1,19 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
+import {
+  ArrowLeftRight,
+  BookOpen,
+  BriefcaseBusiness,
+  ClipboardCheck,
+  FileUp,
+  Landmark,
+  ReceiptText,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   confirmCaptureBatchItemAction,
   interpretCaptureBatchAction,
@@ -60,6 +71,25 @@ function Field({
   );
 }
 
+const manualForms = [
+  {
+    href: "/money/transactions?create=true",
+    label: "Income or expense",
+    icon: ReceiptText,
+  },
+  { href: "/money/transfers", label: "Account transfer", icon: ArrowLeftRight },
+  { href: "/debts", label: "Debt payment", icon: Landmark },
+  { href: "/tasks?create=true", label: "Task", icon: ClipboardCheck },
+  { href: "/career", label: "Career application", icon: BriefcaseBusiness },
+  { href: "/knowledge", label: "Knowledge item", icon: BookOpen },
+] as const;
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export function CaptureBatchWorkspace({
   accounts,
   categories,
@@ -87,6 +117,23 @@ export function CaptureBatchWorkspace({
   const [extracting, setExtracting] = useState(false);
   const [sourceMessage, setSourceMessage] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [chosenFile, setChosenFile] = useState<{
+    name: string;
+    size: number;
+  } | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  function syncChosenFile() {
+    const file = fileRef.current?.files?.[0];
+    setChosenFile(file ? { name: file.name, size: file.size } : null);
+    setSourceMessage("");
+  }
+
+  function clearChosenFile() {
+    if (fileRef.current) fileRef.current.value = "";
+    setChosenFile(null);
+    setSourceMessage("");
+  }
   const items =
     state.batchId && state.batchId !== visibleBatch ? state.items : [];
   const pending = items.filter((item) => item.id && !results[item.id]);
@@ -125,6 +172,7 @@ export function CaptureBatchWorkspace({
           : "Text extracted. Correct anything misread before previewing.",
       );
       if (fileRef.current) fileRef.current.value = "";
+      setChosenFile(null);
     } catch {
       setSourceMessage(
         "Could not read that file. Try again or type the details.",
@@ -217,20 +265,85 @@ export function CaptureBatchWorkspace({
           <label htmlFor="capture-file" className="block text-sm font-semibold">
             Photo, document, or voice note
           </label>
+          {/* The native input stays for labels, forms and the mobile
+              Camera/Files sheet; the drop zone below is what people use. */}
           <input
             ref={fileRef}
             id="capture-file"
             type="file"
             accept=".png,.jpg,.jpeg,.webp,.pdf,.txt,.mp3,.m4a,.mp4,.wav,.webm,image/*,audio/*"
-            className="border-border bg-background block w-full rounded-xl border p-2 text-sm"
+            aria-hidden="true"
+            tabIndex={-1}
+            className="sr-only"
+            onChange={syncChosenFile}
           />
+          {chosenFile ? (
+            <div className="border-border bg-background flex items-center gap-3 rounded-xl border p-3">
+              <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-lg">
+                <FileUp aria-hidden="true" className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">
+                  {chosenFile.name}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {formatFileSize(chosenFile.size)}
+                  {chosenFile.size > MAX_CAPTURE_FILE_BYTES
+                    ? " · over the 4 MB limit"
+                    : ""}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Remove ${chosenFile.name}`}
+                disabled={extracting}
+                onClick={clearChosenFile}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setDragging(false);
+                if (!fileRef.current || !event.dataTransfer.files.length)
+                  return;
+                fileRef.current.files = event.dataTransfer.files;
+                syncChosenFile();
+              }}
+              className={cn(
+                "border-border bg-background hover:border-primary/60 hover:bg-primary/5 focus-visible:ring-ring flex w-full flex-col items-center gap-2 rounded-xl border border-dashed px-4 py-6 text-center transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                dragging && "border-primary bg-primary/5",
+              )}
+            >
+              <span className="bg-primary/10 text-primary grid size-10 place-items-center rounded-lg">
+                <FileUp aria-hidden="true" className="size-4" />
+              </span>
+              <span className="text-sm font-semibold">Choose a file</span>
+              <span className="text-muted-foreground text-xs">
+                <span className="hidden sm:inline">or drop it here · </span>
+                Image, PDF, text, or audio
+              </span>
+            </button>
+          )}
           <p className="text-muted-foreground text-xs">
             On mobile, choose Camera or Files. Files up to 4 MB. ATLAS does not
             store the original file.
           </p>
           <Button
             type="button"
-            disabled={extracting || interpreting}
+            variant={chosenFile ? "default" : "secondary"}
+            disabled={!chosenFile || extracting || interpreting}
             onClick={extractFile}
           >
             {extracting ? "Reading file…" : "Extract text"}
@@ -401,28 +514,20 @@ export function CaptureBatchWorkspace({
 
       <div className="border-border bg-muted/30 rounded-2xl border p-4 sm:p-6">
         <h2 className="text-sm font-semibold">Use a manual form</h2>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-          <Link
-            href="/money/transactions?create=true"
-            className="text-primary underline"
-          >
-            Income or expense
-          </Link>
-          <Link href="/money/transfers" className="text-primary underline">
-            Account transfer
-          </Link>
-          <Link href="/debts" className="text-primary underline">
-            Debt payment
-          </Link>
-          <Link href="/tasks" className="text-primary underline">
-            Task
-          </Link>
-          <Link href="/career" className="text-primary underline">
-            Career application
-          </Link>
-          <Link href="/knowledge" className="text-primary underline">
-            Knowledge item
-          </Link>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {manualForms.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className="border-border bg-card hover:border-primary/50 hover:bg-primary/5 focus-visible:ring-ring flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <Icon
+                aria-hidden="true"
+                className="text-primary size-4 shrink-0"
+              />
+              {label}
+            </Link>
+          ))}
         </div>
       </div>
     </div>
