@@ -42,6 +42,36 @@ describe("follow-up suggestions", () => {
       "What if my monthly income falls by 20%?",
     ]);
   });
+  it("offer one idea per metric of a two-metric history or pattern call", () => {
+    const suggestions = suggestFollowUps({
+      question: "Did my income and weekly review scores move together?",
+      calls: [
+        {
+          tool: "getPatternAssociation",
+          input: { metrics: ["income_centavos", "review_overall_score"] },
+        },
+      ],
+    });
+    expect(suggestions.slice(0, 2)).toEqual([
+      "How has my income changed over the last six months?",
+      "How have my weekly review scores changed?",
+    ]);
+    expect(suggestions.join(" ")).not.toMatch(/task completions/);
+    expect(
+      suggestFollowUps({
+        question: "Compare money and knowledge",
+        calls: [
+          {
+            tool: "getCrossDomainHistory",
+            input: { metrics: ["expense_centavos", "knowledge_reviews"] },
+          },
+        ],
+      }).slice(0, 2),
+    ).toEqual([
+      "How does this compare to last month?",
+      "How many knowledge reviews did I complete each month?",
+    ]);
+  });
   it("skips the question just asked and earlier ones", () => {
     const suggestions = suggestFollowUps({
       question: "what if my monthly income falls by 20%",

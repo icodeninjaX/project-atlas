@@ -89,6 +89,10 @@ const byMetric: Record<string, string[]> = {
   expense_centavos: spending,
   debt_payments_centavos: debts,
   task_completions: tasks,
+  knowledge_reviews: [
+    "How many knowledge reviews did I complete each month?",
+    "What should I focus on this week?",
+  ],
   review_overall_score: reviews,
 };
 
@@ -114,17 +118,23 @@ export function suggestFollowUps(input: {
       questionKey,
     ),
   );
-  const lists = input.calls.map((call) => {
-    const args = (call.input ?? {}) as { kind?: unknown; metric?: unknown };
+  // One list per domain read: a two-metric history or pattern call offers
+  // follow-ups for each of its metrics, not a fixed history list.
+  const lists = input.calls.flatMap((call) => {
+    const args = (call.input ?? {}) as {
+      kind?: unknown;
+      metric?: unknown;
+      metrics?: unknown;
+    };
     if (call.tool === "getMoneySummary" && args.kind === "income")
-      return income;
-    if (
-      call.tool === "getHistoricalMetricSeries" &&
-      typeof args.metric === "string" &&
-      byMetric[args.metric]
-    )
-      return byMetric[args.metric]!;
-    return byTool[call.tool] ?? [];
+      return [income];
+    const metrics = [
+      ...(typeof args.metric === "string" ? [args.metric] : []),
+      ...(Array.isArray(args.metrics) ? args.metrics : []),
+    ]
+      .map((metric) => byMetric[String(metric)])
+      .filter((list): list is string[] => Boolean(list));
+    return metrics.length > 0 ? metrics : [byTool[call.tool] ?? []];
   });
   // Round-robin, so a broad answer offers one idea per domain it read.
   const candidates: string[] = [];
