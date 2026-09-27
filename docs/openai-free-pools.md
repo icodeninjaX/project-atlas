@@ -33,7 +33,7 @@ it, and what to change when the account's tier or the offer changes.
 - **Exact model IDs only.** An alias can move to a snapshot that is not on the
   list, so pooled features send exact IDs. The Analyst quota function accepts
   only the seven chat models.
-- **A daily meter per pool** (`supabase/migrations/20260927160000_openai_free_pools.sql`):
+- **A daily meter per pool** (`supabase/migrations/20260927155626_openai_free_pools.sql`):
   - `ai_pool_limits` holds each pool's daily tokens and ATLAS's stop ratio
     (0.9, so ATLAS stops at 225K and 2.25M).
   - Before every pooled call, `meteredOpenAIFetch` (`src/lib/ai/pool-meter.ts`)
