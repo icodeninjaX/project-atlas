@@ -20,7 +20,11 @@ const page = (results: unknown[], more?: string) =>
     next_page: more ?? null,
   });
 
+let clock = Date.now();
 beforeEach(() => {
+  // Each test runs two minutes after the last, outside any earlier backoff.
+  clock += 120_000;
+  vi.useFakeTimers({ now: clock, shouldAdvanceTime: true });
   process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
   delete process.env.OPENAI_PROJECT_ID;
   admin.configured = true;
@@ -28,6 +32,7 @@ beforeEach(() => {
   admin.rpc.mockResolvedValue({ error: null });
 });
 afterEach(() => {
+  vi.useRealTimers();
   delete process.env.OPENAI_ADMIN_KEY;
   delete process.env.OPENAI_PROJECT_ID;
 });
@@ -236,5 +241,58 @@ describe("OpenAI usage sync", () => {
     const fetch = vi.fn();
     expect(await refreshProviderUsage({ fetch, now, pollMs: 1 })).toBe(false);
     expect(fetch).not.toHaveBeenCalled();
+  });
+  it("keeps waiting through a failed check instead of treating it as released", async () => {
+    const fresh = new Date().toISOString();
+    const polls: Array<() => unknown> = [
+      () => ({ data: null, error: { message: "timeout" } }),
+      () => {
+        throw new Error("network");
+      },
+      () => ({ data: { syncedAt: fresh, claimActive: false }, error: null }),
+    ];
+    admin.rpc.mockImplementation(async (name: string) =>
+      name === "claim_ai_pool_provider_sync"
+        ? { data: false, error: null }
+        : name === "ai_pool_provider_sync_state"
+          ? polls.shift()!()
+          : { error: null },
+    );
+    expect(await refreshProviderUsage({ fetch: vi.fn(), now, pollMs: 1 })).toBe(
+      true,
+    );
+    expect(polls).toHaveLength(0);
+  });
+  it("falls back to the ledger only once the wait for a claim runs out", async () => {
+    admin.rpc.mockImplementation(async (name: string) =>
+      name === "claim_ai_pool_provider_sync"
+        ? { data: false, error: null }
+        : { data: null, error: { message: "down" } },
+    );
+    expect(
+      await refreshProviderUsage({
+        fetch: vi.fn(),
+        now,
+        pollMs: 1,
+        waitMs: 20,
+      }),
+    ).toBe(false);
+  });
+  it("waits a minute after a failed refresh before asking OpenAI again", async () => {
+    admin.rpc.mockImplementation(async (name: string) =>
+      name === "claim_ai_pool_provider_sync"
+        ? { data: true, error: null }
+        : { error: null },
+    );
+    const failing = vi
+      .fn()
+      .mockResolvedValue(new Response("{}", { status: 401 }));
+    expect(await refreshProviderUsage({ fetch: failing, now })).toBe(false);
+    expect(await refreshProviderUsage({ fetch: failing, now })).toBe(false);
+    expect(failing).toHaveBeenCalledTimes(1);
+    vi.setSystemTime(Date.now() + 61_000);
+    const working = vi.fn().mockResolvedValue(page([]));
+    expect(await refreshProviderUsage({ fetch: working, now })).toBe(true);
+    expect(working).toHaveBeenCalledTimes(1);
   });
 });

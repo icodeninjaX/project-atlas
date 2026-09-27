@@ -91,6 +91,11 @@ records it per pool (`supabase/migrations/20260927170000_openai_provider_usage.s
   when it finishes. The others wait until its figure lands or its claim
   ends (released, or lapsed after 15 seconds), then keep their ledger
   decision if no fresh figure arrived.
+- A failed check on another instance's claim keeps the caller waiting; it
+  only gives up when a fresh figure lands, the claim is released, or the wait
+  outlasts the claim. After a failed refresh (a revoked admin key, say), each
+  server instance keeps the ledger decision for a minute before asking
+  OpenAI again.
 - A replaced reservation must be released first; if the release fails,
   nothing is sent and the first reservation stays counted.
 - `OPENAI_PROJECT_ID` (optional) narrows the count to ATLAS's project. Without

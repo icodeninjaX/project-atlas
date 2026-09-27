@@ -139,6 +139,10 @@ export async function syncProviderUsage(
 }
 
 let inflight: Promise<boolean> | null = null;
+// After a failed refresh (a revoked key, say), requests keep the ledger
+// decision for a minute instead of each waiting on OpenAI again.
+const FAILURE_BACKOFF_MS = 60_000;
+let failedAt = 0;
 
 /**
  * Refreshes OpenAI's figure once for everyone waiting on it. Callers in this
@@ -155,9 +159,15 @@ export function refreshProviderUsage(
     waitMs?: number;
   } = {},
 ): Promise<boolean> {
-  inflight ??= coordinatedRefresh(options).finally(() => {
-    inflight = null;
-  });
+  if (Date.now() - failedAt < FAILURE_BACKOFF_MS) return Promise.resolve(false);
+  inflight ??= coordinatedRefresh(options)
+    .then((fresh) => {
+      if (!fresh) failedAt = Date.now();
+      return fresh;
+    })
+    .finally(() => {
+      inflight = null;
+    });
   return inflight;
 }
 
@@ -189,8 +199,12 @@ async function coordinatedRefresh(options: {
       await new Promise((resolve) =>
         setTimeout(resolve, options.pollMs ?? 400),
       );
-      const { data } = await admin.rpc("ai_pool_provider_sync_state");
-      const state = (data ?? {}) as {
+      // A failed check says nothing about the claim, so keep waiting.
+      const polled = await Promise.resolve(
+        admin.rpc("ai_pool_provider_sync_state"),
+      ).catch(() => null);
+      if (!polled || polled.error || !polled.data) continue;
+      const state = polled.data as {
         syncedAt?: unknown;
         claimActive?: unknown;
       };
