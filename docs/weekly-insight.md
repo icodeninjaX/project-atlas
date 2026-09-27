@@ -26,9 +26,35 @@ progress is never compared with a full one.
 5. The card shows the claims (peso figures masked in privacy mode), the weekly
    facts and their limitations. Nothing is stored.
 
-## Why on demand
+## Automatic last-week insight
 
-A scheduled job would send personal totals to OpenAI without a per-request
-acknowledgement and would need a table for stored notes. The on-demand card
-keeps the Analyst's consent model. A scheduled version can reuse
-`gatherWeeklyInsightEvidence` if an opt-in setting and storage are added later.
+The card also has a **Last week** section with an opt-in checkbox,
+**Prepare last week's insight automatically**, stored as
+`user_preferences.weekly_insight_auto` (off by default). Turning it on is
+standing consent to send last week's totals to OpenAI once per week.
+
+When it is on, the first visit to Weekly reviews in a new week calls
+`POST /api/reviews/insight` with `{ "mode": "previous" }`. The route compares
+the last full Monday–Sunday week with the week before, using the same fixed tool
+calls and verified answer step, and stores the result in `weekly_insights`
+(one row per owner and week). Later visits read the stored row with no model
+call and no quota use. An incomplete week is stored as `insufficient` so it is
+not retried every visit; a provider failure is not stored, so the next visit
+retries it.
+
+It runs in the owner's own session rather than a cron job. The historical
+metrics RPC derives the owner from `auth.uid()` and keeps RLS in force, so a
+background job would need a new service-role function that bypasses RLS.
+Generation happens when the owner opens the page, with no click, at most once
+per week.
+
+### Database
+
+Migration `20260927070000_weekly_insights.sql` adds the preference column and
+the `weekly_insights` table: owner-only select, insert and delete under forced
+RLS, no update, a Monday `week_start`, JSON array checks, and a 64 KB payload
+cap. The table is included in the JSON account export and cascades on account
+deletion. `supabase/tests/weekly_insights.sql` covers the default, ownership,
+uniqueness, Monday check, size cap and read/delete isolation. **Apply the
+migration before deploying this code**; otherwise the JSON export fails on the
+missing table.

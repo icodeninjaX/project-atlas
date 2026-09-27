@@ -1154,6 +1154,7 @@ export type Database = {
           updated_at: string;
           user_id: string;
           week_starts_on: number;
+          weekly_insight_auto: boolean;
         };
         Insert: {
           created_at?: string;
@@ -1177,6 +1178,7 @@ export type Database = {
           updated_at?: string;
           user_id: string;
           week_starts_on?: number;
+          weekly_insight_auto?: boolean;
         };
         Update: {
           created_at?: string;
@@ -1200,6 +1202,7 @@ export type Database = {
           updated_at?: string;
           user_id?: string;
           week_starts_on?: number;
+          weekly_insight_auto?: boolean;
         };
         Relationships: [
           {
@@ -1217,6 +1220,39 @@ export type Database = {
             referencedColumns: ["id", "user_id"];
           },
         ];
+      };
+      weekly_insights: {
+        Row: {
+          claims: Json;
+          created_at: string;
+          evidence: Json;
+          id: string;
+          limitations: Json;
+          status: string;
+          user_id: string;
+          week_start: string;
+        };
+        Insert: {
+          claims?: Json;
+          created_at?: string;
+          evidence: Json;
+          id?: string;
+          limitations?: Json;
+          status: string;
+          user_id: string;
+          week_start: string;
+        };
+        Update: {
+          claims?: Json;
+          created_at?: string;
+          evidence?: Json;
+          id?: string;
+          limitations?: Json;
+          status?: string;
+          user_id?: string;
+          week_start?: string;
+        };
+        Relationships: [];
       };
       weekly_reviews: {
         Row: {

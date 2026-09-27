@@ -6,9 +6,11 @@ import {
   requestGroundedAnswer,
 } from "@/lib/analyst/freeform/answer";
 import {
-  WEEKLY_INSIGHT_QUESTION,
+  WEEKLY_INSIGHT_QUESTIONS,
   gatherWeeklyInsightEvidence,
+  previousWeekWindows,
 } from "@/lib/reviews/insight";
+import type { Json } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -16,7 +18,11 @@ const headers = { "Cache-Control": "private, no-store" };
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status, headers });
 const inputSchema = z
-  .object({ dataSharingAcknowledged: z.literal(true) })
+  .object({
+    // "current": this week so far; "previous": last full week, stored once.
+    mode: z.enum(["current", "previous"]).default("current"),
+    dataSharingAcknowledged: z.literal(true).optional(),
+  })
   .strict();
 const reservationSchema = z.discriminatedUnion("status", [
   z.object({
@@ -31,7 +37,11 @@ const reservationSchema = z.discriminatedUnion("status", [
   z.object({ status: z.literal("site_quota") }),
 ]);
 
-/** Generates an on-demand, verified week-over-week insight for /reviews. */
+/**
+ * Generates a verified week-over-week insight for /reviews. Last week's
+ * insight is stored once per owner and week and returned without a model call
+ * afterwards.
+ */
 export async function POST(request: Request) {
   const supabase = await createClient();
   if (!supabase) return json({ error: "Insights are unavailable." }, 503);
@@ -49,7 +59,44 @@ export async function POST(request: Request) {
   } catch {
     return json({ error: "Invalid request." }, 400);
   }
-  if (!inputSchema.safeParse(input).success)
+  const parsed = inputSchema.safeParse(input);
+  if (!parsed.success) return json({ error: "Invalid request." }, 400);
+  const { mode } = parsed.data;
+  const weekStart =
+    mode === "previous" ? previousWeekWindows(new Date()).current.from : null;
+  if (weekStart) {
+    const stored = await supabase
+      .from("weekly_insights")
+      .select("status,claims,evidence,limitations")
+      .eq("user_id", user.id)
+      .eq("week_start", weekStart)
+      .maybeSingle();
+    if (stored.data)
+      return json({
+        status: stored.data.status === "answered" ? "answered" : "fallback",
+        ...(stored.data.status !== "answered" && {
+          failureCode: "insufficient_evidence",
+          message:
+            "Last week's records were not complete enough for an insight. Review the facts below.",
+        }),
+        claims: stored.data.claims,
+        evidence: stored.data.evidence,
+        limitations: stored.data.limitations,
+        weekStart,
+        stored: true,
+      });
+  }
+  // A saved opt-in is standing consent for last week's automatic insight.
+  let consented = parsed.data.dataSharingAcknowledged === true;
+  if (!consented && mode === "previous") {
+    const preferences = await supabase
+      .from("user_preferences")
+      .select("weekly_insight_auto")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    consented = preferences.data?.weekly_insight_auto === true;
+  }
+  if (!consented)
     return json({ error: "Acknowledge data sharing to continue." }, 400);
   if (!process.env.OPENAI_API_KEY)
     return json({ error: "AI insights are not configured." }, 503);
@@ -87,11 +134,34 @@ export async function POST(request: Request) {
   let outputTokens: number | null = null;
   try {
     const { evidence, limitations, complete } =
-      await gatherWeeklyInsightEvidence(new Date());
+      await gatherWeeklyInsightEvidence(new Date(), undefined, mode);
     const fallback = (message: string, failureCode: string) =>
-      json({ status: "fallback", failureCode, message, evidence, limitations });
+      json({
+        status: "fallback",
+        failureCode,
+        message,
+        evidence,
+        limitations,
+        ...(weekStart && { weekStart }),
+      });
+    // Stores last week's result so later visits reuse it without a model call.
+    const store = async (
+      status: "answered" | "insufficient",
+      claims: unknown[] = [],
+    ) => {
+      if (!weekStart) return;
+      await supabase.from("weekly_insights").insert({
+        user_id: user.id,
+        week_start: weekStart,
+        status,
+        claims: claims as Json,
+        evidence: evidence as unknown as Json,
+        limitations,
+      });
+    };
     if (!complete || evidence.length === 0) {
       outcome = "insufficient";
+      await store("insufficient");
       return fallback(
         "ATLAS could not gather complete weekly evidence for an insight. Review the available facts below.",
         "insufficient_evidence",
@@ -105,7 +175,7 @@ export async function POST(request: Request) {
       );
     }
     const answer = await requestGroundedAnswer(
-      WEEKLY_INSIGHT_QUESTION,
+      WEEKLY_INSIGHT_QUESTIONS[mode],
       evidence,
     );
     if (answer.status === "error") {
@@ -127,11 +197,13 @@ export async function POST(request: Request) {
     outcome = "success";
     inputTokens = answer.inputTokens;
     outputTokens = answer.outputTokens;
+    await store("answered", answer.claims);
     return json({
       status: "answered",
       claims: answer.claims,
       evidence,
       limitations,
+      ...(weekStart && { weekStart }),
     });
   } catch {
     return json(

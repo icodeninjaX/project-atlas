@@ -12,8 +12,14 @@ export const INSIGHT_METRICS = [
   "task_completions",
 ] as const;
 
-export const WEEKLY_INSIGHT_QUESTION =
-  "What changed in my recorded activity this week so far compared with the same days last week?";
+export type InsightMode = "current" | "previous";
+
+export const WEEKLY_INSIGHT_QUESTIONS: Record<InsightMode, string> = {
+  current:
+    "What changed in my recorded activity this week so far compared with the same days last week?",
+  previous:
+    "What changed in my recorded activity last week compared with the week before?",
+};
 
 const shiftDays = (date: string, days: number) =>
   new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000)
@@ -36,11 +42,26 @@ export function insightWindows(now: Date) {
   };
 }
 
+/** Last full Monday–Sunday week against the full week before it. */
+export function previousWeekWindows(now: Date) {
+  const thisWeekFrom = mondayWeekStart(now);
+  const lastWeekFrom = shiftDays(thisWeekFrom, -7);
+  return {
+    current: { from: lastWeekFrom, through: shiftDays(thisWeekFrom, -1) },
+    previous: {
+      from: shiftDays(lastWeekFrom, -7),
+      through: shiftDays(lastWeekFrom, -1),
+    },
+  };
+}
+
 export async function gatherWeeklyInsightEvidence(
   now: Date,
   invoke: typeof invokeAnalystTool = invokeAnalystTool,
+  mode: InsightMode = "current",
 ) {
-  const windows = insightWindows(now);
+  const windows =
+    mode === "current" ? insightWindows(now) : previousWeekWindows(now);
   const requests = INSIGHT_METRICS.flatMap((metric) =>
     [windows.previous, windows.current].map((period) => ({ metric, period })),
   );
@@ -55,7 +76,9 @@ export async function gatherWeeklyInsightEvidence(
   );
   const evidence: ToolEvidence[] = [];
   const limitations = new Set<string>([
-    `This week is compared through ${windows.current.through} with the same days last week, through ${windows.previous.through}.`,
+    mode === "current"
+      ? `This week is compared through ${windows.current.through} with the same days last week, through ${windows.previous.through}.`
+      : `The week of ${windows.current.from} is compared with the week of ${windows.previous.from}.`,
   ]);
   let complete = true;
   results.forEach((result, index) => {

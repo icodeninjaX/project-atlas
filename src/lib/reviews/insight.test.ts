@@ -3,8 +3,12 @@ import type { ToolResult } from "@/lib/analyst/tools/contracts";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/analyst/tools/server", () => ({ invokeAnalystTool: vi.fn() }));
-const { gatherWeeklyInsightEvidence, insightWindows, INSIGHT_METRICS } =
-  await import("./insight");
+const {
+  gatherWeeklyInsightEvidence,
+  insightWindows,
+  previousWeekWindows,
+  INSIGHT_METRICS,
+} = await import("./insight");
 
 // Thursday 2026-09-24, 10:00 in Manila.
 const thursday = new Date("2026-09-24T02:00:00Z");
@@ -67,6 +71,32 @@ describe("weekly insight windows", () => {
       current: { from: "2026-09-21", through: "2026-09-21" },
       previous: { from: "2026-09-14", through: "2026-09-14" },
     });
+  });
+});
+
+describe("last week windows", () => {
+  it("compares the last full week with the week before", () => {
+    expect(previousWeekWindows(thursday)).toEqual({
+      current: { from: "2026-09-14", through: "2026-09-20" },
+      previous: { from: "2026-09-07", through: "2026-09-13" },
+    });
+  });
+  it("requests full weeks in previous mode", async () => {
+    const invoke = vi.fn(async () => result("partial", "x"));
+    const gathered = await gatherWeeklyInsightEvidence(
+      thursday,
+      invoke,
+      "previous",
+    );
+    expect(invoke).toHaveBeenCalledWith("getHistoricalMetricSeries", {
+      from: "2026-09-14",
+      through: "2026-09-20",
+      metric: "income_centavos",
+      grain: "week",
+    });
+    expect(gathered.limitations[0]).toBe(
+      "The week of 2026-09-14 is compared with the week of 2026-09-07.",
+    );
   });
 });
 
