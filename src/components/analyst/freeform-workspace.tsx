@@ -5,7 +5,10 @@ import Link from "next/link";
 import type { Route } from "next";
 import { Button } from "@/components/ui/button";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
-import { formatCentavos } from "@/lib/money/money";
+import {
+  ClaimText,
+  evidenceDisplayValue as displayValue,
+} from "@/components/analyst/evidence-display";
 import type { ToolEvidence } from "@/lib/analyst/tools/contracts";
 import type { GroundedClaim } from "@/lib/analyst/freeform/answer";
 import { ChevronDown } from "lucide-react";
@@ -19,30 +22,6 @@ type FreeformResult = {
   limitations: string[];
   matchedEntity?: { type: "goal" | "debt"; name: string };
 };
-
-/** Hides peso figures in claim prose when privacy mode is on. */
-function ClaimText({ text }: { text: string }) {
-  return text
-    .split(
-      /((?:[-−]\s?)?(?:₱|\bPHP\b)\s?[-−]?[\d,]*\d(?:\.\d+)?|[-−]?[\d,]*\d(?:\.\d+)?\s?pesos\b)/i,
-    )
-    .map((part, index) =>
-      index % 2 === 1 ? (
-        <SensitiveValue key={index}>{part}</SensitiveValue>
-      ) : (
-        part
-      ),
-    );
-}
-
-function displayValue(item: ToolEvidence) {
-  if (item.unit === "centavos" && typeof item.value === "number")
-    return formatCentavos(item.value);
-  if (item.unit === "percent") return `${item.value}%`;
-  if (item.unit === "score") return `${item.value} / 10`;
-  if (item.unit === "correlation") return `r = ${item.value}`;
-  return `${item.value}${item.unit === "count" ? "" : ` ${item.unit}`}`;
-}
 
 function scenarioGroups(evidence: ToolEvidence[]) {
   const rows = evidence.filter(

@@ -163,6 +163,25 @@ describe("freeform Analyst route", () => {
     });
     expect(mocks.answer).toHaveBeenCalledWith(question, [item], { history });
   });
+  it("applies the scenario guard to a follow-up of a what-if", async () => {
+    const response = await POST(
+      request({
+        question: "And if it falls by 30% instead?",
+        dataSharingAcknowledged: true,
+        history: [
+          {
+            question: "What if monthly income falls by 20%?",
+            answer: "The calculated options may be worth reviewing.",
+          },
+        ],
+      }),
+    );
+    expect(await response.json()).toMatchObject({
+      status: "fallback",
+      failureCode: "missing_scenario_comparison",
+    });
+    expect(mocks.answer).not.toHaveBeenCalled();
+  });
   it("rejects more than two earlier exchanges", async () => {
     const turn = { question: "How did my spending change?", answer: "x" };
     const response = await POST(

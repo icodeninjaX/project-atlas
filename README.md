@@ -16,6 +16,7 @@ The scoped MVP is implemented and is now in release-candidate validation. See th
 - goal CRUD with category colors, rich milestone notes, milestone-driven progress, and related tasks
 - customizable career table and Kanban views, application editing, stage history, overdue follow-ups, and conversion guards
 - weekly factual summaries, guided reflections, drafts, submission, and score trends
+- on-demand, evidence-checked weekly insight comparing this week so far with the same days last week
 - owner-scoped global search plus filterable, paginated activity history and export
 - installable PWA with user-scoped offline page caches and automatic mutation replay
 - device privacy mode, sync/storage controls, quick-capture defaults, app-wide font preferences, and scoped session controls

@@ -37,9 +37,8 @@ type Figure = { value: number; decimals: number };
 type Allowed = { values: number[]; magnitudes: number[] };
 
 const isoDate = /\b\d{4}-\d{2}(?:-\d{2})?\b/g;
-// A minus counts as a sign only at the start of a word, never inside a range.
 const figure =
-  /(?:(?<=^|[\s(])([-−]))?(₱\s?|\bPHP\s?)?([-−])?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(\s?%|\s?percent\b|\s?pesos\b)?([kKmMbB]\b)?/g;
+  /([-−]\s?)?(₱\s?|\bPHP\s?)?([-−])?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(\s?%|\s?percent\b|\s?pesos\b)?([kKmMbB]\b)?/g;
 
 function numeric(item: ToolEvidence) {
   return typeof item.value === "number" && Number.isFinite(item.value)
@@ -131,8 +130,12 @@ export function figuresAreGrounded(text: string, cited: ToolEvidence[]) {
         : unitSuffix === "%" || unitSuffix === "percent"
           ? "percent"
           : "plain";
-    // "₱-500" is signed; a bare "4-6" is a range, not 4 and -6.
-    const sign = leadingMinus || (moneyPrefix && innerMinus) ? -1 : 1;
+    // Every minus is a sign ("r=-0.5", "-₱500", "₱-500") except a range
+    // separator directly after a number ("4-6", "₱100 - ₱200").
+    const rangeSeparator =
+      Boolean(leadingMinus || (!moneyPrefix && innerMinus)) &&
+      /\d\s*$/.test(withoutDates.slice(0, match.index));
+    const sign = (leadingMinus || innerMinus) && !rangeSeparator ? -1 : 1;
     const value = sign * Number(digits!.replaceAll(",", ""));
     const decimals = digits!.split(".")[1]?.length ?? 0;
     if (!matches(allowed[kind], { value, decimals })) return false;

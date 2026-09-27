@@ -3,6 +3,7 @@ import {
   ReviewWorkspace,
   type ReviewArchiveItem,
 } from "@/components/reviews/review-workspace";
+import { WeeklyInsightCard } from "@/components/reviews/weekly-insight-card";
 import { PageHeading } from "@/components/shared/page-heading";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -191,6 +192,10 @@ export default async function ReviewsPage({
                 Swipe to see all weekly facts
               </p>
             </section>
+
+            <div className="mt-4 sm:mt-5">
+              <WeeklyInsightCard />
+            </div>
 
             <Card className="sm:bg-card mt-4 border-0 bg-transparent sm:mt-5 sm:border">
               <CardHeader className="px-0 pt-0 pb-0 sm:p-5 sm:pb-0">

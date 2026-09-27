@@ -4,6 +4,7 @@ import { requestStructuredJson, structuredRequestBody } from "@/lib/ai/openai";
 import {
   PLANNER_LIMITS,
   PlannerContractError,
+  isScenarioQuestion,
   plannerQuestionSchema,
   plannerResponseJsonSchema,
   plannerToolCatalog,
@@ -115,10 +116,10 @@ export async function requestAnalystPlan(
   const conversation = [previousQuestion, question.data]
     .filter(Boolean)
     .join(" ");
-  const scenarioPlanning =
-    /\b(?:what if|scenario|runway if|runway under|monthly extra|extra monthly|income (?:falls|drops|decreases))\b/i.test(
-      conversation,
-    );
+  const scenarioPlanning = isScenarioQuestion(
+    question.data,
+    previous.success ? previous.data : null,
+  );
   const twoDomainMonthlyPlanning =
     /\b(?:by month|monthly)\b/i.test(conversation) &&
     /\b(?:income|expenses?|debt payments?)\b/i.test(conversation) &&

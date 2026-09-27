@@ -3,6 +3,7 @@ import {
   PLANNER_LIMITS,
   plannerResponseJsonSchema,
   validatePlannerOutput,
+  isScenarioQuestion,
 } from "./contracts";
 
 const goalId = "11111111-1111-4111-8111-111111111111";
@@ -287,6 +288,32 @@ describe("Analyst planner contract", () => {
     expect(validatePlannerOutput(plan("100"), question).calls).toHaveLength(1);
     expect(() => validatePlannerOutput(plan("11111111"), question)).toThrow(
       /comparison assumptions/i,
+    );
+  });
+});
+
+describe("isScenarioQuestion", () => {
+  it("inherits a what-if only for a follow-up that changes its assumptions", () => {
+    const previous = "What if monthly income falls by 20%?";
+    expect(isScenarioQuestion("What if monthly income falls by 20%?")).toBe(
+      true,
+    );
+    expect(
+      isScenarioQuestion("And if it falls by 30% instead?", previous),
+    ).toBe(true);
+    expect(isScenarioQuestion("And if it falls by 30% instead?")).toBe(false);
+    expect(isScenarioQuestion("How are my goals progressing?", previous)).toBe(
+      false,
+    );
+    expect(
+      isScenarioQuestion("How much did I spend in pesos last month?", previous),
+    ).toBe(false);
+    expect(
+      isScenarioQuestion("Show 20% of my tasks, then goals", previous),
+    ).toBe(false);
+    expect(isScenarioQuestion("What about 30%?", previous)).toBe(true);
+    expect(isScenarioQuestion("But if expenses rise by ₱500?", previous)).toBe(
+      true,
     );
   });
 });
