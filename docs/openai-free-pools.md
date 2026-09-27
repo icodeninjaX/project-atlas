@@ -79,9 +79,12 @@ records it per pool (`supabase/migrations/20260927170000_openai_provider_usage.s
   reservations made since 15 minutes before that figure was read (usage data
   lags). Usage the meter never saw now counts: requests before it existed, the
   Playground, and other apps on the organization.
-- The figure refreshes when it is more than five minutes old: alongside the
-  next pooled call (adding no wait to it) and before the picker shows its
-  meters. The picker then notes that usage includes OpenAI's count.
+- The figure refreshes when it is more than five minutes old, before the
+  picker shows its meters and before the next pooled call is sent. That call
+  then releases its first reservation and reserves again against the fresh
+  figure, so usage outside the meter cannot let it cross the limit. The
+  refresh adds one Usage API call at most every five minutes; if it fails,
+  the ledger decision stands.
 - `OPENAI_PROJECT_ID` (optional) narrows the count to ATLAS's project. Without
   it the whole organization counts, which can only stop ATLAS sooner.
 - Without the admin key, or when OpenAI cannot be reached, the meter keeps

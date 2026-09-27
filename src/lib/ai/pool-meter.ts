@@ -95,46 +95,57 @@ export async function meteredOpenAIFetch(
     data: { user },
   } = await session.auth.getUser();
   if (!user) throw new PoolMeterError("unauthenticated");
-  const { data, error } = await admin.rpc("reserve_ai_pool_tokens", {
-    p_user_id: user.id,
-    p_model: options.model,
-    p_feature: options.feature,
-    p_tokens: Math.max(1, Math.ceil(options.reserveTokens)),
-  });
-  const reservation = data as {
+  type Reservation = {
     status?: string;
     reservation_id?: number;
     provider_synced_at?: string | null;
   } | null;
-  if (error || !reservation?.status) throw new PoolMeterError("unavailable");
-  if (reservation.status === "exhausted") throw new PoolExhaustedError(pool);
-  if (reservation.status !== "reserved" || !reservation.reservation_id)
-    throw new PoolMeterError(reservation.status);
-  const settle = async (used: number | null) => {
+  const reserve = async () => {
+    const { data, error } = await admin.rpc("reserve_ai_pool_tokens", {
+      p_user_id: user.id,
+      p_model: options.model,
+      p_feature: options.feature,
+      p_tokens: Math.max(1, Math.ceil(options.reserveTokens)),
+    });
+    return error ? null : (data as Reservation);
+  };
+  const settleReservation = async (id: number, used: number | null) => {
     try {
-      await admin.rpc("settle_ai_pool_tokens", {
-        p_id: reservation.reservation_id,
-        p_used: used,
-      });
+      await admin.rpc("settle_ai_pool_tokens", { p_id: id, p_used: used });
     } catch {
       /* The reservation stays counted at its full size. */
     }
   };
-  // OpenAI's own count refreshes alongside the call, adding no wait to it.
-  const refresh =
+  let reservation = await reserve();
+  // A stale OpenAI count is refreshed before anything is sent, then the
+  // request reserves again against it, so usage outside the meter cannot
+  // let this request cross the limit. If the refresh fails, the ledger
+  // decision stands.
+  if (
+    reservation?.status === "reserved" &&
+    reservation.reservation_id &&
     process.env.OPENAI_ADMIN_KEY &&
-    providerUsageStale(reservation.provider_synced_at)
-      ? syncProviderUsage()
-      : null;
+    providerUsageStale(reservation.provider_synced_at) &&
+    (await syncProviderUsage())
+  ) {
+    await settleReservation(reservation.reservation_id, 0);
+    reservation = await reserve();
+  }
+  if (!reservation?.status) throw new PoolMeterError("unavailable");
+  if (reservation.status === "exhausted") throw new PoolExhaustedError(pool);
+  if (reservation.status !== "reserved" || !reservation.reservation_id)
+    throw new PoolMeterError(reservation.status);
+  const reservationId = reservation.reservation_id;
+  const settle = (used: number | null) =>
+    settleReservation(reservationId, used);
   let response: Response;
   try {
     response = await send(url, init);
   } catch (sendError) {
     // A request that timed out may still have been billed.
-    await Promise.all([settle(null), refresh]);
+    await settle(null);
     throw sendError;
   }
-  await refresh;
   // A rejected request uses no tokens.
   if (!response.ok) {
     await settle(0);
