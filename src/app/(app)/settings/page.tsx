@@ -32,6 +32,7 @@ import { FontPreferencePicker } from "@/components/settings/font-preference-pick
 import { ThemePreferencePicker } from "@/components/settings/theme-preference-picker";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SettingsSectionNav } from "@/components/settings/settings-section-nav";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminConfigured } from "@/lib/supabase/admin";
 import {
@@ -174,10 +175,15 @@ export default async function SettingsPage() {
         title="Settings"
         description="Shape your defaults, choose how ATLAS looks, and manage your account data in one place."
       />
+      <SettingsSectionNav variant="strip" />
 
-      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="mt-6 grid items-start gap-6 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
-          <Card aria-labelledby="preferences-title">
+          <Card
+            id="profile"
+            aria-labelledby="preferences-title"
+            className="scroll-mt-36 lg:scroll-mt-6"
+          >
             <CardHeader>
               <div className="flex items-start gap-3">
                 <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-xl">
@@ -257,7 +263,11 @@ export default async function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card aria-labelledby="appearance-title">
+          <Card
+            id="appearance"
+            aria-labelledby="appearance-title"
+            className="scroll-mt-36 lg:scroll-mt-6"
+          >
             <CardHeader>
               <div className="flex items-start gap-3">
                 <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-xl">
@@ -282,7 +292,11 @@ export default async function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card aria-labelledby="security-title">
+          <Card
+            id="security"
+            aria-labelledby="security-title"
+            className="scroll-mt-36 lg:scroll-mt-6"
+          >
             <CardHeader>
               <div className="flex items-start gap-3">
                 <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-xl">
@@ -305,7 +319,11 @@ export default async function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card aria-labelledby="offline-title">
+          <Card
+            id="offline"
+            aria-labelledby="offline-title"
+            className="scroll-mt-36 lg:scroll-mt-6"
+          >
             <CardHeader>
               <div className="flex items-start gap-3">
                 <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-xl">
@@ -327,7 +345,11 @@ export default async function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card aria-labelledby="reminders-title">
+          <Card
+            id="reminders"
+            aria-labelledby="reminders-title"
+            className="scroll-mt-36 lg:scroll-mt-6"
+          >
             <CardHeader>
               <div className="flex items-start gap-3">
                 <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-xl">
@@ -366,7 +388,11 @@ export default async function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card aria-labelledby="data-title">
+          <Card
+            id="data"
+            aria-labelledby="data-title"
+            className="scroll-mt-36 lg:scroll-mt-6"
+          >
             <CardHeader>
               <div className="flex items-start gap-3">
                 <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-xl">
@@ -453,10 +479,54 @@ export default async function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+          <Card aria-labelledby="shortcuts-title">
+            <CardHeader>
+              <CardTitle
+                id="shortcuts-title"
+                className="flex items-center gap-2"
+              >
+                <Keyboard className="text-primary size-4" />
+                Keyboard shortcuts
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <ShortcutRow label="Capture a task" keys="N" />
+              <ShortcutRow label="Search ATLAS" keys="/" />
+              <ShortcutRow label="Close an overlay" keys="Esc" />
+              <p className="text-muted-foreground border-border mt-3 border-t pt-3 text-xs leading-5">
+                Single-key shortcuts pause while you are typing in a field.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            id="account"
+            aria-labelledby="session-title"
+            className="scroll-mt-36 lg:scroll-mt-6"
+          >
+            <CardHeader>
+              <CardTitle id="session-title" className="flex items-center gap-2">
+                <ShieldCheck className="text-primary size-4" />
+                Session and account
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <SessionControls />
+              <div className="border-border border-t pt-4">
+                <DeleteAccountControl configured={accountDeletionConfigured} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="border-border text-muted-foreground flex items-start gap-3 rounded-2xl border border-dashed p-4 text-xs leading-5">
+            <Landmark className="text-primary mt-0.5 size-4 shrink-0" />
+            Your payoff preference changes ordering only. It never changes debt
+            balances or records payments.
+          </div>
         </div>
 
         <aside
-          aria-label="Account settings"
+          aria-label="Account summary"
           className="space-y-4 lg:sticky lg:top-6"
         >
           <Card>
@@ -481,47 +551,16 @@ export default async function SettingsPage() {
               </div>
             </CardContent>
           </Card>
-
-          <Card aria-labelledby="shortcuts-title">
+          <Card aria-labelledby="sections-title" className="hidden lg:block">
             <CardHeader>
-              <CardTitle
-                id="shortcuts-title"
-                className="flex items-center gap-2"
-              >
-                <Keyboard className="text-primary size-4" />
-                Keyboard shortcuts
+              <CardTitle id="sections-title" className="text-sm">
+                On this page
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1">
-              <ShortcutRow label="Capture a task" keys="N" />
-              <ShortcutRow label="Search ATLAS" keys="/" />
-              <ShortcutRow label="Close an overlay" keys="Esc" />
-              <p className="text-muted-foreground border-border mt-3 border-t pt-3 text-xs leading-5">
-                Single-key shortcuts pause while you are typing in a field.
-              </p>
+            <CardContent className="pt-2">
+              <SettingsSectionNav variant="sidebar" />
             </CardContent>
           </Card>
-
-          <Card aria-labelledby="session-title">
-            <CardHeader>
-              <CardTitle id="session-title" className="flex items-center gap-2">
-                <ShieldCheck className="text-primary size-4" />
-                Session and account
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <SessionControls />
-              <div className="border-border border-t pt-4">
-                <DeleteAccountControl configured={accountDeletionConfigured} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="border-border text-muted-foreground flex items-start gap-3 rounded-2xl border border-dashed p-4 text-xs leading-5">
-            <Landmark className="text-primary mt-0.5 size-4 shrink-0" />
-            Your payoff preference changes ordering only. It never changes debt
-            balances or records payments.
-          </div>
         </aside>
       </div>
     </div>

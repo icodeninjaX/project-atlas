@@ -65,6 +65,12 @@ per page, and no failed routes.
    scrolls the current tab into view on narrow screens (part of #6).
 4. **Settings is 7,300px tall on mobile.** Add a section index or split into
    sub-pages (Profile, Appearance, Security, Offline, Reminders, Data).
+   **Done:** a section index (Profile, Appearance, Security, Offline,
+   Reminders, Data, Account) sticks under the header below `lg` and appears
+   as "On this page" in the desktop sidebar, highlighting the section in view.
+   Shortcuts, session, and account deletion moved from the sidebar to the end
+   of the main column so the sticky sidebar (previously ~1,170px tall, cut off
+   on laptop screens) now fits at 502px.
 5. **Date formats are inconsistent app-wide:** `2026-10-01` (Dashboard, Debts,
    Transactions, History), `Sep 30, 2026` (Career), `Nov 25` (Goals),
    `mm/dd/yyyy` native inputs. Pick one display helper for the en-PH locale.
