@@ -76,8 +76,8 @@ end; $$;
 revoke all on function public.claim_ai_pool_provider_sync() from public, anon, authenticated;
 grant execute on function public.claim_ai_pool_provider_sync() to service_role;
 
--- Written only by the server, from the Usage API, and only by the current
--- claim's holder. Returns whether the figure was recorded.
+-- Written only by the server, from the Usage API, and only by the holder of a
+-- claim still within its lease. Returns whether the figure was recorded.
 create function public.record_ai_pool_provider_usage(p_token uuid, p_day date, p_large bigint, p_small bigint, p_details jsonb default '[]'::jsonb)
 returns boolean language plpgsql security definer set search_path = '' as $$
 begin
@@ -85,7 +85,11 @@ begin
     or p_large < 0 or p_small < 0
     or jsonb_typeof(coalesce(p_details, '[]'::jsonb)) <> 'array' then return false; end if;
   -- Lock the claim so it cannot change hands between this check and the write.
-  perform 1 from public.ai_pool_provider_sync where id and token = p_token for update;
+  -- A claim past its lease records nothing, even before anyone takes it over:
+  -- the figure it read may be too old to count as fresh.
+  perform 1 from public.ai_pool_provider_sync
+    where id and token = p_token and claimed_at >= now() - interval '15 seconds'
+    for update;
   if not found then return false; end if;
   insert into public.ai_pool_provider_usage (pool, usage_day, tokens, details, synced_at)
   values

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(21);
+select plan(22);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password,
   email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
@@ -92,7 +92,16 @@ select is(public.claim_ai_pool_provider_sync(), null,
 select public.release_ai_pool_provider_sync((select token from claims where name = 'third'));
 select is((public.ai_pool_provider_sync_state()->>'claimActive')::boolean, false,
   'a finished refresh releases its claim');
-select isnt(public.claim_ai_pool_provider_sync(), null, 'the next refresh can claim at once');
+insert into claims values ('fourth', public.claim_ai_pool_provider_sync());
+select isnt((select token from claims where name = 'fourth'), null,
+  'the next refresh can claim at once');
+reset role;
+update public.ai_pool_provider_sync set claimed_at = now() - interval '20 seconds';
+set local role service_role;
+-- Even with no newer claim, a claim past its lease cannot record.
+select is(public.record_ai_pool_provider_usage(
+  (select token from claims where name = 'fourth'),
+  (select day from today), 1, 1), false, 'an expired claim cannot record a figure');
 
 select * from finish();
 rollback;
