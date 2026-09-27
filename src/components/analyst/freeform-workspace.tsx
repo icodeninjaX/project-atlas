@@ -496,7 +496,9 @@ function Composer({
   debts: Array<{ id: string; creditor_name: string }>;
   children?: ReactNode;
 }) {
-  const canAsk = !pending && consent && question.trim().length >= 8;
+  const length = question.trim().length;
+  const tooLong = length > maxLength;
+  const canAsk = !pending && consent && length >= 8 && !tooLong;
   return (
     <form
       onSubmit={(event) => {
@@ -528,6 +530,12 @@ function Composer({
         }
         className="placeholder:text-muted-foreground/80 block w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-[0.9375rem] leading-6 focus:outline-none"
       />
+      {tooLong && (
+        <p role="status" className="text-destructive px-4 text-xs">
+          Questions with a focus can be up to {maxLength} characters. Shorten it
+          or clear the focus.
+        </p>
+      )}
       <div className="flex items-center justify-between gap-2 px-2.5 pb-2.5">
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           {(goals.length > 0 || debts.length > 0) &&
@@ -644,17 +652,23 @@ export function FreeformWorkspace({
 
   async function ask(text: string) {
     const trimmed = text.trim();
-    if (trimmed.length < 8 || pending || !consent) return;
-    // Answered exchanges give follow-ups their context.
+    if (trimmed.length < 8 || trimmed.length > (focusId ? 400 : 500)) return;
+    if (pending || !consent) return;
+    // Answered exchanges, and clarification requests, give follow-ups their
+    // context: a short reply to a clarification keeps the original question.
     const history = turns
-      .filter((turn) => turn.result?.status === "answered")
+      .filter(
+        (turn) =>
+          turn.result?.status === "answered" ||
+          turn.result?.status === "clarification_required",
+      )
       .slice(-2)
       .map((turn) => ({
         question: turn.question,
-        answer: (turn.result?.claims ?? [])
-          .map((claim) => claim.text)
-          .join(" ")
-          .slice(0, 600),
+        answer: (turn.result?.status === "answered"
+          ? (turn.result.claims ?? []).map((claim) => claim.text).join(" ")
+          : (turn.result?.message ?? "")
+        ).slice(0, 600),
       }));
     const id = nextId.current++;
     setTurns((current) => [

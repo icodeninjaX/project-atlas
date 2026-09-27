@@ -19,7 +19,8 @@ Phase 9 read-only tools. It cannot execute actions or arbitrary queries.
 - **Thread:** each question and answer is a card in order. Answers show the
   verified claims first, then any scenario comparison, then notes and
   limitations, then a collapsed "Sources" list that citations open. Follow-ups
-  send the last two answered exchanges; "New conversation" clears the thread.
+  send the last two answered or clarification exchanges, so a short reply to a
+  clarification keeps the original question; "New conversation" clears the thread.
 - **Focus:** one optional "Focus" selector covers goals and debts (monthly
   payment scenarios) and shows a removable chip. Typing a goal or debt name also
   works.

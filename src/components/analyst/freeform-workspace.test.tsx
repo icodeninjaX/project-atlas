@@ -310,6 +310,60 @@ describe("Analyst conversation", () => {
     expect(notes).toHaveAttribute("open");
   });
 
+  it("keeps the original question when answering a clarification", async () => {
+    const user = userEvent.setup();
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({
+              status: "clarification_required",
+              message: "Which period should ATLAS compare?",
+              evidence: [],
+              limitations: [],
+            }),
+            { status: 200 },
+          ),
+      )
+      .mockImplementationOnce(async () => answered("Noted."));
+    vi.stubGlobal("fetch", fetch);
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.type(box(), "How did my spending change?{Enter}");
+    await screen.findByText("Which period should ATLAS compare?");
+    await user.type(box(), "Last month please{Enter}");
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    expect(JSON.parse(fetch.mock.calls[1]![1].body).history).toEqual([
+      {
+        question: "How did my spending change?",
+        answer: "Which period should ATLAS compare?",
+      },
+    ]);
+  });
+
+  it("blocks a question that is too long for the chosen focus", async () => {
+    const user = userEvent.setup();
+    render(
+      <FreeformWorkspace
+        userId="owner-a"
+        goals={[{ id: "goal-1", title: "Emergency Fund" }]}
+      />,
+    );
+    await user.click(consent());
+    await user.click(box());
+    await user.paste("x".repeat(450));
+    expect(ask()).toBeEnabled();
+    await user.selectOptions(
+      screen.getByLabelText("Focus on a goal or debt"),
+      "goal:goal-1",
+    );
+    expect(ask()).toBeDisabled();
+    expect(screen.getByText(/can be up to 400 characters/)).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Clear focus" }));
+    expect(ask()).toBeEnabled();
+  });
+
   it("shows a request error inside the conversation", async () => {
     const user = userEvent.setup();
     vi.stubGlobal(
