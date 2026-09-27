@@ -276,6 +276,40 @@ describe("Analyst conversation", () => {
     ).toHaveAttribute("href", "/money/transactions");
   });
 
+  it("shows facts first and collapses notes when no explanation is available", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            status: "fallback",
+            message: "Review the available facts below.",
+            evidence: [fact],
+            limitations: ["Task titles are not sent.", "Scores are rounded."],
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.type(box(), "What should I focus on this week?{Enter}");
+    expect(
+      await screen.findByText("Review the available facts below."),
+    ).toBeVisible();
+    expect(screen.getByText("ATLAS facts only")).toBeVisible();
+    expect(screen.queryByText("Checked")).toBeNull();
+    // Sources start open; the notes stay collapsed.
+    expect(
+      screen.getByText(/Sources · 1 ATLAS fact/).closest("details"),
+    ).toHaveAttribute("open");
+    const notes = screen.getByText("2 notes on these facts").closest("details");
+    expect(notes).not.toHaveAttribute("open");
+    await user.click(screen.getByText("2 notes on these facts"));
+    expect(notes).toHaveAttribute("open");
+  });
+
   it("shows a request error inside the conversation", async () => {
     const user = userEvent.setup();
     vi.stubGlobal(

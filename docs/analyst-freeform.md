@@ -110,6 +110,13 @@ start or end; a bare day number is never treated as a verified figure. The freef
 weekly insight routes allow 60 seconds for planning, retrieval and a repaired
 answer.
 
+When some tools find no or incomplete records (for example no completed reviews
+yet), the answer model receives only complete facts from tools that finished,
+and the answer adds a limitation saying so. The route still falls back when the
+planner reports a missing capability, when a focused goal, pattern or scenario
+tool is incomplete, or when no complete fact remains. Fallback cards show the
+facts first and keep limitations in a collapsed "notes on these facts" list.
+
 The UI still shows every figure from ATLAS evidence alongside the claims. An
 invalid response falls back to the calculated evidence.
 

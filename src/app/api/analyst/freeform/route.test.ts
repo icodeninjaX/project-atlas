@@ -457,6 +457,57 @@ describe("freeform Analyst route", () => {
       p_output_tokens: 25,
     });
   });
+  it("explains complete facts when another tool finds no records", async () => {
+    const reviews = {
+      ...item,
+      id: "reviews.overall_score",
+      completeness: "partial",
+      provenance: { ...item.provenance, tool: "getReviewSummary" },
+    };
+    const ready = {
+      tool: "getMoneySummary",
+      status: "ready",
+      result: { evidence: [item] },
+    };
+    const empty = {
+      tool: "getReviewSummary",
+      status: "partial",
+      result: { evidence: [reviews] },
+    };
+    mocks.plan.mockResolvedValueOnce({
+      status: "partial",
+      calls: [ready, empty],
+      evidence: [item, reviews],
+      limitations: ["Few completed reviews"],
+      missingCapabilities: [],
+      metadata: {},
+    });
+    const body = await (await POST(request(valid))).json();
+    expect(body).toMatchObject({
+      status: "answered",
+      evidence: [item, reviews],
+    });
+    expect(body.limitations).toEqual([
+      "Few completed reviews",
+      expect.stringContaining("uses only the complete facts"),
+    ]);
+    expect(mocks.answer.mock.calls[0]![1]).toEqual([item]);
+
+    // A capability the question needs but ATLAS lacks still falls back.
+    mocks.plan.mockResolvedValueOnce({
+      status: "partial",
+      calls: [ready],
+      evidence: [item],
+      limitations: ["Credit scores are not tracked"],
+      missingCapabilities: ["Credit scores are not tracked"],
+      metadata: {},
+    });
+    expect(await (await POST(request(valid))).json()).toMatchObject({
+      status: "fallback",
+      failureCode: "insufficient_evidence",
+    });
+    expect(mocks.answer).toHaveBeenCalledTimes(1);
+  });
   it("returns clarification without tool evidence or answer generation", async () => {
     mocks.plan.mockResolvedValueOnce({
       status: "clarification_required",

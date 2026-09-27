@@ -17,6 +17,8 @@ import {
 } from "@/lib/analyst/freeform/mentions";
 import { createClient } from "@/lib/supabase/server";
 
+const partialEvidenceNote =
+  "Some ATLAS sources had no or incomplete records for this question, so the explanation uses only the complete facts.";
 export const runtime = "nodejs";
 // Planning, retrieval and an answer with one repair attempt.
 export const maxDuration = 60;
@@ -289,7 +291,7 @@ export async function POST(request: Request) {
       });
     }
     const evidence = plan.evidence;
-    const limitations = plan.limitations;
+    const limitations = [...plan.limitations];
     const fallback = (message: string, failureCode: string) =>
       json({ status: "fallback", failureCode, message, evidence, limitations });
     const usesPattern = plan.calls.some(
@@ -356,26 +358,56 @@ export async function POST(request: Request) {
         "missing_goal_context",
       );
     }
-    if (plan.status === "partial" || evidence.length === 0) {
+    // A tool that finds no or incomplete records (no reviews yet, say) should
+    // not block the whole answer: explain only complete facts from tools that
+    // finished, and say so. Missing capabilities still fall back.
+    const readyIds = new Set(
+      plan.calls
+        .filter((call) => call.status === "ready")
+        .flatMap((call) => call.result.evidence.map((item) => item.id)),
+    );
+    const completeEvidence =
+      plan.status === "partial"
+        ? evidence.filter(
+            (item) => readyIds.has(item.id) && item.completeness === "complete",
+          )
+        : evidence;
+    const missingCapability =
+      plan.status === "partial" && (plan.missingCapabilities?.length ?? 0) > 0;
+    const scoped = goalId
+      ? completeEvidence.filter(
+          (item) => item.provenance.tool === "getGoalLinkedActivity",
+        )
+      : usesPattern
+        ? completeEvidence.filter(
+            (item) => item.provenance.tool === "getPatternAssociation",
+          )
+        : usesScenario
+          ? completeEvidence.filter(
+              (item) => item.provenance.tool === "compareFinancialScenarios",
+            )
+          : completeEvidence;
+    // A focused, pattern or scenario answer needs its own tool to be complete.
+    const coreIncomplete =
+      plan.status === "partial" &&
+      (goalId || usesPattern || usesScenario) &&
+      plan.calls.some(
+        (call) =>
+          call.status !== "ready" &&
+          (call.tool === "getGoalLinkedActivity" ||
+            call.tool === "getPatternAssociation" ||
+            call.tool === "compareFinancialScenarios"),
+      );
+    if (missingCapability || coreIncomplete || scoped.length === 0) {
       outcome = "insufficient";
       return fallback(
         "ATLAS could not gather complete evidence for an AI explanation. Review the available facts below.",
         "insufficient_evidence",
       );
     }
-    const explanationEvidence = goalId
-      ? evidence.filter(
-          (item) => item.provenance.tool === "getGoalLinkedActivity",
-        )
-      : usesPattern
-        ? evidence.filter(
-            (item) => item.provenance.tool === "getPatternAssociation",
-          )
-        : usesScenario
-          ? evidence.filter(
-              (item) => item.provenance.tool === "compareFinancialScenarios",
-            )
-          : evidence;
+    if (scoped.length < evidence.length && plan.status === "partial")
+      limitations.push(partialEvidenceNote);
+    const explanationEvidence = scoped;
     if (explanationEvidence.length > ANSWER_LIMITS.evidenceItems) {
       outcome = "context_limit";
       return fallback(
