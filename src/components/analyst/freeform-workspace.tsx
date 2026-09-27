@@ -907,17 +907,28 @@ export function FreeformWorkspace({
     if (granted) input.current?.focus();
   }
 
-  async function ask(text: string) {
+  /**
+   * `followUpOf` marks a suggested follow-up: it always carries the turn it
+   * came from (even a fallback) and asks without a goal or debt focus, since
+   * suggestions are whole-domain questions a focus could reject.
+   */
+  async function ask(text: string, followUpOf?: number) {
+    const chip = followUpOf !== undefined;
+    const target = chip
+      ? { type: "" as const, id: undefined, label: undefined }
+      : { type: focusType, id: focusId, label: focusLabel };
     const trimmed = text.trim();
-    if (trimmed.length < 8 || trimmed.length > (focusId ? 400 : 500)) return;
+    if (trimmed.length < 8 || trimmed.length > (target.id ? 400 : 500)) return;
     if (pending || !consent) return;
+    if (chip) setFocus("");
     // Answered exchanges, and clarification requests, give follow-ups their
     // context: a short reply to a clarification keeps the original question.
     const history = turns
       .filter(
         (turn) =>
           turn.result?.status === "answered" ||
-          turn.result?.status === "clarification_required",
+          turn.result?.status === "clarification_required" ||
+          turn.id === followUpOf,
       )
       .slice(-2)
       .map((turn) => ({
@@ -933,7 +944,7 @@ export function FreeformWorkspace({
       {
         id,
         question: trimmed,
-        focus: focusLabel ?? null,
+        focus: target.label ?? null,
         result: null,
         error: "",
         pending: true,
@@ -968,8 +979,8 @@ export function FreeformWorkspace({
         },
         body: JSON.stringify({
           question: trimmed,
-          ...(focusType === "goal" && focusId && { goalId: focusId }),
-          ...(focusType === "debt" && focusId && { debtId: focusId }),
+          ...(target.type === "goal" && target.id && { goalId: target.id }),
+          ...(target.type === "debt" && target.id && { debtId: target.id }),
           ...(history.length > 0 && { history }),
           dataSharingAcknowledged: true,
         }),
@@ -1144,7 +1155,7 @@ export function FreeformWorkspace({
                         .filter((text) => !asked.has(questionKey(text)))
                         .slice(0, 3)}
                       disabled={pending || !consent}
-                      onAsk={(text) => void ask(text)}
+                      onAsk={(text) => void ask(text, turn.id)}
                     />
                   )}
               </li>

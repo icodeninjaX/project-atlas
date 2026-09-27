@@ -42,7 +42,9 @@ Phase 9 read-only tools. It cannot execute actions or arbitrary queries.
   forward, and the entry animation uses `motion-safe:`.
 - **Suggested follow-ups:** under the latest answered or fallback turn, two or
   three "Ask next" chips ask a follow-up straight away (consent is already
-  given), with the usual `history`. Chips on older turns are hidden, and a
+  given), with the usual `history`. A chip always includes the turn it came
+  from, even a fallback, and asks without a goal or debt focus, which it
+  clears, because a focus could reject a whole-domain question. Chips on older turns are hidden, and a
   question already asked in the conversation is never offered.
 
 ## Request and evidence boundary

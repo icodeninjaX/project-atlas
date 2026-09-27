@@ -586,4 +586,75 @@ describe("Analyst conversation", () => {
       }),
     ).toBeNull();
   });
+
+  it("keeps a fallback turn as context for its follow-up chip", async () => {
+    const user = userEvent.setup();
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({
+              status: "fallback",
+              message: "An AI explanation is unavailable.",
+              evidence: [fact],
+              limitations: [],
+              suggestions: ["How does this compare to last month?"],
+            }),
+          ),
+      )
+      .mockImplementationOnce(async () => answered("It may be similar."));
+    vi.stubGlobal("fetch", fetch);
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.type(box(), "How did my spending change?{Enter}");
+    await user.click(
+      await screen.findByRole("button", {
+        name: "How does this compare to last month?",
+      }),
+    );
+    await screen.findByText("It may be similar.");
+    expect(JSON.parse(fetch.mock.calls[1]![1].body).history).toEqual([
+      {
+        question: "How did my spending change?",
+        answer: "An AI explanation is unavailable.",
+      },
+    ]);
+  });
+
+  it("asks a follow-up chip without an inherited goal or debt focus", async () => {
+    const user = userEvent.setup();
+    const debtId = "11111111-1111-4111-8111-111111111111";
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(async () =>
+        answered("The options may be worth reviewing.", {
+          suggestions: ["What does my current runway look like?"],
+        }),
+      )
+      .mockImplementationOnce(async () => answered("Runway noted."));
+    vi.stubGlobal("fetch", fetch);
+    render(
+      <FreeformWorkspace
+        userId="owner-a"
+        debts={[{ id: debtId, creditor_name: "Test debt" }]}
+      />,
+    );
+    await user.click(consent());
+    await user.selectOptions(
+      screen.getByLabelText("Focus on a goal or debt"),
+      `debt:${debtId}`,
+    );
+    await user.type(box(), "What if I pay ₱500 extra monthly?{Enter}");
+    await user.click(
+      await screen.findByRole("button", {
+        name: "What does my current runway look like?",
+      }),
+    );
+    await screen.findByText("Runway noted.");
+    const sent = JSON.parse(fetch.mock.calls[1]![1].body);
+    expect(sent).not.toHaveProperty("debtId");
+    expect(sent).not.toHaveProperty("goalId");
+    expect(screen.queryByRole("button", { name: "Clear focus" })).toBeNull();
+  });
 });
