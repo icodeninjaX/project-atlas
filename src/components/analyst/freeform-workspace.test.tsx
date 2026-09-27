@@ -2,122 +2,185 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PrivacyProvider } from "@/components/privacy/privacy-provider";
-import { FreeformWorkspace } from "./freeform-workspace";
+import { FreeformWorkspace, SUGGESTED_QUESTIONS } from "./freeform-workspace";
 
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  window.localStorage.clear();
 });
 
-describe("Freeform Analyst workspace", () => {
-  it("sends the previous answered exchange with a follow-up", async () => {
+const box = () =>
+  screen.getByRole("textbox", { name: "Ask about your ATLAS records" });
+const consent = () => screen.getByRole("checkbox");
+const ask = () => screen.getByRole("button", { name: "Ask Analyst" });
+
+const fact = {
+  id: "money.current",
+  metric: "Recorded expenses",
+  value: 12345,
+  unit: "centavos",
+  period: { from: "2026-09-01", through: "2026-09-24" },
+  comparisonBasis: "Recorded transactions",
+  completeness: "complete",
+  source: {
+    description: "Transactions",
+    recordIds: [],
+    href: "/money/transactions",
+  },
+  claimType: "FACT",
+  provenance: {
+    tool: "getMoneySummary",
+    calculationVersion: "1",
+    retrievedAt: "2026-09-24T00:00:00Z",
+    textTrust: "untrusted_data",
+  },
+};
+const answered = (text: string, extra: Record<string, unknown> = {}) =>
+  new Response(
+    JSON.stringify({
+      status: "answered",
+      claims: [
+        {
+          kind: "observation",
+          text,
+          evidenceIds: [fact.id],
+          comparison: null,
+        },
+      ],
+      evidence: [fact],
+      limitations: [],
+      ...extra,
+    }),
+    { status: 200 },
+  );
+
+describe("Analyst conversation", () => {
+  it("asks for consent once and remembers it for the user", async () => {
     const user = userEvent.setup();
-    const answered = () =>
-      new Response(
-        JSON.stringify({
-          status: "answered",
-          claims: [
-            {
-              kind: "interpretation",
-              text: "The recorded expenses may be worth a look.",
-              evidenceIds: ["money.current"],
-              comparison: null,
-            },
-          ],
-          evidence: [],
-          limitations: [],
-        }),
-        { status: 200 },
-      );
-    const fetch = vi.fn().mockImplementation(async () => answered());
+    const first = render(<FreeformWorkspace userId="owner-a" />);
+    await user.type(box(), "How did my spending change?");
+    expect(ask()).toBeDisabled();
+    await user.click(consent());
+    expect(ask()).toBeEnabled();
+    expect(window.localStorage.getItem("atlas:analyst-consent:owner-a")).toBe(
+      "granted",
+    );
+    first.unmount();
+
+    render(<FreeformWorkspace userId="owner-a" />);
+    await waitFor(() =>
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText(/Data sharing on/)).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Turn off" }));
+    expect(consent()).not.toBeChecked();
+    expect(
+      window.localStorage.getItem("atlas:analyst-consent:owner-a"),
+    ).toBeNull();
+  });
+
+  it("sends a suggested question straight through the verified flow", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem("atlas:analyst-consent:owner-a", "granted");
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(answered("Recorded expenses were ₱123.45."));
     vi.stubGlobal("fetch", fetch);
-    render(<FreeformWorkspace />);
-    const box = screen.getByRole("textbox", { name: "Ask your own question" });
-    await user.type(box, "How did my spending change?");
-    await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Ask Analyst" }));
-    await screen.findByText(/Follow-up to/);
-    expect(box).toHaveValue("");
-    await user.type(box, "What about last quarter?");
-    await user.click(screen.getByRole("button", { name: "Ask Analyst" }));
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    render(<FreeformWorkspace userId="owner-a" />);
+    await waitFor(() =>
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument(),
+    );
+    await user.click(
+      screen.getByRole("button", { name: SUGGESTED_QUESTIONS[0] }),
+    );
+    expect(await screen.findByText(/Recorded expenses were/)).toBeVisible();
+    expect(JSON.parse(fetch.mock.calls[0]![1].body)).toEqual({
+      question: SUGGESTED_QUESTIONS[0],
+      dataSharingAcknowledged: true,
+    });
+    expect(
+      screen.getByRole("list", { name: "Conversation" }),
+    ).toHaveTextContent(SUGGESTED_QUESTIONS[0]);
+  });
+
+  it("keeps a thread and sends earlier answers with a follow-up", async () => {
+    const user = userEvent.setup();
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(async () =>
+        answered("The recorded expenses may be worth a look."),
+      )
+      .mockImplementationOnce(async () =>
+        answered("July expenses may also be worth a look."),
+      );
+    vi.stubGlobal("fetch", fetch);
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.type(box(), "How did my spending change?{Enter}");
+    await screen.findByText("The recorded expenses may be worth a look.");
+    expect(box()).toHaveValue("");
+    await user.type(box(), "What about the month before?");
+    await user.click(ask());
+    await screen.findByText("July expenses may also be worth a look.");
+    // Both answers stay visible as one conversation.
+    expect(
+      screen.getByText("The recorded expenses may be worth a look."),
+    ).toBeVisible();
     expect(JSON.parse(fetch.mock.calls[1]![1].body).history).toEqual([
       {
         question: "How did my spending change?",
         answer: "The recorded expenses may be worth a look.",
       },
     ]);
-    await user.click(
-      screen.getByRole("button", { name: "Start a new question" }),
-    );
-    expect(screen.queryByText(/Follow-up to/)).toBeNull();
+    await user.click(screen.getByRole("button", { name: "New conversation" }));
+    expect(screen.queryByRole("list", { name: "Conversation" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: SUGGESTED_QUESTIONS[0] }),
+    ).toBeVisible();
   });
-  it("hides peso figures in claims under privacy mode and names a matched goal", async () => {
+
+  it("hides peso figures under privacy mode and shows a matched goal", async () => {
     const user = userEvent.setup();
     window.localStorage.setItem("atlas:privacy-mode:owner-a", "hidden");
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            status: "answered",
-            claims: [
-              {
-                kind: "observation",
-                text: "Recorded expenses were ₱1,234.50, PHP 99.00 and 12.50 pesos this month.",
-                evidenceIds: ["money.current"],
-                comparison: null,
-              },
-            ],
-            evidence: [],
-            limitations: [],
-            matchedEntity: { type: "goal", name: "Emergency Fund" },
-          }),
-          { status: 200 },
+      vi
+        .fn()
+        .mockResolvedValue(
+          answered(
+            "Recorded expenses were ₱1,234.50, PHP 99.00 and 12.50 pesos this month.",
+            { matchedEntity: { type: "goal", name: "Emergency Fund" } },
+          ),
         ),
-      ),
     );
     render(
       <PrivacyProvider userId="owner-a">
-        <FreeformWorkspace />
+        <FreeformWorkspace userId="owner-a" />
       </PrivacyProvider>,
     );
-    await user.type(
-      screen.getByRole("textbox", { name: "Ask your own question" }),
-      "How is my emergency fund goal?",
-    );
-    await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Ask Analyst" }));
+    await user.click(consent());
+    await user.type(box(), "How is my emergency fund goal?{Enter}");
     const claim = await screen.findByText(/Recorded expenses were/);
     expect(claim).not.toHaveTextContent("1,234.50");
     expect(claim).not.toHaveTextContent("99.00");
     expect(claim).not.toHaveTextContent("12.50");
-    expect(claim).toHaveTextContent("this month.");
-    expect(
-      screen.getByText(/matched your question to your goal/),
-    ).toHaveTextContent("Emergency Fund");
-    window.localStorage.clear();
+    expect(screen.getByText("Using your goal “Emergency Fund”.")).toBeVisible();
   });
 
-  it("stacks a source-linked scenario comparison with assumptions", async () => {
+  it("shows a scenario comparison with a link to its assumptions", async () => {
     const user = userEvent.setup();
     const evidence = ["Current", "Option 1", "Option 2"].map(
       (label, index) => ({
+        ...fact,
         id: `scenario.${index}`,
         metric: `${label} · Runway estimate`,
         value: 6 - index,
         unit: "months",
-        period: { from: "2026-09-01", through: "2026-09-24" },
         comparisonBasis: `${label}: stated assumptions`,
-        completeness: "complete",
         source: { description: "Runway", recordIds: [], href: "/money/runway" },
         claimType: index === 0 ? "FACT" : "SCENARIO",
-        provenance: {
-          tool: "compareFinancialScenarios",
-          calculationVersion: "1",
-          retrievedAt: "2026-09-24T00:00:00Z",
-          textTrust: "untrusted_data",
-        },
+        provenance: { ...fact.provenance, tool: "compareFinancialScenarios" },
       }),
     );
     vi.stubGlobal(
@@ -134,36 +197,27 @@ describe("Freeform Analyst workspace", () => {
         ),
       ),
     );
-    render(<FreeformWorkspace />);
-    await user.type(
-      screen.getByRole("textbox", { name: "Ask your own question" }),
-      "What if monthly income falls by 20%?",
-    );
-    await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Ask Analyst" }));
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.type(box(), "What if monthly income falls by 20%?{Enter}");
     const comparison = await screen.findByLabelText(
       "Runway scenario comparison",
     );
     expect(comparison).toHaveTextContent("Current: stated assumptions");
-    expect(comparison).toHaveTextContent("Option 1: stated assumptions");
     expect(comparison).toHaveTextContent("Option 2: stated assumptions");
     expect(
       screen.getByRole("link", { name: "Review or edit runway assumptions" }),
     ).toHaveAttribute("href", "/money/runway");
   });
-  it("sends the selected active debt with a monthly scenario", async () => {
+
+  it("sends a focused goal or debt and shows the focus on the question", async () => {
     const user = userEvent.setup();
-    const fetch = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({ status: "fallback", evidence: [], limitations: [] }),
-          { status: 200 },
-        ),
-      );
+    const fetch = vi.fn().mockImplementation(async () => answered("Noted."));
     vi.stubGlobal("fetch", fetch);
     render(
       <FreeformWorkspace
+        userId="owner-a"
+        goals={[{ id: "goal-1", title: "Emergency Fund" }]}
         debts={[
           {
             id: "11111111-1111-4111-8111-111111111111",
@@ -172,119 +226,69 @@ describe("Freeform Analyst workspace", () => {
         ]}
       />,
     );
-    await user.type(
-      screen.getByRole("textbox", { name: "Ask your own question" }),
-      "What if I pay an extra 100 pesos monthly?",
-    );
+    await user.click(consent());
     await user.selectOptions(
-      screen.getByRole("combobox", {
-        name: "Active debt for a monthly payment scenario (optional)",
-      }),
-      "11111111-1111-4111-8111-111111111111",
+      screen.getByLabelText("Focus on a goal or debt"),
+      "debt:11111111-1111-4111-8111-111111111111",
     );
-    await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: "Ask Analyst" }));
-    await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
+    expect(screen.getByText("Focus: Test debt")).toBeVisible();
+    expect(box()).toHaveAttribute("maxLength", "400");
+    await user.type(box(), "What if I pay ₱500 extra monthly?{Enter}");
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
     expect(JSON.parse(fetch.mock.calls[0]![1].body)).toMatchObject({
       debtId: "11111111-1111-4111-8111-111111111111",
     });
+    // The asked question keeps its focus label; the composer chip clears.
+    expect(
+      screen.getByRole("list", { name: "Conversation" }),
+    ).toHaveTextContent("Focus: Test debt");
+    await user.click(screen.getByRole("button", { name: "Clear focus" }));
+    expect(screen.queryByRole("button", { name: "Clear focus" })).toBeNull();
   });
-  it("requires disclosure and opens cited evidence on narrow layouts", async () => {
+
+  it("opens the cited source from a citation", async () => {
     const user = userEvent.setup();
-    const fetch = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          status: "answered",
-          claims: [
-            {
-              kind: "interpretation",
-              text: "This may warrant a closer look at expenses.",
-              evidenceIds: ["money.current"],
-            },
-          ],
-          evidence: [
-            {
-              id: "money.current",
-              metric: "Recorded expenses",
-              value: 12000,
-              unit: "centavos",
-              period: { from: "2026-09-01", through: "2026-09-24" },
-              comparisonBasis: "Recorded transactions",
-              completeness: "complete",
-              source: {
-                description: "Transactions",
-                recordIds: [],
-                href: "/money/transactions",
-              },
-              claimType: "FACT",
-              provenance: {
-                tool: "getMoneySummary",
-                calculationVersion: "1",
-                retrievedAt: "2026-09-24T00:00:00Z",
-                textTrust: "untrusted_data",
-              },
-              relationship: {
-                source: {
-                  type: "task",
-                  id: "11111111-1111-4111-8111-111111111111",
-                },
-                target: {
-                  type: "goal",
-                  id: "22222222-2222-4222-8222-222222222222",
-                },
-                origin: "native",
-              },
-            },
-          ],
-          limitations: [],
-        }),
-        { status: 200 },
-      ),
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          answered("This may warrant a closer look at recorded expenses."),
+        ),
     );
-    vi.stubGlobal("fetch", fetch);
-    render(
-      <FreeformWorkspace
-        goals={[
-          { id: "22222222-2222-4222-8222-222222222222", title: "Career goal" },
-        ]}
-      />,
-    );
-    const submit = screen.getByRole("button", { name: "Ask Analyst" });
-    expect(submit).toBeDisabled();
-    await user.type(
-      screen.getByRole("textbox", { name: "Ask your own question" }),
-      "What needs my attention in money?",
-    );
-    await user.click(screen.getByRole("checkbox"));
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Specific goal (optional)" }),
-      "22222222-2222-4222-8222-222222222222",
-    );
-    await user.click(submit);
-    await waitFor(() =>
-      expect(
-        screen.getByText("This may warrant a closer look at expenses."),
-      ).toBeInTheDocument(),
-    );
-    expect(
-      screen.getByText(/Inspected records span Sep 1–24, 2026/),
-    ).toBeInTheDocument();
-    const sent = JSON.parse(fetch.mock.calls[0]![1].body);
-    expect(sent.dataSharingAcknowledged).toBe(true);
-    expect(sent.goalId).toBe("22222222-2222-4222-8222-222222222222");
-    const citation = screen.getByRole("link", { name: "Recorded expenses" });
-    expect(citation).toHaveAttribute("href", "#evidence-money.current");
-    const details = screen
-      .getByText(/How this was answered/)
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.type(box(), "What needs attention in my finances?{Enter}");
+    await screen.findByText(/warrant a closer look/);
+    const sources = screen
+      .getByText(/Sources · 1 ATLAS fact ·/)
       .closest("details")!;
-    expect(details.open).toBe(false);
-    await user.click(citation);
-    expect(details.open).toBe(true);
-    expect(
-      screen.getByText(/Current native path: task → goal/),
-    ).toBeInTheDocument();
+    expect(sources).not.toHaveAttribute("open");
+    await user.click(screen.getByRole("link", { name: "Recorded expenses" }));
+    expect(sources).toHaveAttribute("open");
     expect(
       screen.getByRole("link", { name: "View ATLAS records" }),
     ).toHaveAttribute("href", "/money/transactions");
+  });
+
+  it("shows a request error inside the conversation", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            error: "Your Analyst usage limit has been reached.",
+          }),
+          { status: 429 },
+        ),
+      ),
+    );
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.type(box(), "What needs attention in my finances?{Enter}");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Your Analyst usage limit has been reached.",
+    );
   });
 });
