@@ -44,6 +44,11 @@ it, and what to change when the account's tier or the offer changes.
     last room.
   - If the reservation would pass the stop point, the call is refused and
     nothing reaches OpenAI.
+  - Reserving and settling run only with the server's service-role key
+    (`SUPABASE_SERVICE_ROLE_KEY`), for the account the request verified. A
+    signed-in account cannot call them, so it cannot fill a pool without an
+    OpenAI request or settle a reservation below its real usage. Without the
+    key, pooled calls are refused and nothing is sent.
   - After the call, `settle_ai_pool_tokens` records the reported usage. A
     rejected request settles at zero; a timeout or unreadable usage keeps the
     full reservation, since OpenAI may still have billed it.
@@ -74,6 +79,8 @@ When a pool is refused:
 
 ## Operations
 
+- **Service-role key:** `SUPABASE_SERVICE_ROLE_KEY` must be set wherever
+  ATLAS runs; the meter fails closed without it.
 - **Verify sharing:** after enabling it, the Chat Completions usage page
   grouped by service tier should show "data sharing incentive tier" tokens.
 - **Change of tier:** update the two rows, for example at tier 3:

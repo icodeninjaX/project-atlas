@@ -4,6 +4,9 @@
 -- total past the limit is billed in full, so every pooled OpenAI call first
 -- reserves its largest possible size here and is refused once the pool would
 -- pass its stop point. The app settles each reservation with the real usage.
+-- Reserving and settling run only with the server's service-role key: a
+-- signed-in account could otherwise fill a pool without calling OpenAI, or
+-- settle a reservation below its real usage.
 
 create table public.ai_pool_limits (
   pool text primary key check (pool in ('large', 'small')),
@@ -66,18 +69,18 @@ returns text language sql immutable set search_path = '' as $$
 $$;
 revoke all on function public.ai_pool_for_model(text) from public, anon, authenticated;
 
-create function public.reserve_ai_pool_tokens(p_model text, p_feature text, p_tokens integer)
+-- p_user_id is the account the server verified for this request.
+create function public.reserve_ai_pool_tokens(p_user_id uuid, p_model text, p_feature text, p_tokens integer)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
-  requesting_user uuid := (select auth.uid());
   target_pool text := public.ai_pool_for_model(p_model);
   today date := (now() at time zone 'utc')::date;
   pool_budget bigint;
   committed bigint;
   reservation_id bigint;
 begin
-  if requesting_user is null then
-    return jsonb_build_object('status', 'unauthenticated');
+  if p_user_id is null then
+    return jsonb_build_object('status', 'invalid_request');
   end if;
   if target_pool is null then
     return jsonb_build_object('status', 'unpooled_model');
@@ -103,12 +106,12 @@ begin
     );
   end if;
   insert into public.ai_pool_usage (user_id, pool, model, feature, usage_day, reserved_tokens)
-    values (requesting_user, target_pool, p_model, p_feature, today, p_tokens)
+    values (p_user_id, target_pool, p_model, p_feature, today, p_tokens)
     returning id into reservation_id;
   return jsonb_build_object('status', 'reserved', 'reservation_id', reservation_id, 'pool', target_pool);
 end; $$;
-revoke all on function public.reserve_ai_pool_tokens(text, text, integer) from public, anon;
-grant execute on function public.reserve_ai_pool_tokens(text, text, integer) to authenticated;
+revoke all on function public.reserve_ai_pool_tokens(uuid, text, text, integer) from public, anon, authenticated;
+grant execute on function public.reserve_ai_pool_tokens(uuid, text, text, integer) to service_role;
 
 -- Records the real usage once. Unknown usage (a timeout, say) keeps the
 -- reserved size, since OpenAI may still have billed the request.
@@ -118,10 +121,10 @@ begin
   if p_used is not null and p_used < 0 then return; end if;
   update public.ai_pool_usage
     set used_tokens = coalesce(p_used, reserved_tokens), status = 'settled'
-    where id = p_id and user_id = (select auth.uid()) and status = 'reserved';
+    where id = p_id and status = 'reserved';
 end; $$;
-revoke all on function public.settle_ai_pool_tokens(bigint, integer) from public, anon;
-grant execute on function public.settle_ai_pool_tokens(bigint, integer) to authenticated;
+revoke all on function public.settle_ai_pool_tokens(bigint, integer) from public, anon, authenticated;
+grant execute on function public.settle_ai_pool_tokens(bigint, integer) to service_role;
 
 -- Today's use of each pool against ATLAS's stop point, for the model picker.
 create function public.ai_pool_status()

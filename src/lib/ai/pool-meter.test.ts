@@ -7,9 +7,22 @@ import {
 } from "./pool-meter";
 
 vi.mock("server-only", () => ({}));
-const supabase = vi.hoisted(() => ({ rpc: vi.fn() }));
+const supabase = vi.hoisted(() => ({
+  rpc: vi.fn(),
+  statusRpc: vi.fn(),
+  getUser: vi.fn(),
+  admin: true,
+}));
+// Reserving and settling use the server's service-role client; the session
+// client only identifies the account and reads pool status.
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: () => (supabase.admin ? { rpc: supabase.rpc } : null),
+}));
 vi.mock("@/lib/supabase/server", () => ({
-  createClient: async () => ({ rpc: supabase.rpc }),
+  createClient: async () => ({
+    rpc: supabase.statusRpc,
+    auth: { getUser: supabase.getUser },
+  }),
 }));
 
 const url = "https://api.openai.com/v1/chat/completions";
@@ -24,6 +37,9 @@ const settleCalls = () =>
   supabase.rpc.mock.calls.filter(([name]) => name === "settle_ai_pool_tokens");
 
 beforeEach(() => {
+  supabase.admin = true;
+  supabase.getUser.mockResolvedValue({ data: { user: { id: "owner-a" } } });
+  supabase.statusRpc.mockReset();
   supabase.rpc.mockReset();
   supabase.rpc.mockImplementation(async (name: string) =>
     name === "reserve_ai_pool_tokens"
@@ -42,6 +58,7 @@ describe("free daily pool meter", () => {
     );
     const response = await meteredOpenAIFetch(url, init, options(fetch));
     expect(supabase.rpc).toHaveBeenNthCalledWith(1, "reserve_ai_pool_tokens", {
+      p_user_id: "owner-a",
       p_model: "gpt-6-sol",
       p_feature: "analyst_answer",
       p_tokens: 1235,
@@ -94,6 +111,20 @@ describe("free daily pool meter", () => {
     ).rejects.toBeInstanceOf(PoolMeterError);
     expect(fetch).not.toHaveBeenCalled();
   });
+  it("refuses without the service-role key or a signed-in account", async () => {
+    const fetch = vi.fn();
+    supabase.admin = false;
+    await expect(
+      meteredOpenAIFetch(url, init, options(fetch)),
+    ).rejects.toBeInstanceOf(PoolMeterError);
+    supabase.admin = true;
+    supabase.getUser.mockResolvedValueOnce({ data: { user: null } });
+    await expect(
+      meteredOpenAIFetch(url, init, options(fetch)),
+    ).rejects.toBeInstanceOf(PoolMeterError);
+    expect(supabase.rpc).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+  });
   it("frees a rejected request and keeps the reserve when usage is unknown", async () => {
     await meteredOpenAIFetch(
       url,
@@ -118,7 +149,7 @@ describe("free daily pool meter", () => {
     expect(settleCalls().at(-1)![1]).toEqual({ p_id: 9, p_used: null });
   });
   it("reads today's pool status", async () => {
-    supabase.rpc.mockResolvedValueOnce({
+    supabase.statusRpc.mockResolvedValueOnce({
       data: [
         { pool: "large", used: 1000, budget: 225000, dailyTokens: 250000 },
         { pool: "small", used: 0, budget: 2250000, dailyTokens: 2500000 },
@@ -129,7 +160,10 @@ describe("free daily pool meter", () => {
       large: { used: 1000, budget: 225000, dailyTokens: 250000 },
       small: { used: 0, budget: 2250000, dailyTokens: 2500000 },
     });
-    supabase.rpc.mockResolvedValueOnce({ data: null, error: { message: "x" } });
+    supabase.statusRpc.mockResolvedValueOnce({
+      data: null,
+      error: { message: "x" },
+    });
     expect(await readPoolStatus()).toBeNull();
   });
 });

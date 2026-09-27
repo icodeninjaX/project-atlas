@@ -1,4 +1,5 @@
 import "server-only";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { freePoolFor, type FreePool } from "./pools";
 
@@ -85,9 +86,16 @@ export async function meteredOpenAIFetch(
   const send = options.fetch ?? globalThis.fetch;
   const pool = freePoolFor(options.model);
   if (!pool) throw new PoolMeterError("unpooled_model");
-  const client = await createClient();
-  if (!client) throw new PoolMeterError("unconfigured");
-  const { data, error } = await client.rpc("reserve_ai_pool_tokens", {
+  // Only the server may reserve, for the account this request verified.
+  const session = await createClient();
+  const admin = createAdminClient();
+  if (!session || !admin) throw new PoolMeterError("unconfigured");
+  const {
+    data: { user },
+  } = await session.auth.getUser();
+  if (!user) throw new PoolMeterError("unauthenticated");
+  const { data, error } = await admin.rpc("reserve_ai_pool_tokens", {
+    p_user_id: user.id,
     p_model: options.model,
     p_feature: options.feature,
     p_tokens: Math.max(1, Math.ceil(options.reserveTokens)),
@@ -102,7 +110,7 @@ export async function meteredOpenAIFetch(
     throw new PoolMeterError(reservation.status);
   const settle = async (used: number | null) => {
     try {
-      await client.rpc("settle_ai_pool_tokens", {
+      await admin.rpc("settle_ai_pool_tokens", {
         p_id: reservation.reservation_id,
         p_used: used,
       });
