@@ -347,6 +347,10 @@ pre {
   }
 }
 
+html[data-launch-seen] .atlas-launch-screen {
+  display: none;
+}
+
 @keyframes atlas-launch-core {
   0% {
     transform: scale(0.72) rotate(-24deg);
@@ -539,4 +543,23 @@ pre {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* Edge fades for horizontally scrolling tab strips (see ScrollStrip). */
+[data-fade="end"] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+
+[data-fade="start"] {
+  mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent);
+}
+
+[data-fade="both"] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 2.5rem,
+    #000 calc(100% - 2.5rem),
+    transparent
+  );
 }

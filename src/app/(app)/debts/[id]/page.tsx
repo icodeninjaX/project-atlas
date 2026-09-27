@@ -10,6 +10,7 @@ import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { projectDebtPayoff } from "@/lib/debts/debt";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 function todayInManila() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -19,6 +20,8 @@ function todayInManila() {
     day: "2-digit",
   }).format(new Date());
 }
+
+export const metadata = { title: "Debt details" };
 
 export default async function DebtDetailPage({
   params,
@@ -64,7 +67,7 @@ export default async function DebtDetailPage({
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">
             {debt.creditor_name}
           </h1>
-          <p className="text-muted-foreground mt-2 text-sm">
+          <p className="text-muted-foreground mt-2 text-sm first-letter:uppercase">
             {debt.status} · {Number(debt.interest_rate_percent)}% annual
             interest
           </p>
@@ -146,7 +149,7 @@ export default async function DebtDetailPage({
                     </SensitiveValue>
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {payment.payment_date}
+                    {formatCalendarDate(payment.payment_date)}
                     {payment.notes ? ` · ${payment.notes}` : ""}
                   </p>
                 </div>

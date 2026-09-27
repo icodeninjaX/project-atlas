@@ -1,4 +1,5 @@
 import { formatCentavos } from "@/lib/money/money";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 export const signalCategories = [
   "Money",
@@ -205,13 +206,7 @@ function mondayStart(value: string): string {
   return shiftDate(value, weekday === 0 ? -6 : 1 - weekday);
 }
 
-function dateLabel(value: string): string {
-  return new Intl.DateTimeFormat("en-PH", {
-    timeZone: "UTC",
-    month: "short",
-    day: "numeric",
-  }).format(new Date(`${value}T00:00:00Z`));
-}
+const dateLabel = formatCalendarDate;
 
 function percentageChange(current: number, baseline: number): number | null {
   if (baseline <= 0) return null;
@@ -1042,7 +1037,7 @@ function goalSignals(
           severity: stalled.inactiveDays >= 45 ? "warning" : "info",
           title: `“${stalled.goal.title}” has gone quiet`,
           message: `This goal has had no recorded change for ${stalled.inactiveDays} days.`,
-          reason: `ATLAS checked the goal and all of its milestones. The most recent stored update was ${new Date(stalled.latestUpdate).toLocaleDateString("en-PH", { timeZone: "Asia/Manila" })}.`,
+          reason: `ATLAS checked the goal and all of its milestones. The most recent stored update was ${formatCalendarDate(stalled.latestUpdate)}.`,
           metric: {
             label: "Days without change",
             value: String(stalled.inactiveDays),

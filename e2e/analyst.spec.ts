@@ -69,9 +69,7 @@ for (const width of [390, 1280]) {
     );
     await analyze.click();
     await expect(page.getByText("₱123.45")).toBeVisible();
-    await expect(
-      page.getByText("2026-09-01 to 2026-09-24 · complete"),
-    ).toBeVisible();
+    await expect(page.getByText("Sep 1–24, 2026 · complete")).toBeVisible();
     await expect(
       page.getByRole("link", { name: "View ATLAS records" }),
     ).toHaveAttribute("href", "/money/transactions");

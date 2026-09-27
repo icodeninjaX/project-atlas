@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { orderDebts, resolveDebtStrategy } from "@/lib/debts/debt";
 import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
+import { formatCalendarDate } from "@/lib/dates/dates";
+import { ScrollStrip } from "@/components/shared/scroll-strip";
 
 export const metadata = { title: "Debts" };
 
@@ -93,20 +95,22 @@ export default async function DebtsPage({
           </div>
         }
       />
-      <nav
+      <ScrollStrip
         aria-label="Debt payoff strategy"
+        activeKey={strategy}
         className="border-border mt-6 flex [scrollbar-width:none] gap-1 overflow-x-auto border-b [&::-webkit-scrollbar]:hidden"
       >
         {(["snowball", "avalanche", "priority"] as const).map((item) => (
           <Link
             key={item}
             href={`/debts?strategy=${item}`}
+            aria-current={strategy === item ? "page" : undefined}
             className={`min-h-11 shrink-0 border-b-2 px-4 py-3 text-sm capitalize ${strategy === item ? "border-primary font-semibold" : "text-muted-foreground border-transparent"}`}
           >
             {item === "priority" ? "My priority" : item}
           </Link>
         ))}
-      </nav>
+      </ScrollStrip>
       <p className="text-muted-foreground mt-3 text-xs">
         {strategy === "snowball" && "Smallest remaining balance first."}
         {strategy === "avalanche" && "Highest annual interest rate first."}
@@ -141,7 +145,9 @@ export default async function DebtsPage({
                 <p className="text-muted-foreground mt-1 text-xs capitalize">
                   {String(debt.debt_type).replaceAll("_", " ")} ·{" "}
                   {Number(debt.interest_rate_percent)}% APR
-                  {debt.next_due_date ? ` · due ${debt.next_due_date}` : ""}
+                  {debt.next_due_date
+                    ? ` · due ${formatCalendarDate(debt.next_due_date)}`
+                    : ""}
                 </p>
               </div>
               <TooltipHint

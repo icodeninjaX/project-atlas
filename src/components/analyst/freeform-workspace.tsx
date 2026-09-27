@@ -8,6 +8,8 @@ import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { formatCentavos } from "@/lib/money/money";
 import type { ToolEvidence } from "@/lib/analyst/tools/contracts";
 import type { GroundedClaim } from "@/lib/analyst/freeform/answer";
+import { ChevronDown } from "lucide-react";
+import { formatPeriodLabel } from "@/lib/history/period-label";
 
 type FreeformResult = {
   status: "answered" | "fallback" | "unsupported" | "clarification_required";
@@ -158,20 +160,32 @@ export function FreeformWorkspace({
             className="border-border bg-background mt-2 w-full rounded-xl border px-3 py-3 text-sm"
           />
           <p className="text-muted-foreground mt-2 text-xs">
-            Analyst can use supported ATLAS records. Questions about unavailable
-            history or unnamed records may need clarification.
+            Try “What if monthly income falls by 20%?” Mark amounts with ₱ or
+            “pesos”.
           </p>
-          <p className="text-muted-foreground mt-1 text-xs">
-            For example: “What if monthly income falls by 20%?” Runway scenarios
-            are estimates. Mark money amounts with ₱ or “pesos”; extra debt
-            payments are monthly.
-          </p>
-          <p className="text-muted-foreground mt-1 text-xs">
-            Freeform questions are sent to GPT-5.4 mini to plan which ATLAS data
-            to read, and the retrieved evidence is sent to GPT-4o mini for the
-            explanation. The model selector under Suggested questions applies to
-            those presets.
-          </p>
+          <details className="group text-muted-foreground mt-2 text-xs">
+            <summary className="focus-visible:ring-ring hover:text-foreground inline-flex min-h-8 cursor-pointer list-none items-center gap-1 rounded-md font-semibold focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+              How Analyst answers
+              <ChevronDown
+                aria-hidden="true"
+                className="size-3.5 transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <div className="mt-1 space-y-1 leading-5">
+              <p>
+                Analyst uses supported ATLAS records. Questions about
+                unavailable history or unnamed records may need clarification.
+                Runway scenarios are estimates, and extra debt payments are
+                treated as monthly.
+              </p>
+              <p>
+                Freeform questions are sent to GPT-5.4 mini to plan which ATLAS
+                data to read, and the retrieved evidence is sent to GPT-4o mini
+                for the explanation. The model picker under Suggested questions
+                applies only to those presets.
+              </p>
+            </div>
+          </details>
         </div>
         {goals.length > 0 && (
           <div>
@@ -198,8 +212,7 @@ export function FreeformWorkspace({
               ))}
             </select>
             <p className="text-muted-foreground mt-1 text-xs">
-              Selecting a goal lets Analyst inspect its current links and dated
-              linked activity. Past goal progress is unavailable.
+              Analyst inspects the goal’s current links and dated activity.
             </p>
             {goalId && question.length > 400 && (
               <p className="text-destructive mt-1 text-xs">
@@ -233,8 +246,7 @@ export function FreeformWorkspace({
               ))}
             </select>
             <p className="text-muted-foreground mt-1 text-xs">
-              Select a debt when asking about an extra monthly payment. This
-              does not change the debt or make a payment.
+              For an extra monthly payment scenario. Nothing is paid or changed.
             </p>
             {debtId && question.length > 400 && (
               <p className="text-destructive mt-1 text-xs">
@@ -285,16 +297,17 @@ export function FreeformWorkspace({
             {result.evidence.length > 0 && (
               <p className="text-muted-foreground mt-2 text-xs">
                 Inspected records span{" "}
-                {result.evidence.reduce(
-                  (first, item) =>
-                    item.period.from < first ? item.period.from : first,
-                  result.evidence[0]!.period.from,
-                )}
-                {" to "}
-                {result.evidence.reduce(
-                  (last, item) =>
-                    item.period.through > last ? item.period.through : last,
-                  result.evidence[0]!.period.through,
+                {formatPeriodLabel(
+                  result.evidence.reduce(
+                    (first, item) =>
+                      item.period.from < first ? item.period.from : first,
+                    result.evidence[0]!.period.from,
+                  ),
+                  result.evidence.reduce(
+                    (last, item) =>
+                      item.period.through > last ? item.period.through : last,
+                    result.evidence[0]!.period.through,
+                  ),
                 )}
                 {result.evidence.some(
                   (item) => item.completeness !== "complete",

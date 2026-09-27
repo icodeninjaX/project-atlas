@@ -2,8 +2,26 @@
 
 import { Search } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { CollapsibleFilters } from "@/components/shared/collapsible-filters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+const typeOptions = [
+  ["Tasks", "Tasks"],
+  ["Goals", "Goals"],
+  ["Debts", "Debts"],
+  ["Transactions", "Money"],
+  ["Career", "Career"],
+  ["Reviews", "Reviews"],
+  ["Knowledge", "Knowledge"],
+] as const;
+
+const statusOptions = [
+  ["open", "Open / active"],
+  ["completed", "Completed"],
+  ["active", "Active"],
+  ["paused", "Paused"],
+] as const;
 
 export function SearchInput({
   defaultValue,
@@ -57,64 +75,81 @@ export function SearchInput({
           />
           <kbd
             aria-hidden="true"
-            className="border-border bg-muted text-muted-foreground pointer-events-none absolute top-3.5 right-3 rounded border px-1.5 font-mono text-[10px]"
+            className="border-border bg-muted text-muted-foreground pointer-events-none absolute top-3.5 right-3 hidden rounded border px-1.5 font-mono text-[10px] sm:block"
           >
             /
           </kbd>
         </span>
       </label>
-      <Button type="submit" className="h-12 self-end">
-        Search
-      </Button>
-      <fieldset className="border-border grid gap-3 border-t pt-3 sm:col-span-2 sm:grid-cols-2 lg:grid-cols-4">
-        <legend className="text-muted-foreground px-1 text-xs font-semibold">
-          Narrow results
-        </legend>
-        <label className="text-muted-foreground text-xs">
-          Type
-          <select
-            name="type"
-            defaultValue={entityType}
-            className="border-border bg-background mt-1 min-h-10 w-full rounded-xl border px-3 text-sm"
-          >
-            <option value="all">All types</option>
-            <option value="Tasks">Tasks</option>
-            <option value="Goals">Goals</option>
-            <option value="Debts">Debts</option>
-            <option value="Transactions">Money</option>
-            <option value="Career">Career</option>
-            <option value="Reviews">Reviews</option>
-            <option value="Knowledge">Knowledge</option>
-          </select>
-        </label>
-        <label className="text-muted-foreground text-xs">
-          Status
-          <select
-            name="status"
-            defaultValue={status}
-            className="border-border bg-background mt-1 min-h-10 w-full rounded-xl border px-3 text-sm"
-          >
-            <option value="all">All statuses</option>
-            <option value="open">Open / active</option>
-            <option value="completed">Completed</option>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-          </select>
-        </label>
-        <label className="text-muted-foreground text-xs">
-          From
-          <Input
-            name="from"
-            type="date"
-            defaultValue={fromDate}
-            className="mt-1"
-          />
-        </label>
-        <label className="text-muted-foreground text-xs">
-          To
-          <Input name="to" type="date" defaultValue={toDate} className="mt-1" />
-        </label>
-      </fieldset>
+      <CollapsibleFilters
+        activeCount={
+          [
+            typeOptions.some(([value]) => value === entityType),
+            statusOptions.some(([value]) => value === status),
+            fromDate,
+            toDate,
+          ].filter(Boolean).length
+        }
+        actions={
+          <Button type="submit" className="h-12 flex-1 self-end">
+            Search
+          </Button>
+        }
+      >
+        <fieldset className="border-border grid gap-3 border-t pt-3 sm:order-last sm:col-span-2 sm:grid-cols-2 lg:grid-cols-4">
+          <legend className="text-muted-foreground px-1 text-xs font-semibold">
+            Narrow results
+          </legend>
+          <label className="text-muted-foreground text-xs">
+            Type
+            <select
+              name="type"
+              defaultValue={entityType}
+              className="border-border bg-background mt-1 min-h-10 w-full rounded-xl border px-3 text-sm"
+            >
+              <option value="all">All types</option>
+              {typeOptions.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-muted-foreground text-xs">
+            Status
+            <select
+              name="status"
+              defaultValue={status}
+              className="border-border bg-background mt-1 min-h-10 w-full rounded-xl border px-3 text-sm"
+            >
+              <option value="all">All statuses</option>
+              {statusOptions.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-muted-foreground text-xs">
+            From
+            <Input
+              name="from"
+              type="date"
+              defaultValue={fromDate}
+              className="mt-1"
+            />
+          </label>
+          <label className="text-muted-foreground text-xs">
+            To
+            <Input
+              name="to"
+              type="date"
+              defaultValue={toDate}
+              className="mt-1"
+            />
+          </label>
+        </fieldset>
+      </CollapsibleFilters>
     </form>
   );
 }

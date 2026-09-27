@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatPeriodLabel } from "@/lib/history/period-label";
 import { PageHeading } from "@/components/shared/page-heading";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,8 +55,8 @@ export default async function PatternsPage() {
         View monthly history
       </Link>
       <p className="text-muted-foreground mt-4 text-sm">
-        {window.from} to {window.through} · eleven completed Asia/Manila
-        calendar months · method version {ASSOCIATION_VERSION}
+        {formatPeriodLabel(window.from, window.through)} · eleven completed
+        Asia/Manila calendar months · method version {ASSOCIATION_VERSION}
       </p>
       {unavailable || rows === null ? (
         <Card className="mt-6">

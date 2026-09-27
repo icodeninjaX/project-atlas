@@ -135,16 +135,6 @@ export default async function RunwayPage() {
         eyebrow="Money / Runway"
         title="Personal runway"
         description="A planning estimate from liquid funds and essential monthly need. Future income never extends this headline."
-        actions={
-          <>
-            <Button asChild variant="secondary">
-              <Link href="/money/accounts">Accounts</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/money/budget">Budget</Link>
-            </Button>
-          </>
-        }
       />
       <MoneyNavigation currentHref="/money/runway" />
 

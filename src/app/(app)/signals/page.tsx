@@ -13,6 +13,7 @@ import {
 } from "@/lib/signals/engine";
 import { loadSignals } from "@/lib/signals/server";
 import { createClient } from "@/lib/supabase/server";
+import { ScrollStrip } from "@/components/shared/scroll-strip";
 
 export const metadata = { title: "Signals" };
 
@@ -66,8 +67,9 @@ export default async function SignalsPage({
         description="Meaningful changes, risks, deadlines, and improvements detected from your ATLAS records. Every signal shows the facts behind it."
       />
 
-      <nav
+      <ScrollStrip
         aria-label="Signal categories"
+        activeKey={category ?? "all"}
         className="border-border bg-muted/60 mt-6 flex [scrollbar-width:none] gap-1 overflow-x-auto rounded-2xl border p-1 [&::-webkit-scrollbar]:hidden"
       >
         {[null, ...signalCategories].map((item) => {
@@ -87,7 +89,7 @@ export default async function SignalsPage({
             </Link>
           );
         })}
-      </nav>
+      </ScrollStrip>
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
         {visibleSignals && (

@@ -14,11 +14,17 @@ import {
 } from "@/lib/history/metrics";
 import { loadHistoricalMetrics } from "@/lib/history/server";
 import { formatCentavos } from "@/lib/money/money";
+import { formatPeriodLabel } from "@/lib/history/period-label";
 
 export const metadata = { title: "Recorded history" };
 
-function displayValue(row: HistoricalMetric) {
-  if (row.value === null) return "No supported history";
+const coverageStyles: Record<HistoricalMetric["coverage"], string> = {
+  recorded: "bg-primary/12 text-primary",
+  partial: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+  insufficient: "bg-muted text-muted-foreground",
+};
+
+function displayValue(row: HistoricalMetric & { value: number }) {
   const unit = metricDefinitions[row.metric].unit;
   return unit === "centavos"
     ? formatCentavos(row.value)
@@ -43,6 +49,8 @@ export default async function HistoryPage({
   const months = grain === "day" ? 1 : selectedMonths;
   const today = manilaToday(new Date());
   const window = historicalWindow(today, grain, months);
+  // Row labels omit the year the window ends in; the window line shows it.
+  const contextYear = Number(window.through.slice(0, 4));
   let rows: HistoricalMetric[] | null = null;
   let unavailable = false;
   try {
@@ -75,8 +83,8 @@ export default async function HistoryPage({
         initialMonths={months}
       />
       <p className="text-muted-foreground mt-3 text-xs">
-        {window.from} to {window.through} · Asia/Manila · metric version{" "}
-        {HISTORICAL_METRICS_VERSION} · updated {updatedAt}
+        {formatPeriodLabel(window.from, window.through)} · Asia/Manila · metric
+        version {HISTORICAL_METRICS_VERSION} · updated {updatedAt}
       </p>
       <p className="text-muted-foreground mt-2 text-sm">
         “Recorded” means source records exist from that date onward, not that
@@ -112,7 +120,7 @@ export default async function HistoryPage({
                   </p>
                   <p className="text-muted-foreground text-xs">
                     {first
-                      ? `Available from ${first}`
+                      ? `Available from ${formatPeriodLabel(first, first)}`
                       : "No source records yet"}{" "}
                     ·{" "}
                     <Link
@@ -123,24 +131,29 @@ export default async function HistoryPage({
                     </Link>
                   </p>
                 </CardHeader>
-                <CardContent>
-                  <div className="max-h-80 overflow-auto rounded-lg border">
-                    <table className="w-full min-w-80 text-left text-sm">
+                <CardContent className="px-3 sm:px-5">
+                  <div
+                    tabIndex={0}
+                    role="region"
+                    aria-label={`${definition.label} table`}
+                    className="focus-visible:ring-ring max-h-80 overflow-auto rounded-lg border focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    <table className="w-full text-left text-sm">
                       <caption className="sr-only">
                         {definition.label} by {grain}
                       </caption>
                       <thead className="bg-muted/60 sticky top-0 text-xs">
                         <tr>
-                          <th scope="col" className="p-2">
+                          <th scope="col" className="px-1.5 py-2 sm:p-2">
                             Period
                           </th>
-                          <th scope="col" className="p-2">
+                          <th scope="col" className="px-1.5 py-2 sm:p-2">
                             Value
                           </th>
-                          <th scope="col" className="p-2">
+                          <th scope="col" className="px-1.5 py-2 sm:p-2">
                             Sources
                           </th>
-                          <th scope="col" className="p-2">
+                          <th scope="col" className="px-1.5 py-2 sm:p-2">
                             Coverage
                           </th>
                         </tr>
@@ -167,28 +180,57 @@ export default async function HistoryPage({
                               key={row.period.from}
                               className="border-t align-top"
                             >
-                              <th scope="row" className="p-2 font-medium">
-                                {row.period.from}
-                                {grain === "day"
-                                  ? ""
-                                  : ` – ${row.period.through}`}
+                              <th
+                                scope="row"
+                                className="px-1.5 py-2 font-medium sm:p-2"
+                              >
+                                {formatPeriodLabel(
+                                  row.period.from,
+                                  row.period.through,
+                                  { contextYear },
+                                )}
                                 {clipped && (
                                   <span className="text-muted-foreground mt-0.5 block text-xs font-normal">
-                                    Counted {countedFrom} – {countedThrough}
+                                    Counted{" "}
+                                    {formatPeriodLabel(
+                                      countedFrom,
+                                      countedThrough,
+                                      { contextYear },
+                                    )}
                                   </span>
                                 )}
                               </th>
-                              <td className="p-2 whitespace-nowrap">
-                                <SensitiveValue>
-                                  {displayValue(row)}
-                                </SensitiveValue>
+                              <td className="px-1.5 py-2 font-mono whitespace-nowrap tabular-nums sm:p-2">
+                                {row.value === null ? (
+                                  <>
+                                    <span
+                                      aria-hidden="true"
+                                      className="text-muted-foreground"
+                                    >
+                                      —
+                                    </span>
+                                    <span className="sr-only">
+                                      No supported history
+                                    </span>
+                                  </>
+                                ) : (
+                                  <SensitiveValue>
+                                    {displayValue({ ...row, value: row.value })}
+                                  </SensitiveValue>
+                                )}
                               </td>
-                              <td className="p-2">
+                              <td className="px-1.5 py-2 sm:p-2">
                                 <SensitiveValue>
                                   {row.sourceCount}
                                 </SensitiveValue>
                               </td>
-                              <td className="p-2 capitalize">{row.coverage}</td>
+                              <td className="px-1.5 py-2 sm:p-2">
+                                <span
+                                  className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${coverageStyles[row.coverage]}`}
+                                >
+                                  {row.coverage}
+                                </span>
+                              </td>
                             </tr>
                           );
                         })}

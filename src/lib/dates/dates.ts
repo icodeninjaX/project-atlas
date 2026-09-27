@@ -49,6 +49,57 @@ function toManilaDate(value: string | Date): Date {
   );
 }
 
+const calendarDateUtc = new Intl.DateTimeFormat("en-PH", {
+  timeZone: "UTC",
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+const calendarDateManila = new Intl.DateTimeFormat("en-PH", {
+  timeZone: MANILA_TIMEZONE,
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+/**
+ * The app-wide display format for a calendar date: "Sep 30, 2026".
+ * Date-only `YYYY-MM-DD` values are shown as stored; timestamps are shown
+ * on their Asia/Manila calendar day. Unparseable input is returned as is.
+ */
+export function formatCalendarDate(value: string | Date): string {
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return calendarDateUtc.format(new Date(`${value}T00:00:00Z`));
+  }
+  const date = typeof value === "string" ? new Date(value) : value;
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : calendarDateManila.format(date);
+}
+
+const monthYear = new Intl.DateTimeFormat("en-PH", {
+  timeZone: "UTC",
+  month: "short",
+  year: "numeric",
+});
+
+/** "2026-09" → "Sep 2026". */
+export function formatCalendarMonth(month: string): string {
+  return /^\d{4}-\d{2}$/.test(month)
+    ? monthYear.format(new Date(`${month}-01T00:00:00Z`))
+    : month;
+}
+
+/**
+ * Stored weekly-review titles read "Week of 2026-09-14"; show the date in the
+ * app-wide style. Other titles pass through unchanged.
+ */
+export function formatWeekOfTitle(title: string): string {
+  const match = /^Week of (\d{4}-\d{2}-\d{2})$/.exec(title);
+  return match ? `Week of ${formatCalendarDate(match[1]!)}` : title;
+}
+
 export function manilaDateLabel(value: string | Date): string {
   return new Intl.DateTimeFormat("en-PH", {
     timeZone: MANILA_TIMEZONE,

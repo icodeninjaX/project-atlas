@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   TransactionWorkspace,
   type TransactionHistoryItem,
@@ -6,7 +5,6 @@ import {
 } from "@/components/money/transaction-workspace";
 import { PageHeading } from "@/components/shared/page-heading";
 import { MoneyNavigation } from "@/components/money/money-navigation";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { formatCentavos } from "@/lib/money/money";
@@ -127,16 +125,6 @@ export default async function TransactionsPage({
         eyebrow="Money / Transactions"
         title="Money movement"
         description="Income and expenses change balances. Transfers stay separate and never inflate either total."
-        actions={
-          <>
-            <Button asChild variant="secondary">
-              <Link href="/money/accounts">Accounts</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/money/transfers">Record transfer</Link>
-            </Button>
-          </>
-        }
       />
       <MoneyNavigation currentHref="/money/transactions" />
       <div className="mt-8 grid gap-3 sm:grid-cols-2">

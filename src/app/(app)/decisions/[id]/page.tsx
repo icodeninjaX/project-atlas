@@ -28,6 +28,7 @@ import {
 } from "@/lib/history/metrics";
 import { loadHistoricalMetrics } from "@/lib/history/server";
 import { formatCentavos } from "@/lib/money/money";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 export const metadata = { title: "Review decision" };
 
@@ -176,7 +177,7 @@ export default async function DecisionPage({
       <PageHeading
         eyebrow="Decision review"
         title={decision.title}
-        description={`Decided ${decision.decision_on} · Review planned ${decision.review_on}`}
+        description={`Decided ${formatCalendarDate(decision.decision_on)} · Review planned ${formatCalendarDate(decision.review_on)}`}
       />
       <section
         className="border-border bg-card mt-6 rounded-2xl border p-4 sm:p-5"
@@ -335,7 +336,7 @@ export default async function DecisionPage({
               className="border-border bg-card rounded-2xl border p-4 sm:p-5"
             >
               <p className="text-muted-foreground mb-2 text-xs">
-                Observed {observation.observed_on}
+                Observed {formatCalendarDate(observation.observed_on)}
               </p>
               <ObservationEditor
                 decisionId={id}
@@ -388,7 +389,8 @@ export default async function DecisionPage({
                   }).format(new Date(revision.changed_at))}
                 </p>
                 <p className="mt-2 text-sm font-semibold">
-                  {revision.previous_title} · {revision.previous_decision_on}
+                  {revision.previous_title} ·{" "}
+                  {formatCalendarDate(revision.previous_decision_on)}
                 </p>
                 <p className="mt-1 text-sm break-words whitespace-pre-wrap">
                   {revision.previous_intent}
@@ -407,7 +409,8 @@ export default async function DecisionPage({
                   </p>
                 )}
                 <p className="text-muted-foreground mt-2 text-xs">
-                  Review planned {revision.previous_review_on} · Measure:{" "}
+                  Review planned{" "}
+                  {formatCalendarDate(revision.previous_review_on)} · Measure:{" "}
                   {revision.previous_metric_key
                     ? decisionMetricLabel(revision.previous_metric_key)
                     : "none"}

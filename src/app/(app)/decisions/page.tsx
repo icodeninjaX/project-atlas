@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { DecisionForm } from "@/components/decisions/decision-form";
+import { DecisionCreatePanel } from "@/components/decisions/decision-create-panel";
 import { PageHeading } from "@/components/shared/page-heading";
 import { manilaToday } from "@/lib/analyst/evidence";
 import { loadDecisionGoals, loadDecisionList } from "@/lib/decisions/server";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 export const metadata = { title: "Decision journal" };
 
@@ -27,16 +28,11 @@ export default async function DecisionsPage({
         title="Decision journal"
         description="Record a choice in your own words, then return to what happened. ATLAS will not infer past decisions for you."
       />
-      <section className="mt-6" aria-labelledby="record-decision">
-        <h2 id="record-decision" className="mb-3 text-lg font-semibold">
-          Record a decision
-        </h2>
-        <DecisionForm goals={goals} today={today} />
-      </section>
-      <section className="mt-9" aria-labelledby="past-decisions">
-        <h2 id="past-decisions" className="text-lg font-semibold">
-          Your decisions
-        </h2>
+      <DecisionCreatePanel
+        goals={goals}
+        today={today}
+        startOpen={page === 1 && decisions.length === 0}
+      >
         {decisions.length === 0 ? (
           <div className="border-border mt-3 rounded-2xl border border-dashed p-8 text-center">
             <p className="text-sm font-semibold">No decisions recorded yet</p>
@@ -52,7 +48,8 @@ export default async function DecisionsPage({
                 className="border-border bg-card min-w-0 rounded-2xl border p-4"
               >
                 <p className="text-muted-foreground text-xs">
-                  Decided {decision.decision_on} · Review {decision.review_on}
+                  Decided {formatCalendarDate(decision.decision_on)} · Review{" "}
+                  {formatCalendarDate(decision.review_on)}
                 </p>
                 <h3 className="mt-1 font-semibold break-words">
                   {decision.title}
@@ -92,7 +89,7 @@ export default async function DecisionsPage({
             </Link>
           )}
         </nav>
-      </section>
+      </DecisionCreatePanel>
     </div>
   );
 }

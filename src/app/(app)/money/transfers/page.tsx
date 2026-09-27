@@ -1,13 +1,12 @@
 import { ArrowLeftRight } from "lucide-react";
-import Link from "next/link";
 import { TransferForm } from "@/components/money/transfer-form";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { PageHeading } from "@/components/shared/page-heading";
 import { MoneyNavigation } from "@/components/money/money-navigation";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { formatCentavos } from "@/lib/money/money";
+import { formatCalendarDate } from "@/lib/dates/dates";
 
 export const metadata = { title: "Record transfer" };
 
@@ -68,19 +67,9 @@ export default async function TransfersPage({
   return (
     <div className="mx-auto max-w-[1100px] p-4 sm:p-6 lg:p-8">
       <PageHeading
-        eyebrow="Money / Money movement / Transfer"
+        eyebrow="Money / Transfers"
         title="Move money between accounts"
         description="Record an internal transfer without counting it as income or an expense."
-        actions={
-          <>
-            <Button asChild variant="secondary">
-              <Link href="/money/transactions">Money movement</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/money/accounts">Accounts</Link>
-            </Button>
-          </>
-        }
       />
       <MoneyNavigation currentHref="/money/transfers" />
 
@@ -133,7 +122,7 @@ export default async function TransfersPage({
                       "Account"}
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {transfer.transfer_date}
+                    {formatCalendarDate(transfer.transfer_date)}
                     {transfer.description ? ` · ${transfer.description}` : ""}
                   </p>
                 </div>

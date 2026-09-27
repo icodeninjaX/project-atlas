@@ -22,11 +22,17 @@ export function DecisionForm({
   goals,
   today,
   actionTask,
+  autoFocus,
+  onCancel,
+  onSaved,
 }: {
   decision?: Decision;
   goals: { id: string; title: string }[];
   today: string;
   actionTask?: GraphEntitySummary | null;
+  autoFocus?: boolean;
+  onCancel?: () => void;
+  onSaved?: () => void;
 }) {
   const [state, action, pending] = useActionState(saveDecisionAction, initial);
   const form = useRef<HTMLFormElement>(null);
@@ -35,8 +41,9 @@ export function DecisionForm({
     if (state.success) {
       toast.success(state.message);
       if (!decision) form.current?.reset();
+      onSaved?.();
     } else toast.error(state.message);
-  }, [state, decision]);
+  }, [state, decision, onSaved]);
   return (
     <form
       ref={form}
@@ -53,6 +60,7 @@ export function DecisionForm({
           name="title"
           required
           maxLength={160}
+          autoFocus={autoFocus}
           defaultValue={decision?.title}
           placeholder="Apply to ten jobs each week"
         />
@@ -158,10 +166,15 @@ export function DecisionForm({
         A recorded measure can show what changed in equal 14-day windows before
         and after this date. It does not prove the decision caused the change.
       </p>
-      <div className="sm:col-span-2">
+      <div className="flex flex-wrap gap-2 sm:col-span-2">
         <Button type="submit" pending={pending} pendingLabel="Saving…">
           {decision ? "Save changes" : "Record decision"}
         </Button>
+        {onCancel ? (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+        ) : null}
       </div>
       {state.message && (
         <p

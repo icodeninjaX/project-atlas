@@ -7,6 +7,8 @@ import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Button } from "@/components/ui/button";
 import { formatCentavos } from "@/lib/money/money";
 import type { Evidence, EvidencePackage } from "@/lib/analyst/evidence";
+import { ChevronDown } from "lucide-react";
+import { formatPeriodLabel } from "@/lib/history/period-label";
 
 const questions = [
   "What changed in my spending this month?",
@@ -98,9 +100,6 @@ export function AnalystWorkspace({
               <option key={q}>{q}</option>
             ))}
           </select>
-          <p className="text-muted-foreground mt-2 text-xs">
-            These questions use the original focused Analyst flow.
-          </p>
         </div>
         <div>
           <label
@@ -121,10 +120,20 @@ export function AnalystWorkspace({
               </option>
             ))}
           </select>
-          <p className="text-muted-foreground mt-2 text-xs">
-            Model usage may be billed by OpenAI unless your API project
-            qualifies for complimentary tokens.
-          </p>
+          <details className="group text-muted-foreground mt-2 text-xs">
+            <summary className="focus-visible:ring-ring hover:text-foreground inline-flex min-h-8 cursor-pointer list-none items-center gap-1 rounded-md font-semibold focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+              About AI models and billing
+              <ChevronDown
+                aria-hidden="true"
+                className="size-3.5 transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <p className="mt-1 leading-5">
+              ATLAS calculates the facts itself; the model only explains them.
+              Model usage may be billed by OpenAI unless your API project
+              qualifies for complimentary tokens.
+            </p>
+          </details>
         </div>
         <label className="flex items-start gap-3 text-sm">
           <input
@@ -190,7 +199,7 @@ export function AnalystWorkspace({
                   <SensitiveValue>{displayValue(item)}</SensitiveValue>
                 </p>
                 <p className="text-muted-foreground mt-2 text-xs">
-                  {item.period.from} to {item.period.through} ·{" "}
+                  {formatPeriodLabel(item.period.from, item.period.through)} ·{" "}
                   {item.completeness}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">

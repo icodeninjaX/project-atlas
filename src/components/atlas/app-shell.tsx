@@ -14,6 +14,7 @@ import {
   Menu,
   NotebookPen,
   Radar,
+  Scale,
   Search,
   Settings,
   WalletCards,
@@ -33,7 +34,7 @@ const destinations = {
   signals: { href: "/signals", label: "Signals", icon: Radar },
   money: { href: "/money/accounts", label: "Money", icon: WalletCards },
   debts: { href: "/debts", label: "Debts", icon: Landmark },
-  decisions: { href: "/decisions", label: "Decisions", icon: NotebookPen },
+  decisions: { href: "/decisions", label: "Decisions", icon: Scale },
   tasks: { href: "/tasks", label: "Tasks", icon: ClipboardCheck },
   goals: { href: "/goals", label: "Goals", icon: Goal },
   history: { href: "/history", label: "History", icon: History },
@@ -226,7 +227,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           {navigationGroups.map((group) => (
             <div key={group.label}>
-              <p className="text-muted-foreground/75 mb-1.5 px-3 text-[10px] font-semibold tracking-[0.14em] uppercase">
+              <p className="text-muted-foreground mb-1.5 px-3 text-[10px] font-semibold tracking-[0.14em] uppercase">
                 {group.label}
               </p>
               <div className="space-y-0.5">

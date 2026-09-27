@@ -43,9 +43,14 @@ describe("TransactionWorkspace", () => {
     expect(
       screen.getByRole("button", { name: "Record a transaction" }),
     ).toBeVisible();
+    expect(screen.getByRole("button", { name: "History" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "History" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     expect(
-      screen.getByRole("button", { name: "View transaction history" }),
-    ).toBeVisible();
+      screen.getByRole("button", { name: "Record a transaction" }),
+    ).toHaveAttribute("aria-pressed", "false");
     expect(screen.queryByTestId("record-form")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "History" })).toBeVisible();
     expect(screen.getByText("Canteen")).toBeVisible();
@@ -59,9 +64,7 @@ describe("TransactionWorkspace", () => {
     );
     expect(screen.getByTestId("record-form")).toBeVisible();
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "View transaction history" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "History" }));
     expect(screen.queryByTestId("record-form")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "History" })).toBeVisible();
     expect(screen.getByText("Canteen")).toBeVisible();

@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useRef } from "react";
+import { useScrollStrip } from "@/components/shared/scroll-strip";
 import { cn } from "@/lib/utils";
 
 const destinations = [
@@ -11,8 +15,13 @@ const destinations = [
 ] as const;
 
 export function MoneyNavigation({ currentHref }: { currentHref: string }) {
+  const navRef = useRef<HTMLElement>(null);
+
+  useScrollStrip(navRef, { activeKey: currentHref });
+
   return (
     <nav
+      ref={navRef}
       aria-label="Money navigation"
       className="border-border bg-muted/50 mt-6 flex [scrollbar-width:none] gap-1 overflow-x-auto rounded-xl border p-1 [&::-webkit-scrollbar]:hidden"
     >

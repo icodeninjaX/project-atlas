@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatCalendarDate,
+  formatCalendarMonth,
+  formatWeekOfTitle,
   compactReviewWeekLabel,
   manilaDateLabel,
   mondayWeekStart,
@@ -41,5 +44,24 @@ describe("date helpers", () => {
 
   it("keeps a valid requested calendar month", () => {
     expect(resolveCalendarMonth("2027-01", "2026-08")).toBe("2027-01");
+  });
+
+  it("formats calendar dates in one app-wide style", () => {
+    expect(formatCalendarDate("2026-09-30")).toBe("Sep 30, 2026");
+    expect(formatCalendarDate("2026-05-03")).toBe("May 3, 2026");
+    // 11:30 PM UTC on Sep 30 is already Oct 1 in Manila.
+    expect(formatCalendarDate("2026-09-30T23:30:00Z")).toBe("Oct 1, 2026");
+    expect(formatCalendarDate(new Date("2026-01-01T00:00:00+08:00"))).toBe(
+      "Jan 1, 2026",
+    );
+    expect(formatCalendarDate("not a date")).toBe("not a date");
+  });
+
+  it("formats months and stored weekly-review titles", () => {
+    expect(formatCalendarMonth("2026-09")).toBe("Sep 2026");
+    expect(formatWeekOfTitle("Week of 2026-09-14")).toBe(
+      "Week of Sep 14, 2026",
+    );
+    expect(formatWeekOfTitle("Weekly review")).toBe("Weekly review");
   });
 });

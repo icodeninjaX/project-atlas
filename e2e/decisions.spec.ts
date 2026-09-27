@@ -84,6 +84,9 @@ test.describe("Decision journal local browser flow", () => {
       await expect(
         page.getByRole("heading", { name: "Decision journal" }),
       ).toBeVisible();
+      // The form starts open only while the journal is empty.
+      const openForm = page.getByRole("button", { name: "Record a decision" });
+      if (await openForm.isVisible()) await openForm.click();
       await page
         .getByRole("textbox", { name: "Decision", exact: true })
         .fill("Apply weekly");
@@ -120,7 +123,9 @@ test.describe("Decision journal local browser flow", () => {
         .filter({ hasText: "Find a role" })
         .getByRole("link", { name: /View relationships/ })
         .click();
-      await expect(page.getByRole("link", { name: "Apply weekly" })).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Apply weekly" }),
+      ).toBeVisible();
       await page.goto(`/decisions/${saved!.id}`);
       await expect(page.getByText("Action task: Apply to roles")).toBeVisible();
       await page
