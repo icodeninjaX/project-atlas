@@ -33,11 +33,16 @@ export type StructuredCallResult =
       outputTokens?: number;
     };
 
+export type StructuredMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
 export type StructuredCallRequest = {
   model: string;
   schemaName: string;
   schema: unknown;
-  messages: Array<{ role: "system" | "user"; content: string }>;
+  messages: StructuredMessage[];
   maxOutputTokens: number;
   /** Overrides the model's default effort; ignored for non-reasoning models. */
   reasoningEffort?: "none" | "low" | "medium";

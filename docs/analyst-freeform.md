@@ -78,6 +78,19 @@ the cited evidence instead of banning figures outright:
   an option better or say to go with it, and may only suggest reviewing the
   stated assumptions or options.
 
+Each claim is checked on its own (`reviewGroundedAnswer`). A claim that fails
+is dropped and the verified claims are still shown; the answer falls back only
+when none survive (or, for scenario evidence, when no surviving claim compares
+a Current item with an Option item). In that case the model gets one repair
+attempt: the same request plus its rejected output and the rule each claim
+broke, for example "contains a number or date that is not a cited value". Only
+the rule names are logged (`Grounded answer rejected` / `claims dropped`), never
+claim text, questions or evidence. A day number is accepted only inside a month-day
+date ("September 1", "Sept 1–24") whose month and day match a cited period's
+start or end; a bare day number is never treated as a verified figure. The freeform and
+weekly insight routes allow 60 seconds for planning, retrieval and a repaired
+answer.
+
 The UI still shows every figure from ATLAS evidence alongside the claims. An
 invalid response falls back to the calculated evidence.
 

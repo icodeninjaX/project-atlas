@@ -169,8 +169,9 @@ function LastWeekInsight({
         <span>
           Prepare last week’s insight automatically. Last week’s totals are sent
           to OpenAI (GPT-4o mini) under your organization’s data-sharing
-          settings at most once per week; a failed attempt is not retried until
-          the next week.
+          settings at most once per week (one request, plus one automatic
+          correction if the first answer fails ATLAS’s checks); a failed attempt
+          is not retried until the next week.
         </span>
       </label>
       {error && (

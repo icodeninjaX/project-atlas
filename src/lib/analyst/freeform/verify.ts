@@ -37,6 +37,23 @@ type Figure = { value: number; decimals: number };
 type Allowed = { values: number[]; magnitudes: number[] };
 
 const isoDate = /\b\d{4}-\d{2}(?:-\d{2})?\b/g;
+const months = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
+// "September 1", "Sept. 24" or "Aug 1–31": a day is only a date next to its month.
+const monthDay =
+  /\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+(\d{1,2})(?:\s*(?:-|–|to)\s*(\d{1,2})\b)?\b/gi;
 const figure =
   /([-−]\s?)?(₱\s?|\bPHP\s?)?([-−])?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(\s?%|\s?percent\b|\s?pesos\b)?([kKmMbB]\b)?/g;
 
@@ -117,7 +134,25 @@ export function figuresAreGrounded(text: string, cited: ToolEvidence[]) {
   );
   for (const date of text.match(isoDate) ?? [])
     if (!dates.has(date)) return false;
-  const withoutDates = text.replace(isoDate, " ");
+  // Month-day phrases must name a cited period's start or end day.
+  const endpoints = new Set(
+    cited.flatMap((item) => [
+      item.period.from.slice(5),
+      item.period.through.slice(5),
+    ]),
+  );
+  let unknownDay = false;
+  const withoutDates = text
+    .replace(isoDate, " ")
+    .replace(monthDay, (_match, month: string, from: string, to?: string) => {
+      const index = months.indexOf(month.slice(0, 3).toLowerCase()) + 1;
+      for (const day of [from, to].filter(Boolean) as string[]) {
+        const key = `${String(index).padStart(2, "0")}-${day.padStart(2, "0")}`;
+        if (!endpoints.has(key)) unknownDay = true;
+      }
+      return " ";
+    });
+  if (unknownDay) return false;
   const allowed = candidates(cited);
   for (const match of withoutDates.matchAll(figure)) {
     const [, leadingMinus, moneyPrefix, innerMinus, digits, suffix, magnitude] =
