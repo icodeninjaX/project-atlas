@@ -218,6 +218,25 @@ describe("verified figures and comparisons", () => {
       ),
     ).not.toBeNull();
   });
+  it("reads a bare hyphenated range as two unsigned figures", () => {
+    const low = { ...income, id: "low", unit: "months" as const, value: 4 };
+    const high = { ...low, id: "high", value: 6 };
+    expect(
+      validateGroundedAnswer(
+        {
+          claims: [
+            {
+              kind: "observation",
+              text: "Runway ranges from 4-6 months across the options.",
+              evidenceIds: ["low", "high"],
+              comparison: null,
+            },
+          ],
+        },
+        [low, high],
+      ),
+    ).not.toBeNull();
+  });
   it("rejects figures from uncited evidence and unknown dates", () => {
     expect(
       observe("Recorded income was ₱200.00.", null, ["money.current"]),
@@ -305,7 +324,13 @@ describe("verified figures and comparisons", () => {
     expect(
       withClaim(
         "suggestion",
-        "Consider reviewing the stated assumptions first.",
+        "Consider reviewing the stated assumptions, then using Option 1.",
+      ),
+    ).toBeNull();
+    expect(
+      withClaim(
+        "suggestion",
+        "Consider reviewing the stated assumptions behind each option.",
       ),
     ).not.toBeNull();
   });

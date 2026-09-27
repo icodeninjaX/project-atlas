@@ -131,7 +131,8 @@ export function figuresAreGrounded(text: string, cited: ToolEvidence[]) {
         : unitSuffix === "%" || unitSuffix === "percent"
           ? "percent"
           : "plain";
-    const sign = leadingMinus || innerMinus ? -1 : 1;
+    // "₱-500" is signed; a bare "4-6" is a range, not 4 and -6.
+    const sign = leadingMinus || (moneyPrefix && innerMinus) ? -1 : 1;
     const value = sign * Number(digits!.replaceAll(",", ""));
     const decimals = digits!.split(".")[1]?.length ?? 0;
     if (!matches(allowed[kind], { value, decimals })) return false;
