@@ -256,9 +256,15 @@ export async function historicalSeries(
         : []),
     ],
     evidence: available.map((row) => {
-      const countedFrom = [row.period.from, input.from, row.firstRecordedOn!]
-        .sort()
-        .at(-1)!;
+      const windowFrom = [row.period.from, input.from].sort().at(-1)!;
+      const countedFrom = [windowFrom, row.firstRecordedOn!].sort().at(-1)!;
+      // Totals only count records inside the stated window, so a bucket that is
+      // partial only because it is trimmed to the request or still in progress
+      // (this month so far) is complete for that window. It stays partial when
+      // recorded history starts inside the window.
+      const complete =
+        row.coverage === "recorded" ||
+        (row.coverage === "partial" && row.firstRecordedOn! <= windowFrom);
       const countedThrough =
         row.period.through < input.through ? row.period.through : input.through;
       return makeFact("getHistoricalMetricSeries", now, {
@@ -267,13 +273,13 @@ export async function historicalSeries(
         value: row.value!,
         unit: definition.unit,
         period: { from: countedFrom, through: countedThrough },
-        comparisonBasis: `Calendar bucket ${row.period.from} through ${row.period.through}; version 1 ${input.grain} aggregation; ${row.sourceCount} contributing surviving records; first recorded ${row.firstRecordedOn}; coverage ${row.coverage}.`,
+        comparisonBasis: `Calendar bucket ${row.period.from} through ${row.period.through}; version 1 ${input.grain} aggregation; ${row.sourceCount} contributing surviving records; first recorded ${row.firstRecordedOn}; coverage ${complete && row.coverage === "partial" ? `recorded for ${countedFrom} through ${countedThrough} only` : row.coverage}.`,
         source: {
           description: definition.source,
           recordIds: [],
           href: definition.href,
         },
-        completeness: row.coverage === "recorded" ? "complete" : "partial",
+        completeness: complete ? "complete" : "partial",
       });
     }),
   };
