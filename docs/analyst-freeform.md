@@ -1,9 +1,28 @@
 # Analyst 2.0 — Freeform Grounded Analysis (Phase 11)
 
-Implemented locally and validated on 2026-09-25. The existing seven preset questions keep their
-original endpoint and model selector. The new question box on `/analyst` uses
+Implemented locally and validated on 2026-09-25. `/analyst` uses
 `POST /api/analyst/freeform` with the accepted Phase 10 planner and thirteen
 Phase 9 read-only tools. It cannot execute actions or arbitrary queries.
+
+## Page layout (2026-09-27)
+
+`/analyst` is one conversation (`src/components/analyst/freeform-workspace.tsx`):
+
+- **Starters:** suggested-question chips go through the same freeform flow. The
+  older preset form and its model picker were removed from the page;
+  `POST /api/analyst` and its tests remain but no page calls it.
+- **Consent once:** the first question needs one "Allow data sharing" tap. The choice
+  is remembered per user in this browser (`atlas:analyst-consent:<userId>` in
+  local storage) and shown as "Data sharing on · Turn off". Until consent is
+  given, a starter chip only fills the box. The route still requires
+  `dataSharingAcknowledged: true` on every request.
+- **Thread:** each question and answer is a card in order. Answers show the
+  verified claims first, then any scenario comparison, then notes and
+  limitations, then a collapsed "Sources" list that citations open. Follow-ups
+  send the last two answered exchanges; "New conversation" clears the thread.
+- **Focus:** one optional "Focus" selector covers goals and debts (monthly
+  payment scenarios) and shows a removable chip. Typing a goal or debt name also
+  works.
 
 ## Request and evidence boundary
 

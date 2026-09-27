@@ -19,7 +19,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const width of [390, 1280]) {
-  test(`Analyst shows consent, evidence, and record links at ${width}px`, async ({
+  test(`Analyst asks once for consent and answers a suggested question at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 850 });
@@ -27,52 +27,67 @@ for (const width of [390, 1280]) {
     await expect(
       page.getByRole("heading", { name: "ATLAS Analyst" }),
     ).toBeVisible();
-    await expect(page.getByLabel("AI model").locator("option")).toHaveCount(9);
-    await expect(page.getByRole("option", { name: "GPT-6 Astra" })).toHaveCount(
-      1,
-    );
-    const analyze = page.getByRole("button", { name: "Analyze" });
-    await expect(analyze).toBeDisabled();
-    await page.getByRole("checkbox").nth(1).check();
-    await expect(analyze).toBeEnabled();
-    await page.route("**/api/analyst", async (route) =>
+    await expect(page.getByLabel("AI model")).toHaveCount(0);
+    await page.route("**/api/analyst/freeform", async (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          evidence: {
-            type: "spending_change",
-            status: "ready",
-            note: "Recorded expenses only.",
-            evidence: [
-              {
-                id: "spending.current",
-                metric: "Recorded spending this month",
-                value: 12345,
-                unit: "centavos",
-                period: { from: "2026-09-01", through: "2026-09-24" },
-                comparisonBasis: "Days 1–24 of each month",
-                source: {
-                  description: "Expense transactions",
-                  recordIds: ["a"],
-                  href: "/money/transactions",
-                },
-                completeness: "complete",
+          status: "answered",
+          claims: [
+            {
+              kind: "observation",
+              text: "Recorded expenses were ₱123.45 this month.",
+              evidenceIds: ["money.current"],
+              comparison: null,
+            },
+          ],
+          evidence: [
+            {
+              id: "money.current",
+              metric: "Recorded expenses",
+              value: 12345,
+              unit: "centavos",
+              period: { from: "2026-09-01", through: "2026-09-24" },
+              comparisonBasis: "Recorded transactions",
+              source: {
+                description: "Transactions",
+                recordIds: [],
+                href: "/money/transactions",
               },
-            ],
-          },
-          explanation: "Recorded spending increased.",
-          uncertainty: "Recorded expenses only.",
-          providerStatus: "success",
+              completeness: "complete",
+              claimType: "FACT",
+              provenance: {
+                tool: "getMoneySummary",
+                calculationVersion: "1",
+                retrievedAt: "2026-09-24T00:00:00Z",
+                textTrust: "untrusted_data",
+              },
+            },
+          ],
+          limitations: [],
         }),
       }),
     );
-    await analyze.click();
-    await expect(page.getByText("₱123.45")).toBeVisible();
-    await expect(page.getByText("Sep 1–24, 2026 · complete")).toBeVisible();
+    // Without consent a suggestion only fills the box.
+    const suggestion = page.getByRole("button", {
+      name: "How did my spending compare to my income last month?",
+    });
+    await suggestion.click();
     await expect(
-      page.getByRole("link", { name: "View ATLAS records" }),
-    ).toHaveAttribute("href", "/money/transactions");
+      page.getByRole("button", { name: "Ask Analyst" }),
+    ).toBeDisabled();
+    await page.getByRole("button", { name: "Allow data sharing" }).click();
+    await page.getByRole("button", { name: "Ask Analyst" }).click();
+    await expect(
+      page.getByText("Recorded expenses were ₱123.45 this month."),
+    ).toBeVisible();
+    // Consent is remembered on this device.
+    await page.reload();
+    await expect(page.getByText(/Data sharing on/)).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Allow data sharing" }),
+    ).toHaveCount(0);
     const dimensions = await page.evaluate(() => ({
       width: document.documentElement.clientWidth,
       scroll: document.documentElement.scrollWidth,
@@ -90,9 +105,9 @@ for (const width of [390, 1280]) {
     const ask = page.getByRole("button", { name: "Ask Analyst" });
     await expect(ask).toBeDisabled();
     await page
-      .getByRole("textbox", { name: "Ask your own question" })
+      .getByRole("textbox", { name: "Ask about your ATLAS records" })
       .fill("What needs attention in my finances?");
-    await page.getByRole("checkbox").first().check();
+    await page.getByRole("button", { name: "Allow data sharing" }).click();
     await page.route("**/api/analyst/freeform", async (route) =>
       route.fulfill({
         status: 200,
@@ -104,6 +119,7 @@ for (const width of [390, 1280]) {
               kind: "interpretation",
               text: "This may warrant a closer look at recorded expenses.",
               evidenceIds: ["money.current"],
+              comparison: null,
             },
           ],
           evidence: [
@@ -156,9 +172,9 @@ for (const width of [320, 1280]) {
     await page.setViewportSize({ width, height: 850 });
     await page.goto("/analyst");
     await page
-      .getByRole("textbox", { name: "Ask your own question" })
+      .getByRole("textbox", { name: "Ask about your ATLAS records" })
       .fill("What if monthly income falls by 20%?");
-    await page.getByRole("checkbox").first().check();
+    await page.getByRole("button", { name: "Allow data sharing" }).click();
     const evidence = ["Current", "Option 1", "Option 2"].flatMap(
       (label, index) =>
         ["Runway estimate", "Monthly income"].map((metric) => ({
@@ -243,8 +259,8 @@ test("selected goal reaches freeform Analyst and shows its current path", async 
   expect(inserted.error).toBeNull();
   await page.setViewportSize({ width: 390, height: 850 });
   await page.goto("/analyst");
-  const selector = page.getByLabel("Specific goal (optional)");
-  await selector.selectOption(goalId);
+  const selector = page.getByLabel("Focus on a goal or debt");
+  await selector.selectOption(`goal:${goalId}`);
   let submittedGoalId: string | undefined;
   await page.route("**/api/analyst/freeform", async (route) => {
     submittedGoalId = route.request().postDataJSON().goalId;
@@ -276,9 +292,9 @@ test("selected goal reaches freeform Analyst and shows its current path", async 
     });
   });
   await page
-    .getByRole("textbox", { name: "Ask your own question" })
+    .getByRole("textbox", { name: "Ask about your ATLAS records" })
     .fill("What changed around this goal?");
-  await page.getByRole("checkbox").first().check();
+  await page.getByRole("button", { name: "Allow data sharing" }).click();
   await page.getByRole("button", { name: "Ask Analyst" }).click();
   await expect(page.getByText("Linked task completion")).toBeVisible();
   await expect(
