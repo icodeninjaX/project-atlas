@@ -119,27 +119,30 @@ export async function meteredOpenAIFetch(
   let reservation = await reserve();
   // A stale OpenAI count is refreshed before anything is sent, then the
   // request reserves again against it, so usage outside the meter cannot
-  // let this request cross the limit. If the refresh fails, the ledger
-  // decision stands.
+  // let this request cross the limit. A refusal against a stale count is
+  // retried too, since a newer count can free room. If the refresh fails,
+  // the ledger decision stands.
   if (
-    reservation?.status === "reserved" &&
-    reservation.reservation_id &&
+    (reservation?.status === "exhausted" ||
+      (reservation?.status === "reserved" && reservation.reservation_id)) &&
     process.env.OPENAI_ADMIN_KEY &&
     providerUsageStale(reservation.provider_synced_at) &&
     (await refreshProviderUsage())
   ) {
-    // Only a released reservation may be replaced; otherwise nothing is
-    // sent and the first one stays counted.
-    const { error: releaseError } = await admin
-      .rpc("settle_ai_pool_tokens", {
-        p_id: reservation.reservation_id,
-        p_used: 0,
-      })
-      .then(
-        (result) => result,
-        () => ({ error: true }),
-      );
-    if (releaseError) throw new PoolMeterError("release_failed");
+    if (reservation.status === "reserved" && reservation.reservation_id) {
+      // Only a released reservation may be replaced; otherwise nothing is
+      // sent and the first one stays counted.
+      const { error: releaseError } = await admin
+        .rpc("settle_ai_pool_tokens", {
+          p_id: reservation.reservation_id,
+          p_used: 0,
+        })
+        .then(
+          (result) => result,
+          () => ({ error: true }),
+        );
+      if (releaseError) throw new PoolMeterError("release_failed");
+    }
     reservation = await reserve();
   }
   if (!reservation?.status) throw new PoolMeterError("unavailable");
