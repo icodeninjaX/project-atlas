@@ -18,6 +18,8 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
+// Planning, retrieval and an answer with one repair attempt.
+export const maxDuration = 60;
 const headers = { "Cache-Control": "private, no-store" };
 // Room for the question plus two earlier exchanges.
 const MAX_REQUEST_CHARS = 8192;

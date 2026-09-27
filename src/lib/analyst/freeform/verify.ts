@@ -72,8 +72,9 @@ function candidates(cited: ToolEvidence[]) {
     const value = numeric(item);
     for (const token of item.metric.match(/\d+(?:\.\d+)?/g) ?? [])
       plain.values.push(Number(token));
+    // Years and days of cited periods ("August 1 to August 31, 2026").
     for (const date of [item.period.from, item.period.through])
-      plain.values.push(Number(date.slice(0, 4)));
+      plain.values.push(Number(date.slice(0, 4)), Number(date.slice(8, 10)));
     if (value === null) continue;
     const scaled = item.unit === "centavos" ? value / 100 : value;
     (item.unit === "centavos"

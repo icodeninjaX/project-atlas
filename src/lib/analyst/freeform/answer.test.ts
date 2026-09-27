@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ToolEvidence } from "@/lib/analyst/tools/contracts";
-import { requestGroundedAnswer, validateGroundedAnswer } from "./answer";
+import {
+  requestGroundedAnswer,
+  reviewGroundedAnswer,
+  validateGroundedAnswer,
+} from "./answer";
 
 vi.mock("server-only", () => ({}));
 const priorKey = process.env.OPENAI_API_KEY;
@@ -338,8 +342,9 @@ describe("verified figures and comparisons", () => {
     expect(
       validateGroundedAnswer(claim(["option"]), [current, option]),
     ).toBeNull();
+    // Advice is dropped; the verified baseline-versus-option claim stays.
     const withClaim = (kind: string, text: string) =>
-      validateGroundedAnswer(
+      reviewGroundedAnswer(
         {
           claims: [
             claim(["current", "option"]).claims[0],
@@ -353,22 +358,78 @@ describe("verified figures and comparisons", () => {
         },
         [current, option],
       );
-    expect(
-      withClaim("suggestion", "Consider using Option 1 for runway."),
-    ).toBeNull();
-    expect(
-      withClaim("interpretation", "Option 1 may be the better choice here."),
-    ).toBeNull();
-    expect(
-      withClaim(
+    for (const [kind, text] of [
+      ["suggestion", "Consider using Option 1 for runway."],
+      ["interpretation", "Option 1 may be the better choice here."],
+      [
         "suggestion",
         "Consider reviewing the stated assumptions, then using Option 1.",
-      ),
-    ).toBeNull();
+      ],
+    ] as const) {
+      const review = withClaim(kind, text);
+      expect(review?.claims).toHaveLength(1);
+      expect(review?.rejections).toEqual([
+        { index: 1, reason: "scenario_advice" },
+      ]);
+    }
     expect(
       withClaim(
         "suggestion",
         "Consider reviewing the stated assumptions behind each option.",
+      )?.claims,
+    ).toHaveLength(2);
+  });
+});
+
+describe("per-claim review", () => {
+  it("keeps verified claims and reports why others were dropped", () => {
+    const review = reviewGroundedAnswer(
+      {
+        claims: [
+          {
+            kind: "observation",
+            text: "Recorded expenses were ₱123.45 this month.",
+            evidenceIds: ["money.current"],
+            comparison: null,
+          },
+          {
+            kind: "observation",
+            text: "Most of the expenses went to food this month.",
+            evidenceIds: ["money.current"],
+            comparison: null,
+          },
+          {
+            kind: "interpretation",
+            text: "Recorded expenses were ₱999.00 this month.",
+            evidenceIds: ["money.current"],
+            comparison: null,
+          },
+        ],
+      },
+      evidence,
+    );
+    expect(review?.claims.map((item) => item.text)).toEqual([
+      "Recorded expenses were ₱123.45 this month.",
+    ]);
+    expect(review?.rejections).toEqual([
+      { index: 1, reason: "wording" },
+      { index: 2, reason: "unhedged_interpretation" },
+    ]);
+  });
+  it("allows day numbers of cited period dates", () => {
+    expect(
+      validateGroundedAnswer(
+        {
+          claims: [
+            {
+              kind: "observation",
+              text: "Recorded expenses were ₱123.45 from September 1 to September 24.",
+              evidenceIds: ["money.current"],
+              comparison: null,
+            },
+          ],
+        },
+        evidence,
       ),
     ).not.toBeNull();
   });
@@ -448,7 +509,7 @@ describe("freeform provider boundary", () => {
     expect(JSON.parse(sent.messages.at(-1).content).evidence[0].display).toBe(
       "₱123.45",
     );
-    fetch.mockResolvedValueOnce(
+    const invented = () =>
       new Response(
         JSON.stringify({
           usage: { prompt_tokens: 100, completion_tokens: 30 },
@@ -464,15 +525,93 @@ describe("freeform provider boundary", () => {
           ],
         }),
         { status: 200 },
-      ),
+      );
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const rejecting = vi.fn().mockImplementation(async () => invented());
+    // Invented citations fail both the first answer and the one repair.
+    expect(
+      await requestGroundedAnswer("How is my money?", evidence, {
+        fetch: rejecting,
+      }),
+    ).toMatchObject({
+      status: "error",
+      code: "invalid_response",
+      inputTokens: 200,
+      outputTokens: 60,
+    });
+    expect(warn).toHaveBeenCalledWith("Grounded answer rejected", {
+      attempt: 0,
+      reasons: ["citation"],
+    });
+    warn.mockRestore();
+  });
+});
+
+describe("grounded answer repair attempt", () => {
+  const completion = (content: unknown) =>
+    new Response(
+      JSON.stringify({
+        usage: { prompt_tokens: 100, completion_tokens: 30 },
+        choices: [
+          {
+            finish_reason: "stop",
+            message: { content: JSON.stringify(content) },
+          },
+        ],
+      }),
+      { status: 200 },
     );
+  const rejected = {
+    claims: [
+      {
+        kind: "observation",
+        text: "Recorded expenses were ₱999.00 this month.",
+        evidenceIds: ["money.current"],
+        comparison: null,
+      },
+    ],
+  };
+
+  it("retries once with the rejection reasons and returns the fixed answer", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(completion(rejected))
+      .mockResolvedValueOnce(completion(valid));
+    const result = await requestGroundedAnswer("How is my money?", evidence, {
+      fetch,
+    });
+    expect(result).toMatchObject({
+      status: "answered",
+      claims: valid.claims,
+      inputTokens: 200,
+      outputTokens: 60,
+    });
+    const retry = JSON.parse(fetch.mock.calls[1]![1].body);
+    expect(retry.messages.at(-2)).toMatchObject({ role: "assistant" });
+    expect(retry.messages.at(-1).content).toContain(
+      "Claim 1 contains a number or date",
+    );
+    // Only rule names are logged, never claim text.
+    expect(JSON.stringify(warn.mock.calls)).not.toContain("999");
+    expect(warn).toHaveBeenCalledWith("Grounded answer rejected", {
+      attempt: 0,
+      reasons: ["figure"],
+    });
+    warn.mockRestore();
+  });
+  it("gives up after one repair attempt", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetch = vi.fn().mockImplementation(async () => completion(rejected));
     expect(
       await requestGroundedAnswer("How is my money?", evidence, { fetch }),
     ).toMatchObject({
       status: "error",
       code: "invalid_response",
-      inputTokens: 100,
-      outputTokens: 30,
+      inputTokens: 200,
+      outputTokens: 60,
     });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
   });
 });
