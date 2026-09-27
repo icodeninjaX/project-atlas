@@ -218,6 +218,25 @@ describe("verified figures and comparisons", () => {
       ),
     ).not.toBeNull();
   });
+  it("reads a bare hyphenated range as two unsigned figures", () => {
+    const low = { ...income, id: "low", unit: "months" as const, value: 4 };
+    const high = { ...low, id: "high", value: 6 };
+    expect(
+      validateGroundedAnswer(
+        {
+          claims: [
+            {
+              kind: "observation",
+              text: "Runway ranges from 4-6 months across the options.",
+              evidenceIds: ["low", "high"],
+              comparison: null,
+            },
+          ],
+        },
+        [low, high],
+      ),
+    ).not.toBeNull();
+  });
   it("rejects figures from uncited evidence and unknown dates", () => {
     expect(
       observe("Recorded income was ₱200.00.", null, ["money.current"]),
@@ -305,13 +324,55 @@ describe("verified figures and comparisons", () => {
     expect(
       withClaim(
         "suggestion",
-        "Consider reviewing the stated assumptions first.",
+        "Consider reviewing the stated assumptions, then using Option 1.",
+      ),
+    ).toBeNull();
+    expect(
+      withClaim(
+        "suggestion",
+        "Consider reviewing the stated assumptions behind each option.",
       ),
     ).not.toBeNull();
   });
 });
 
 describe("freeform provider boundary", () => {
+  it("sends earlier exchanges as context only when present", async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          usage: { prompt_tokens: 100, completion_tokens: 30 },
+          choices: [
+            {
+              finish_reason: "stop",
+              message: { content: JSON.stringify(valid) },
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    const history = [
+      {
+        question: "How did I spend in August?",
+        answer: "It may be worth a look.",
+      },
+    ];
+    await requestGroundedAnswer("What about September?", evidence, {
+      fetch,
+      history,
+    });
+    const sent = JSON.parse(fetch.mock.calls[0]![1].body);
+    expect(JSON.parse(sent.messages.at(-1).content).previousExchanges).toEqual(
+      history,
+    );
+    expect(sent.messages.at(-2).content).toContain("previousExchanges");
+    await requestGroundedAnswer("What about September?", evidence, { fetch });
+    const plain = JSON.parse(fetch.mock.calls[1]![1].body);
+    expect(JSON.parse(plain.messages.at(-1).content)).not.toHaveProperty(
+      "previousExchanges",
+    );
+  });
   it("does not contact the provider when evidence exceeds the bounded context", async () => {
     const fetch = vi.fn();
     const result = await requestGroundedAnswer(

@@ -151,6 +151,26 @@ describe("freeform Analyst route", () => {
       expect.stringContaining(`Selected active debt ID: ${debtId}.`),
     );
   });
+  it("forwards follow-up context to the planner and answer", async () => {
+    const history = [
+      { question: "How did my spending change?", answer: "It may help." },
+      { question: "What about my income?", answer: "It could matter." },
+    ];
+    const response = await POST(request({ ...valid, history }));
+    expect(response.status).toBe(200);
+    expect(mocks.plan).toHaveBeenCalledWith(question, {
+      previousQuestion: "What about my income?",
+    });
+    expect(mocks.answer).toHaveBeenCalledWith(question, [item], { history });
+  });
+  it("rejects more than two earlier exchanges", async () => {
+    const turn = { question: "How did my spending change?", answer: "x" };
+    const response = await POST(
+      request({ ...valid, history: [turn, turn, turn] }),
+    );
+    expect(response.status).toBe(400);
+    expect(mocks.plan).not.toHaveBeenCalled();
+  });
   it("does not guess when two goals match the question", async () => {
     mentionRows.goals = [
       { id: "a", title: "Savings" },

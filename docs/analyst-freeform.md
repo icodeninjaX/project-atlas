@@ -38,6 +38,21 @@ debt, keep the existing clarification path. The answer includes
 `matchedEntity` so the UI can show what was matched. Peso figures in claim text
 are masked when privacy mode is on.
 
+## Follow-up questions
+
+After an answered question, the workspace keeps up to two earlier exchanges
+(question and claim text, answer clipped to 600 characters) in page state only
+and sends them as `history` with the next question. Starting a new question
+clears them; nothing is stored server-side. The route accepts at most two
+exchanges in a request of up to 8,192 characters.
+
+The planner receives only the preceding question, clipped to 200 characters,
+to resolve what the follow-up leaves implicit ("what about last quarter?").
+Scenario and two-domain guidance also applies when the preceding question
+triggered it. Literal IDs must still appear in the current question. The
+answer model receives both exchanges for context, but every figure must still
+come from the current evidence, which the verifier enforces.
+
 ## Grounded answer contract
 
 The answer model returns one to four structured observation, interpretation or

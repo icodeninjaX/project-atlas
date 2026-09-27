@@ -180,3 +180,51 @@ describe("Analyst planner provider boundary", () => {
     expect(reads).toBeLessThanOrEqual(2);
   });
 });
+
+describe("Analyst planner follow-up context", () => {
+  it("sends a bounded previous question and stays within budget at full size", async () => {
+    process.env.OPENAI_API_KEY = "test-key";
+    const fetch = vi.fn().mockResolvedValue(
+      Response.json(
+        providerBody({
+          outcome: "plan",
+          clarification: null,
+          unsupportedReason: null,
+          missingCapabilities: [],
+          calls: [{ id: "call_1", tool: "getRunway", argumentsJson: "{}" }],
+        }),
+      ),
+    );
+    const previous = `What if monthly income falls by 20%? ${"x".repeat(400)}`;
+    const current = `And if it falls by 30% instead? ${"y".repeat(PLANNER_LIMITS.questionChars - 40)}`;
+    const response = await requestAnalystPlan(current, {
+      fetch,
+      previousQuestion: previous,
+    });
+    expect(response.metadata.providerStatus).not.toBe("context_limit");
+    expect(fetch).toHaveBeenCalledOnce();
+    const request = JSON.parse(String(fetch.mock.calls[0]?.[1]?.body));
+    const input = JSON.parse(request.messages.at(-1).content);
+    expect(input.previousQuestion).toHaveLength(200);
+    expect(input.question).toBe(current);
+    const system = request.messages
+      .filter((message: { role: string }) => message.role === "system")
+      .map((message: { content: string }) => message.content)
+      .join(" ");
+    expect(system).toContain("previousQuestion");
+    // The follow-up inherits scenario guidance from the question it follows.
+    expect(system).toContain("compareFinancialScenarios call");
+  });
+  it("ignores an invalid previous question", async () => {
+    process.env.OPENAI_API_KEY = "test-key";
+    const fetch = vi.fn().mockResolvedValue(Response.json({}, { status: 500 }));
+    await requestAnalystPlan("What is my current runway?", {
+      fetch,
+      previousQuestion: "short",
+    });
+    const request = JSON.parse(String(fetch.mock.calls[0]?.[1]?.body));
+    expect(JSON.parse(request.messages.at(-1).content)).not.toHaveProperty(
+      "previousQuestion",
+    );
+  });
+});

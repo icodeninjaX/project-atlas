@@ -69,6 +69,10 @@ export function FreeformWorkspace({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<FreeformResult | null>(null);
+  // Answered exchanges sent with the next question so follow-ups keep context.
+  const [history, setHistory] = useState<
+    Array<{ question: string; answer: string }>
+  >([]);
 
   async function ask(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -83,6 +87,7 @@ export function FreeformWorkspace({
           question,
           ...(goalId && { goalId }),
           ...(debtId && { debtId }),
+          ...(history.length > 0 && { history }),
           dataSharingAcknowledged: acknowledged,
         }),
       });
@@ -90,6 +95,19 @@ export function FreeformWorkspace({
       if (!response.ok)
         setError(body.error ?? "Analyst is unavailable. Try again.");
       if (body.status) setResult(body as FreeformResult);
+      if (body.status === "answered") {
+        const answer = (body as FreeformResult).claims
+          ?.map((claim) => claim.text)
+          .join(" ")
+          .slice(0, 600);
+        setHistory((previous) =>
+          [
+            ...previous,
+            { question: question.trim(), answer: answer ?? "" },
+          ].slice(-2),
+        );
+        setQuestion("");
+      }
     } catch {
       setError("Analyst is unavailable. Try again.");
     } finally {
@@ -110,6 +128,20 @@ export function FreeformWorkspace({
           >
             Ask your own question
           </label>
+          {history.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              <p className="text-muted-foreground">
+                Follow-up to “{history.at(-1)!.question}”
+              </p>
+              <button
+                type="button"
+                onClick={() => setHistory([])}
+                className="text-primary inline-flex min-h-11 items-center underline"
+              >
+                Start a new question
+              </button>
+            </div>
+          )}
           <textarea
             id="analyst-freeform-question"
             value={question}
@@ -118,7 +150,11 @@ export function FreeformWorkspace({
             onChange={(event) => setQuestion(event.target.value)}
             required
             minLength={8}
-            placeholder="What needs my attention across money and goals?"
+            placeholder={
+              history.length > 0
+                ? "Ask a follow-up, like “What about last quarter?”"
+                : "What needs my attention across money and goals?"
+            }
             className="border-border bg-background mt-2 w-full rounded-xl border px-3 py-3 text-sm"
           />
           <p className="text-muted-foreground mt-2 text-xs">

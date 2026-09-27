@@ -10,6 +10,48 @@ afterEach(() => {
 });
 
 describe("Freeform Analyst workspace", () => {
+  it("sends the previous answered exchange with a follow-up", async () => {
+    const user = userEvent.setup();
+    const answered = () =>
+      new Response(
+        JSON.stringify({
+          status: "answered",
+          claims: [
+            {
+              kind: "interpretation",
+              text: "The recorded expenses may be worth a look.",
+              evidenceIds: ["money.current"],
+              comparison: null,
+            },
+          ],
+          evidence: [],
+          limitations: [],
+        }),
+        { status: 200 },
+      );
+    const fetch = vi.fn().mockImplementation(async () => answered());
+    vi.stubGlobal("fetch", fetch);
+    render(<FreeformWorkspace />);
+    const box = screen.getByRole("textbox", { name: "Ask your own question" });
+    await user.type(box, "How did my spending change?");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Ask Analyst" }));
+    await screen.findByText(/Follow-up to/);
+    expect(box).toHaveValue("");
+    await user.type(box, "What about last quarter?");
+    await user.click(screen.getByRole("button", { name: "Ask Analyst" }));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    expect(JSON.parse(fetch.mock.calls[1]![1].body).history).toEqual([
+      {
+        question: "How did my spending change?",
+        answer: "The recorded expenses may be worth a look.",
+      },
+    ]);
+    await user.click(
+      screen.getByRole("button", { name: "Start a new question" }),
+    );
+    expect(screen.queryByText(/Follow-up to/)).toBeNull();
+  });
   it("hides peso figures in claims under privacy mode and names a matched goal", async () => {
     const user = userEvent.setup();
     window.localStorage.setItem("atlas:privacy-mode:owner-a", "hidden");

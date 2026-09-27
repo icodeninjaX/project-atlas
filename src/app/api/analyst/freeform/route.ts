@@ -16,6 +16,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "private, no-store" };
+// Room for the question plus two earlier exchanges.
+const MAX_REQUEST_CHARS = 8192;
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status, headers });
 const inputSchema = z
@@ -23,6 +25,18 @@ const inputSchema = z
     question: plannerQuestionSchema,
     goalId: z.uuid().optional(),
     debtId: z.uuid().optional(),
+    // Earlier answered exchanges in this conversation, oldest first.
+    history: z
+      .array(
+        z
+          .object({
+            question: plannerQuestionSchema,
+            answer: z.string().trim().max(600),
+          })
+          .strict(),
+      )
+      .max(2)
+      .optional(),
     dataSharingAcknowledged: z.literal(true),
   })
   .strict();
@@ -50,10 +64,11 @@ export async function POST(request: Request) {
     return json({ error: "Sign in to use Analyst." }, 401);
   let input: unknown;
   try {
-    if (Number(request.headers.get("content-length") ?? 0) > 4096)
+    if (Number(request.headers.get("content-length") ?? 0) > MAX_REQUEST_CHARS)
       return json({ error: "Request is too large." }, 413);
     const raw = await request.text();
-    if (raw.length > 4096) return json({ error: "Request is too large." }, 413);
+    if (raw.length > MAX_REQUEST_CHARS)
+      return json({ error: "Request is too large." }, 413);
     input = JSON.parse(raw);
   } catch {
     return json({ error: "Invalid request." }, 400);
@@ -221,7 +236,12 @@ export async function POST(request: Request) {
       : debtId
         ? `${parsed.data.question} Selected active debt ID: ${debtId}. Extra payments are monthly.`
         : parsed.data.question;
-    const plan = await runAnalystQueryPlanner(plannerQuestion);
+    const history = parsed.data.history ?? [];
+    const plan = history.length
+      ? await runAnalystQueryPlanner(plannerQuestion, {
+          previousQuestion: history.at(-1)!.question,
+        })
+      : await runAnalystQueryPlanner(plannerQuestion);
     const plannerUsage =
       "calls" in plan ? plan.metadata.planner : plan.metadata;
     inputTokens = plannerUsage?.inputTokens ?? null;
@@ -357,10 +377,11 @@ export async function POST(request: Request) {
         "context_limit",
       );
     }
-    const answer = await requestGroundedAnswer(
-      parsed.data.question,
-      explanationEvidence,
-    );
+    const answer = history.length
+      ? await requestGroundedAnswer(parsed.data.question, explanationEvidence, {
+          history,
+        })
+      : await requestGroundedAnswer(parsed.data.question, explanationEvidence);
     if (answer.status === "error") {
       inputTokens = (inputTokens ?? 0) + (answer.inputTokens ?? 0);
       outputTokens = (outputTokens ?? 0) + (answer.outputTokens ?? 0);

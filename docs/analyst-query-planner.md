@@ -56,9 +56,9 @@ overflow cause the affected result to fail closed.
 | Question                  |                                                                                500 characters |
 | Authentication            |                                                                                     5 seconds |
 | Model calls               |                                                                                             1 |
-| Provider input            | 18,000 catalog/question characters and at most 16,000 conservatively estimated request tokens |
+| Provider input            | 19,500 catalog/question characters and at most 19,000 conservatively estimated request tokens |
 | Provider output           |                                  1,400 tokens (including reasoning) and 24,000 response bytes |
-| Estimated provider cost   |                                                               20,000 micro-US-dollars ($0.02) |
+| Estimated provider cost   |                                                              21,000 micro-US-dollars ($0.021) |
 | Model request             |                                                                                    12 seconds |
 | Approved tool calls       |                                                                                             4 |
 | Per-call arguments        |                                                               2,000 characters before parsing |
@@ -73,7 +73,7 @@ The planner is pinned to `gpt-5.4-mini-2026-03-17` with low reasoning effort
 ceiling uses the [model's standard text rates](https://developers.openai.com/api/docs/models/gpt-5.4-mini)
 reviewed on 2026-09-27: $0.75 per million input tokens and $4.50 per million
 output tokens, from `AI_MODEL_PRICING`. The pre-call check treats request bytes
-as tokens, so a full-size request stays under $0.02; a typical plan costs about
+as tokens, so a full-size follow-up request stays under $0.021; a typical plan costs about
 $0.004–0.01. The provider's reported token counts are checked again before any
 tool executes. A pricing or model change must update the rates, model
 snapshot, evaluation record and budget together. The live evaluation must be
