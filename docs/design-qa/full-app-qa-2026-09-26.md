@@ -120,6 +120,13 @@ per page, and no failed routes.
    directly (`/tasks?create=true`).
 10. Analyst: dense helper copy and model names (`GPT-4o mini`) up front.
     Move provider/model details into a disclosure.
+    **Done:** the three helper paragraphs under the freeform question are one
+    short example plus a "How Analyst answers" disclosure (which holds the
+    GPT-4o mini note); goal/debt helper text is one line each; the billing
+    note sits behind "About AI models and billing"; and the internal "original
+    focused Analyst flow" line is gone. Result date ranges now use the shared
+    date style. The two data-sharing consent checkboxes keep their full text
+    on purpose. The model picker stays visible because it is a real choice.
 11. Onboarding shows the app's bottom navigation and header; a focused setup
     flow shouldn't let users wander off mid-setup. The form card also has an
     empty band above "About you".

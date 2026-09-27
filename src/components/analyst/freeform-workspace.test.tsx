@@ -177,7 +177,7 @@ describe("Freeform Analyst workspace", () => {
       ).toBeInTheDocument(),
     );
     expect(
-      screen.getByText(/Inspected records span 2026-09-01 to 2026-09-24/),
+      screen.getByText(/Inspected records span Sep 1–24, 2026/),
     ).toBeInTheDocument();
     const sent = JSON.parse(fetch.mock.calls[0]![1].body);
     expect(sent.dataSharingAcknowledged).toBe(true);
