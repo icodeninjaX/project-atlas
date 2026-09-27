@@ -18,6 +18,11 @@ const supabase = vi.hoisted(() => ({
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => (supabase.admin ? { rpc: supabase.rpc } : null),
 }));
+const usage = vi.hoisted(() => ({ sync: vi.fn() }));
+vi.mock("./provider-usage", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./provider-usage")>()),
+  syncProviderUsage: usage.sync,
+}));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     rpc: supabase.statusRpc,
@@ -37,6 +42,9 @@ const settleCalls = () =>
   supabase.rpc.mock.calls.filter(([name]) => name === "settle_ai_pool_tokens");
 
 beforeEach(() => {
+  delete process.env.OPENAI_ADMIN_KEY;
+  usage.sync.mockReset();
+  usage.sync.mockResolvedValue(true);
   supabase.admin = true;
   supabase.getUser.mockResolvedValue({ data: { user: { id: "owner-a" } } });
   supabase.statusRpc.mockReset();
@@ -157,13 +165,66 @@ describe("free daily pool meter", () => {
       error: null,
     });
     expect(await readPoolStatus()).toEqual({
-      large: { used: 1000, budget: 225000, dailyTokens: 250000 },
-      small: { used: 0, budget: 2250000, dailyTokens: 2500000 },
+      large: {
+        used: 1000,
+        budget: 225000,
+        dailyTokens: 250000,
+        syncedAt: null,
+      },
+      small: { used: 0, budget: 2250000, dailyTokens: 2500000, syncedAt: null },
     });
     supabase.statusRpc.mockResolvedValueOnce({
       data: null,
       error: { message: "x" },
     });
     expect(await readPoolStatus()).toBeNull();
+    expect(usage.sync).not.toHaveBeenCalled();
+  });
+  it("refreshes OpenAI's count before showing a stale status", async () => {
+    process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
+    const row = (used: number, syncedAt: string | null) => [
+      { pool: "large", used, budget: 225000, dailyTokens: 250000, syncedAt },
+      { pool: "small", used, budget: 2250000, dailyTokens: 2500000, syncedAt },
+    ];
+    const fresh = new Date().toISOString();
+    supabase.statusRpc
+      .mockResolvedValueOnce({ data: row(0, null), error: null })
+      .mockResolvedValueOnce({ data: row(69542, fresh), error: null });
+    expect((await readPoolStatus())?.small).toMatchObject({
+      used: 69542,
+      syncedAt: fresh,
+    });
+    expect(usage.sync).toHaveBeenCalledTimes(1);
+    // A recent figure is shown without asking OpenAI again.
+    supabase.statusRpc.mockResolvedValueOnce({
+      data: row(69542, fresh),
+      error: null,
+    });
+    await readPoolStatus();
+    expect(usage.sync).toHaveBeenCalledTimes(1);
+  });
+  it("refreshes a stale OpenAI count alongside a pooled call", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(Response.json({ usage: {}, choices: [] }));
+    await meteredOpenAIFetch(url, init, options(fetch));
+    expect(usage.sync).not.toHaveBeenCalled();
+    process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
+    supabase.rpc.mockImplementation(async (name: string) =>
+      name === "reserve_ai_pool_tokens"
+        ? {
+            data: {
+              status: "reserved",
+              reservation_id: 9,
+              provider_synced_at: new Date(
+                Date.now() - 10 * 60_000,
+              ).toISOString(),
+            },
+            error: null,
+          }
+        : { data: null, error: null },
+    );
+    await meteredOpenAIFetch(url, init, options(fetch));
+    expect(usage.sync).toHaveBeenCalledTimes(1);
   });
 });

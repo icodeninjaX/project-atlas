@@ -662,8 +662,18 @@ describe("Analyst conversation", () => {
     const user = userEvent.setup();
     const pools = {
       pools: {
-        large: { used: 45000, budget: 225000, dailyTokens: 250000 },
-        small: { used: 225000, budget: 2250000, dailyTokens: 2500000 },
+        large: {
+          used: 45000,
+          budget: 225000,
+          dailyTokens: 250000,
+          syncedAt: "2026-09-27T16:40:00.000Z",
+        },
+        small: {
+          used: 225000,
+          budget: 2250000,
+          dailyTokens: 2500000,
+          syncedAt: "2026-09-27T16:40:00.000Z",
+        },
       },
       resetsAt: "2026-09-28T00:00:00.000Z",
     };
@@ -701,6 +711,7 @@ describe("Analyst conversation", () => {
           .map((meter) => meter.getAttribute("aria-valuenow")),
       ).toEqual(["10", "20"]),
     );
+    expect(dialog).toHaveTextContent("Usage includes OpenAI’s own count");
     await user.click(within(dialog).getByRole("radio", { name: /GPT-6 Sol/ }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(window.localStorage.getItem("atlas:analyst-model:owner-a")).toBe(

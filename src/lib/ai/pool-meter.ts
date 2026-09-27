@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { freePoolFor, type FreePool } from "./pools";
+import { providerUsageStale, syncProviderUsage } from "./provider-usage";
 
 export type PoolFeature =
   | "analyst_planner"
@@ -103,6 +104,7 @@ export async function meteredOpenAIFetch(
   const reservation = data as {
     status?: string;
     reservation_id?: number;
+    provider_synced_at?: string | null;
   } | null;
   if (error || !reservation?.status) throw new PoolMeterError("unavailable");
   if (reservation.status === "exhausted") throw new PoolExhaustedError(pool);
@@ -118,14 +120,21 @@ export async function meteredOpenAIFetch(
       /* The reservation stays counted at its full size. */
     }
   };
+  // OpenAI's own count refreshes alongside the call, adding no wait to it.
+  const refresh =
+    process.env.OPENAI_ADMIN_KEY &&
+    providerUsageStale(reservation.provider_synced_at)
+      ? syncProviderUsage()
+      : null;
   let response: Response;
   try {
     response = await send(url, init);
   } catch (sendError) {
     // A request that timed out may still have been billed.
-    await settle(null);
+    await Promise.all([settle(null), refresh]);
     throw sendError;
   }
+  await refresh;
   // A rejected request uses no tokens.
   if (!response.ok) {
     await settle(0);
@@ -135,27 +144,41 @@ export async function meteredOpenAIFetch(
   return response;
 }
 
-/** Today's use of each pool, or null when the meter is unavailable. */
-export async function readPoolStatus() {
+export type PoolStatus = Record<
+  FreePool,
+  { used: number; budget: number; dailyTokens: number; syncedAt: string | null }
+>;
+
+async function readStatusOnce(): Promise<PoolStatus | null> {
   const client = await createClient();
   if (!client) return null;
   const { data, error } = await client.rpc("ai_pool_status");
   if (error || !Array.isArray(data)) return null;
-  const status: Partial<
-    Record<FreePool, { used: number; budget: number; dailyTokens: number }>
-  > = {};
+  const status: Partial<PoolStatus> = {};
   for (const row of data as Array<Record<string, unknown>>) {
     if (row.pool !== "large" && row.pool !== "small") continue;
     status[row.pool] = {
       used: Number(row.used) || 0,
       budget: Number(row.budget) || 0,
       dailyTokens: Number(row.dailyTokens) || 0,
+      syncedAt: typeof row.syncedAt === "string" ? row.syncedAt : null,
     };
   }
-  return status.large && status.small
-    ? (status as Record<
-        FreePool,
-        { used: number; budget: number; dailyTokens: number }
-      >)
-    : null;
+  return status.large && status.small ? (status as PoolStatus) : null;
+}
+
+/**
+ * Today's use of each pool, or null when the meter is unavailable. A stale
+ * OpenAI figure is refreshed first, so the picker shows OpenAI's own count.
+ */
+export async function readPoolStatus(): Promise<PoolStatus | null> {
+  const status = await readStatusOnce();
+  if (
+    !status ||
+    !process.env.OPENAI_ADMIN_KEY ||
+    (!providerUsageStale(status.large.syncedAt) &&
+      !providerUsageStale(status.small.syncedAt))
+  )
+    return status;
+  return (await syncProviderUsage()) ? await readStatusOnce() : status;
 }
