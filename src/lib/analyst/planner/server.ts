@@ -30,6 +30,8 @@ export type PlannerExecution = {
   calls: PlannerCallExecution[];
   evidence: ToolEvidence[];
   limitations: string[];
+  /** Capabilities the planner said the question needs but ATLAS lacks. */
+  missingCapabilities?: string[];
   metadata: {
     version: "1";
     startedAt: string;
@@ -268,6 +270,7 @@ export async function executeAnalystPlan(
     calls,
     evidence,
     limitations: [...new Set(limitations)],
+    missingCapabilities: plan.missingCapabilities,
     metadata: {
       version: "1",
       startedAt: now.toISOString(),

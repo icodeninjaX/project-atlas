@@ -19,7 +19,8 @@ Phase 9 read-only tools. It cannot execute actions or arbitrary queries.
 - **Thread:** each question and answer is a card in order. Answers show the
   verified claims first, then any scenario comparison, then notes and
   limitations, then a collapsed "Sources" list that citations open. Follow-ups
-  send the last two answered exchanges; "New conversation" clears the thread.
+  send the last two answered or clarification exchanges, so a short reply to a
+  clarification keeps the original question; "New conversation" clears the thread.
 - **Focus:** one optional "Focus" selector covers goals and debts (monthly
   payment scenarios) and shows a removable chip. Typing a goal or debt name also
   works.
@@ -109,6 +110,13 @@ date ("September 1", "Sept 1–24") whose month and day match a cited period's
 start or end; a bare day number is never treated as a verified figure. The freeform and
 weekly insight routes allow 60 seconds for planning, retrieval and a repaired
 answer.
+
+When some tools find no or incomplete records (for example no completed reviews
+yet), the answer model receives only complete facts from tools that finished,
+and the answer adds a limitation saying so. The route still falls back when the
+planner reports a missing capability, when a focused goal, pattern or scenario
+tool is incomplete, or when no complete fact remains. Fallback cards show the
+facts first and keep limitations in a collapsed "notes on these facts" list.
 
 The UI still shows every figure from ATLAS evidence alongside the claims. An
 invalid response falls back to the calculated evidence.

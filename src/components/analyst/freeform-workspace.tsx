@@ -20,6 +20,7 @@ import {
   Wallet,
   X,
   type LucideIcon,
+  Info,
 } from "lucide-react";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import {
@@ -183,9 +184,18 @@ function AnswerBody({ turn }: { turn: Turn }) {
   return (
     <>
       <div className="space-y-5 px-5 pb-5 sm:px-6">
-        {result.message && (
-          <p className="text-[0.9375rem] leading-7">{result.message}</p>
-        )}
+        {result.message &&
+          (claims.length === 0 ? (
+            <p className="border-border bg-background/40 text-muted-foreground flex gap-2.5 rounded-2xl border p-3.5 text-sm leading-6">
+              <Info
+                aria-hidden="true"
+                className="text-primary mt-1 size-4 shrink-0"
+              />
+              {result.message}
+            </p>
+          ) : (
+            <p className="text-[0.9375rem] leading-7">{result.message}</p>
+          ))}
         {lead.map((claim, index) => (
           <div key={`lead-${index}`}>
             <p className="text-[0.9375rem] leading-7 text-pretty">
@@ -310,13 +320,6 @@ function AnswerBody({ turn }: { turn: Turn }) {
       </div>
       {(result.limitations.length > 0 || result.evidence.length > 0) && (
         <footer className="border-border bg-background/35 border-t px-5 py-3 sm:px-6">
-          {result.limitations.length > 0 && (
-            <ul className="text-muted-foreground mb-1 space-y-1 text-xs leading-5">
-              {result.limitations.map((item, index) => (
-                <li key={index}>{item}</li>
-              ))}
-            </ul>
-          )}
           {result.evidence.length > 0 && (
             <details
               ref={sources}
@@ -351,8 +354,9 @@ function AnswerBody({ turn }: { turn: Turn }) {
                       <SensitiveValue>{displayValue(item)}</SensitiveValue>
                     </p>
                     <p className="text-muted-foreground mt-1 text-[11px]">
-                      {item.period.from} to {item.period.through} ·{" "}
-                      {item.completeness}
+                      {formatPeriodLabel(item.period.from, item.period.through)}
+                      {item.completeness !== "complete" &&
+                        ` · ${item.completeness}`}
                     </p>
                     <p className="text-muted-foreground mt-1 text-[11px] leading-4 break-words">
                       <SensitiveValue>{item.comparisonBasis}</SensitiveValue>
@@ -374,6 +378,24 @@ function AnswerBody({ turn }: { turn: Turn }) {
                   </article>
                 ))}
               </div>
+            </details>
+          )}
+          {result.limitations.length > 0 && (
+            <details className="group">
+              <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-lg text-xs font-medium focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+                {result.limitations.length === 1
+                  ? "1 note on these facts"
+                  : `${result.limitations.length} notes on these facts`}
+                <ChevronDown
+                  aria-hidden="true"
+                  className="size-3.5 transition-transform group-open:rotate-180"
+                />
+              </summary>
+              <ul className="text-muted-foreground mb-2 list-disc space-y-1 pl-4 text-xs leading-5">
+                {result.limitations.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
             </details>
           )}
         </footer>
@@ -415,6 +437,11 @@ function AnswerCard({ turn }: { turn: Turn }) {
             <ShieldCheck aria-hidden="true" className="size-3.5" />
             Checked
             <span className="hidden sm:inline">&nbsp;against your records</span>
+          </span>
+        )}
+        {turn.result?.status === "fallback" && (
+          <span className="bg-muted text-muted-foreground inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold">
+            ATLAS facts only
           </span>
         )}
       </header>
@@ -469,7 +496,9 @@ function Composer({
   debts: Array<{ id: string; creditor_name: string }>;
   children?: ReactNode;
 }) {
-  const canAsk = !pending && consent && question.trim().length >= 8;
+  const length = question.trim().length;
+  const tooLong = length > maxLength;
+  const canAsk = !pending && consent && length >= 8 && !tooLong;
   return (
     <form
       onSubmit={(event) => {
@@ -501,6 +530,12 @@ function Composer({
         }
         className="placeholder:text-muted-foreground/80 block w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-[0.9375rem] leading-6 focus:outline-none"
       />
+      {tooLong && (
+        <p role="status" className="text-destructive px-4 text-xs">
+          Questions with a focus can be up to {maxLength} characters. Shorten it
+          or clear the focus.
+        </p>
+      )}
       <div className="flex items-center justify-between gap-2 px-2.5 pb-2.5">
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           {(goals.length > 0 || debts.length > 0) &&
@@ -617,17 +652,23 @@ export function FreeformWorkspace({
 
   async function ask(text: string) {
     const trimmed = text.trim();
-    if (trimmed.length < 8 || pending || !consent) return;
-    // Answered exchanges give follow-ups their context.
+    if (trimmed.length < 8 || trimmed.length > (focusId ? 400 : 500)) return;
+    if (pending || !consent) return;
+    // Answered exchanges, and clarification requests, give follow-ups their
+    // context: a short reply to a clarification keeps the original question.
     const history = turns
-      .filter((turn) => turn.result?.status === "answered")
+      .filter(
+        (turn) =>
+          turn.result?.status === "answered" ||
+          turn.result?.status === "clarification_required",
+      )
       .slice(-2)
       .map((turn) => ({
         question: turn.question,
-        answer: (turn.result?.claims ?? [])
-          .map((claim) => claim.text)
-          .join(" ")
-          .slice(0, 600),
+        answer: (turn.result?.status === "answered"
+          ? (turn.result.claims ?? []).map((claim) => claim.text).join(" ")
+          : (turn.result?.message ?? "")
+        ).slice(0, 600),
       }));
     const id = nextId.current++;
     setTurns((current) => [
