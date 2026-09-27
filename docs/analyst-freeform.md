@@ -12,8 +12,9 @@ data-sharing acknowledgement. It reserves one request from the existing Analyst
 allowance before any planner or answer model call. Migration
 `20260924161640_analyst_freeform_quota.sql` adds `freeform` to the ledger's
 analysis types and typed reservation RPC; the same hourly, daily and site-wide
-limits apply. The reservation model is the pinned `gpt-4o-mini-2024-07-18` used
-by both planner and answer generation. No prompt, question, evidence or answer is
+limits apply. The reservation records the answer model, the pinned
+`gpt-4o-mini-2024-07-18`; the planner runs on `gpt-5.4-mini-2026-03-17` (see
+[the planner doc](analyst-query-planner.md)). No prompt, question, evidence or answer is
 stored in the ledger.
 
 The planner authenticates again and invokes only approved tools. Every tool
@@ -24,18 +25,49 @@ The question and retrieved text are untrusted. The answer model receives at most
 planner evidence, including periods, calculation basis, completeness, record
 links and limitations. It never treats partial tool results as a complete answer.
 
+## Named goal and debt resolution
+
+When no goal or debt is selected, the route loads the owner's goal titles and
+active debt creditor names (up to 100 and 50) and checks whether the question
+names exactly one of them as a whole phrase (`src/lib/analyst/freeform/mentions.ts`).
+A single match is passed to the planner as the literal selected ID, and then
+goes through the same selected-goal or selected-debt rules. Goals are not
+resolved for pattern or scenario questions. Debts are resolved only for monthly
+scenario questions. Ambiguous names, or questions naming both a goal and a
+debt, keep the existing clarification path. The answer includes
+`matchedEntity` so the UI can show what was matched. Peso figures in claim text
+are masked when privacy mode is on.
+
 ## Grounded answer contract
 
-The answer model returns one to four structured interpretation or suggestion
-claims. Each claim must cite one to four supplied evidence IDs. Server validation
-rejects missing or duplicate IDs, figures and currencies in prose, direct causal
-and directional claims, categorical forecasts, unsupported certainty, and
-suggestions based on incomplete evidence. The figures shown in the UI come from
-ATLAS evidence, never model prose. These checks are deliberately conservative;
-an invalid response falls back to the calculated evidence.
+The answer model returns one to four structured observation, interpretation or
+suggestion claims. Each claim must cite one to four supplied evidence IDs.
+Server validation (`src/lib/analyst/freeform/verify.ts`) checks prose against
+the cited evidence instead of banning figures outright:
+
+- Every number must be reproducible from a cited item: its value (money as
+  shown in the supplied `display` string or rounded to whole pesos), a
+  difference between two cited values of the same unit, a percent change
+  between them, a number in a cited metric label, or a year of a cited period.
+  ISO dates must be cited period dates. Magnitude suffixes (`k`, `M`) and
+  number words (`thousand`, `double`) are rejected.
+- A figure with a minus sign must copy a negative cited value. An unsigned
+  figure may copy a non-negative value or state a difference or percent change,
+  so a sign cannot be dropped or reversed.
+- Directional words (higher, lower, increased, fell, unchanged…) require a
+  structured `comparison` of two cited same-unit items whose values confirm
+  the stated direction.
+- Causal language, forecasts, certainty, significance/strength, superlatives,
+  suggestions from incomplete evidence, and scenario recommendations remain
+  rejected. Scenario answers must cite a Current and an Option item, cannot call
+  an option better or say to go with it, and may only suggest reviewing the
+  stated assumptions or options.
+
+The UI still shows every figure from ATLAS evidence alongside the claims. An
+invalid response falls back to the calculated evidence.
 
 The answer call has a 14,000-character compact payload ceiling, 16,000-token
-conservative input ceiling, 450 output-token ceiling, $0.003 estimated ceiling,
+conservative input ceiling, 700 output-token ceiling, $0.003 estimated ceiling,
 24,000-byte response ceiling and 12-second deadline. The planner retains its own
 call, time, evidence and cost limits. One planner call and at most one answer call
 occur per request. Typed failures cover clarification, unsupported questions,
@@ -43,10 +75,15 @@ insufficient evidence, context limits, provider/timeout errors and invalid
 responses. The UI keeps retry available and places tap-friendly citations beside
 claims; selecting one opens the evidence view.
 
-The fixed cost calculation uses the [published GPT-4o mini text rates](https://developers.openai.com/api/docs/models/gpt-4o-mini)
+Planner and answer budgets use `AI_MODEL_PRICING` in `src/lib/ai/models.ts`,
+which holds the [published GPT-4o mini text rates](https://developers.openai.com/api/docs/models/gpt-4o-mini)
 reviewed on 2026-09-25: $0.15 per million input tokens and $0.60 per million
-output tokens. A model or price change requires updating both planner and answer
-budgets and their evaluations.
+output tokens. A model without an entry fails with `configuration_error` before
+any provider call. To try another planner or answer model, add its published
+rates, update `AI_MODELS`, and rerun the live planner and answer evaluations.
+Both calls go through `src/lib/ai/openai.ts`. It sends `reasoning_effort`
+instead of `temperature` to reasoning models, which reject a temperature
+setting.
 
 ## Local acceptance and release boundary — 2026-09-25
 

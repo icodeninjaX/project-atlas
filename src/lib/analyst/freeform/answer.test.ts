@@ -33,6 +33,7 @@ const valid = {
       kind: "interpretation",
       text: "This may warrant a closer look at the recorded expenses.",
       evidenceIds: ["money.current"],
+      comparison: null,
     },
   ],
 };
@@ -61,9 +62,12 @@ describe("freeform claim validation", () => {
       ),
     ).toBeNull();
   });
-  it("rejects figures, causal claims, direction and unsupported certainty", () => {
+  it("rejects unverified figures, causal claims, direction and unsupported certainty", () => {
     for (const text of [
       "Expenses increased by 25%.",
+      "Recorded expenses were ₱999.00 this month.",
+      "Recorded expenses were about 5k this month.",
+      "Expenses reached a thousand pesos this month.",
       "Debt fell because income rose.",
       "This always proves progress.",
       "These patterns may explain the change in tasks.",
@@ -105,6 +109,7 @@ describe("freeform claim validation", () => {
           kind: "suggestion",
           text: "Consider reviewing the recorded expenses for context.",
           evidenceIds: ["money.current"],
+          comparison: null,
         },
       ],
     };
@@ -147,6 +152,165 @@ describe("freeform claim validation", () => {
   });
 });
 
+const income: ToolEvidence = {
+  ...evidence[0]!,
+  id: "money.income",
+  metric: "Recorded income",
+  value: 20000,
+};
+
+describe("verified figures and comparisons", () => {
+  const observe = (
+    text: string,
+    comparison: unknown = null,
+    evidenceIds = ["money.current", "money.income"],
+  ) =>
+    validateGroundedAnswer(
+      { claims: [{ kind: "observation", text, evidenceIds, comparison }] },
+      [...evidence, income],
+    );
+
+  it("accepts figures copied from or derived from cited evidence", () => {
+    for (const text of [
+      "Recorded expenses were ₱123.45 for 2026-09-01 to 2026-09-24.",
+      "Recorded expenses were about ₱123 against ₱200.00 of income in 2026.",
+      "Income and expenses differ by ₱76.55 across the recorded period.",
+      "Recorded expenses were 38% less than recorded income.",
+    ])
+      expect(
+        observe(
+          text,
+          /less than/.test(text)
+            ? {
+                subjectId: "money.current",
+                referenceId: "money.income",
+                direction: "lower",
+              }
+            : null,
+        ),
+        text,
+      ).not.toBeNull();
+  });
+  it("preserves the sign of a cited figure", () => {
+    expect(observe("Recorded expenses were -₱123.45 this month.")).toBeNull();
+    const refund = { ...income, id: "refund", value: -5000 };
+    const signed = (text: string) =>
+      validateGroundedAnswer(
+        {
+          claims: [
+            {
+              kind: "observation",
+              text,
+              evidenceIds: ["refund"],
+              comparison: null,
+            },
+          ],
+        },
+        [refund],
+      );
+    expect(
+      signed("The recorded change was -₱50.00 this month."),
+    ).not.toBeNull();
+    expect(signed("The recorded change was ₱50.00 this month.")).toBeNull();
+    expect(
+      observe(
+        "Income and expenses differ by ₱76.55 in 2026-09-01 to 2026-09-24.",
+      ),
+    ).not.toBeNull();
+  });
+  it("rejects figures from uncited evidence and unknown dates", () => {
+    expect(
+      observe("Recorded income was ₱200.00.", null, ["money.current"]),
+    ).toBeNull();
+    expect(observe("Recorded expenses were ₱123.45 on 2026-10-02.")).toBeNull();
+  });
+  it("requires a declared comparison that matches the values", () => {
+    const lower = {
+      subjectId: "money.current",
+      referenceId: "money.income",
+      direction: "lower",
+    };
+    expect(observe("Recorded expenses were lower than income.")).toBeNull();
+    expect(observe("Recorded expenses were lower than income.", lower)).toEqual(
+      expect.any(Array),
+    );
+    expect(
+      observe("Recorded expenses were higher than income.", {
+        ...lower,
+        direction: "higher",
+      }),
+    ).toBeNull();
+    expect(
+      observe("Recorded expenses were higher than income.", lower),
+    ).toBeNull();
+    expect(
+      observe("Recorded expenses were lower than income.", lower, [
+        "money.current",
+      ]),
+    ).toBeNull();
+  });
+  it("still requires scenario claims to cite a baseline and an option", () => {
+    const tool = "compareFinancialScenarios" as const;
+    const current = {
+      ...evidence[0]!,
+      id: "current",
+      metric: "Current · Runway",
+      unit: "months" as const,
+      value: 4,
+      provenance: { ...evidence[0]!.provenance, tool },
+    };
+    const option = {
+      ...current,
+      id: "option",
+      metric: "Option 1 · Runway",
+      value: 6,
+    };
+    const claim = (evidenceIds: string[]) => ({
+      claims: [
+        {
+          kind: "observation",
+          text: "Option 1 shows 6 months of runway against 4 months today.",
+          evidenceIds,
+          comparison: null,
+        },
+      ],
+    });
+    expect(
+      validateGroundedAnswer(claim(["current", "option"]), [current, option]),
+    ).not.toBeNull();
+    expect(
+      validateGroundedAnswer(claim(["option"]), [current, option]),
+    ).toBeNull();
+    const withClaim = (kind: string, text: string) =>
+      validateGroundedAnswer(
+        {
+          claims: [
+            claim(["current", "option"]).claims[0],
+            {
+              kind,
+              text,
+              evidenceIds: ["current", "option"],
+              comparison: null,
+            },
+          ],
+        },
+        [current, option],
+      );
+    expect(
+      withClaim("suggestion", "Consider using Option 1 for runway."),
+    ).toBeNull();
+    expect(
+      withClaim("interpretation", "Option 1 may be the better choice here."),
+    ).toBeNull();
+    expect(
+      withClaim(
+        "suggestion",
+        "Consider reviewing the stated assumptions first.",
+      ),
+    ).not.toBeNull();
+  });
+});
+
 describe("freeform provider boundary", () => {
   it("does not contact the provider when evidence exceeds the bounded context", async () => {
     const fetch = vi.fn();
@@ -181,7 +345,10 @@ describe("freeform provider boundary", () => {
     ).toMatchObject({ status: "answered", claims: valid.claims });
     const sent = JSON.parse(fetch.mock.calls[0]![1].body);
     expect(sent.store).toBe(false);
-    expect(sent.messages[1].content).not.toContain("record-a");
+    expect(sent.messages.at(-1).content).not.toContain("record-a");
+    expect(JSON.parse(sent.messages.at(-1).content).evidence[0].display).toBe(
+      "₱123.45",
+    );
     fetch.mockResolvedValueOnce(
       new Response(
         JSON.stringify({

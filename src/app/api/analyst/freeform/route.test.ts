@@ -19,6 +19,7 @@ vi.mock("@/lib/analyst/freeform/answer", () => ({
   requestGroundedAnswer: mocks.answer,
 }));
 
+const mentionRows: Record<string, unknown[]> = { goals: [], debts: [] };
 const question = "What needs attention in my finances?";
 const request = (body: unknown) =>
   new Request("http://localhost/api/analyst/freeform", {
@@ -65,16 +66,23 @@ beforeEach(() => {
     rpc: mocks.rpc,
     from: mocks.from,
   });
+  mentionRows.goals = [];
+  mentionRows.debts = [];
+  let table = "";
   const goalQuery = {
     select: vi.fn(),
     eq: vi.fn(),
     maybeSingle: vi
       .fn()
       .mockResolvedValue({ data: { id: "goal" }, error: null }),
+    limit: vi.fn(async () => ({ data: mentionRows[table], error: null })),
   };
   goalQuery.select.mockReturnValue(goalQuery);
   goalQuery.eq.mockReturnValue(goalQuery);
-  mocks.from.mockReturnValue(goalQuery);
+  mocks.from.mockImplementation((name: string) => {
+    table = name;
+    return goalQuery;
+  });
   mocks.plan.mockResolvedValue({
     status: "ready",
     calls: [],
@@ -97,6 +105,66 @@ beforeEach(() => {
 });
 
 describe("freeform Analyst route", () => {
+  it("resolves a goal named in the question to its literal ID", async () => {
+    const goalId = "3f0c2a4e-8b1d-4c6e-9a2f-1b3c5d7e9f00";
+    mentionRows.goals = [
+      { id: goalId, title: "Emergency Fund" },
+      { id: "other", title: "Japan trip" },
+    ];
+    mocks.plan.mockResolvedValueOnce({
+      status: "ready",
+      calls: [{ tool: "getGoalLinkedActivity", input: { goalId } }],
+      evidence: [
+        {
+          ...item,
+          id: "goal-link",
+          provenance: { ...item.provenance, tool: "getGoalLinkedActivity" },
+        },
+      ],
+      limitations: [],
+      metadata: { planner: { inputTokens: 90, outputTokens: 20 } },
+    });
+    const response = await POST(
+      request({
+        question: "How is my emergency fund goal going this month?",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(mocks.plan).toHaveBeenCalledWith(
+      `How is my emergency fund goal going this month? Selected goal ID: ${goalId}.`,
+    );
+    expect(await response.json()).toMatchObject({
+      status: "answered",
+      matchedEntity: { type: "goal", name: "Emergency Fund" },
+    });
+  });
+  it("resolves a named debt for an extra monthly payment question", async () => {
+    const debtId = "4a1d2c3b-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
+    mentionRows.debts = [{ id: debtId, creditor_name: "BPI Loan" }];
+    await POST(
+      request({
+        question: "Put an extra monthly ₱500 toward my BPI Loan",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(mocks.plan).toHaveBeenCalledWith(
+      expect.stringContaining(`Selected active debt ID: ${debtId}.`),
+    );
+  });
+  it("does not guess when two goals match the question", async () => {
+    mentionRows.goals = [
+      { id: "a", title: "Savings" },
+      { id: "b", title: "savings" },
+    ];
+    await POST(
+      request({
+        question: "How are my savings doing lately?",
+        dataSharingAcknowledged: true,
+      }),
+    );
+    expect(mocks.plan).toHaveBeenCalledWith("How are my savings doing lately?");
+  });
+
   it("requires the comparison tool for a financial what-if", async () => {
     const response = await POST(
       request({

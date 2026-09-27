@@ -1,5 +1,6 @@
 import "server-only";
-import { AI_MODELS } from "@/lib/ai/models";
+import { AI_MODELS, estimatedCostUsdMicros } from "@/lib/ai/models";
+import { requestStructuredJson, structuredRequestBody } from "@/lib/ai/openai";
 import {
   PLANNER_LIMITS,
   PlannerContractError,
@@ -40,52 +41,6 @@ function manilaDate(now: Date) {
     month: "2-digit",
     day: "2-digit",
   }).format(now);
-}
-
-function estimatedCostUsdMicros(inputTokens: number, outputTokens: number) {
-  // GPT-4o mini standard text rates: $0.15 input / $0.60 output per 1M tokens.
-  return Math.ceil(inputTokens * 0.15 + outputTokens * 0.6);
-}
-
-function providerFailure(status: number): PlannerFailureCode {
-  if (status === 401) return "provider_auth";
-  if (status === 403) return "model_access";
-  if (status === 429) return "provider_rate_limit";
-  return "provider_error";
-}
-
-async function readBoundedProviderResponse(response: Response) {
-  if (!response.body) return null;
-  const reportedLength = Number(response.headers.get("content-length"));
-  if (
-    Number.isFinite(reportedLength) &&
-    reportedLength > PLANNER_LIMITS.providerResponseBytes
-  )
-    return null;
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let bytes = 0;
-  try {
-    while (true) {
-      const next = await reader.read();
-      if (next.done) break;
-      bytes += next.value.byteLength;
-      if (bytes > PLANNER_LIMITS.providerResponseBytes) {
-        await reader.cancel();
-        return null;
-      }
-      chunks.push(next.value);
-    }
-  } finally {
-    reader.releaseLock();
-  }
-  const buffer = new Uint8Array(bytes);
-  let offset = 0;
-  for (const chunk of chunks) {
-    buffer.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return new TextDecoder().decode(buffer);
 }
 
 export async function requestAnalystPlan(
@@ -161,19 +116,13 @@ export async function requestAnalystPlan(
     !/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(
       question.data,
     );
-  const requestBody = JSON.stringify({
-    model: AI_MODELS.planner,
-    store: false,
-    temperature: 0,
-    max_completion_tokens: PLANNER_LIMITS.outputTokens,
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "atlas_analyst_query_plan",
-        strict: true,
-        schema: plannerResponseJsonSchema(),
-      },
-    },
+  const model = AI_MODELS.planner;
+  const requestBody = structuredRequestBody({
+    model,
+    maxOutputTokens: PLANNER_LIMITS.outputTokens,
+    reasoningEffort: "low",
+    schemaName: "atlas_analyst_query_plan",
+    schema: plannerResponseJsonSchema(),
     messages: [
       {
         role: "system",
@@ -183,7 +132,7 @@ export async function requestAnalystPlan(
       ...(scenarioPlanning
         ? [
             {
-              role: "system",
+              role: "system" as const,
               content:
                 "For a supported financial what-if, use exactly one compareFinancialScenarios call. It includes the Current baseline; alternatives contain only changed options, never an unchanged baseline. Do not call getRunway too. For an income fall by 20%, set monthlyIncomeChangePercent to -20 and monthlyIncomePesos to null; never use 0.80 or another factor as a peso amount. For a stated monthly peso amount such as ₱100, copy '100' into an amountPesos field; ATLAS converts it. Use '0' in unchanged expense and purchase fields. A one-time debt payment is unsupported: return unsupported with zero calls. Never invent an ID or assume whether a literal UUID exists in records.",
             },
@@ -192,7 +141,7 @@ export async function requestAnalystPlan(
       ...(twoDomainMonthlyPlanning
         ? [
             {
-              role: "system",
+              role: "system" as const,
               content:
                 "This asks for two supported whole-domain metrics by month. Use exactly one getCrossDomainHistory call with the two metric keys and the stated inclusive period. It provides both series and missing-history coverage. Do not split into two getHistoricalMetricSeries calls.",
             },
@@ -201,7 +150,7 @@ export async function requestAnalystPlan(
       ...(unresolvedGoalPlanning
         ? [
             {
-              role: "system",
+              role: "system" as const,
               content:
                 "This names a supported goal without a literal goal ID. Return clarification with zero calls asking for the specific goal ID. Do not return unsupported for a missing ID.",
             },
@@ -212,122 +161,66 @@ export async function requestAnalystPlan(
   });
   // A UTF-8 byte upper bound is deliberately conservative without a tokenizer.
   const estimatedInputTokens = Buffer.byteLength(requestBody);
+  const estimatedCost = estimatedCostUsdMicros(
+    model,
+    estimatedInputTokens,
+    PLANNER_LIMITS.outputTokens,
+  );
+  if (estimatedCost === null) {
+    providerStatus = "configuration_error";
+    return fail("configuration_error");
+  }
   if (
     providerInput.length > PLANNER_LIMITS.providerInputChars ||
     estimatedInputTokens > PLANNER_LIMITS.inputTokens ||
-    estimatedCostUsdMicros(estimatedInputTokens, PLANNER_LIMITS.outputTokens) >
-      PLANNER_LIMITS.estimatedCostUsdMicros
+    estimatedCost > PLANNER_LIMITS.estimatedCostUsdMicros
   ) {
     providerStatus = "context_limit";
     return fail("context_limit");
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(
-    () => controller.abort(),
-    PLANNER_LIMITS.modelTimeoutMs,
-  );
+  modelCalls = 1;
+  const result = await requestStructuredJson(requestBody, {
+    timeoutMs: PLANNER_LIMITS.modelTimeoutMs,
+    responseBytes: PLANNER_LIMITS.providerResponseBytes,
+    fetch: options.fetch,
+  });
+  resolvedModel = result.resolvedModel ?? null;
+  if (result.status === "error") return fail(result.code);
+  inputTokens = result.inputTokens ?? estimatedInputTokens;
+  outputTokens = result.outputTokens ?? PLANNER_LIMITS.outputTokens;
+  cost = estimatedCostUsdMicros(model, inputTokens, outputTokens) ?? Infinity;
+  if (
+    inputTokens > PLANNER_LIMITS.inputTokens ||
+    outputTokens > PLANNER_LIMITS.outputTokens ||
+    cost > PLANNER_LIMITS.estimatedCostUsdMicros
+  ) {
+    providerStatus = "cost_limit";
+    return fail("cost_limit");
+  }
+  let plan;
   try {
-    modelCalls = 1;
-    const response = await (options.fetch ?? globalThis.fetch)(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        signal: controller.signal,
-        headers: {
-          Authorization: `Bearer ${key}`,
-          "Content-Type": "application/json",
-        },
-        body: requestBody,
-      },
-    );
-    if (!response.ok) {
-      const code = providerFailure(response.status);
-      return fail(code);
-    }
-    const responseText = await readBoundedProviderResponse(response);
-    if (responseText === null) return fail("invalid_response");
-    let body: unknown;
-    try {
-      body = JSON.parse(responseText);
-    } catch {
-      return fail("invalid_response");
-    }
-    const parsedBody = body as {
-      model?: string;
-      usage?: { prompt_tokens?: number; completion_tokens?: number };
-      choices?: Array<{
-        finish_reason?: string;
-        message?: { content?: string; refusal?: string };
-      }>;
-    };
-    const reportedInput = parsedBody.usage?.prompt_tokens;
-    const reportedOutput = parsedBody.usage?.completion_tokens;
-    if (
-      (reportedInput !== undefined &&
-        (!Number.isSafeInteger(reportedInput) || reportedInput < 0)) ||
-      (reportedOutput !== undefined &&
-        (!Number.isSafeInteger(reportedOutput) || reportedOutput < 0))
-    )
-      return fail("invalid_response");
-    inputTokens = reportedInput ?? estimatedInputTokens;
-    outputTokens = reportedOutput ?? PLANNER_LIMITS.outputTokens;
-    resolvedModel = parsedBody.model ?? null;
-    cost = estimatedCostUsdMicros(inputTokens, outputTokens);
-    if (
-      inputTokens > PLANNER_LIMITS.inputTokens ||
-      outputTokens > PLANNER_LIMITS.outputTokens ||
-      cost > PLANNER_LIMITS.estimatedCostUsdMicros
-    ) {
-      providerStatus = "cost_limit";
-      return fail("cost_limit");
-    }
-    const choice = parsedBody.choices?.[0];
-    if (
-      choice?.finish_reason !== "stop" ||
-      choice.message?.refusal ||
-      !choice.message?.content
-    )
-      return fail("invalid_response");
-    let rawPlan: unknown;
-    try {
-      rawPlan = JSON.parse(choice.message.content);
-    } catch {
-      return fail("invalid_response");
-    }
-    let plan;
-    try {
-      plan = validatePlannerOutput(rawPlan, question.data);
-    } catch (error) {
-      return fail(
-        error instanceof PlannerContractError
-          ? "invalid_plan"
-          : "invalid_response",
-      );
-    }
-    providerStatus = "success";
-    if (plan.outcome === "clarification")
-      return {
-        status: "clarification_required",
-        clarification: plan.clarification!,
-        metadata: metadata(),
-      };
-    if (plan.outcome === "unsupported")
-      return {
-        status: "unsupported",
-        unsupportedReason: plan.unsupportedReason!,
-        missingCapabilities: plan.missingCapabilities,
-        metadata: metadata(),
-      };
-    return { status: "planned", plan, metadata: metadata() };
+    plan = validatePlannerOutput(result.content, question.data);
   } catch (error) {
     return fail(
-      error instanceof Error && error.name === "AbortError"
-        ? "timeout"
-        : "provider_error",
+      error instanceof PlannerContractError
+        ? "invalid_plan"
+        : "invalid_response",
     );
-  } finally {
-    clearTimeout(timeout);
-    controller.abort();
   }
+  providerStatus = "success";
+  if (plan.outcome === "clarification")
+    return {
+      status: "clarification_required",
+      clarification: plan.clarification!,
+      metadata: metadata(),
+    };
+  if (plan.outcome === "unsupported")
+    return {
+      status: "unsupported",
+      unsupportedReason: plan.unsupportedReason!,
+      missingCapabilities: plan.missingCapabilities,
+      metadata: metadata(),
+    };
+  return { status: "planned", plan, metadata: metadata() };
 }

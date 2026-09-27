@@ -57,8 +57,8 @@ overflow cause the affected result to fail closed.
 | Authentication            |                                                                                     5 seconds |
 | Model calls               |                                                                                             1 |
 | Provider input            | 18,000 catalog/question characters and at most 16,000 conservatively estimated request tokens |
-| Provider output           |                                                          500 tokens and 24,000 response bytes |
-| Estimated provider cost   |                                                               3,000 micro-US-dollars ($0.003) |
+| Provider output           |                                  1,400 tokens (including reasoning) and 24,000 response bytes |
+| Estimated provider cost   |                                                               20,000 micro-US-dollars ($0.02) |
 | Model request             |                                                                                    12 seconds |
 | Approved tool calls       |                                                                                             4 |
 | Per-call arguments        |                                                               2,000 characters before parsing |
@@ -67,12 +67,17 @@ overflow cause the affected result to fail closed.
 | Aggregate evidence        |                                                                     80 items and 96,000 bytes |
 | Missing-capability labels |                                                                                             6 |
 
-The planner is pinned to `gpt-4o-mini-2024-07-18` at temperature zero. The cost
-ceiling uses the [model's standard text rates](https://developers.openai.com/api/docs/models/gpt-4o-mini)
-reviewed on 2026-09-24: $0.15 per million input tokens and $0.60 per million
-output tokens. The provider's reported
-token counts are checked again before any tool executes. A pricing or model change
-must update the fixed rates, model snapshot, evaluation record and budget together.
+The planner is pinned to `gpt-5.4-mini-2026-03-17` with low reasoning effort
+(reasoning models take no temperature). It was switched from
+`gpt-4o-mini-2024-07-18` on 2026-09-27 for better tool routing. The cost
+ceiling uses the [model's standard text rates](https://developers.openai.com/api/docs/models/gpt-5.4-mini)
+reviewed on 2026-09-27: $0.75 per million input tokens and $4.50 per million
+output tokens, from `AI_MODEL_PRICING`. The pre-call check treats request bytes
+as tokens, so a full-size request stays under $0.02; a typical plan costs about
+$0.004–0.01. The provider's reported token counts are checked again before any
+tool executes. A pricing or model change must update the rates, model
+snapshot, evaluation record and budget together. The live evaluation must be
+rerun against this model before release.
 
 Operational metadata contains only the requested/resolved model, timestamps,
 latency, provider status, token counts, estimated cost, approved tool names/counts,

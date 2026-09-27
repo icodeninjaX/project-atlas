@@ -1,6 +1,7 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { PrivacyProvider } from "@/components/privacy/privacy-provider";
 import { FreeformWorkspace } from "./freeform-workspace";
 
 afterEach(() => {
@@ -9,6 +10,53 @@ afterEach(() => {
 });
 
 describe("Freeform Analyst workspace", () => {
+  it("hides peso figures in claims under privacy mode and names a matched goal", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem("atlas:privacy-mode:owner-a", "hidden");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            status: "answered",
+            claims: [
+              {
+                kind: "observation",
+                text: "Recorded expenses were ₱1,234.50, PHP 99.00 and 12.50 pesos this month.",
+                evidenceIds: ["money.current"],
+                comparison: null,
+              },
+            ],
+            evidence: [],
+            limitations: [],
+            matchedEntity: { type: "goal", name: "Emergency Fund" },
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+    render(
+      <PrivacyProvider userId="owner-a">
+        <FreeformWorkspace />
+      </PrivacyProvider>,
+    );
+    await user.type(
+      screen.getByRole("textbox", { name: "Ask your own question" }),
+      "How is my emergency fund goal?",
+    );
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Ask Analyst" }));
+    const claim = await screen.findByText(/Recorded expenses were/);
+    expect(claim).not.toHaveTextContent("1,234.50");
+    expect(claim).not.toHaveTextContent("99.00");
+    expect(claim).not.toHaveTextContent("12.50");
+    expect(claim).toHaveTextContent("this month.");
+    expect(
+      screen.getByText(/matched your question to your goal/),
+    ).toHaveTextContent("Emergency Fund");
+    window.localStorage.clear();
+  });
+
   it("stacks a source-linked scenario comparison with assumptions", async () => {
     const user = userEvent.setup();
     const evidence = ["Current", "Option 1", "Option 2"].map(
