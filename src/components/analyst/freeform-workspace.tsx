@@ -325,8 +325,9 @@ export function FreeformWorkspace({
             ))}
             {result.status === "answered" && (
               <p className="text-muted-foreground mt-4 text-xs">
-                Interpretations and suggestions are optional. The figures below
-                are calculated by ATLAS.
+                Every figure and comparison in these points was checked against
+                the ATLAS evidence it cites. Interpretations and suggestions are
+                optional.
               </p>
             )}
           </div>

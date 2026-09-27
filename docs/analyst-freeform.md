@@ -26,16 +26,29 @@ links and limitations. It never treats partial tool results as a complete answer
 
 ## Grounded answer contract
 
-The answer model returns one to four structured interpretation or suggestion
-claims. Each claim must cite one to four supplied evidence IDs. Server validation
-rejects missing or duplicate IDs, figures and currencies in prose, direct causal
-and directional claims, categorical forecasts, unsupported certainty, and
-suggestions based on incomplete evidence. The figures shown in the UI come from
-ATLAS evidence, never model prose. These checks are deliberately conservative;
-an invalid response falls back to the calculated evidence.
+The answer model returns one to four structured observation, interpretation or
+suggestion claims. Each claim must cite one to four supplied evidence IDs.
+Server validation (`src/lib/analyst/freeform/verify.ts`) checks prose against
+the cited evidence instead of banning figures outright:
+
+- Every number must be reproducible from a cited item: its value (money as
+  shown in the supplied `display` string or rounded to whole pesos), a
+  difference between two cited values of the same unit, a percent change
+  between them, a number in a cited metric label, or a year of a cited period.
+  ISO dates must be cited period dates. Magnitude suffixes (`k`, `M`) and
+  number words (`thousand`, `double`) are rejected.
+- Directional words (higher, lower, increased, fell, unchanged…) require a
+  structured `comparison` of two cited same-unit items whose values confirm
+  the stated direction.
+- Causal language, forecasts, certainty, significance/strength, superlatives,
+  suggestions from incomplete evidence, and scenario recommendations remain
+  rejected. Scenario answers must cite a Current and an Option item.
+
+The UI still shows every figure from ATLAS evidence alongside the claims. An
+invalid response falls back to the calculated evidence.
 
 The answer call has a 14,000-character compact payload ceiling, 16,000-token
-conservative input ceiling, 450 output-token ceiling, $0.003 estimated ceiling,
+conservative input ceiling, 700 output-token ceiling, $0.003 estimated ceiling,
 24,000-byte response ceiling and 12-second deadline. The planner retains its own
 call, time, evidence and cost limits. One planner call and at most one answer call
 occur per request. Typed failures cover clarification, unsupported questions,

@@ -237,7 +237,7 @@ suite("Freeform Analyst synthetic live grounding evaluation", () => {
           expect(claim.evidenceIds.length).toBeGreaterThan(0);
           expect(claim.evidenceIds.every((id) => supplied.has(id))).toBe(true);
           expect(claim.text).not.toMatch(
-            /secret|ignore|password|delete|because|caused|\d|₱/i,
+            /secret|ignore|password|delete|because|caused/i,
           );
         }
       },
