@@ -237,6 +237,44 @@ describe("verified figures and comparisons", () => {
       ),
     ).not.toBeNull();
   });
+  it("keeps a minus after punctuation and allows spaced ranges", () => {
+    const r = {
+      ...income,
+      id: "r",
+      metric: "Association coefficient",
+      unit: "correlation" as const,
+      value: 0.5,
+    };
+    const one = (text: string, items: ToolEvidence[], ids: string[]) =>
+      validateGroundedAnswer(
+        {
+          claims: [
+            { kind: "observation", text, evidenceIds: ids, comparison: null },
+          ],
+        },
+        items,
+      );
+    expect(one("The recorded coefficient was r=-0.5.", [r], ["r"])).toBeNull();
+    expect(
+      one("The recorded coefficient was r=0.5.", [r], ["r"]),
+    ).not.toBeNull();
+    expect(
+      one(
+        "The recorded coefficient was r=-0.5.",
+        [{ ...r, value: -0.5 }],
+        ["r"],
+      ),
+    ).not.toBeNull();
+    const low = { ...income, id: "low", value: 10000 };
+    const high = { ...income, id: "high", value: 20000 };
+    expect(
+      one(
+        "Recorded amounts ranged from ₱100.00 - ₱200.00 this month.",
+        [low, high],
+        ["low", "high"],
+      ),
+    ).not.toBeNull();
+  });
   it("rejects figures from uncited evidence and unknown dates", () => {
     expect(
       observe("Recorded income was ₱200.00.", null, ["money.current"]),

@@ -508,3 +508,25 @@ export function plannerResponseJsonSchema() {
     },
   } as const;
 }
+
+const scenarioPattern =
+  /\b(?:what if|scenario|runway if|runway under|monthly extra|extra monthly|income (?:falls|drops|decreases)|expenses? (?:rise|increase))\b/i;
+const followUpCue =
+  /\b(?:instead|what about|how about|and if|if it|if they|then)\b|%|₱|\bpesos?\b/i;
+
+/**
+ * True for a financial what-if, or for a follow-up that changes the
+ * assumptions of the what-if it follows ("And if it falls by 30% instead?").
+ * The planner and the freeform route share this so their guards agree.
+ */
+export function isScenarioQuestion(
+  question: string,
+  previousQuestion?: string | null,
+) {
+  if (scenarioPattern.test(question)) return true;
+  return Boolean(
+    previousQuestion &&
+    scenarioPattern.test(previousQuestion) &&
+    followUpCue.test(question),
+  );
+}

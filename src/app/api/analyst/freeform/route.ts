@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AI_MODELS } from "@/lib/ai/models";
 import { runAnalystQueryPlanner } from "@/lib/analyst/planner/server";
-import { plannerQuestionSchema } from "@/lib/analyst/planner/contracts";
+import {
+  isScenarioQuestion,
+  plannerQuestionSchema,
+} from "@/lib/analyst/planner/contracts";
 import {
   ANSWER_LIMITS,
   requestGroundedAnswer,
@@ -124,10 +127,11 @@ export async function POST(request: Request) {
     /\b(?:correlat\w*|associat\w*|coincid\w*|mov\w* together|pattern between)\b/i.test(
       parsed.data.question,
     );
-  const scenarioQuestion =
-    /\b(?:what if|scenario|runway if|runway under|income (?:falls|drops|decreases)|expenses? (?:rise|increase))\b/i.test(
-      parsed.data.question,
-    );
+  // A follow-up inherits the what-if it continues, as the planner does.
+  const scenarioQuestion = isScenarioQuestion(
+    parsed.data.question,
+    parsed.data.history?.at(-1)?.question,
+  );
   const oneTimeDebtQuestion =
     /\b(?:one[- ]time|lump[- ]sum)\b.*\b(?:debt|loan|pay(?:ment|off)?)\b|\b(?:debt|loan)\b.*\b(?:one[- ]time|lump[- ]sum)\b/i.test(
       parsed.data.question,
