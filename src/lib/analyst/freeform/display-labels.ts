@@ -20,7 +20,11 @@ export async function focusTaskLabels(
   evidence: ToolEvidence[],
 ): Promise<Record<string, DisplayLabel> | undefined> {
   const items = evidence.filter(
-    (item) => focusItem.test(item.id) && item.source.recordIds.length === 1,
+    // A ranking from a truncated task sample is not a recommendation to show.
+    (item) =>
+      focusItem.test(item.id) &&
+      item.completeness === "complete" &&
+      item.source.recordIds.length === 1,
   );
   if (items.length === 0) return undefined;
   try {

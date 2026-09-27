@@ -67,7 +67,7 @@ describe("focusTaskLabels", () => {
     expect(calls).toContainEqual(["id", ["task-1", "task-2"]]);
   });
 
-  it("skips the lookup without focus evidence and on errors", async () => {
+  it("skips the lookup without complete focus evidence and on errors", async () => {
     const { client: supabase } = client([]);
     expect(
       await focusTaskLabels(supabase, "owner-a", [
@@ -75,6 +75,16 @@ describe("focusTaskLabels", () => {
       ]),
     ).toBeUndefined();
     expect(supabase.from).not.toHaveBeenCalled();
+    const partial = client([]);
+    expect(
+      await focusTaskLabels(partial.client, "owner-a", [
+        {
+          ...evidence("getTaskFocus.tasks.focus.1.abc", ["task-1"]),
+          completeness: "partial",
+        },
+      ]),
+    ).toBeUndefined();
+    expect(partial.client.from).not.toHaveBeenCalled();
     const failing = client([], { message: "denied" }).client;
     expect(
       await focusTaskLabels(failing, "owner-a", [

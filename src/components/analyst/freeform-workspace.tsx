@@ -203,7 +203,9 @@ function AnswerBody({ turn }: { turn: Turn }) {
   };
   const groups = scenarioGroups(result.evidence);
   const figures = keyFigures(result);
-  const focusTasks = result.evidence.filter((item) => result.labels?.[item.id]);
+  const focusTasks = result.evidence.filter(
+    (item) => result.labels?.[item.id] && item.completeness === "complete",
+  );
   const claims = result.claims ?? [];
   const lead = claims.filter((claim) => claim.kind === "observation");
   const insights = claims.filter((claim) => claim.kind !== "observation");
