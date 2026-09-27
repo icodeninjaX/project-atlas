@@ -3,15 +3,25 @@ import { POST } from "./route";
 import { ANALYST_MODEL_OPTIONS, CAPTURE_MODEL_OPTIONS } from "@/lib/ai/models";
 import { freePoolFor } from "@/lib/ai/pools";
 
-// The daily pool meter has its own tests; here it passes requests through.
-vi.mock("@/lib/ai/pool-meter", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/ai/pool-meter")>()),
-  meteredOpenAIFetch: (
-    url: string,
-    init: RequestInit,
-    options: { fetch?: typeof fetch },
-  ) => (options.fetch ?? globalThis.fetch)(url, init),
-}));
+// The daily pool meter has its own tests; here it passes requests through
+// unless a test makes it refuse.
+const meter = vi.hoisted(() => ({ refuse: null as null | "pool" | "meter" }));
+vi.mock("@/lib/ai/pool-meter", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/ai/pool-meter")>();
+  return {
+    ...actual,
+    meteredOpenAIFetch: (
+      url: string,
+      init: RequestInit,
+      options: { fetch?: typeof fetch },
+    ) => {
+      if (meter.refuse === "pool") throw new actual.PoolExhaustedError("small");
+      if (meter.refuse === "meter")
+        throw new actual.PoolMeterError("unconfigured");
+      return (options.fetch ?? globalThis.fetch)(url, init);
+    },
+  };
+});
 
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
@@ -289,6 +299,40 @@ describe("Analyst request", () => {
       expect.objectContaining({ p_outcome: providerStatus }),
     );
   });
+  it.each([
+    ["pool", "pool_exhausted", "pool_exhausted", /free daily AI allowance/],
+    [
+      "meter",
+      "meter_unavailable",
+      "provider_error",
+      /usage meter is unavailable/,
+    ],
+  ] as const)(
+    "records a %s refusal as an uncalled provider",
+    async (refusal, providerStatus, audit, message) => {
+      const provider = vi.fn();
+      vi.stubGlobal("fetch", provider);
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      meter.refuse = refusal;
+      try {
+        const body = await (await POST(ask(valid))).json();
+        expect(body).toMatchObject({ providerStatus, explanation: null });
+        expect(body.fallbackMessage).toMatch(message);
+        expect(provider).not.toHaveBeenCalled();
+        expect(warn).toHaveBeenCalledWith(
+          "[analyst]",
+          expect.objectContaining({ providerCalled: false, providerStatus }),
+        );
+        expect(mocks.rpc).toHaveBeenLastCalledWith(
+          "finish_ai_analyst_request",
+          expect.objectContaining({ p_outcome: audit }),
+        );
+      } finally {
+        meter.refuse = null;
+        warn.mockRestore();
+      }
+    },
+  );
   it("sends bounded facts without record identifiers or stored notes", async () => {
     vi.stubGlobal(
       "fetch",

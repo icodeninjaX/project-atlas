@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { reasoningEffortFor, resolveAnalystModel } from "@/lib/ai/models";
-import { meteredOpenAIFetch, PoolExhaustedError } from "@/lib/ai/pool-meter";
+import {
+  meteredOpenAIFetch,
+  PoolExhaustedError,
+  PoolMeterError,
+} from "@/lib/ai/pool-meter";
 import {
   classifyQuestion,
   validateExplanation,
@@ -56,11 +60,13 @@ type ProviderStatus =
   | "openai_provider_error"
   | "timeout"
   | "invalid_response"
-  | "pool_exhausted";
+  | "pool_exhausted"
+  | "meter_unavailable";
 
 type AuditOutcome =
   | "success"
   | "pool_exhausted"
+  | "provider_error"
   | "context_limit"
   | "openai_auth_error"
   | "openai_model_access"
@@ -77,6 +83,8 @@ function fallbackMessage(status: ProviderStatus) {
     status === "site_quota"
   )
     return "Your Analyst usage limit has been reached. ATLAS's calculated evidence is still shown below.";
+  if (status === "meter_unavailable")
+    return "ATLAS's AI usage meter is unavailable, so no explanation was requested. ATLAS's calculated evidence is shown below.";
   if (status === "pool_exhausted")
     return "ATLAS's free daily AI allowance is used up. ATLAS's calculated evidence is still shown below. It resets at 8:00 AM Manila time.";
   if (status === "invalid_model")
@@ -134,7 +142,7 @@ function providerStatusForResponse(
   status: number,
   providerErrorType?: string,
   providerErrorCode?: string,
-): AuditOutcome {
+): Exclude<AuditOutcome, "provider_error"> {
   if (status === 401) return "openai_auth_error";
   if (status === 403) return "openai_model_access";
   if (status === 429) return "openai_rate_limit";
@@ -400,24 +408,25 @@ export async function POST(request: Request) {
     providerRequestIdHeader = providerRequestId(response);
     if (!response.ok) {
       const providerError = await readProviderError(response);
-      outcome = providerStatusForResponse(
+      const rejected = providerStatusForResponse(
         response.status,
         providerError.providerErrorType,
         providerError.providerErrorCode,
       );
+      outcome = rejected;
       logAnalystEvent({
         requestedModel: model,
         analysisType: type,
         reservationStatus: "reserved",
         providerCalled: true,
-        providerStatus: outcome,
+        providerStatus: rejected,
         providerHttpStatus: response.status,
         providerRequestId: providerRequestIdHeader,
         providerErrorType: providerError.providerErrorType,
         providerErrorCode: providerError.providerErrorCode,
         latencyMs: Date.now() - startedAt,
       });
-      return evidenceOnly(evidence, outcome);
+      return evidenceOnly(evidence, rejected);
     }
     const body: unknown = await response.json();
     const result = body as {
@@ -468,22 +477,31 @@ export async function POST(request: Request) {
       providerStatus: "success",
     });
   } catch (error) {
+    // The meter refuses before anything reaches OpenAI.
+    const meterDown = error instanceof PoolMeterError;
+    const refused = meterDown || error instanceof PoolExhaustedError;
     if (error instanceof PoolExhaustedError) outcome = "pool_exhausted";
+    else if (meterDown) outcome = "provider_error";
     else if (error instanceof Error && error.name === "AbortError")
       outcome = "timeout";
     else if (error instanceof SyntaxError) outcome = "invalid_response";
+    const providerStatus: ProviderStatus = meterDown
+      ? "meter_unavailable"
+      : outcome === "provider_error"
+        ? "openai_provider_error"
+        : outcome;
     logAnalystEvent({
       requestedModel: model,
       analysisType: type,
       reservationStatus: "reserved",
-      providerCalled: true,
-      providerStatus: outcome,
+      providerCalled: !refused,
+      providerStatus,
       providerRequestId: providerRequestIdHeader,
       inputTokens,
       outputTokens,
       latencyMs: Date.now() - startedAt,
     });
-    return evidenceOnly(evidence, outcome);
+    return evidenceOnly(evidence, providerStatus);
   } finally {
     clearTimeout(timeout);
     try {
