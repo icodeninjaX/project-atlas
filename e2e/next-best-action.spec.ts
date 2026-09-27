@@ -64,7 +64,7 @@ test.describe("Next Best Action local browser flow", () => {
       for (const width of [1280, 320]) {
         await page.setViewportSize({ width, height: 800 });
         const card = page.getByRole("heading", {
-          name: "A follow-up worth reviewing",
+          name: "Turn a follow-up into a task",
         });
         await expect(card).toBeVisible();
         await expect(

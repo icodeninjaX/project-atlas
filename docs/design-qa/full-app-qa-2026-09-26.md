@@ -103,6 +103,12 @@ per page, and no failed routes.
    transaction" on wider screens and for screen readers).
 8. Dashboard: Next Best Action often proposes the same task shown as Dayline
    "Now", and Situation says "0 follow-ups" directly below a follow-up card.
+   **Done:** the Career tile counted only _overdue_ follow-ups but said
+   "0 follow-ups"; it now reads "0 overdue follow-ups". Next Best Action
+   proposals are drawn from Dayline by design, so the card was reframed
+   rather than filtered: "Turn a follow-up into a task", with the company
+   and urgency up front and the Dayline reasoning moved into the review step
+   ("Why now"). The "No known goal link" line only shows goals that exist.
 9. Capture: unstyled native file input ("Choose File No file chosen"), and
    "Extract text" is enabled before a file is chosen. Manual-form links are a
    dense row of underlined text; chips or buttons would scan better.

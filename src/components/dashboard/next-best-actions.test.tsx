@@ -40,8 +40,15 @@ describe("NextBestActions", () => {
     });
     render(<NextBestActions actions={[action]} />);
 
-    expect(screen.getByText(action.reason)).toBeInTheDocument();
-    expect(screen.getByText(/No known goal link/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Turn a follow-up into a task" }),
+    ).toBeVisible();
+    expect(screen.getByText(/Acme follow-up/)).toBeInTheDocument();
+    // The Dayline evidence is shown when reviewing, not repeated up front.
+    expect(
+      screen.queryByText(new RegExp(action.reason)),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/No known goal link/)).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View Acme application" }),
     ).toHaveAttribute("href", action.sourceHref);
@@ -49,6 +56,7 @@ describe("NextBestActions", () => {
       screen.getByRole("button", { name: "Review task proposal" }),
     );
     expect(choose).not.toHaveBeenCalled();
+    expect(screen.getByText(new RegExp(action.reason))).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     expect(choose).not.toHaveBeenCalled();
     await user.click(
@@ -86,6 +94,8 @@ describe("NextBestActions", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(
       "Recommendation dismissed.",
     );
-    expect(screen.queryByText(action.reason)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: action.title }),
+    ).not.toBeInTheDocument();
   });
 });

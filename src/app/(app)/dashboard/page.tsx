@@ -182,7 +182,7 @@ export default async function DashboardPage() {
     },
     {
       label: "Career",
-      value: `${dashboard.career.follow_up} follow-ups`,
+      value: `${dashboard.career.follow_up} overdue follow-up${dashboard.career.follow_up === 1 ? "" : "s"}`,
       detail: `${dashboard.career.active} active applications`,
       href: "/career" as const,
       urgent: dashboard.career.follow_up > 0,
