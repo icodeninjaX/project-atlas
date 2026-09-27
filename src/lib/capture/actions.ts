@@ -1,6 +1,6 @@
 "use server";
 
-import { resolveCaptureModel } from "@/lib/ai/models";
+import { reasoningEffortFor, resolveCaptureModel } from "@/lib/ai/models";
 import { createApplicationAction } from "@/lib/career/actions";
 import { createKnowledgeConceptAction } from "@/lib/knowledge/actions";
 import { createTransactionAction } from "@/lib/money/actions";
@@ -44,17 +44,6 @@ type OpenAIChatCompletionResponse = {
 type OpenAIErrorResponse = {
   error?: { type?: string; code?: string };
 };
-
-function captureReasoningEffort(model: string) {
-  if (model === "gpt-6-astra") return "low";
-  if (
-    model.startsWith("gpt-5.4") ||
-    model === "gpt-6-sol" ||
-    model === "gpt-6-luna"
-  )
-    return "none";
-  return null;
-}
 
 export async function interpretCaptureAction(
   _state: InterpretCaptureState,
@@ -121,7 +110,7 @@ export async function interpretCaptureAction(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
   try {
-    const reasoningEffort = captureReasoningEffort(model);
+    const reasoningEffort = reasoningEffortFor(model);
     const today = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Manila",
       year: "numeric",

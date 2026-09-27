@@ -1,6 +1,6 @@
 "use server";
 
-import { resolveCaptureModel } from "@/lib/ai/models";
+import { reasoningEffortFor, resolveCaptureModel } from "@/lib/ai/models";
 import { createClient } from "@/lib/supabase/server";
 import { createApplicationAction } from "@/lib/career/actions";
 import { createKnowledgeConceptAction } from "@/lib/knowledge/actions";
@@ -44,17 +44,6 @@ const unavailable: BatchConfirmResult = {
     "This preview was already handled or expired. Preview again if needed.",
   status: "unavailable",
 };
-
-function reasoningEffort(model: string) {
-  if (model === "gpt-6-astra") return "low";
-  if (
-    model.startsWith("gpt-5.4") ||
-    model === "gpt-6-sol" ||
-    model === "gpt-6-luna"
-  )
-    return "none";
-  return null;
-}
 
 export async function interpretCaptureBatchAction(
   _state: BatchInterpretState,
@@ -141,8 +130,8 @@ export async function interpretCaptureBatchAction(
       body: JSON.stringify({
         model,
         store: false,
-        ...(reasoningEffort(model) && {
-          reasoning_effort: reasoningEffort(model),
+        ...(reasoningEffortFor(model) && {
+          reasoning_effort: reasoningEffortFor(model),
         }),
         max_completion_tokens: 2400,
         response_format: {

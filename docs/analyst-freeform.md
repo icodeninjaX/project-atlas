@@ -69,10 +69,15 @@ insufficient evidence, context limits, provider/timeout errors and invalid
 responses. The UI keeps retry available and places tap-friendly citations beside
 claims; selecting one opens the evidence view.
 
-The fixed cost calculation uses the [published GPT-4o mini text rates](https://developers.openai.com/api/docs/models/gpt-4o-mini)
+Planner and answer budgets use `AI_MODEL_PRICING` in `src/lib/ai/models.ts`,
+which holds the [published GPT-4o mini text rates](https://developers.openai.com/api/docs/models/gpt-4o-mini)
 reviewed on 2026-09-25: $0.15 per million input tokens and $0.60 per million
-output tokens. A model or price change requires updating both planner and answer
-budgets and their evaluations.
+output tokens. A model without an entry fails with `configuration_error` before
+any provider call. To try another planner or answer model, add its published
+rates, update `AI_MODELS`, and rerun the live planner and answer evaluations.
+Both calls go through `src/lib/ai/openai.ts`. It sends `reasoning_effort`
+instead of `temperature` to reasoning models, which reject a temperature
+setting.
 
 ## Local acceptance and release boundary — 2026-09-25
 

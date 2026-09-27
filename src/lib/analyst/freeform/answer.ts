@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
-import { AI_MODELS } from "@/lib/ai/models";
+import { AI_MODELS, estimatedCostUsdMicros } from "@/lib/ai/models";
+import { requestStructuredJson, structuredRequestBody } from "@/lib/ai/openai";
 import type { ToolEvidence } from "@/lib/analyst/tools/contracts";
 import {
   comparisonIsGrounded,
@@ -138,34 +139,6 @@ export function validateGroundedAnswer(raw: unknown, evidence: ToolEvidence[]) {
   return parsed.data.claims;
 }
 
-async function boundedText(response: Response) {
-  if (!response.body) return null;
-  const reader = response.body.getReader();
-  let total = 0;
-  const parts: Uint8Array[] = [];
-  try {
-    while (true) {
-      const next = await reader.read();
-      if (next.done) break;
-      total += next.value.byteLength;
-      if (total > ANSWER_LIMITS.responseBytes) {
-        await reader.cancel();
-        return null;
-      }
-      parts.push(next.value);
-    }
-  } finally {
-    reader.releaseLock();
-  }
-  const bytes = new Uint8Array(total);
-  let offset = 0;
-  for (const part of parts) {
-    bytes.set(part, offset);
-    offset += part.byteLength;
-  }
-  return new TextDecoder().decode(bytes);
-}
-
 export async function requestGroundedAnswer(
   question: string,
   evidence: ToolEvidence[],
@@ -200,53 +173,46 @@ export async function requestGroundedAnswer(
   const payload = JSON.stringify({ question, evidence: compact });
   if (payload.length > ANSWER_LIMITS.payloadChars)
     return { status: "error", code: "context_limit" };
-  const body = JSON.stringify({
-    model: AI_MODELS.analyst,
-    store: false,
-    temperature: 0,
-    max_completion_tokens: ANSWER_LIMITS.outputTokens,
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "atlas_grounded_claims",
-        strict: true,
-        schema: {
-          type: "object",
-          additionalProperties: false,
-          required: ["claims"],
-          properties: {
-            claims: {
-              type: "array",
-              items: {
-                type: "object",
-                additionalProperties: false,
-                required: ["kind", "text", "evidenceIds", "comparison"],
-                properties: {
-                  kind: {
-                    type: "string",
-                    enum: ["observation", "interpretation", "suggestion"],
-                  },
-                  text: { type: "string" },
-                  evidenceIds: { type: "array", items: { type: "string" } },
-                  comparison: {
-                    anyOf: [
-                      { type: "null" },
-                      {
-                        type: "object",
-                        additionalProperties: false,
-                        required: ["subjectId", "referenceId", "direction"],
-                        properties: {
-                          subjectId: { type: "string" },
-                          referenceId: { type: "string" },
-                          direction: {
-                            type: "string",
-                            enum: ["higher", "lower", "same"],
-                          },
-                        },
+  const model = AI_MODELS.analyst;
+  const body = structuredRequestBody({
+    model,
+    maxOutputTokens: ANSWER_LIMITS.outputTokens,
+    schemaName: "atlas_grounded_claims",
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["claims"],
+      properties: {
+        claims: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["kind", "text", "evidenceIds", "comparison"],
+            properties: {
+              kind: {
+                type: "string",
+                enum: ["observation", "interpretation", "suggestion"],
+              },
+              text: { type: "string" },
+              evidenceIds: { type: "array", items: { type: "string" } },
+              comparison: {
+                anyOf: [
+                  { type: "null" },
+                  {
+                    type: "object",
+                    additionalProperties: false,
+                    required: ["subjectId", "referenceId", "direction"],
+                    properties: {
+                      subjectId: { type: "string" },
+                      referenceId: { type: "string" },
+                      direction: {
+                        type: "string",
+                        enum: ["higher", "lower", "same"],
                       },
-                    ],
+                    },
                   },
-                },
+                ],
               },
             },
           },
@@ -263,106 +229,51 @@ export async function requestGroundedAnswer(
     ],
   });
   const estimatedInput = Buffer.byteLength(body);
+  const estimatedCost = estimatedCostUsdMicros(
+    model,
+    estimatedInput,
+    ANSWER_LIMITS.outputTokens,
+  );
+  if (estimatedCost === null)
+    return { status: "error", code: "configuration_error" };
   if (
     estimatedInput > ANSWER_LIMITS.inputTokens ||
-    Math.ceil(estimatedInput * 0.15 + ANSWER_LIMITS.outputTokens * 0.6) >
-      ANSWER_LIMITS.costUsdMicros
+    estimatedCost > ANSWER_LIMITS.costUsdMicros
   )
     return { status: "error", code: "context_limit" };
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), ANSWER_LIMITS.timeoutMs);
-  try {
-    const response = await (options.fetch ?? globalThis.fetch)(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        signal: controller.signal,
-        headers: {
-          Authorization: `Bearer ${key}`,
-          "Content-Type": "application/json",
-        },
-        body,
-      },
-    );
-    if (!response.ok)
-      return {
-        status: "error",
-        code:
-          response.status === 401
-            ? "provider_auth"
-            : response.status === 403
-              ? "model_access"
-              : response.status === 429
-                ? "provider_rate_limit"
-                : "provider_error",
-      };
-    const raw = await boundedText(response);
-    if (!raw) return { status: "error", code: "invalid_response" };
-    const parsed: unknown = JSON.parse(raw);
-    const result = parsed as {
-      usage?: { prompt_tokens?: number; completion_tokens?: number };
-      choices?: Array<{
-        finish_reason?: string;
-        message?: { content?: string; refusal?: string };
-      }>;
-    };
-    const inputTokens = result.usage?.prompt_tokens;
-    const outputTokens = result.usage?.completion_tokens;
-    if (
-      !Number.isSafeInteger(inputTokens) ||
-      !Number.isSafeInteger(outputTokens) ||
-      (inputTokens ?? -1) < 0 ||
-      (outputTokens ?? -1) < 0
-    )
-      return { status: "error", code: "invalid_response" };
-    if (
-      inputTokens! > ANSWER_LIMITS.inputTokens ||
-      outputTokens! > ANSWER_LIMITS.outputTokens ||
-      Math.ceil(inputTokens! * 0.15 + outputTokens! * 0.6) >
-        ANSWER_LIMITS.costUsdMicros
-    )
-      return { status: "error", code: "cost_limit", inputTokens, outputTokens };
-    const choice = result.choices?.[0];
-    if (
-      choice?.finish_reason !== "stop" ||
-      choice.message?.refusal ||
-      !choice.message?.content
-    )
-      return {
-        status: "error",
-        code: "invalid_response",
-        inputTokens,
-        outputTokens,
-      };
-    const claims = validateGroundedAnswer(
-      JSON.parse(choice.message.content),
-      evidence,
-    );
-    if (!claims)
-      return {
-        status: "error",
-        code: "invalid_response",
-        inputTokens,
-        outputTokens,
-      };
-    return {
-      status: "answered",
-      claims,
-      inputTokens: inputTokens!,
-      outputTokens: outputTokens!,
-    };
-  } catch (error) {
+  const result = await requestStructuredJson(body, {
+    timeoutMs: ANSWER_LIMITS.timeoutMs,
+    responseBytes: ANSWER_LIMITS.responseBytes,
+    fetch: options.fetch,
+  });
+  if (result.status === "error")
     return {
       status: "error",
-      code:
-        error instanceof Error && error.name === "AbortError"
-          ? "timeout"
-          : error instanceof SyntaxError
-            ? "invalid_response"
-            : "provider_error",
+      code: result.code,
+      ...(result.inputTokens !== undefined && {
+        inputTokens: result.inputTokens,
+      }),
+      ...(result.outputTokens !== undefined && {
+        outputTokens: result.outputTokens,
+      }),
     };
-  } finally {
-    clearTimeout(timeout);
-    controller.abort();
-  }
+  const { inputTokens, outputTokens } = result;
+  if (inputTokens === undefined || outputTokens === undefined)
+    return { status: "error", code: "invalid_response" };
+  if (
+    inputTokens > ANSWER_LIMITS.inputTokens ||
+    outputTokens > ANSWER_LIMITS.outputTokens ||
+    (estimatedCostUsdMicros(model, inputTokens, outputTokens) ?? Infinity) >
+      ANSWER_LIMITS.costUsdMicros
+  )
+    return { status: "error", code: "cost_limit", inputTokens, outputTokens };
+  const claims = validateGroundedAnswer(result.content, evidence);
+  if (!claims)
+    return {
+      status: "error",
+      code: "invalid_response",
+      inputTokens,
+      outputTokens,
+    };
+  return { status: "answered", claims, inputTokens, outputTokens };
 }

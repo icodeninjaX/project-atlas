@@ -44,3 +44,42 @@ export function resolveCaptureModel(value: FormDataEntryValue | null) {
     CAPTURE_MODEL_OPTIONS.find((option) => option.id === value)?.id ?? null
   );
 }
+
+/**
+ * Published standard text rates in USD per 1M tokens, used for request
+ * budgets. A model without an entry cannot be used by budgeted features, so
+ * switching the Analyst planner or answer model requires adding its rates.
+ * GPT-4o mini rates reviewed 2026-09-25.
+ */
+export const AI_MODEL_PRICING: Record<
+  string,
+  { input: number; output: number }
+> = {
+  "gpt-4o-mini-2024-07-18": { input: 0.15, output: 0.6 },
+};
+
+/** Estimated cost in USD micros, or null when the model has no known rates. */
+export function estimatedCostUsdMicros(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+) {
+  const rates = AI_MODEL_PRICING[model];
+  if (!rates) return null;
+  return Math.ceil(inputTokens * rates.input + outputTokens * rates.output);
+}
+
+/**
+ * Reasoning effort for models that accept it. Reasoning models reject a
+ * temperature setting, so callers omit temperature whenever this is non-null.
+ */
+export function reasoningEffortFor(model: string) {
+  if (model === "gpt-6-astra") return "low";
+  if (
+    model.startsWith("gpt-5.4") ||
+    model === "gpt-6-sol" ||
+    model === "gpt-6-luna"
+  )
+    return "none";
+  return null;
+}
