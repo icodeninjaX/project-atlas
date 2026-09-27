@@ -511,8 +511,9 @@ export function plannerResponseJsonSchema() {
 
 const scenarioPattern =
   /\b(?:what if|scenario|runway if|runway under|monthly extra|extra monthly|income (?:falls|drops|decreases)|expenses? (?:rise|increase))\b/i;
+// Language that changes the prior assumptions, not any mention of money.
 const followUpCue =
-  /\b(?:instead|what about|how about|and if|if it|if they|then)\b|%|₱|\bpesos?\b/i;
+  /\b(?:instead|rather than)\b|\b(?:and|but) if\b|\bif (?:it|they|that|income|expenses?|i)\b|\b(?:what|how) about (?:₱\s?|-)?\d/i;
 
 /**
  * True for a financial what-if, or for a follow-up that changes the

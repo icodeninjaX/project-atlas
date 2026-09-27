@@ -41,15 +41,16 @@ export async function gatherWeeklyInsightEvidence(
   invoke: typeof invokeAnalystTool = invokeAnalystTool,
 ) {
   const windows = insightWindows(now);
+  const requests = INSIGHT_METRICS.flatMap((metric) =>
+    [windows.previous, windows.current].map((period) => ({ metric, period })),
+  );
   const results = await Promise.all(
-    INSIGHT_METRICS.flatMap((metric) =>
-      [windows.previous, windows.current].map((period) =>
-        invoke("getHistoricalMetricSeries", {
-          ...period,
-          metric,
-          grain: "week",
-        }),
-      ),
+    requests.map(({ metric, period }) =>
+      invoke("getHistoricalMetricSeries", {
+        ...period,
+        metric,
+        grain: "week",
+      }),
     ),
   );
   const evidence: ToolEvidence[] = [];
@@ -57,10 +58,21 @@ export async function gatherWeeklyInsightEvidence(
     `This week is compared through ${windows.current.through} with the same days last week, through ${windows.previous.through}.`,
   ]);
   let complete = true;
-  for (const result of results) {
-    if (result.status !== "ready") complete = false;
+  results.forEach((result, index) => {
+    const { period } = requests[index]!;
+    const [item] = result.evidence;
+    // "ready" can still carry a period clipped to the first recorded day, so
+    // each window must be covered in full or the weeks are not comparable.
+    if (
+      result.status !== "ready" ||
+      result.evidence.length !== 1 ||
+      item!.completeness !== "complete" ||
+      item!.period.from !== period.from ||
+      item!.period.through !== period.through
+    )
+      complete = false;
     evidence.push(...result.evidence);
     for (const limitation of result.limitations) limitations.add(limitation);
-  }
+  });
   return { windows, evidence, limitations: [...limitations], complete };
 }

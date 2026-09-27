@@ -13,6 +13,7 @@ function result(
   status: ToolResult["status"],
   id: string,
   limitation = "Surviving records only.",
+  period = { from: "2026-09-21", through: "2026-09-24" },
 ): ToolResult {
   return {
     tool: "getHistoricalMetricSeries",
@@ -25,7 +26,7 @@ function result(
               metric: "Recorded expenses",
               value: 100,
               unit: "centavos",
-              period: { from: "2026-09-21", through: "2026-09-24" },
+              period,
               comparisonBasis: "Weekly bucket",
               source: { description: "Transactions", recordIds: [], href: "/" },
               completeness: "complete",
@@ -71,9 +72,13 @@ describe("weekly insight windows", () => {
 
 describe("weekly insight evidence", () => {
   it("requests both windows for every metric and merges limitations", async () => {
-    const invoke = vi.fn(async (_name: unknown, input: unknown) =>
-      result("ready", JSON.stringify(input)),
-    );
+    const invoke = vi.fn(async (_name: unknown, raw: unknown) => {
+      const input = raw as { from: string; through: string };
+      return result("ready", JSON.stringify(input), undefined, {
+        from: input.from,
+        through: input.through,
+      });
+    });
     const gathered = await gatherWeeklyInsightEvidence(thursday, invoke);
     expect(invoke).toHaveBeenCalledTimes(INSIGHT_METRICS.length * 2);
     expect(invoke).toHaveBeenCalledWith("getHistoricalMetricSeries", {
@@ -94,6 +99,18 @@ describe("weekly insight evidence", () => {
       "This week is compared through 2026-09-24 with the same days last week, through 2026-09-17.",
       "Surviving records only.",
     ]);
+  });
+  it("reports incomplete evidence when a ready window is clipped to its first record", async () => {
+    const invoke = vi.fn(async (_name: unknown, raw: unknown) => {
+      const input = raw as { from: string; through: string };
+      return result("ready", JSON.stringify(input), undefined, {
+        // The first expense was recorded on Wednesday of this week.
+        from: input.from === "2026-09-21" ? "2026-09-23" : input.from,
+        through: input.through,
+      });
+    });
+    const gathered = await gatherWeeklyInsightEvidence(thursday, invoke);
+    expect(gathered.complete).toBe(false);
   });
   it("reports incomplete evidence when any window is not ready", async () => {
     let call = 0;

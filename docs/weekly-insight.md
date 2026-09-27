@@ -17,8 +17,9 @@ progress is never compared with a full one.
    `getHistoricalMetricSeries` tool with fixed inputs: weekly grain, both
    windows, for expenses, income, debt payments and task completions. There is
    no planner call.
-4. If any window is not fully available, the route returns the facts without an
-   AI note. Otherwise the fixed question and evidence go to the grounded answer
+4. Every window must be covered in full: one complete fact whose period
+   matches the requested dates. A window clipped to a first recorded day, or any
+   partial result, makes the route return the facts without an AI note. Otherwise the fixed question and evidence go to the grounded answer
    step (`requestGroundedAnswer`), so every figure and comparison is verified
    against the cited evidence as described in
    [the freeform Analyst doc](analyst-freeform.md).

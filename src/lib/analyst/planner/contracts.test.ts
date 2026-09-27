@@ -305,5 +305,15 @@ describe("isScenarioQuestion", () => {
     expect(isScenarioQuestion("How are my goals progressing?", previous)).toBe(
       false,
     );
+    expect(
+      isScenarioQuestion("How much did I spend in pesos last month?", previous),
+    ).toBe(false);
+    expect(
+      isScenarioQuestion("Show 20% of my tasks, then goals", previous),
+    ).toBe(false);
+    expect(isScenarioQuestion("What about 30%?", previous)).toBe(true);
+    expect(isScenarioQuestion("But if expenses rise by ₱500?", previous)).toBe(
+      true,
+    );
   });
 });
