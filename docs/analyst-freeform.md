@@ -24,6 +24,19 @@ The question and retrieved text are untrusted. The answer model receives at most
 planner evidence, including periods, calculation basis, completeness, record
 links and limitations. It never treats partial tool results as a complete answer.
 
+## Named goal and debt resolution
+
+When no goal or debt is selected, the route loads the owner's goal titles and
+active debt creditor names (up to 100 and 50) and checks whether the question
+names exactly one of them as a whole phrase (`src/lib/analyst/freeform/mentions.ts`).
+A single match is passed to the planner as the literal selected ID, and then
+goes through the same selected-goal or selected-debt rules. Goals are not
+resolved for pattern or scenario questions. Debts are resolved only for monthly
+scenario questions. Ambiguous names, or questions naming both a goal and a
+debt, keep the existing clarification path. The answer includes
+`matchedEntity` so the UI can show what was matched. Peso figures in claim text
+are masked when privacy mode is on.
+
 ## Grounded answer contract
 
 The answer model returns one to four structured observation, interpretation or

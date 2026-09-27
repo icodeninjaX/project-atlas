@@ -7,6 +7,11 @@ import {
   ANSWER_LIMITS,
   requestGroundedAnswer,
 } from "@/lib/analyst/freeform/answer";
+import {
+  MENTION_LIMITS,
+  resolveMentionedEntity,
+  type MentionedEntity,
+} from "@/lib/analyst/freeform/mentions";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -137,6 +142,42 @@ export async function POST(request: Request) {
       },
       400,
     );
+  let goalId = parsed.data.goalId;
+  let debtId = parsed.data.debtId;
+  let matchedEntity: MentionedEntity = null;
+  if (!goalId && !debtId && parsed.data.question.length <= 400) {
+    const [goals, debts] = await Promise.all([
+      supabase
+        .from("goals")
+        .select("id,title")
+        .eq("user_id", user.id)
+        .limit(MENTION_LIMITS.goals),
+      supabase
+        .from("debts")
+        .select("id,creditor_name")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .limit(MENTION_LIMITS.debts),
+    ]);
+    if (!goals.error && !debts.error) {
+      matchedEntity = resolveMentionedEntity(parsed.data.question, {
+        goals: (goals.data ?? []).map((goal) => ({
+          id: goal.id,
+          name: goal.title,
+        })),
+        debts: (debts.data ?? []).map((debt) => ({
+          id: debt.id,
+          name: debt.creditor_name,
+        })),
+        allowGoal: !associationQuestion && !scenarioQuestion,
+        allowDebt:
+          scenarioQuestion &&
+          /\b(?:monthly|per month|each month)\b/i.test(parsed.data.question),
+      });
+      if (matchedEntity?.type === "goal") goalId = matchedEntity.id;
+      if (matchedEntity?.type === "debt") debtId = matchedEntity.id;
+    }
+  }
   if (!process.env.OPENAI_API_KEY)
     return json({ error: "AI analysis is not configured." }, 503);
 
@@ -173,10 +214,10 @@ export async function POST(request: Request) {
   let inputTokens: number | null = null;
   let outputTokens: number | null = null;
   try {
-    const plannerQuestion = parsed.data.goalId
-      ? `${parsed.data.question} Selected goal ID: ${parsed.data.goalId}.`
-      : parsed.data.debtId
-        ? `${parsed.data.question} Selected active debt ID: ${parsed.data.debtId}. Extra payments are monthly.`
+    const plannerQuestion = goalId
+      ? `${parsed.data.question} Selected goal ID: ${goalId}.`
+      : debtId
+        ? `${parsed.data.question} Selected active debt ID: ${debtId}. Extra payments are monthly.`
         : parsed.data.question;
     const plan = await runAnalystQueryPlanner(plannerQuestion);
     const plannerUsage =
@@ -229,14 +270,14 @@ export async function POST(request: Request) {
     const usesScenario = plan.calls.some(
       (call) => call.tool === "compareFinancialScenarios",
     );
-    if (usesPattern && parsed.data.goalId) {
+    if (usesPattern && goalId) {
       outcome = "insufficient";
       return fallback(
         "The pattern test covers whole-domain history and cannot establish an association for the selected goal.",
         "unsupported_goal_pattern",
       );
     }
-    if (usesScenario && parsed.data.goalId) {
+    if (usesScenario && goalId) {
       outcome = "insufficient";
       return fallback(
         "Runway scenarios cover the whole financial baseline, not the selected goal.",
@@ -257,7 +298,7 @@ export async function POST(request: Request) {
         "missing_scenario_comparison",
       );
     }
-    if (parsed.data.debtId) {
+    if (debtId) {
       const selectedDebtUsed = plan.calls.some((call) => {
         if (call.tool !== "compareFinancialScenarios") return false;
         const input = call.input as {
@@ -266,7 +307,7 @@ export async function POST(request: Request) {
           }>;
         };
         return input.alternatives?.some(
-          (option) => option.extraDebtPayment?.debtId === parsed.data.debtId,
+          (option) => option.extraDebtPayment?.debtId === debtId,
         );
       });
       if (!selectedDebtUsed) {
@@ -278,7 +319,7 @@ export async function POST(request: Request) {
       }
     }
     if (
-      parsed.data.goalId &&
+      goalId &&
       !plan.calls.some((call) => call.tool === "getGoalLinkedActivity")
     ) {
       outcome = "insufficient";
@@ -294,7 +335,7 @@ export async function POST(request: Request) {
         "insufficient_evidence",
       );
     }
-    const explanationEvidence = parsed.data.goalId
+    const explanationEvidence = goalId
       ? evidence.filter(
           (item) => item.provenance.tool === "getGoalLinkedActivity",
         )
@@ -342,6 +383,9 @@ export async function POST(request: Request) {
       claims: answer.claims,
       evidence,
       limitations,
+      ...(matchedEntity && {
+        matchedEntity: { type: matchedEntity.type, name: matchedEntity.name },
+      }),
     });
   } catch {
     return json(

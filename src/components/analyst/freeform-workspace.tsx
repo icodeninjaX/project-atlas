@@ -15,7 +15,21 @@ type FreeformResult = {
   claims?: GroundedClaim[];
   evidence: ToolEvidence[];
   limitations: string[];
+  matchedEntity?: { type: "goal" | "debt"; name: string };
 };
+
+/** Hides peso figures in claim prose when privacy mode is on. */
+function ClaimText({ text }: { text: string }) {
+  return text
+    .split(/(₱\s?[\d,]+(?:\.\d+)?)/)
+    .map((part, index) =>
+      index % 2 === 1 ? (
+        <SensitiveValue key={index}>{part}</SensitiveValue>
+      ) : (
+        part
+      ),
+    );
+}
 
 function displayValue(item: ToolEvidence) {
   if (item.unit === "centavos" && typeof item.value === "number")
@@ -296,12 +310,20 @@ export function FreeformWorkspace({
                 </Link>
               </div>
             )}
+            {result.matchedEntity && (
+              <p className="text-muted-foreground mt-4 text-xs">
+                ATLAS matched your question to your {result.matchedEntity.type}{" "}
+                “{result.matchedEntity.name}”.
+              </p>
+            )}
             {result.claims?.map((claim, index) => (
               <article key={index} className="border-border mt-4 border-t pt-4">
                 <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                   {claim.kind}
                 </p>
-                <p className="mt-1 text-sm leading-relaxed">{claim.text}</p>
+                <p className="mt-1 text-sm leading-relaxed">
+                  <ClaimText text={claim.text} />
+                </p>
                 <div
                   className="mt-2 flex flex-wrap gap-2"
                   aria-label="Evidence for this point"
