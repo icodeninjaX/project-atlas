@@ -45,56 +45,69 @@ returns bigint language sql stable set search_path = '' as $$
 $$;
 revoke all on function public.ai_pool_committed(text, date) from public, anon, authenticated;
 
--- Written only by the server, from the Usage API.
-create function public.record_ai_pool_provider_usage(p_day date, p_large bigint, p_small bigint, p_details jsonb default '[]'::jsonb)
-returns void language plpgsql security definer set search_path = '' as $$
+-- One refresh at a time across server instances: the first caller claims
+-- it, and others wait for its figure instead of calling the Usage API too.
+-- Each claim carries a fencing token, so a claimant that stalls past its
+-- lease can neither record an older figure nor release a newer claim.
+create table public.ai_pool_provider_sync (
+  id boolean primary key default true check (id),
+  claimed_at timestamptz,
+  token uuid
+);
+insert into public.ai_pool_provider_sync (id, claimed_at, token) values (true, null, null);
+
+alter table public.ai_pool_provider_sync enable row level security;
+alter table public.ai_pool_provider_sync force row level security;
+revoke all on public.ai_pool_provider_sync from anon, authenticated;
+
+-- The claim's token for the one caller that may refresh now, or null; a
+-- claim lapses after 15 seconds.
+create function public.claim_ai_pool_provider_sync()
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare
+  claim_token uuid;
 begin
-  if p_day is null or p_large is null or p_small is null or p_large < 0 or p_small < 0
-    or jsonb_typeof(coalesce(p_details, '[]'::jsonb)) <> 'array' then return; end if;
+  update public.ai_pool_provider_sync
+    set claimed_at = now(), token = pg_catalog.gen_random_uuid()
+    where id and (claimed_at is null or claimed_at < now() - interval '15 seconds')
+    returning token into claim_token;
+  return claim_token;
+end; $$;
+revoke all on function public.claim_ai_pool_provider_sync() from public, anon, authenticated;
+grant execute on function public.claim_ai_pool_provider_sync() to service_role;
+
+-- Written only by the server, from the Usage API, and only by the current
+-- claim's holder. Returns whether the figure was recorded.
+create function public.record_ai_pool_provider_usage(p_token uuid, p_day date, p_large bigint, p_small bigint, p_details jsonb default '[]'::jsonb)
+returns boolean language plpgsql security definer set search_path = '' as $$
+begin
+  if p_token is null or p_day is null or p_large is null or p_small is null
+    or p_large < 0 or p_small < 0
+    or jsonb_typeof(coalesce(p_details, '[]'::jsonb)) <> 'array' then return false; end if;
+  -- Lock the claim so it cannot change hands between this check and the write.
+  perform 1 from public.ai_pool_provider_sync where id and token = p_token for update;
+  if not found then return false; end if;
   insert into public.ai_pool_provider_usage (pool, usage_day, tokens, details, synced_at)
   values
     ('large', p_day, p_large, coalesce(p_details, '[]'::jsonb), now()),
     ('small', p_day, p_small, coalesce(p_details, '[]'::jsonb), now())
   on conflict (pool, usage_day) do update
     set tokens = excluded.tokens, details = excluded.details, synced_at = excluded.synced_at;
+  return true;
 end; $$;
-revoke all on function public.record_ai_pool_provider_usage(date, bigint, bigint, jsonb) from public, anon, authenticated;
-grant execute on function public.record_ai_pool_provider_usage(date, bigint, bigint, jsonb) to service_role;
-
--- One refresh at a time across server instances: the first caller claims
--- it, and others wait for its figure instead of calling the Usage API too.
-create table public.ai_pool_provider_sync (
-  id boolean primary key default true check (id),
-  claimed_at timestamptz
-);
-insert into public.ai_pool_provider_sync (id, claimed_at) values (true, null);
-
-alter table public.ai_pool_provider_sync enable row level security;
-alter table public.ai_pool_provider_sync force row level security;
-revoke all on public.ai_pool_provider_sync from anon, authenticated;
-
--- True for the one caller that may refresh now; a claim lapses after 15s.
-create function public.claim_ai_pool_provider_sync()
-returns boolean language plpgsql security definer set search_path = '' as $$
-declare
-  claimed boolean;
-begin
-  update public.ai_pool_provider_sync set claimed_at = now()
-    where id and (claimed_at is null or claimed_at < now() - interval '15 seconds')
-    returning true into claimed;
-  return coalesce(claimed, false);
-end; $$;
-revoke all on function public.claim_ai_pool_provider_sync() from public, anon, authenticated;
-grant execute on function public.claim_ai_pool_provider_sync() to service_role;
+revoke all on function public.record_ai_pool_provider_usage(uuid, date, bigint, bigint, jsonb) from public, anon, authenticated;
+grant execute on function public.record_ai_pool_provider_usage(uuid, date, bigint, bigint, jsonb) to service_role;
 
 -- Ends a claim once its refresh has finished, whether or not it succeeded,
--- so waiting callers learn the outcome instead of timing out.
-create function public.release_ai_pool_provider_sync()
+-- so waiting callers learn the outcome instead of timing out. Only the
+-- current holder's token can release it.
+create function public.release_ai_pool_provider_sync(p_token uuid)
 returns void language sql security definer set search_path = '' as $$
-  update public.ai_pool_provider_sync set claimed_at = null where id
+  update public.ai_pool_provider_sync set claimed_at = null, token = null
+  where id and token = p_token
 $$;
-revoke all on function public.release_ai_pool_provider_sync() from public, anon, authenticated;
-grant execute on function public.release_ai_pool_provider_sync() to service_role;
+revoke all on function public.release_ai_pool_provider_sync(uuid) from public, anon, authenticated;
+grant execute on function public.release_ai_pool_provider_sync(uuid) to service_role;
 
 -- For callers waiting on another instance's refresh: when today's figure was
 -- last recorded, and whether a refresh is still claimed.

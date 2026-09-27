@@ -115,24 +115,29 @@ export async function fetchProviderUsage(
 }
 
 /**
- * Refreshes the recorded figure. Never throws: without the admin key or when
- * OpenAI is unreachable, the meter keeps using its own ledger.
+ * Refreshes the recorded figure under the refresh claim `token`. Never
+ * throws: without the admin key, when OpenAI is unreachable, or once the
+ * claim has passed to another caller, the meter keeps its own ledger.
  */
-export async function syncProviderUsage(
-  options: { fetch?: typeof globalThis.fetch; now?: Date } = {},
-) {
+export async function syncProviderUsage(options: {
+  token: string;
+  fetch?: typeof globalThis.fetch;
+  now?: Date;
+}) {
   const admin = createAdminClient();
   if (!admin) return false;
   const usage = await fetchProviderUsage(options);
   if (!usage) return false;
   try {
-    const { error } = await admin.rpc("record_ai_pool_provider_usage", {
+    const { data, error } = await admin.rpc("record_ai_pool_provider_usage", {
+      p_token: options.token,
       p_day: usage.day,
       p_large: usage.totals.large,
       p_small: usage.totals.small,
       p_details: usage.details,
     });
-    return !error;
+    // False when the claim lapsed and another caller holds it now.
+    return !error && data === true;
   } catch {
     return false;
   }
@@ -180,16 +185,19 @@ async function coordinatedRefresh(options: {
   const admin = createAdminClient();
   if (!admin) return false;
   try {
-    const { data: claimed, error } = await admin.rpc(
+    const { data: token, error } = await admin.rpc(
       "claim_ai_pool_provider_sync",
     );
     if (error) return false;
-    if (claimed === true) {
+    if (typeof token === "string") {
       try {
-        return await syncProviderUsage(options);
+        return await syncProviderUsage({ ...options, token });
       } finally {
-        // Waiting callers learn the outcome instead of timing out.
-        await admin.rpc("release_ai_pool_provider_sync");
+        // Waiting callers learn the outcome instead of timing out. Only this
+        // claim is released, never one taken after it lapsed.
+        await Promise.resolve(
+          admin.rpc("release_ai_pool_provider_sync", { p_token: token }),
+        ).catch(() => undefined);
       }
     }
     // Another instance is refreshing: wait until its figure lands or its

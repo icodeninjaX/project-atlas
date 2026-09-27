@@ -13,6 +13,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 }));
 
 const now = new Date("2026-09-27T16:40:00Z");
+const TOKEN = "5f0c6f1e-8d3a-4c52-9b7e-2a1d4e6f8a90";
 const page = (results: unknown[], more?: string) =>
   Response.json({
     data: [{ results }],
@@ -29,7 +30,7 @@ beforeEach(() => {
   delete process.env.OPENAI_PROJECT_ID;
   admin.configured = true;
   admin.rpc.mockReset();
-  admin.rpc.mockResolvedValue({ error: null });
+  admin.rpc.mockResolvedValue({ data: true, error: null });
 });
 afterEach(() => {
   vi.useRealTimers();
@@ -128,6 +129,7 @@ describe("OpenAI usage sync", () => {
     ).toBeNull();
     expect(
       await syncProviderUsage({
+        token: TOKEN,
         fetch: vi.fn().mockRejectedValue(new Error("offline")),
         now,
       }),
@@ -145,8 +147,9 @@ describe("OpenAI usage sync", () => {
         },
       ]),
     );
-    expect(await syncProviderUsage({ fetch, now })).toBe(true);
+    expect(await syncProviderUsage({ token: TOKEN, fetch, now })).toBe(true);
     expect(admin.rpc).toHaveBeenCalledWith("record_ai_pool_provider_usage", {
+      p_token: TOKEN,
       p_day: "2026-09-27",
       p_large: 0,
       p_small: 120,
@@ -159,8 +162,11 @@ describe("OpenAI usage sync", () => {
         },
       ],
     });
+    // A claim that lapsed and passed to another caller records nothing.
+    admin.rpc.mockResolvedValue({ data: false, error: null });
+    expect(await syncProviderUsage({ token: TOKEN, fetch, now })).toBe(false);
     admin.configured = false;
-    expect(await syncProviderUsage({ fetch, now })).toBe(false);
+    expect(await syncProviderUsage({ token: TOKEN, fetch, now })).toBe(false);
   });
   it("refreshes a figure older than five minutes", () => {
     expect(providerUsageStale(null)).toBe(true);
@@ -173,8 +179,8 @@ describe("OpenAI usage sync", () => {
   it("shares one refresh between concurrent callers in an instance", async () => {
     admin.rpc.mockImplementation(async (name: string) =>
       name === "claim_ai_pool_provider_sync"
-        ? { data: true, error: null }
-        : { error: null },
+        ? { data: TOKEN, error: null }
+        : { data: true, error: null },
     );
     const fetch = vi.fn().mockResolvedValue(page([]));
     const results = await Promise.all([
@@ -193,8 +199,8 @@ describe("OpenAI usage sync", () => {
   it("releases its claim after refreshing, whether or not it succeeded", async () => {
     admin.rpc.mockImplementation(async (name: string) =>
       name === "claim_ai_pool_provider_sync"
-        ? { data: true, error: null }
-        : { error: null },
+        ? { data: TOKEN, error: null }
+        : { data: true, error: null },
     );
     await refreshProviderUsage({
       fetch: vi.fn().mockResolvedValue(page([])),
@@ -208,7 +214,28 @@ describe("OpenAI usage sync", () => {
       admin.rpc.mock.calls.filter(
         ([name]) => name === "release_ai_pool_provider_sync",
       ),
-    ).toHaveLength(2);
+    ).toEqual([
+      ["release_ai_pool_provider_sync", { p_token: TOKEN }],
+      ["release_ai_pool_provider_sync", { p_token: TOKEN }],
+    ]);
+  });
+  it("reports no fresh figure when its claim lapsed before recording", async () => {
+    admin.rpc.mockImplementation(async (name: string) =>
+      name === "claim_ai_pool_provider_sync"
+        ? { data: TOKEN, error: null }
+        : name === "record_ai_pool_provider_usage"
+          ? { data: false, error: null }
+          : { data: null, error: null },
+    );
+    expect(
+      await refreshProviderUsage({
+        fetch: vi.fn().mockResolvedValue(page([])),
+        now,
+      }),
+    ).toBe(false);
+    expect(admin.rpc).toHaveBeenCalledWith("release_ai_pool_provider_sync", {
+      p_token: TOKEN,
+    });
   });
   it("waits while another instance holds the claim, then uses its figure", async () => {
     const stale = new Date(Date.now() - 10 * 60_000).toISOString();
@@ -220,10 +247,10 @@ describe("OpenAI usage sync", () => {
     ];
     admin.rpc.mockImplementation(async (name: string) =>
       name === "claim_ai_pool_provider_sync"
-        ? { data: false, error: null }
+        ? { data: null, error: null }
         : name === "ai_pool_provider_sync_state"
           ? { data: states.shift(), error: null }
-          : { error: null },
+          : { data: true, error: null },
     );
     const fetch = vi.fn();
     expect(await refreshProviderUsage({ fetch, now, pollMs: 1 })).toBe(true);
@@ -233,10 +260,10 @@ describe("OpenAI usage sync", () => {
   it("keeps the ledger decision once the other refresh ends without a figure", async () => {
     admin.rpc.mockImplementation(async (name: string) =>
       name === "claim_ai_pool_provider_sync"
-        ? { data: false, error: null }
+        ? { data: null, error: null }
         : name === "ai_pool_provider_sync_state"
           ? { data: { syncedAt: null, claimActive: false }, error: null }
-          : { error: null },
+          : { data: true, error: null },
     );
     const fetch = vi.fn();
     expect(await refreshProviderUsage({ fetch, now, pollMs: 1 })).toBe(false);
@@ -253,10 +280,10 @@ describe("OpenAI usage sync", () => {
     ];
     admin.rpc.mockImplementation(async (name: string) =>
       name === "claim_ai_pool_provider_sync"
-        ? { data: false, error: null }
+        ? { data: null, error: null }
         : name === "ai_pool_provider_sync_state"
           ? polls.shift()!()
-          : { error: null },
+          : { data: true, error: null },
     );
     expect(await refreshProviderUsage({ fetch: vi.fn(), now, pollMs: 1 })).toBe(
       true,
@@ -266,7 +293,7 @@ describe("OpenAI usage sync", () => {
   it("falls back to the ledger only once the wait for a claim runs out", async () => {
     admin.rpc.mockImplementation(async (name: string) =>
       name === "claim_ai_pool_provider_sync"
-        ? { data: false, error: null }
+        ? { data: null, error: null }
         : { data: null, error: { message: "down" } },
     );
     expect(
@@ -281,8 +308,8 @@ describe("OpenAI usage sync", () => {
   it("waits a minute after a failed refresh before asking OpenAI again", async () => {
     admin.rpc.mockImplementation(async (name: string) =>
       name === "claim_ai_pool_provider_sync"
-        ? { data: true, error: null }
-        : { error: null },
+        ? { data: TOKEN, error: null }
+        : { data: true, error: null },
     );
     const failing = vi
       .fn()
