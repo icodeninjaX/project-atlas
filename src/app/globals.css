@@ -23,6 +23,20 @@
   /* Figures use the UI face with tabular numerals: aligned like a ledger,
      without the terminal feel of a monospace face. */
   --font-mono: var(--font-app);
+  /* Analyst progress steps and follow-up chips settle in from below. */
+  --animate-analyst-rise: analyst-rise 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes analyst-rise {
+  from {
+    transform: translateY(0.375rem);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 :root {

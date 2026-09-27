@@ -621,6 +621,33 @@ describe("grounded answer repair attempt", () => {
     });
     warn.mockRestore();
   });
+  it("reports writing, checking and the repair attempt in order", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const onStage = vi.fn();
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(completion(rejected))
+      .mockResolvedValueOnce(completion(valid));
+    await requestGroundedAnswer("How is my money?", evidence, {
+      fetch,
+      onStage,
+    });
+    expect(onStage.mock.calls.map(([event]) => event.stage)).toEqual([
+      "writing",
+      "checking",
+      "repairing",
+    ]);
+    onStage.mockClear();
+    await requestGroundedAnswer("How is my money?", evidence, {
+      fetch: vi.fn().mockResolvedValueOnce(completion(valid)),
+      onStage,
+    });
+    expect(onStage.mock.calls.map(([event]) => event.stage)).toEqual([
+      "writing",
+      "checking",
+    ]);
+    warn.mockRestore();
+  });
   it("gives up after one repair attempt", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const fetch = vi.fn().mockImplementation(async () => completion(rejected));

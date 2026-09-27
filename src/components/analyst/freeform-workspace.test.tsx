@@ -1,4 +1,10 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PrivacyProvider } from "@/components/privacy/privacy-provider";
@@ -441,5 +447,214 @@ describe("Analyst conversation", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Your Analyst usage limit has been reached.",
     );
+  });
+
+  it("shows live stages as they stream and advances through them", async () => {
+    const user = userEvent.setup();
+    let push!: (event: unknown) => void;
+    let end!: () => void;
+    const encoder = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        push = (event) =>
+          controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+        end = () => controller.close();
+      },
+    });
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(body, {
+        status: 200,
+        headers: { "Content-Type": "application/x-ndjson" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetch);
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.type(box(), "What should I focus on this week?{Enter}");
+    expect(fetch.mock.calls[0]![1].headers.Accept).toContain(
+      "application/x-ndjson",
+    );
+    const progress = await screen.findByRole("list", {
+      name: "Analyst progress",
+    });
+    expect(screen.getByRole("status")).toContainElement(progress);
+    const active = () =>
+      progress.querySelector('[data-state="active"]')?.textContent;
+    expect(active()).toContain("Understanding your question");
+    push({ type: "stage", stage: "understanding" });
+    push({ type: "stage", stage: "reading", domains: ["tasks", "signals"] });
+    await waitFor(() =>
+      expect(active()).toContain("Reading tasks and signals"),
+    );
+    expect(
+      progress.querySelector('[data-state="done"]')?.textContent,
+    ).toContain("Understanding your question");
+    push({ type: "stage", stage: "writing" });
+    push({ type: "stage", stage: "checking" });
+    await waitFor(() => expect(active()).toContain("Checking every figure"));
+    push({ type: "stage", stage: "repairing" });
+    await waitFor(() =>
+      expect(active()).toContain("Correcting an answer that failed checks"),
+    );
+    // A late checking event after the repair never rewinds the list.
+    push({ type: "stage", stage: "checking" });
+    push({
+      type: "result",
+      status: 200,
+      body: {
+        status: "answered",
+        claims: [
+          {
+            kind: "observation",
+            text: "Recorded expenses may be worth a look.",
+            evidenceIds: [fact.id],
+            comparison: null,
+          },
+        ],
+        evidence: [fact],
+        limitations: [],
+      },
+    });
+    end();
+    expect(
+      await screen.findByText("Recorded expenses may be worth a look."),
+    ).toBeVisible();
+    expect(screen.queryByRole("list", { name: "Analyst progress" })).toBeNull();
+  });
+
+  it("asks a follow-up chip with history and hides chips on older turns", async () => {
+    const user = userEvent.setup();
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(async () =>
+        answered("The recorded expenses may be worth a look.", {
+          suggestions: [
+            "How does this compare to last month?",
+            "How did my spending change?",
+            "How has my spending changed over the last six months?",
+          ],
+        }),
+      )
+      .mockImplementationOnce(async () =>
+        answered("August expenses may also be worth a look.", {
+          suggestions: ["What needs my attention across money and goals?"],
+        }),
+      );
+    vi.stubGlobal("fetch", fetch);
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.type(box(), "How did my spending change?{Enter}");
+    const chips = await screen.findByRole("group", {
+      name: "Suggested follow-ups",
+    });
+    // The question just asked is never offered again.
+    expect(
+      within(chips)
+        .getAllByRole("button")
+        .map((button) => button.textContent),
+    ).toEqual([
+      "How does this compare to last month?",
+      "How has my spending changed over the last six months?",
+    ]);
+    await user.click(
+      within(chips).getByRole("button", {
+        name: "How does this compare to last month?",
+      }),
+    );
+    await screen.findByText("August expenses may also be worth a look.");
+    expect(JSON.parse(fetch.mock.calls[1]![1].body)).toEqual({
+      question: "How does this compare to last month?",
+      history: [
+        {
+          question: "How did my spending change?",
+          answer: "The recorded expenses may be worth a look.",
+        },
+      ],
+      dataSharingAcknowledged: true,
+    });
+    // Only the latest turn keeps its chips.
+    const groups = screen.getAllByRole("group", {
+      name: "Suggested follow-ups",
+    });
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toHaveTextContent(
+      "What needs my attention across money and goals?",
+    );
+    expect(
+      screen.queryByRole("button", {
+        name: "How has my spending changed over the last six months?",
+      }),
+    ).toBeNull();
+  });
+
+  it("keeps a fallback turn as context for its follow-up chip", async () => {
+    const user = userEvent.setup();
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({
+              status: "fallback",
+              message: "An AI explanation is unavailable.",
+              evidence: [fact],
+              limitations: [],
+              suggestions: ["How does this compare to last month?"],
+            }),
+          ),
+      )
+      .mockImplementationOnce(async () => answered("It may be similar."));
+    vi.stubGlobal("fetch", fetch);
+    render(<FreeformWorkspace userId="owner-a" />);
+    await user.click(consent());
+    await user.type(box(), "How did my spending change?{Enter}");
+    await user.click(
+      await screen.findByRole("button", {
+        name: "How does this compare to last month?",
+      }),
+    );
+    await screen.findByText("It may be similar.");
+    expect(JSON.parse(fetch.mock.calls[1]![1].body).history).toEqual([
+      {
+        question: "How did my spending change?",
+        answer: "An AI explanation is unavailable.",
+      },
+    ]);
+  });
+
+  it("asks a follow-up chip without an inherited goal or debt focus", async () => {
+    const user = userEvent.setup();
+    const debtId = "11111111-1111-4111-8111-111111111111";
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(async () =>
+        answered("The options may be worth reviewing.", {
+          suggestions: ["What does my current runway look like?"],
+        }),
+      )
+      .mockImplementationOnce(async () => answered("Runway noted."));
+    vi.stubGlobal("fetch", fetch);
+    render(
+      <FreeformWorkspace
+        userId="owner-a"
+        debts={[{ id: debtId, creditor_name: "Test debt" }]}
+      />,
+    );
+    await user.click(consent());
+    await user.selectOptions(
+      screen.getByLabelText("Focus on a goal or debt"),
+      `debt:${debtId}`,
+    );
+    await user.type(box(), "What if I pay ₱500 extra monthly?{Enter}");
+    await user.click(
+      await screen.findByRole("button", {
+        name: "What does my current runway look like?",
+      }),
+    );
+    await screen.findByText("Runway noted.");
+    const sent = JSON.parse(fetch.mock.calls[1]![1].body);
+    expect(sent).not.toHaveProperty("debtId");
+    expect(sent).not.toHaveProperty("goalId");
+    expect(screen.queryByRole("button", { name: "Clear focus" })).toBeNull();
   });
 });
