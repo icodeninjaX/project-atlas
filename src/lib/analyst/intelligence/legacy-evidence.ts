@@ -7,7 +7,13 @@ import {
   type EvidenceUnit,
   type EvidenceV2,
 } from "./contracts";
-import { semanticsFor, type MetricDomain } from "./semantics";
+import {
+  METRIC_SEMANTICS,
+  labeledSemantics,
+  semanticsFor,
+  type MetricDomain,
+  type MetricSemantics,
+} from "./semantics";
 
 /**
  * Adapts evidence from the existing approved tools to EvidenceV2 without
@@ -24,7 +30,7 @@ export type LegacyToolCall = {
 };
 
 /** The consent domain each existing tool reads. */
-const toolDomains: Record<ToolName, ConsentDomain> = {
+export const LEGACY_TOOL_DOMAINS: Record<ToolName, ConsentDomain> = {
   getSpendingChange: "money",
   getDebtProgress: "debts",
   getTaskFocus: "tasks",
@@ -44,6 +50,37 @@ const toolDomains: Record<ToolName, ConsentDomain> = {
   runFinancialScenario: "runway",
   compareFinancialScenarios: "runway",
 };
+
+/**
+ * Tools whose evidence labels are fixed vocabulary (templates, stage and
+ * signal enums), never record names or notes, with the domain each speaks
+ * for. Their labels are kept as the measure's definition.
+ */
+const FIXED_LABEL_DOMAINS: Partial<Record<ToolName, MetricDomain>> = {
+  getDebtProgress: "debt",
+  getTaskFocus: "task",
+  getGoalProgress: "goal",
+  getCareerPipeline: "career",
+  getWeeklyReviewMetrics: "review",
+  getSignals: "signal",
+  getRunway: "runway",
+  runFinancialScenario: "runway",
+  compareFinancialScenarios: "runway",
+};
+
+function fixedAggregation(
+  local: string,
+  unit: EvidenceUnit,
+  tool: ToolName,
+): MetricSemantics["aggregation"] {
+  if (/change|reduction/.test(local)) return "difference";
+  if (tool === "runFinancialScenario" || tool === "compareFinancialScenarios")
+    return "estimate";
+  if (unit === "count") return "count";
+  if (unit === "score" || unit === "percent") return "mean";
+  if (unit === "months") return "estimate";
+  return unit === "centavos" ? "latest" : "value";
+}
 
 /** A whole-domain series belongs to its own domain, not to "history". */
 function historyDomain(domain: MetricDomain): ConsentDomain {
@@ -227,7 +264,17 @@ export function adaptLegacyCall(call: LegacyToolCall): EvidenceV2[] {
       local,
       categoryCount,
     );
-    const semantics = semanticsFor(metricKey, unit);
+    const fixed = FIXED_LABEL_DOMAINS[call.tool];
+    const semantics =
+      fixed && !METRIC_SEMANTICS[metricKey]
+        ? labeledSemantics(
+            metricKey,
+            item.metric,
+            unit,
+            fixed,
+            fixedAggregation(local, unit, call.tool),
+          )
+        : semanticsFor(metricKey, unit);
     const scenario =
       item.provenance.tool === "compareFinancialScenarios" ||
       item.provenance.tool === "runFinancialScenario";
@@ -240,7 +287,7 @@ export function adaptLegacyCall(call: LegacyToolCall): EvidenceV2[] {
         call.tool === "getHistoricalMetricSeries" ||
         call.tool === "getCrossDomainHistory"
           ? historyDomain(semantics.domain)
-          : toolDomains[call.tool],
+          : LEGACY_TOOL_DOMAINS[call.tool],
       calculationVersion: item.provenance.calculationVersion,
       semantics: {
         metricKey: semantics.key,

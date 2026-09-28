@@ -1,12 +1,14 @@
 import "server-only";
 import { z } from "zod";
 import { ToolFailure } from "@/lib/analyst/tools/contracts";
+import { invokeAnalystTool } from "@/lib/analyst/tools/server";
 import {
   approvedToolTables,
   createToolTransport,
 } from "@/lib/analyst/tools/transport";
 import { createClient } from "@/lib/supabase/server";
 import { evidenceV2Schema } from "../contracts";
+import { adaptLegacyCall } from "../legacy-evidence";
 import {
   eligibility,
   type AnalystConsent,
@@ -15,6 +17,9 @@ import {
 import {
   ENTITY_DOMAINS,
   V2_TOOL_LIMITS,
+  emptyPayload,
+  isBridgedTool,
+  type BridgedTool,
   parseHandle,
   v2ToolDescriptions,
   v2ToolInputs,
@@ -109,6 +114,58 @@ function sensitiveAllowed(
   );
 }
 
+/**
+ * Runs an existing aggregate tool unchanged and adapts its evidence. The
+ * legacy tool keeps its own session identity, owner filter, bounded
+ * transport and timeout; V2 only reshapes the result. A status other than
+ * `error` passes through, so "not enough history" stays insufficient
+ * evidence rather than an operational failure.
+ */
+async function invokeBridged(
+  tool: BridgedTool,
+  rawInput: unknown,
+): Promise<V2ToolResult> {
+  const result = await invokeAnalystTool(tool, rawInput);
+  const metadata = {
+    version: "1" as const,
+    durationMs: result.metadata.durationMs,
+    queries: result.metadata.queries,
+    rows: result.metadata.rows,
+  };
+  const failed = (code: V2FailureCode): V2ToolResult => ({
+    ...emptyPayload(),
+    tool,
+    status: "error",
+    error: { code, message: messages[code] },
+    limitations: [messages[code]],
+    metadata,
+  });
+  if (result.status === "error") {
+    const raw = result.error?.code ?? "unavailable_source";
+    return failed(
+      raw === "insufficient_history" || raw === "stale_data"
+        ? "unavailable_source"
+        : raw,
+    );
+  }
+  try {
+    return {
+      ...emptyPayload(),
+      tool,
+      status: result.status,
+      evidence: adaptLegacyCall({
+        tool,
+        input: v2ToolInputs[tool].parse(rawInput),
+        evidence: result.evidence,
+      }),
+      limitations: result.limitations,
+      metadata,
+    };
+  } catch {
+    return failed("invalid_output");
+  }
+}
+
 export async function invokeAnalystToolV2(
   name: unknown,
   rawInput: unknown,
@@ -134,6 +191,7 @@ export async function invokeAnalystToolV2(
     if (!tool || !parsed?.success) throw new ToolFailure("invalid_input");
     // Nothing is sent to a provider without consent; nothing is read either.
     if (!options.consent) throw new ToolFailure("unauthenticated");
+    if (isBridgedTool(tool)) return await invokeBridged(tool, rawInput);
     const input = parsed.data as Record<string, unknown>;
     const work = async (): Promise<V2ToolPayload> => {
       const nativeFetch = globalThis.fetch;

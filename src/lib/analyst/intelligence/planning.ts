@@ -1,6 +1,7 @@
 import { spendingPeriods } from "@/lib/analyst/evidence";
 import type { AnalysisBrief, ConsentDomain } from "./contracts";
 import { detectLanguage, detectStyle } from "./language";
+import { debtScenario, referencePhrase } from "./references";
 import { resolvePeriod, topicDomains, type TurnPlan } from "./turns";
 
 /**
@@ -95,6 +96,19 @@ const requirementFor: Record<
   timeline: null,
 };
 
+/** Capabilities that read one resolved record rather than a whole domain. */
+const ENTITY_CAPABILITIES = new Set([
+  "goal.resolve",
+  "goal.linked_activity",
+  "task.detail",
+  "graph.paths",
+  "decision.context",
+  "decision.text",
+  "knowledge.reviews",
+  "career.stage_history",
+  "reviews.excerpts",
+]);
+
 export function deterministicBrief(input: {
   question: string;
   plan: TurnPlan | null;
@@ -108,11 +122,38 @@ export function deterministicBrief(input: {
   let domains = topicDomains(question);
   if (domains.length === 0 && context?.topic) domains = context.topic.domains;
   if (domains.length === 0) domains = ["money"];
+  // A decision about studying is a decision question, not a knowledge one.
+  if (
+    /\b(?:decision|decided|desisyon|right (?:call|choice|move))\b/i.test(
+      question,
+    ) &&
+    !/\b(?:concepts?|knowledge)\b/i.test(question)
+  )
+    domains = domains.filter((domain) => domain !== "knowledge");
+  // An explicit payment scenario is answered by the runway engine.
+  if (debtScenario(question) && domains.includes("debts"))
+    domains = [
+      ...new Set(
+        domains.map((domain) => (domain === "debts" ? "runway" : domain)),
+      ),
+    ];
+  // One named goal (or one carried in the conversation) gets its own
+  // context; otherwise goals and tasks are read as a whole.
+  const namedGoal =
+    referencePhrase(question, "goal") !== null ||
+    (input.plan?.entities ?? []).some((handle) => handle.startsWith("goal:"));
   const requirements: AnalysisBrief["requirements"] = [];
   for (const domain of domains) {
     const base = requirementFor[domain];
     if (!base) continue;
-    const capabilities = [...base.capabilities];
+    let capabilities = [...base.capabilities];
+    if (domain === "goals" && !namedGoal)
+      capabilities = [
+        "goal.overview",
+        ...(intent === "prioritize" ? ["task.ranking"] : []),
+      ];
+    if (domain === "tasks" && !namedGoal && !domains.includes("goals"))
+      capabilities = ["task.ranking"];
     if (
       domain === "money" &&
       (intent === "explain_change" ||
@@ -121,6 +162,7 @@ export function deterministicBrief(input: {
       capabilities.push("money.category_breakdown");
     if (
       (domain === "goals" || domain === "tasks") &&
+      namedGoal &&
       (intent === "prioritize" ||
         /\bon track|open|overdue|remaining\b/i.test(question))
     )
@@ -185,10 +227,23 @@ export function deterministicBrief(input: {
     (input.plan?.entities ?? []).includes(item.handle),
   );
   const needsEntity = requirements.some((item) =>
-    item.evidenceNeeded.some((id) =>
-      /^(goal|task|career|decision|knowledge|reviews)\./.test(id),
-    ),
+    item.evidenceNeeded.some((id) => ENTITY_CAPABILITIES.has(id)),
   );
+  // The phrases that name records, so resolution searches for a name
+  // rather than the whole sentence.
+  const phrases = [
+    ...new Set(
+      (
+        [
+          "goal",
+          "decision",
+          "debt",
+          "job_application",
+          "knowledge_concept",
+        ] as const
+      ).flatMap((type) => referencePhrase(question, type) ?? []),
+    ),
+  ];
   return {
     version: "1",
     intent,
@@ -208,6 +263,10 @@ export function deterministicBrief(input: {
       origin: item.origin,
     })),
     unresolvedReferences:
-      needsEntity && entities.length === 0 ? [question.slice(0, 120)] : [],
+      needsEntity && entities.length === 0
+        ? phrases.length > 0
+          ? phrases.slice(0, 8)
+          : [question.slice(0, 120)]
+        : [],
   };
 }

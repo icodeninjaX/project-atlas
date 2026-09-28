@@ -150,6 +150,17 @@ export const CAPABILITY_MANIFEST: readonly CapabilityDescriptor[] = [
     ],
   }),
   entry({
+    id: "goal.overview",
+    domain: "goals",
+    profile: "aggregate",
+    status: "available",
+    description:
+      "Counts across all active goals: how many, how many are past their target date, completed milestones and average displayed progress.",
+    tools: ["getGoalProgress"],
+    supportedHistory: "Current state only.",
+    unsupported: ["Which goal matters most to the user", "Progress history"],
+  }),
+  entry({
     id: "goal.history",
     domain: "goals",
     profile: "aggregate",

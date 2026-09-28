@@ -169,6 +169,22 @@ export const METRIC_SEMANTICS: Record<string, MetricSemantics> = {
 };
 
 /** Semantics for a key, or an isolated group for values with no registry entry. */
+/**
+ * Semantics for a measure an existing aggregate tool returns under a fixed
+ * label (such as "Open tasks" or "Current · Runway estimate") that has no
+ * registry entry. It keeps its own comparable group, so it can be cited but
+ * never combined with another value.
+ */
+export function labeledSemantics(
+  key: string,
+  label: string,
+  unit: EvidenceUnit,
+  domain: MetricDomain,
+  aggregation: MetricSemantics["aggregation"],
+): MetricSemantics {
+  return own(key, label, unit, domain, aggregation);
+}
+
 export function semanticsFor(key: string, unit: EvidenceUnit): MetricSemantics {
   return (
     METRIC_SEMANTICS[key] ??
@@ -206,5 +222,10 @@ export function textDomains(semantics: MetricSemantics): MetricDomain[] {
     return ["goal", "income", "expense"];
   // Debt payments are recorded payments toward a debt.
   if (semantics.key === "debt_payments_centavos") return ["debt"];
+  // A scenario's income and need are money flows under stated assumptions.
+  if (semantics.key === "scenario:monthlyIncomeCentavos")
+    return ["runway", "income"];
+  if (semantics.key === "scenario:monthlyNeedCentavos")
+    return ["runway", "expense"];
   return [semantics.domain];
 }

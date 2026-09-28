@@ -26,9 +26,12 @@ import { safeProgress, type V2ProgressEvent } from "./progress";
 import { capabilityProposer } from "./proposer";
 import type { StageCaller } from "./stages";
 import { synthesizeAnswer } from "./synthesis";
+import { LEGACY_TOOL_DOMAINS } from "./legacy-evidence";
 import {
+  BRIDGED_TOOLS,
   ENTITY_DOMAINS,
   parseHandle,
+  type BridgedTool,
   type V2ToolName,
   type V2ToolResult,
 } from "./tools/contracts";
@@ -98,6 +101,9 @@ const toolDomains: Record<V2ToolName, ConsentDomain[]> = {
   getGoalAnalysisContext: ["goals"],
   getDecisionAnalysisContext: ["decisions"],
   getRelationshipPaths: ["graph"],
+  ...(Object.fromEntries(
+    BRIDGED_TOOLS.map((tool) => [tool, [LEGACY_TOOL_DOMAINS[tool]]]),
+  ) as Record<BridgedTool, ConsentDomain[]>),
 };
 
 const label = (id: string) =>
