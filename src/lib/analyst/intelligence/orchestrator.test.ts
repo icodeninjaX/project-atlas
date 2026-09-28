@@ -552,7 +552,7 @@ describe("server control of proposals", () => {
 
   it("charges a model-backed proposer against the budget outside the reserve", async () => {
     const proposer: Proposer = {
-      provider: { tokens: 20_000, costUsdMicros: 5_000 },
+      provider: { tokens: 25_000, costUsdMicros: 5_000 },
       propose: () => ({ requests: [] }),
     };
     const result = await runInvestigation({

@@ -577,6 +577,9 @@ export function recordAnswer(
       origin: "analyst_suggestion" as const,
     }));
   const domains = [...new Set(input.evidence.map((item) => item.domain))];
+  const profiles = [
+    ...new Set(input.evidence.map((item) => item.sharing.route)),
+  ];
   const questionOf = (id: string) =>
     input.brief.requirements.find((item) => item.id === id)?.question ?? id;
   const candidates = [...new Set(input.candidates ?? [])];
@@ -610,6 +613,18 @@ export function recordAnswer(
     findings: [...context.findings, ...findings].slice(
       -CONTEXT_LIMITS.findings,
     ),
+    history: [
+      ...context.history.filter((item) => item.turn !== context.turn),
+      {
+        turn: context.turn,
+        question: input.brief.question.slice(
+          0,
+          CONTEXT_LIMITS.historyQuestionChars,
+        ),
+        domains,
+        profiles: profiles.length ? profiles : ["aggregate" as const],
+      },
+    ].slice(-CONTEXT_LIMITS.historyTurns),
     recommendations: [...context.recommendations, ...recommendations].slice(
       -CONTEXT_LIMITS.recommendations,
     ),

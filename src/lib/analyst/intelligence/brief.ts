@@ -60,7 +60,8 @@ const deepIntents = new Set<AnalysisBrief["intent"]>([
 
 /**
  * The simple path answers one lookup from one round; the deep path may
- * investigate. A single lookup never takes the deep path.
+ * investigate. A single lookup never takes the deep path; a brief with more
+ * than one requirement always does.
  */
 export function choosePath(brief: AnalysisBrief): RunPath {
   const essential = brief.requirements.filter((item) => item.essential);
@@ -68,6 +69,8 @@ export function choosePath(brief: AnalysisBrief): RunPath {
     brief.requirements.flatMap((item) => item.evidenceNeeded),
   );
   if (essential.length > 1) return "deep";
+  // A planned investigation reads several areas, which one round cannot.
+  if (brief.requirements.length > 1) return "deep";
   if (deepIntents.has(brief.intent)) return "deep";
   if ([...needs].some((item) => deepCapabilities.has(item))) return "deep";
   return "simple";

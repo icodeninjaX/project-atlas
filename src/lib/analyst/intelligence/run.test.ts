@@ -63,6 +63,8 @@ type Evidence = {
   measure: string;
 };
 let writer: (input: Record<string, unknown>) => unknown;
+/** The analysis planner's reply, for runs that configure a planner model. */
+let planner: (input: Record<string, unknown>) => unknown;
 /** Injected provider or source faults for the AI-07 fault suite. */
 let fault:
   | null
@@ -117,6 +119,7 @@ beforeEach(() => {
   fault = null;
   providerRequests = [];
   writer = totalWriter();
+  planner = () => ({ not: "a plan" });
   emulator = createEmulator(fixtureTables(), OWNER_A);
   vi.stubGlobal(
     "fetch",
@@ -154,7 +157,12 @@ beforeEach(() => {
               content:
                 fault === "invalid_output"
                   ? "not json"
-                  : JSON.stringify(writer(payload)),
+                  : JSON.stringify(
+                      body.response_format.json_schema.name ===
+                        "atlas_analysis_plan"
+                        ? planner(payload)
+                        : writer(payload),
+                    ),
             },
           },
         ],
@@ -190,6 +198,7 @@ function ask(
     contextKey?: Buffer | null;
     consent?: typeof consent;
     signal?: AbortSignal;
+    planModel?: string;
   } = {},
 ) {
   const events: V2ProgressEvent[] = [];
@@ -214,6 +223,7 @@ function ask(
       clock: () => 0,
       emit: (event) => events.push(event),
       signal: options.signal,
+      planModel: options.planModel ?? null,
     },
   );
   return { result, events };
@@ -574,5 +584,180 @@ describe("Analyst V2 under injected faults (AI-07)", () => {
     expect(response.status).toBe("error");
     expect(providerRequests).toEqual([]);
     expect(response.usage.providerCalls).toBe(0);
+  });
+});
+
+describe("Analyst V2 with the analysis planner (mocked provider)", () => {
+  const planModel = AI_MODELS.planner;
+  const plan = (extra: Record<string, unknown> = {}) => ({
+    understanding:
+      "Whether income covers spending and where attention should go.",
+    intent: "prioritize",
+    responseStyle: "detailed",
+    subQuestions: [
+      {
+        question: "How much was spent this month?",
+        capabilities: ["money.totals"],
+        moneyKind: "expense",
+      },
+      {
+        question: "How much income came in this month?",
+        capabilities: ["money.totals"],
+        moneyKind: "income",
+      },
+      {
+        question: "Where do debts stand?",
+        capabilities: ["debt.payments"],
+        moneyKind: "none",
+      },
+    ],
+    hypotheses: ["One category may account for most spending."],
+    comparePreviousPeriod: false,
+    period: null,
+    clarification: null,
+    ...extra,
+  });
+
+  it("plans before reading, reads every planned area and briefs the writer", async () => {
+    planner = () => plan();
+    const response = await ask("How am I doing overall?", { planModel }).result;
+    expect(providerRequests[0]).toMatchObject({
+      schema: "atlas_analysis_plan",
+      model: planModel,
+    });
+    // The planner sees the question and a catalog, never a record.
+    expect(Object.keys(providerRequests[0]!.input).sort()).toEqual([
+      "catalog",
+      "currentReading",
+      "previousTurns",
+      "question",
+      "today",
+    ]);
+    const writerInput = providerRequests.find(
+      (item) => item.schema === "atlas_answer_v2",
+    )!.input as {
+      analysisPlan: { understanding: string } | null;
+      requirements: Array<{ id: string }>;
+      evidence: Array<{ id: string }>;
+    };
+    expect(writerInput.analysisPlan?.understanding).toBe(
+      "Whether income covers spending and where attention should go.",
+    );
+    expect(writerInput.requirements.map((item) => item.id)).toEqual([
+      "r_plan1_expense",
+      "r_plan2_income",
+      "r_plan3",
+    ]);
+    expect(response.models.planner).toEqual({
+      requested: planModel,
+      resolved: planModel,
+    });
+    expect(["answered", "partial_answer"]).toContain(response.status);
+  });
+
+  it("keeps the rules' reading when the plan is invalid", async () => {
+    const response = await ask("How much did I spend this month?", {
+      planModel,
+    }).result;
+    expect(response.status).toBe("answered");
+    const writerInput = providerRequests.find(
+      (item) => item.schema === "atlas_answer_v2",
+    )!.input as {
+      analysisPlan: unknown;
+      requirements: Array<{ id: string }>;
+    };
+    expect(writerInput.analysisPlan).toBeNull();
+    expect(writerInput.requirements.map((item) => item.id)).toEqual([
+      "r_money",
+    ]);
+  });
+
+  it("asks back, reading nothing, when no records could answer", async () => {
+    planner = () =>
+      plan({
+        subQuestions: [],
+        clarification: "ATLAS keeps no weather records. What did you mean?",
+      });
+    const response = await ask("What will the weather be tomorrow?", {
+      planModel,
+    }).result;
+    expect(response.status).toBe("clarification_required");
+    expect(response.presentation.limitations).toContain(
+      "ATLAS keeps no weather records. What did you mean?",
+    );
+    expect(providerRequests.map((item) => item.schema)).toEqual([
+      "atlas_analysis_plan",
+    ]);
+    expect(response.usage.providerCalls).toBe(1);
+  });
+
+  it("accepts the writer's private analysis and never shows it", async () => {
+    const base = totalWriter();
+    writer = (input) => ({
+      analysis: {
+        keyObservations: ["Spending is the only area read."],
+        connections: [],
+        alternatives: [],
+        gaps: [],
+        confidence: "medium",
+      },
+      ...(base(input) as object),
+    });
+    const response = await ask("How much did I spend this month?").result;
+    expect(response.status).toBe("answered");
+    expect(JSON.stringify(response.presentation)).not.toContain(
+      "only area read",
+    );
+  });
+
+  it("shows the writer's findings when the plan asks for detail", async () => {
+    planner = () =>
+      plan({ intent: "lookup", responseStyle: "detailed", subQuestions: [] });
+    writer = totalWriter((total) => [
+      {
+        id: "c2",
+        kind: "fact",
+        text: `Recorded expenses were ${pesos(total.value!)} in this period.`,
+        answersRequirementIds: ["r_money"],
+        evidenceIds: [total.id],
+        derivedFactIds: [],
+        assumptionIds: [],
+        scopeId: "whole_domain:expense",
+        comparison: null,
+        recommendation: null,
+      },
+    ]);
+    const detailed = await ask("How much did I spend this month?", {
+      planModel,
+    }).result;
+    expect(detailed.presentation.findings).toHaveLength(1);
+    expect(detailed.presentation.shortened).toBeNull();
+    // Without a plan a lookup still stays short, as before.
+    const short = await ask("How much did I spend this month?").result;
+    expect(short.presentation.findings).toHaveLength(0);
+  });
+
+  it("carries earlier turns to the planner and the writer", async () => {
+    planner = () => plan({ subQuestions: [] });
+    const first = await ask("How much did I spend this month?", { planModel })
+      .result;
+    providerRequests = [];
+    await ask("And how does that compare with my income this month?", {
+      planModel,
+      context: first.context,
+    }).result;
+    for (const schema of ["atlas_analysis_plan", "atlas_answer_v2"]) {
+      const input = providerRequests.find((item) => item.schema === schema)!
+        .input as {
+        previousTurns: Array<{ question: string; answer: string }>;
+      };
+      expect(input.previousTurns).toEqual([
+        {
+          question: "How much did I spend this month?",
+          answer:
+            "Recorded expenses were ₱11,000.00 from 2026-09-01 to 2026-09-24.",
+        },
+      ]);
+    }
   });
 });

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { AnalysisBrief, AnalyticalClaim, DerivedFact } from "./contracts";
+import type { AnalysisPlan } from "./planner";
 import type { ProviderPayload } from "./policy";
 import { compactDerived, compactEvidence } from "./writer";
 
@@ -28,7 +29,12 @@ export const REVIEW_ISSUES = [
   "not_connected_to_objective",
   "generic",
   "contradiction",
+  "misses_question",
+  "shallow",
 ] as const;
+
+/** The repair target a reviewer uses for the answer as a whole. */
+export const WHOLE_ANSWER_TARGET = "answer";
 export type ReviewIssue = (typeof REVIEW_ISSUES)[number];
 
 export const REVIEW_SYSTEM = [
@@ -39,6 +45,7 @@ export const REVIEW_SYSTEM = [
   "citesEvidenceIds must list only IDs the claim itself cites. Never add facts.",
   "For every requirement, say whether the claims actually answer it and which claims do; a claim that only mentions a topic does not answer it.",
   "Report contradictory claim pairs. Give short repair instructions for missing essential content or needed qualifiers, naming the requirement or claim.",
+  "Then judge the answer as a whole, as the person would read it. Flag misses_question on a direct-answer claim that does not answer what the person asked (see understanding), and shallow on a claim that only restates a figure when a cited baseline, ranking or other area would say what it means. If the whole answer misses the question, or ignores a connection or baseline that the cited or uncited evidence clearly supports, add one repair instruction with target answer that says what to add. Never ask for anything the evidence cannot support.",
 ].join(" ");
 
 export const REVIEW_SCHEMA = {
@@ -161,12 +168,14 @@ export function renderReviewInput(
   brief: AnalysisBrief,
   claims: AnalyticalClaim[],
   derived: DerivedFact[],
+  plan: AnalysisPlan | null = null,
 ) {
   return (payload: ProviderPayload) => {
     const cited = new Set(claims.flatMap((claim) => claim.evidenceIds));
     const facts = new Set(claims.flatMap((claim) => claim.derivedFactIds));
     return {
       question: payload.question,
+      understanding: plan?.understanding ?? null,
       requirements: brief.requirements.map(({ id, question, essential }) => ({
         id,
         question,
@@ -186,6 +195,18 @@ export function renderReviewInput(
       evidence: payload.evidence
         .filter((item) => cited.has(item.id))
         .map(compactEvidence),
+      // What the answer could have used: meaning and scope only, so the
+      // review can spot a missed baseline or area without re-judging values.
+      uncitedEvidence: payload.evidence
+        .filter((item) => !cited.has(item.id))
+        .slice(0, 24)
+        .map((item) => ({
+          id: item.id,
+          measure: item.semantics.metricKey,
+          definition: item.semantics.definition,
+          period: item.time.period,
+          scope: item.scope.type,
+        })),
       derivedFacts: derived
         .filter((fact) => facts.has(fact.id))
         .map(compactDerived),

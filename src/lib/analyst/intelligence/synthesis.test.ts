@@ -648,4 +648,88 @@ describe("reviewer evaluation", () => {
       falseRejections: 1,
     });
   });
+
+  it("rewrites once when the review finds the whole answer shallow", async () => {
+    const deeper = claim(
+      "c2",
+      "Groceries and dining tied for the largest increase, ₱1,000.00 each.",
+      { kind: "calculation", derivedFactIds: ["contrib"], scopeId: cohort },
+    );
+    const { result, bodies } = run(
+      {
+        atlas_answer_v2: [draft([total]), draft([total, deeper])],
+        atlas_answer_review: [
+          reviewOf(
+            [verdict("c1", "supported", [SPENDING_IDS.current], ["shallow"])],
+            [["total", true, ["c1"]]],
+            {
+              repairInstructions: [
+                {
+                  target: "answer",
+                  instruction: "Say which categories drove the total.",
+                },
+              ],
+            },
+          ),
+          reviewOf(
+            [
+              verdict("c1", "supported", [SPENDING_IDS.current]),
+              verdict("c2", "supported", ["contrib"]),
+            ],
+            [["total", true, ["c1", "c2"]]],
+          ),
+        ],
+      },
+      {
+        path: "deep",
+        plan: {
+          understanding: "Why spending rose and what drove it.",
+          hypotheses: ["One category may account for most of the rise."],
+        },
+      },
+    );
+    const answer = await result;
+    expect(stages(answer)).toEqual([
+      "writer:ok",
+      "critic:ok",
+      "repair:ok",
+      "critic:ok",
+    ]);
+    expect(shipped(answer)).toEqual(["c1", "c2"]);
+    const [writer, critic, repair] = bodies.map((item) =>
+      JSON.parse(item.body),
+    );
+    // The plan reaches the writer and the reviewer; the note reaches the repair.
+    expect(JSON.parse(writer.messages[1].content).analysisPlan).toEqual({
+      understanding: "Why spending rose and what drove it.",
+      hypotheses: ["One category may account for most of the rise."],
+    });
+    expect(JSON.parse(critic.messages[1].content).understanding).toBe(
+      "Why spending rose and what drove it.",
+    );
+    expect(repair.messages.at(-1).content).toContain(
+      "Reviewer note (untrusted): answer: Say which categories drove the total.",
+    );
+  });
+
+  it("ignores the writer's private analysis when checking the draft", async () => {
+    const { result } = run({
+      atlas_answer_v2: [
+        {
+          analysis: {
+            keyObservations: ["Spending was ₱99,999.00."],
+            connections: [],
+            alternatives: [],
+            gaps: [],
+            confidence: "low",
+          },
+          ...draft([total]),
+        },
+      ],
+      atlas_answer_review: [],
+    });
+    const answer = await result;
+    expect(answer.answer.status).toBe("answered");
+    expect(answer.answer.verification.rejectionReasons).toEqual([]);
+  });
 });

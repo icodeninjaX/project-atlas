@@ -5,9 +5,10 @@ import {
 } from "@/lib/ai/models";
 import { freePoolFor } from "@/lib/ai/pools";
 import { checkBrief } from "./brief";
-import { RUN_BUDGETS, RunLedger } from "./budgets";
+import { PLANNER_BUDGET, RUN_BUDGETS, RunLedger } from "./budgets";
 import { analystCapabilities } from "./capabilities";
 import {
+  historyTurns,
   newConversation,
   openContext,
   reauthorizeContext,
@@ -17,10 +18,11 @@ import {
 import type { AnswerV2, ConsentDomain, ResultStatus } from "./contracts";
 import { autoDerive } from "./derive";
 import { suggestFollowUpsV2, type FollowUp } from "./follow-ups";
-import { detectStyle } from "./language";
+import { detectStyle, explicitStyle } from "./language";
 import { runInvestigation } from "./orchestrator";
 import { deterministicBrief } from "./planning";
 import type { AnalystConsent, ProviderRoute } from "./policy";
+import { planAnalysis, type AnalysisPlan } from "./planner";
 import { presentAnswer, type Presentation } from "./presentation";
 import { safeProgress, type V2ProgressEvent } from "./progress";
 import { capabilityProposer } from "./proposer";
@@ -41,14 +43,21 @@ import {
   assumedIncomeChange,
   vagueIncomeDrop,
 } from "./references";
-import { applyTurn, askAssumption, classifyTurn, recordAnswer } from "./turns";
+import {
+  applyTurn,
+  askAssumption,
+  classifyTurn,
+  recordAnswer,
+  topicDomains,
+} from "./turns";
 
 /**
  * One Analyst V2 request, end to end (AI-06): open and re-authorize the
- * conversation context, interpret the turn, build and check the brief,
- * investigate within one run budget, synthesize and check the answer,
- * present it, suggest follow-ups and seal the next context. Every external
- * effect is injected, so the whole path runs against fixtures in tests.
+ * conversation context, interpret the turn, build the brief and let the
+ * analysis planner (when configured) extend it, check it, investigate within
+ * one run budget, synthesize and check the answer, present it, suggest
+ * follow-ups and seal the next context. Every external effect is injected,
+ * so the whole path runs against fixtures in tests.
  */
 
 export type V2RunDeps = {
@@ -62,6 +71,11 @@ export type V2RunDeps = {
   signal?: AbortSignal;
   /** Receives the run ledger, so usage can be settled even if the run throws. */
   onLedger?: (ledger: RunLedger) => void;
+  /**
+   * The model that plans the analysis before retrieval. Without one the
+   * brief stays deterministic, exactly as before the planner existed.
+   */
+  planModel?: string | null;
 };
 
 export type V2RunInput = {
@@ -187,7 +201,10 @@ export async function runAnalystV2(
     fresh,
   );
   const style = detectStyle(input.question, "lookup");
-  const planner = { requested: "deterministic", resolved: "deterministic" };
+  let planner: ModelRecord = {
+    requested: "deterministic",
+    resolved: "deterministic",
+  };
   const seal = (next: ConversationContext) =>
     deps.contextKey ? sealContext(next, deps.contextKey, now) : null;
 
@@ -213,7 +230,8 @@ export async function runAnalystV2(
     };
   }
 
-  const brief = deterministicBrief({ question: plan.question, plan, now });
+  const rulesBrief = deterministicBrief({ question: plan.question, plan, now });
+  let brief = rulesBrief;
   const language = brief.language === "fil-en" ? "fil-en" : "en";
   // A scenario needs a number: an unstated income drop is proposed to the
   // user and runs only once confirmed, never assumed silently.
@@ -254,18 +272,86 @@ export async function runAnalystV2(
       usage: new RunLedger(RUN_BUDGETS.simple, deps.clock).usage,
     };
   }
-  const check = checkBrief(brief, {
+  const capabilities = analystCapabilities({
+    consent: input.consent,
+    route: input.route,
+  });
+  // The planner reads the question like an analyst and may widen the brief;
+  // it runs on its own allowance, which the run ledger then carries.
+  const startedAt = deps.clock();
+  const history = historyTurns(plan.context);
+  let analysisPlan: AnalysisPlan | null = null;
+  let plannerLedger: RunLedger | null = null;
+  if (deps.planModel && brief.intent !== "scenario") {
+    plannerLedger = new RunLedger(PLANNER_BUDGET, deps.clock, deps.signal);
+    deps.onLedger?.(plannerLedger);
+    const allowed = new Set(
+      capabilities
+        .filter(
+          (item) => item.status === "available" || item.status === "partial",
+        )
+        .map((item) => item.id),
+    );
+    try {
+      const refined = await planAnalysis({
+        brief,
+        history,
+        model: deps.planModel,
+        now,
+        allowed,
+        defaultedTopic:
+          topicDomains(plan.question).length === 0 &&
+          !plan.context.topic?.domains.length,
+        call: deps.stageCaller(plannerLedger),
+      });
+      planner = {
+        requested: deps.planModel,
+        resolved: refined.resolvedModel,
+      };
+      brief = refined.brief;
+      analysisPlan = refined.plan;
+      if (refined.clarification)
+        return {
+          version: "2",
+          status: "clarification_required",
+          presentation: presentAnswer(
+            emptyAnswer("clarification_required", refined.clarification),
+            { language, style, requirementText: (id) => id, asOf: null },
+          ),
+          candidates: [],
+          suggestions: [],
+          models: { planner, writer: null, reviewer: null, fallback: false },
+          context: seal(plan.context),
+          contextNotice,
+          outcome: "insufficient",
+          usage: plannerLedger.usage,
+        };
+    } catch {
+      // A planner fault never costs the answer: the rules' brief stands.
+      brief = rulesBrief;
+      analysisPlan = null;
+    }
+  }
+  const checkOptions = {
     consent: input.consent,
     route: input.route,
     authorizedHandles: new Set(plan.entities),
-  });
+  };
+  let check = checkBrief(brief, checkOptions);
+  if (!check.ok && brief !== rulesBrief) {
+    brief = rulesBrief;
+    analysisPlan = null;
+    check = checkBrief(brief, checkOptions);
+  }
   if (!check.ok)
     throw new Error(`The analysis brief was rejected: ${check.reason}.`);
   const ledger = new RunLedger(
     RUN_BUDGETS[check.path],
     deps.clock,
     deps.signal,
+    startedAt,
   );
+  if (plannerLedger) ledger.absorb(plannerLedger.usage);
   deps.onLedger?.(ledger);
   const investigation = await runInvestigation({
     check,
@@ -285,10 +371,6 @@ export async function runAnalystV2(
   const requirementText = (id: string) =>
     brief.requirements.find((item) => item.id === id)?.question ?? id;
   const asOf = investigation.asOf.sources.at(-1)?.retrievedAt ?? null;
-  const capabilities = analystCapabilities({
-    consent: input.consent,
-    route: input.route,
-  });
 
   if (
     investigation.status === "clarification_required" ||
@@ -363,7 +445,8 @@ export async function runAnalystV2(
       domain,
       text,
     })),
-    history: [],
+    history,
+    plan: analysisPlan,
     path: check.path,
     knownReasons: new Map(
       investigation.unresolved.map((item) => [item.requirementId, item.reason]),
@@ -383,7 +466,13 @@ export async function runAnalystV2(
   const answer = synthesis.answer;
   const presentation = presentAnswer(answer, {
     language,
-    style: detectStyle(plan.question, brief.intent),
+    // With a plan, the planned style decides how much is shown; a short
+    // lookup no longer hides every finding behind its one-line answer.
+    style:
+      explicitStyle(plan.question) ??
+      (analysisPlan
+        ? { style: brief.responseStyle, maxSentences: null }
+        : detectStyle(plan.question, brief.intent)),
     requirementText,
     asOf,
     labels: new Map(
