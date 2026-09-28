@@ -22,6 +22,9 @@ const tables = new Set([
   "knowledge_concepts",
 ]);
 
+/** Tables the legacy tools may read; other tool families extend a copy. */
+export const approvedToolTables: ReadonlySet<string> = tables;
+
 function safeMoney(value: unknown, sums = new Map<string, number>()): boolean {
   if (!value || typeof value !== "object") return true;
   return Object.entries(value).every(([key, item]) => {
@@ -52,12 +55,30 @@ function date(value: unknown): number {
     : NaN;
 }
 
+/**
+ * Overrides for a separately registered tool family (Analyst V2). Omitted
+ * fields keep the legacy tools' allowlist and budgets.
+ */
+export type ToolTransportPolicy = {
+  tables?: ReadonlySet<string>;
+  queries?: number;
+  rows?: number;
+  historicalBuckets?: number;
+  /** The caller reads a lookahead row itself, so a full window is not a failure. */
+  callerPaginates?: boolean;
+};
+
 /** A fail-closed transport for a single tool execution, never a general Supabase client. */
 export function createToolTransport(options: {
   ownerId: string;
   signal: AbortSignal;
   fetch: typeof globalThis.fetch;
+  policy?: ToolTransportPolicy;
 }) {
+  const allowedTables = options.policy?.tables ?? tables;
+  const maxQueries = options.policy?.queries ?? TOOL_LIMITS.queries;
+  const maxRows = options.policy?.rows ?? TOOL_LIMITS.rows;
+  const maxBuckets = options.policy?.historicalBuckets ?? 12;
   const stats = { queries: 0, rows: 0 };
   let totalBytes = 0;
   const moneySums = new Map<string, number>();
@@ -86,7 +107,7 @@ export function createToolTransport(options: {
       let finiteBound = Infinity;
       let paginated = false;
       if (!auth) {
-        if (table && request.method === "GET" && tables.has(table)) {
+        if (table && request.method === "GET" && allowedTables.has(table)) {
           const ownerColumn = table === "profiles" ? "id" : "user_id";
           if (
             url.searchParams.getAll(ownerColumn).length !== 1 ||
@@ -117,9 +138,10 @@ export function createToolTransport(options: {
           // consume their lookahead row to report hasMore themselves.
           paginated =
             !sentinel &&
-            ((table === "weekly_reviews" &&
-              limit === 12 &&
-              url.searchParams.get("order") === "week_start.desc") ||
+            (options.policy?.callerPaginates === true ||
+              (table === "weekly_reviews" &&
+                limit === 12 &&
+                url.searchParams.get("order") === "week_start.desc") ||
               table === "atlas_relationships" ||
               (table === "tasks" &&
                 url.searchParams.get("related_goal_id")?.startsWith("eq.") ===
@@ -158,7 +180,7 @@ export function createToolTransport(options: {
                 String(body.p_from),
                 String(body.p_through),
                 body.p_grain as MetricGrain,
-              ) > 12
+              ) > maxBuckets
             )
               fail("invalid_input", "Historical period is invalid.");
           } else if (rpc === "runway_monthly_totals") {
@@ -227,7 +249,7 @@ export function createToolTransport(options: {
           url.searchParams.set("limit", String(limit));
         } else fail("invalid_input", "This read is not approved.");
         // Reserve before awaiting network I/O so concurrent reads share the same budget.
-        if (stats.queries >= TOOL_LIMITS.queries)
+        if (stats.queries >= maxQueries)
           fail("budget_exceeded", "Tool query budget exceeded.");
         stats.queries += 1;
       }
@@ -299,7 +321,7 @@ export function createToolTransport(options: {
       if (!auth) {
         const count = Array.isArray(data) ? data.length : data === null ? 0 : 1;
         stats.rows += count;
-        if (stats.rows > TOOL_LIMITS.rows)
+        if (stats.rows > maxRows)
           fail("budget_exceeded", "Tool row budget exceeded.");
         const rangeTotal = response.headers.get("content-range")?.split("/")[1];
         if (

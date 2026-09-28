@@ -197,10 +197,32 @@ export const evidenceCoverageSchema = z
   .strict();
 export type EvidenceCoverage = z.infer<typeof evidenceCoverageSchema>;
 
+/**
+ * The user-data domain an item comes from. Consent and provider policy are
+ * decided per domain and field profile, so every item must name one.
+ */
+export const CONSENT_DOMAINS = [
+  "money",
+  "debts",
+  "tasks",
+  "goals",
+  "career",
+  "reviews",
+  "knowledge",
+  "decisions",
+  "signals",
+  "graph",
+  "runway",
+  "history",
+  "timeline",
+] as const;
+export type ConsentDomain = (typeof CONSENT_DOMAINS)[number];
+
 const evidenceBase = {
   version: z.literal("2"),
   id: handle,
   sourceType: handle,
+  domain: z.enum(CONSENT_DOMAINS),
   calculationVersion: z.string().trim().min(1).max(16),
   semantics: z
     .object({

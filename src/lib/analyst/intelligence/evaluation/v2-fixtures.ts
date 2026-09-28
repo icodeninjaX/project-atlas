@@ -82,6 +82,11 @@ export function metricEvidence(input: MetricInput): EvidenceV2 {
     kind: "metric",
     id: input.id,
     sourceType: "fixture",
+    domain: input.metricKey.endsWith("_centavos")
+      ? "money"
+      : input.metricKey === "task_completions"
+        ? "tasks"
+        : "knowledge",
     calculationVersion: "1",
     semantics: {
       metricKey: semantics.key,

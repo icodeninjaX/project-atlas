@@ -136,7 +136,7 @@ Supabase database tests, end-to-end tests, and live models.
 - No tool yet returns a complete category breakdown; `getMoneyBreakdown` is
   AI-02B. Until then the V2 path cannot rank categories from live data.
 
-**Next phase: AI-02** — data policy and capability manifest (AI-02A), entity
+**Next phase: AI-02** (done; see [analyst-intelligence-data-access.md](analyst-intelligence-data-access.md)) — data policy and capability manifest (AI-02A), entity
 resolution and numeric detail tools including the complete money breakdown
 (AI-02B), and decisions with connected context (AI-02C). Sensitive narrative
 access stays disabled until a verified non-sharing provider route exists.

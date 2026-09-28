@@ -6,17 +6,17 @@
 
 ## Document control
 
-| Field                                   | Value                                                                                                                                                                                                                                                                                                                   |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository                              | `icodeninjaX/project-atlas`                                                                                                                                                                                                                                                                                             |
-| Prepared                                | September 28, 2026 — Asia/Manila                                                                                                                                                                                                                                                                                        |
-| Earlier review baseline                 | `83c18f0df06fbc11a03241cad1f48cb8527b881d`                                                                                                                                                                                                                                                                              |
-| Latest head inspected for this document | `7586b443709a60437dc59886c58b06416b7a934e`                                                                                                                                                                                                                                                                              |
-| Suggested repository location           | `docs/analyst-intelligence-implementation.md`                                                                                                                                                                                                                                                                           |
-| Document status                         | Implementation specification. AI-00 implemented locally on 2026-09-28 against `0db728ca6f09f602da0c9c3a7bad90cc30df0691`; see [the baseline](analyst-intelligence-baseline.md). AI-01 implemented locally on 2026-09-28; see [contracts and claim checks](analyst-intelligence-contracts.md). AI-02 onward not started. |
-| Validation status                       | Source review only. Application tests, live model evaluations, database checks, and production flows were not run for this document.                                                                                                                                                                                    |
-| Delivery scope                          | Analyst improvements; reuse the completed ATLAS foundations and shared AI safeguards                                                                                                                                                                                                                                    |
-| Phase namespace                         | `AI-00` through `AI-07`; independent of the existing intelligent roadmap's Phases 1–19                                                                                                                                                                                                                                  |
+| Field                                   | Value                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository                              | `icodeninjaX/project-atlas`                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Prepared                                | September 28, 2026 — Asia/Manila                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Earlier review baseline                 | `83c18f0df06fbc11a03241cad1f48cb8527b881d`                                                                                                                                                                                                                                                                                                                                                                                              |
+| Latest head inspected for this document | `7586b443709a60437dc59886c58b06416b7a934e`                                                                                                                                                                                                                                                                                                                                                                                              |
+| Suggested repository location           | `docs/analyst-intelligence-implementation.md`                                                                                                                                                                                                                                                                                                                                                                                           |
+| Document status                         | Implementation specification. AI-00 implemented locally on 2026-09-28 against `0db728ca6f09f602da0c9c3a7bad90cc30df0691`; see [the baseline](analyst-intelligence-baseline.md). AI-01 implemented locally on 2026-09-28; see [contracts and claim checks](analyst-intelligence-contracts.md). AI-02 implemented locally on 2026-09-28; see [data policy and read tools](analyst-intelligence-data-access.md). AI-03 onward not started. |
+| Validation status                       | Source review only. Application tests, live model evaluations, database checks, and production flows were not run for this document.                                                                                                                                                                                                                                                                                                    |
+| Delivery scope                          | Analyst improvements; reuse the completed ATLAS foundations and shared AI safeguards                                                                                                                                                                                                                                                                                                                                                    |
+| Phase namespace                         | `AI-00` through `AI-07`; independent of the existing intelligent roadmap's Phases 1–19                                                                                                                                                                                                                                                                                                                                                  |
 
 **AI-00 reconciliation (2026-09-28):** The checkout is one commit past `7586b443`: `0db728c` makes the free-pool meter also count OpenAI's own reported usage (organization Usage API with `OPENAI_ADMIN_KEY`, optionally narrowed by `OPENAI_PROJECT_ID`). It changes metering only; the Analyst read path, planner and answer contract are as described here. Details and every other reconciled difference are in [analyst-intelligence-baseline.md](analyst-intelligence-baseline.md#2-reconciliation-with-the-roadmap).
 
@@ -448,7 +448,7 @@ Implement one phase at a time. A phase can be split into small pull requests, bu
 | ----- | ------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------- |
 | AI-00 | Reconciled baseline and quality harness                             | None                                                       | Implemented locally, 2026-09-28 |
 | AI-01 | Evidence/answer contracts and deterministic claim checks            | AI-00                                                      | Implemented locally, 2026-09-28 |
-| AI-02 | Semantic coverage, privacy boundary, and targeted data tools        | AI-01                                                      | Planned                         |
+| AI-02 | Semantic coverage, privacy boundary, and targeted data tools        | AI-01                                                      | Implemented locally, 2026-09-28 |
 | AI-03 | Structured conversation context and entity continuity               | AI-01; AI-02 entity resolution for cross-domain references | Planned                         |
 | AI-04 | Bounded investigative controller and evidence selection             | AI-02, AI-03                                               | Planned                         |
 | AI-05 | Semantic review, completeness repair, and supported recommendations | AI-04                                                      | Planned                         |
@@ -517,33 +517,33 @@ Implement this phase in three small subpackages.
 
 #### AI-02A — Data policy and semantic manifest
 
-- [ ] Define domain capability descriptors, metric definitions, supported history, and unsupported inferences.
-- [ ] Define approved field profiles: aggregates, basic record context, and sensitive narrative context.
-- [ ] Implement server-side provider-route eligibility checks for the complete payload.
-- [ ] Version consent and disclose selected field/domain access in understandable language.
-- [ ] Keep sensitive narrative features disabled without a verified appropriate provider route and spending authorization.
-- [ ] Implement consent revocation and future-call exclusion; invalidate cached context that included excluded fields.
-- [ ] Test that turning off a data category affects planner, writer, critic, repair, and history payloads.
+- [x] Define domain capability descriptors, metric definitions, supported history, and unsupported inferences.
+- [x] Define approved field profiles: aggregates, basic record context, and sensitive narrative context.
+- [x] Implement server-side provider-route eligibility checks for the complete payload.
+- [x] Version consent and disclose selected field/domain access in understandable language. _(Contract and disclosure text done; consent storage and UI are open — see the data access record.)_
+- [x] Keep sensitive narrative features disabled without a verified appropriate provider route and spending authorization.
+- [x] Implement consent revocation and future-call exclusion; invalidate cached context that included excluded fields.
+- [x] Test that turning off a data category affects planner, writer, critic, repair, and history payloads.
 
 #### AI-02B — Entity discovery and numeric detail tools
 
-- [ ] Reuse existing entity/search registries; support exact aliases and normalized names with explicit candidate ambiguity.
-- [ ] Add owner-scoped record search and bounded details retrieval.
-- [ ] Add money category/contribution breakdowns with full-population reconciliation.
-- [ ] Add detailed task/goal context and relevant career context from existing services.
-- [ ] Preserve current budget, period, row, and output limits, or change them only with measured tests.
-- [ ] Add stable pagination, safe source handles, and explicit truncation.
-- [ ] Test unknown IDs, foreign-owner IDs, inaccessible records, duplicates, and oversized inputs.
+- [x] Reuse existing entity/search registries; support exact aliases and normalized names with explicit candidate ambiguity.
+- [x] Add owner-scoped record search and bounded details retrieval.
+- [x] Add money category/contribution breakdowns with full-population reconciliation.
+- [x] Add detailed task/goal context and relevant career context from existing services.
+- [x] Preserve current budget, period, row, and output limits, or change them only with measured tests.
+- [x] Add stable pagination, safe source handles, and explicit truncation.
+- [x] Test unknown IDs, foreign-owner IDs, inaccessible records, duplicates, and oversized inputs.
 
 #### AI-02C — Decisions and richer connected context
 
-- [ ] Add a decision evidence adapter for original/revised plans, observations, and the existing deterministic review.
-- [ ] Reuse existing decision comparison windows and eligibility rules; do not create a competing calculation.
-- [ ] Add authorized review/knowledge excerpts only through approved field profiles.
-- [ ] Add bounded graph paths with provenance and current/historical distinction.
-- [ ] Mark self-reported observations as attributed context.
-- [ ] Keep unconfirmed capture previews outside factual evidence.
-- [ ] Expand the capability matrix to every user-visible domain listed in Section 6, including explicit unsupported entries.
+- [x] Add a decision evidence adapter for original/revised plans, observations, and the existing deterministic review.
+- [x] Reuse existing decision comparison windows and eligibility rules; do not create a competing calculation.
+- [x] Add authorized review/knowledge excerpts only through approved field profiles.
+- [x] Add bounded graph paths with provenance and current/historical distinction.
+- [x] Mark self-reported observations as attributed context.
+- [x] Keep unconfirmed capture previews outside factual evidence.
+- [x] Expand the capability matrix to every user-visible domain listed in Section 6, including explicit unsupported entries.
 
 **Required tests**
 
@@ -1212,16 +1212,16 @@ Avoid “all done” when a necessary database, provider, security, or hosted ga
 
 Updated during authorized implementation. AI-00 evidence is in [analyst-intelligence-baseline.md](analyst-intelligence-baseline.md).
 
-| Phase | Implementation                  | Local validation                                                                                                           | Live synthetic evaluation  | Hosted verification | Evidence/blocker                                                                     |
-| ----- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------- | ------------------------------------------------------------------------------------ |
-| AI-00 | Implemented locally, 2026-09-28 | Lint, typecheck, 752 unit tests (40 new), format and build pass; see baseline §7                                           | Not run (not authorized)   | Not applicable      | [Baseline](analyst-intelligence-baseline.md); provider sharing enrollment unverified |
-| AI-01 | Implemented locally, 2026-09-28 | Lint, typecheck, 782 unit tests, format and build pass; see [contracts §6](analyst-intelligence-contracts.md#6-validation) | Not run (no V2 writer yet) | Not run             | Legacy path unchanged; V2 behind `ATLAS_ANALYST_V2`                                  |
-| AI-02 | Not started                     | Not run                                                                                                                    | Not run                    | Not run             | Requires contracts and data-handling decision                                        |
-| AI-03 | Not started                     | Not run                                                                                                                    | Not run                    | Not run             | Requires context/authorization contracts                                             |
-| AI-04 | Not started                     | Not run                                                                                                                    | Not run                    | Not run             | Requires tools and conversation context                                              |
-| AI-05 | Not started                     | Not run                                                                                                                    | Not run                    | Not run             | Requires investigation and claim ledger                                              |
-| AI-06 | Not started                     | Not run                                                                                                                    | Not run                    | Not run             | Requires validated answer behavior                                                   |
-| AI-07 | Not started                     | Not run                                                                                                                    | Not run                    | Not run             | Requires full scoped implementation and release approval                             |
+| Phase | Implementation                  | Local validation                                                                                                               | Live synthetic evaluation         | Hosted verification | Evidence/blocker                                                                           |
+| ----- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | ------------------- | ------------------------------------------------------------------------------------------ |
+| AI-00 | Implemented locally, 2026-09-28 | Lint, typecheck, 752 unit tests (40 new), format and build pass; see baseline §7                                               | Not run (not authorized)          | Not applicable      | [Baseline](analyst-intelligence-baseline.md); provider sharing enrollment unverified       |
+| AI-01 | Implemented locally, 2026-09-28 | Lint, typecheck, 782 unit tests, format and build pass; see [contracts §6](analyst-intelligence-contracts.md#6-validation)     | Not run (no V2 writer yet)        | Not run             | Legacy path unchanged; V2 behind `ATLAS_ANALYST_V2`                                        |
+| AI-02 | Implemented locally, 2026-09-28 | Lint, typecheck, 809 unit tests, format and build pass; see [data access §5](analyst-intelligence-data-access.md#5-validation) | Not run (no model calls in AI-02) | Not run             | Sensitive text blocked until a verified non-sharing route; consent v2 needs storage and UI |
+| AI-03 | Not started                     | Not run                                                                                                                        | Not run                           | Not run             | Requires context/authorization contracts                                                   |
+| AI-04 | Not started                     | Not run                                                                                                                        | Not run                           | Not run             | Requires tools and conversation context                                                    |
+| AI-05 | Not started                     | Not run                                                                                                                        | Not run                           | Not run             | Requires investigation and claim ledger                                                    |
+| AI-06 | Not started                     | Not run                                                                                                                        | Not run                           | Not run             | Requires validated answer behavior                                                         |
+| AI-07 | Not started                     | Not run                                                                                                                        | Not run                           | Not run             | Requires full scoped implementation and release approval                                   |
 
 ### 13.2 Definition of done
 

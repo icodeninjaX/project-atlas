@@ -1,12 +1,13 @@
 import type { ToolEvidence, ToolName } from "@/lib/analyst/tools/contracts";
 import {
   evidenceV2Schema,
+  type ConsentDomain,
   type EvidenceCoverage,
   type EvidenceScope,
   type EvidenceUnit,
   type EvidenceV2,
 } from "./contracts";
-import { semanticsFor } from "./semantics";
+import { semanticsFor, type MetricDomain } from "./semantics";
 
 /**
  * Adapts evidence from the existing approved tools to EvidenceV2 without
@@ -21,6 +22,38 @@ export type LegacyToolCall = {
   input: unknown;
   evidence: ToolEvidence[];
 };
+
+/** The consent domain each existing tool reads. */
+const toolDomains: Record<ToolName, ConsentDomain> = {
+  getSpendingChange: "money",
+  getDebtProgress: "debts",
+  getTaskFocus: "tasks",
+  getGoalProgress: "goals",
+  getCareerPipeline: "career",
+  getWeeklyReviewMetrics: "reviews",
+  getSignals: "signals",
+  getMoneySummary: "money",
+  getDebtPayments: "debts",
+  getHistoricalMetricSeries: "history",
+  getCrossDomainHistory: "history",
+  getPatternAssociation: "history",
+  getRelatedEntities: "graph",
+  getGoalLinkedActivity: "goals",
+  getTimelineEvents: "timeline",
+  getRunway: "runway",
+  runFinancialScenario: "runway",
+  compareFinancialScenarios: "runway",
+};
+
+/** A whole-domain series belongs to its own domain, not to "history". */
+function historyDomain(domain: MetricDomain): ConsentDomain {
+  if (domain === "income" || domain === "expense") return "money";
+  if (domain === "debt") return "debts";
+  if (domain === "task") return "tasks";
+  if (domain === "knowledge") return "knowledge";
+  if (domain === "review") return "reviews";
+  return "history";
+}
 
 const digestSuffix = /\.[0-9a-f]{16}$/;
 
@@ -203,6 +236,11 @@ export function adaptLegacyCall(call: LegacyToolCall): EvidenceV2[] {
       version: "2" as const,
       id: item.id,
       sourceType: call.tool,
+      domain:
+        call.tool === "getHistoricalMetricSeries" ||
+        call.tool === "getCrossDomainHistory"
+          ? historyDomain(semantics.domain)
+          : toolDomains[call.tool],
       calculationVersion: item.provenance.calculationVersion,
       semantics: {
         metricKey: semantics.key,
