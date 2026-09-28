@@ -207,6 +207,55 @@ export function ratio(
   );
 }
 
+/**
+ * One set member's share of its whole-domain total, in percent: the same
+ * measure and period, a member of a complete set, and a total over the same
+ * records. It speaks for the member's set scope.
+ */
+export function share(id: string, member: EvidenceV2, total: EvidenceV2) {
+  const part = numeric(member);
+  const whole = numeric(total);
+  assertComparable([part, whole]);
+  const cohort = part.scope.cohort;
+  if (!cohort?.setComplete || whole.scope.type !== "whole_domain")
+    throw new CalculationError("A share needs a complete set and its total.");
+  if (
+    part.semantics.metricKey !== whole.semantics.metricKey ||
+    !samePeriod(part.time.period, whole.time.period)
+  )
+    throw new CalculationError("A share needs the total's measure and period.");
+  const base: Base = {
+    id,
+    operands: [part.id, whole.id],
+    metricKey: part.semantics.metricKey,
+    comparableGroup: part.semantics.comparableGroup,
+    scopeId: part.scope.id,
+    periods: [part.time.period],
+  };
+  const extra = {
+    rounding: "half_away_from_zero_tenths" as const,
+    denominatorRule: "nonzero_required" as const,
+    complete: complete([part, whole]),
+  };
+  if (whole.value === 0)
+    return fact(
+      base,
+      "ratio",
+      { status: "undefined", reason: "zero_denominator" },
+      extra,
+    );
+  return fact(
+    base,
+    "ratio",
+    {
+      status: "defined",
+      value: percentTenths(part.value, whole.value),
+      unit: "percent",
+    },
+    extra,
+  );
+}
+
 /** Every member of one defined set, for one measure and period. */
 function setMembers(items: EvidenceV2[]) {
   const values = items.map(numeric);

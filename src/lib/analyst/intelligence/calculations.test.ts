@@ -6,6 +6,7 @@ import {
   percentChange,
   rank,
   ratio,
+  share,
   sum,
 } from "./calculations";
 import { EXPECTED_FACTS } from "./evaluation/expected";
@@ -181,5 +182,30 @@ describe("Analyst V2 derived facts", () => {
     expect(() => sum("dupe", [members[0]!, members[0]!])).toThrow(
       CalculationError,
     );
+  });
+
+  it("gives a member's share of its total and refuses a mismatched total", () => {
+    const members = categoryBreakdown("current", current);
+    const total = wholeExpenseTotal("total.current", current);
+    const top = [...members].sort((a, b) =>
+      a.kind === "metric" && b.kind === "metric" ? b.value - a.value : 0,
+    )[0]!;
+    const fact = share("share.top", top, total);
+    const part = top.kind === "metric" ? top.value : 0;
+    const whole = total.kind === "metric" ? total.value : 0;
+    expect(fact.operation).toBe("ratio");
+    expect(fact.scopeId).toBe(top.scope.id);
+    expect(fact.operands).toEqual([top.id, total.id]);
+    expect(fact.output).toEqual({
+      status: "defined",
+      value: Math.round((part / whole) * 1000) / 10,
+      unit: "percent",
+    });
+    // A total over another period is not this member's total.
+    expect(() =>
+      share("share.bad", top, wholeExpenseTotal("total.previous", previous)),
+    ).toThrow(CalculationError);
+    // A total is not a set member.
+    expect(() => share("share.bad", total, total)).toThrow(CalculationError);
   });
 });

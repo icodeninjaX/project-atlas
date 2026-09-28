@@ -11,7 +11,11 @@ import type {
   UnresolvedReason,
 } from "./contracts";
 import type { HistoryTurn, ProviderLabel, ProviderPayload } from "./policy";
-import { recomputeAnswer, assembleAnswer } from "./response";
+import {
+  answersRequirement,
+  assembleAnswer,
+  recomputeAnswer,
+} from "./response";
 import {
   applyReview,
   interpretive,
@@ -375,6 +379,7 @@ export async function synthesizeAnswer(
           input.brief,
           input.evidence,
           input.byRequirement ?? {},
+          { derived: input.derived, labels: input.labels },
         ),
       ),
     );
@@ -510,6 +515,53 @@ export async function synthesizeAnswer(
           rejectionReasons: answer.verification.rejectionReasons,
         },
       };
+    }
+  } else {
+    // An essential requirement the writer left unanswered gets ATLAS's own
+    // checked statement for it (such as the top of its ranking), first.
+    const open = new Set(
+      answer.coverage
+        .filter((item) => item.essential && item.state === "unresolved")
+        .map((item) => item.requirementId),
+    );
+    const figures = checkedFigures();
+    const answering = figures.claims.filter((claim) =>
+      input.brief.requirements.some(
+        (requirement) =>
+          open.has(requirement.id) && answersRequirement(requirement, claim),
+      ),
+    );
+    if (open.size > 0 && answering.length > 0) {
+      const kept = new Set(
+        answer.claims.filter(claimCanShip).map((claim) => claim.id),
+      );
+      const merged = merge(answer, { ...figures, claims: answering });
+      const added = merged.claims
+        .filter((claim) => !kept.has(claim.id))
+        .map((claim) => claim.id);
+      // The reviewer's verdicts stand, except for what ATLAS now answers.
+      const answered = new Set(
+        answering.flatMap((claim) => claim.answersRequirementIds),
+      );
+      const standing = new Map(
+        answer.coverage.flatMap((item) =>
+          item.semantic === "confirmed" || item.semantic === "rejected"
+            ? answered.has(item.requirementId)
+              ? []
+              : [[item.requirementId, item.semantic === "confirmed"] as const]
+            : [],
+        ),
+      );
+      answer = recompute(
+        {
+          ...merged,
+          directAnswerClaimIds: [
+            ...added,
+            ...merged.directAnswerClaimIds.filter((id) => !added.includes(id)),
+          ].slice(0, 3),
+        },
+        standing.size ? standing : undefined,
+      );
     }
   }
   return {

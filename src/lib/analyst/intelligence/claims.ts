@@ -226,6 +226,13 @@ function cite(claim: DraftClaim, ctx: ClaimCheckContext): Cited {
       });
     if (item.ranking)
       numbers.push({ value: item.ranking.length, unit: "count" });
+    // A share may state the part and total it divides.
+    if (item.operation === "ratio")
+      for (const id of item.operands) {
+        const operand = ctx.evidence.get(id);
+        if (operand?.kind === "metric")
+          numbers.push({ value: operand.value, unit: operand.unit });
+      }
     const unit = item.output.status === "defined" ? item.output.unit : "count";
     for (const domain of metricDomains(item.metricKey, unit))
       domains.add(domain);

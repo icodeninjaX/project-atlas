@@ -19,11 +19,31 @@ import {
  * incomplete answer look complete.
  */
 
-/** Requirement coverage from the claims that survived checking. */
 /** Capabilities whose requirement only a cited ATLAS ranking answers. */
 const RANKING_CAPABILITIES = new Set(["money.category_ranking"]);
 const rankingFact = /^derived\.(?:rank|contribution)\./;
 
+/**
+ * Whether a claim answers a requirement: it is attached, ships and is not a
+ * limitation, and a ranking question is answered by a claim that cites the
+ * ranking, never by a total alone.
+ */
+export function answersRequirement(
+  requirement: AnalysisBrief["requirements"][number],
+  claim: AnalyticalClaim,
+) {
+  const ranked = requirement.evidenceNeeded.some((id) =>
+    RANKING_CAPABILITIES.has(id),
+  );
+  return (
+    claim.answersRequirementIds.includes(requirement.id) &&
+    claimCanShip(claim) &&
+    claim.kind !== "limitation" &&
+    (!ranked || claim.derivedFactIds.some((id) => rankingFact.test(id)))
+  );
+}
+
+/** Requirement coverage from the claims that survived checking. */
 export function evaluateCoverage(
   brief: AnalysisBrief,
   claims: AnalyticalClaim[],
@@ -32,16 +52,8 @@ export function evaluateCoverage(
     const attached = claims.filter((claim) =>
       claim.answersRequirementIds.includes(requirement.id),
     );
-    // A ranking question is answered by a claim that cites the ranking,
-    // never by a total alone.
-    const ranked = requirement.evidenceNeeded.some((id) =>
-      RANKING_CAPABILITIES.has(id),
-    );
-    const answering = attached.filter(
-      (claim) =>
-        claimCanShip(claim) &&
-        claim.kind !== "limitation" &&
-        (!ranked || claim.derivedFactIds.some((id) => rankingFact.test(id))),
+    const answering = attached.filter((claim) =>
+      answersRequirement(requirement, claim),
     );
     if (answering.length > 0)
       return {
@@ -61,10 +73,12 @@ export function evaluateCoverage(
       essential: requirement.essential,
       state: "unresolved",
       claimIds: attached.filter(claimCanShip).map((claim) => claim.id),
-      reason: explained
-        ? "insufficient_evidence"
-        : rejected
-          ? "claim_rejected"
+      // A rejected answer is the gap even when a caveat shipped beside it;
+      // it is never reported as missing records.
+      reason: rejected
+        ? "claim_rejected"
+        : explained
+          ? "insufficient_evidence"
           : "no_supported_claim",
       semantic: "pending",
     };
@@ -79,7 +93,10 @@ export function resultStatus(
   if (essential.every((item) => item.state === "answered")) return "answered";
   if (coverage.some((item) => item.state === "answered"))
     return "partial_answer";
-  if (shipped.some((claim) => claim.kind === "limitation"))
+  if (
+    shipped.some((claim) => claim.kind === "limitation") &&
+    !essential.some((item) => item.reason === "claim_rejected")
+  )
     return "insufficient_evidence";
   return "fallback_facts";
 }

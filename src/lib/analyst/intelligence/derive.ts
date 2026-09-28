@@ -4,6 +4,7 @@ import {
   difference,
   percentChange,
   rank,
+  share,
 } from "./calculations";
 import type { DerivedFact, EvidenceV2, NumericEvidence } from "./contracts";
 
@@ -26,6 +27,9 @@ function attempt<T>(work: () => T): T | null {
   }
 }
 
+/** Shares are derived for this many leading members of a ranked set. */
+const TOP_SHARES = 3;
+
 const periodKey = (item: EvidenceV2) =>
   `${item.time.period.from}..${item.time.period.through}`;
 
@@ -42,7 +46,25 @@ export function autoDerive(evidence: EvidenceV2[]): DerivedFact[] {
   }
   for (const [key, members] of sets) {
     const fact = attempt(() => rank(`derived.rank.${key}`, members));
-    if (fact && fact.output.status === "defined") facts.push(fact);
+    if (!fact || fact.output.status !== "defined") continue;
+    facts.push(fact);
+    // The leading members' shares of their total, so a writer never
+    // divides: "Groceries is 45.5% of recorded expenses".
+    const [first] = members;
+    const total = values.find(
+      (item) =>
+        item.scope.type === "whole_domain" &&
+        item.semantics.metricKey === first!.semantics.metricKey &&
+        periodKey(item) === periodKey(first!),
+    );
+    if (!total) continue;
+    for (const entry of (fact.ranking ?? []).slice(0, TOP_SHARES)) {
+      const member = members.find((item) => item.id === entry.evidenceId)!;
+      const part = attempt(() =>
+        share(`derived.share.${entry.member}|${key}`, member, total),
+      );
+      if (part && part.output.status === "defined") facts.push(part);
+    }
   }
   // A whole-domain measure over two periods gets its change.
   const totals = new Map<string, EvidenceV2[]>();
