@@ -111,6 +111,12 @@ ATLAS should first become better at **detecting**, then **prioritizing**, then *
 
 ## Current Delivery Status
 
+Analyst intelligence work after Phase 19 follows the separate
+[Analyst intelligence roadmap](analyst-intelligence-implementation.md)
+(phases AI-00 to AI-07). It does not relabel or reopen the phases below;
+AI-00's baseline is recorded in
+[analyst-intelligence-baseline.md](analyst-intelligence-baseline.md).
+
 Implementation, local validation, deployment, and hosted verification are separate
 states. “Recorded” means existing implementation reports, **not tests rerun in this
 documentation task**. Earlier dated paragraphs preserve historical results; this
