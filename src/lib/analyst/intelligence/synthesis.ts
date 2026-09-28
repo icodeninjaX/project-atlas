@@ -1,4 +1,5 @@
 import { claimCanShip } from "./claims";
+import { draftAnswerSchema } from "./contracts";
 import { deterministicDraft } from "./fallback";
 import type {
   AnalysisBrief,
@@ -193,6 +194,28 @@ function feedback(answer: AnswerV2, instructions: string[]) {
 }
 
 /** Keeps first-round claims that shipped and adds repaired claims that ship. */
+/**
+ * Rule names and schema paths only: never claim text, questions, labels or
+ * evidence values. This is how a rejected answer is diagnosed from logs.
+ */
+function logRejections(stages: StageLog[], reasons: string[], draft: unknown) {
+  const unique = [...new Set(reasons)];
+  if (unique.length === 0) return;
+  const parsed = draftAnswerSchema.safeParse(draft);
+  console.warn("Analyst V2 claims rejected", {
+    stages: stages.map(
+      (item) =>
+        `${item.stage}:${item.status}${item.code ? `:${item.code}` : ""}`,
+    ),
+    reasons: unique,
+    ...(!parsed.success && {
+      schema: parsed.error.issues
+        .slice(0, 6)
+        .map((issue) => `${issue.path.join(".")}:${issue.code}`),
+    }),
+  });
+}
+
 function merge(first: AnswerV2, repaired: AnswerV2): AnswerV2 {
   const kept = first.claims.filter(claimCanShip);
   const offset = kept.reduce(
@@ -345,11 +368,8 @@ export async function synthesizeAnswer(
     reviewer: reviewerUse,
     fallback,
   });
-  if (drafted.status === "error") {
-    // No model could write: ATLAS states its own figures, checked like any
-    // claim (roadmap §9.5 step 4). With none to show, the run is an
-    // operational error, never a claim that the records are empty.
-    const answer = recompute(
+  const checkedFigures = () =>
+    recompute(
       assemble(
         deterministicDraft(
           input.brief,
@@ -358,6 +378,11 @@ export async function synthesizeAnswer(
         ),
       ),
     );
+  if (drafted.status === "error") {
+    // No model could write: ATLAS states its own figures, checked like any
+    // claim (roadmap §9.5 step 4). With none to show, the run is an
+    // operational error, never a claim that the records are empty.
+    const answer = checkedFigures();
     const shown = answer.claims.some(claimCanShip);
     return {
       answer: {
@@ -412,6 +437,12 @@ export async function synthesizeAnswer(
         item.state === "unresolved" &&
         item.reason === "no_supported_claim",
     );
+  // A merge keeps only claims that passed, so the first draft's count and
+  // reasons are kept for the "X of Y statements passed" line.
+  let firstDraft = {
+    proposed: answer.verification.claimsProposed,
+    reasons: answer.verification.rejectionReasons,
+  };
   if (eligible) {
     const repaired = await write("repair", undefined, [
       { role: "assistant", content: JSON.stringify(drafted.content) },
@@ -455,11 +486,50 @@ export async function synthesizeAnswer(
       verdicts,
     );
   }
+  logRejections(
+    stages,
+    [...firstDraft.reasons, ...answer.verification.rejectionReasons],
+    drafted.content,
+  );
+  // Nothing the writer proposed survived the checks, even after a repair:
+  // ATLAS states its own checked figures instead of an empty answer.
+  if (!answer.claims.some(claimCanShip)) {
+    const figures = checkedFigures();
+    if (figures.claims.some(claimCanShip)) {
+      // The count shown is of the figures ATLAS states itself.
+      firstDraft = { proposed: 0, reasons: firstDraft.reasons };
+      answer = {
+        ...figures,
+        status: "fallback_facts",
+        limitations: [
+          ...figures.limitations,
+          "The written explanation did not pass ATLAS checks, so only checked ATLAS figures are shown.",
+        ],
+        verification: {
+          ...figures.verification,
+          rejectionReasons: answer.verification.rejectionReasons,
+        },
+      };
+    }
+  }
   return {
     answer: {
       ...answer,
       limitations: [...answer.limitations, ...disclosures],
-      verification: { ...answer.verification, semanticReview: reviewState },
+      verification: {
+        ...answer.verification,
+        claimsProposed: Math.max(
+          answer.verification.claimsProposed,
+          firstDraft.proposed,
+        ),
+        rejectionReasons: [
+          ...new Set([
+            ...firstDraft.reasons,
+            ...answer.verification.rejectionReasons,
+          ]),
+        ],
+        semanticReview: reviewState,
+      },
     },
     stages,
     models: models(),

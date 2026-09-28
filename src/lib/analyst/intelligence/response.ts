@@ -20,6 +20,10 @@ import {
  */
 
 /** Requirement coverage from the claims that survived checking. */
+/** Capabilities whose requirement only a cited ATLAS ranking answers. */
+const RANKING_CAPABILITIES = new Set(["money.category_ranking"]);
+const rankingFact = /^derived\.(?:rank|contribution)\./;
+
 export function evaluateCoverage(
   brief: AnalysisBrief,
   claims: AnalyticalClaim[],
@@ -28,8 +32,16 @@ export function evaluateCoverage(
     const attached = claims.filter((claim) =>
       claim.answersRequirementIds.includes(requirement.id),
     );
+    // A ranking question is answered by a claim that cites the ranking,
+    // never by a total alone.
+    const ranked = requirement.evidenceNeeded.some((id) =>
+      RANKING_CAPABILITIES.has(id),
+    );
     const answering = attached.filter(
-      (claim) => claimCanShip(claim) && claim.kind !== "limitation",
+      (claim) =>
+        claimCanShip(claim) &&
+        claim.kind !== "limitation" &&
+        (!ranked || claim.derivedFactIds.some((id) => rankingFact.test(id))),
     );
     if (answering.length > 0)
       return {

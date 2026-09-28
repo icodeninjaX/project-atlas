@@ -68,6 +68,17 @@ const FIXED_LABEL_DOMAINS: Partial<Record<ToolName, MetricDomain>> = {
   compareFinancialScenarios: "runway",
 };
 
+/**
+ * The domain a fixed-label measure speaks for, read from its key
+ * (`legacy:<tool>:<measure>`), or null for any other key.
+ */
+export function fixedLabelDomain(metricKey: string): MetricDomain | null {
+  const tool = /^legacy:([A-Za-z]+):/.exec(metricKey)?.[1];
+  return tool && tool in FIXED_LABEL_DOMAINS
+    ? FIXED_LABEL_DOMAINS[tool as ToolName]!
+    : null;
+}
+
 function fixedAggregation(
   local: string,
   unit: EvidenceUnit,
@@ -252,6 +263,36 @@ function classify(
 
 const recordingUnknown = new Set<EvidenceUnit>(["centavos", "count"]);
 
+/** The review tool's retrieval limit; fewer rows means every review was read. */
+const REVIEW_LIMIT = 12;
+
+/**
+ * The weekly review tool marks every value partial when fewer than 12
+ * completed reviews exist; that is a sample-size note, not missing records.
+ * With fewer rows than its limit every completed review was read, so a value
+ * is partial only when some of those reviews lack the score it averages.
+ */
+function completenessOf(
+  call: LegacyToolCall,
+  item: ToolEvidence,
+  local: string,
+): ToolEvidence["completeness"] {
+  if (call.tool !== "getWeeklyReviewMetrics" || item.completeness !== "partial")
+    return item.completeness;
+  const byLocal = (key: string) =>
+    call.evidence.find((entry) => localEvidenceId(call.tool, entry.id) === key);
+  const reviewed = byLocal("reviews.count")?.value;
+  if (typeof reviewed !== "number" || reviewed >= REVIEW_LIMIT)
+    return item.completeness;
+  if (local === "reviews.count") return "complete";
+  // The change splits the same reviews the overall average reads.
+  const scored =
+    local === "reviews.overall_change"
+      ? byLocal("reviews.overall_score")
+      : item;
+  return scored?.source.recordIds.length === reviewed ? "complete" : "partial";
+}
+
 export function adaptLegacyCall(call: LegacyToolCall): EvidenceV2[] {
   const categoryCount = call.evidence.filter((item) =>
     localEvidenceId(call.tool, item.id).startsWith("spending.category."),
@@ -279,6 +320,7 @@ export function adaptLegacyCall(call: LegacyToolCall): EvidenceV2[] {
       item.provenance.tool === "compareFinancialScenarios" ||
       item.provenance.tool === "runFinancialScenario";
     const truncated = local === "spending.records_inspected";
+    const completeness = completenessOf(call, item, local);
     const base = {
       version: "2" as const,
       id: item.id,
@@ -306,9 +348,9 @@ export function adaptLegacyCall(call: LegacyToolCall): EvidenceV2[] {
       },
       coverage: {
         query:
-          item.completeness === "complete"
+          completeness === "complete"
             ? ("complete" as const)
-            : item.completeness === "partial"
+            : completeness === "partial"
               ? ("partial" as const)
               : ("unknown" as const),
         // Stored records never prove the user logged everything.
@@ -318,7 +360,7 @@ export function adaptLegacyCall(call: LegacyToolCall): EvidenceV2[] {
             ? ("unknown" as const)
             : ("not_applicable" as const),
         period:
-          item.completeness === "complete"
+          completeness === "complete"
             ? ("complete" as const)
             : ("partial" as const),
         relationship: relationship ?? ("not_applicable" as const),

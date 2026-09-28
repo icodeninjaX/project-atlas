@@ -219,6 +219,45 @@ a different percentage ("10%") confirms that value instead, keeping the
 proposed direction, and "no" declines. Only a ₱ amount, a percentage or
 "percent" counts as a stated amount; a year such as 2027 does not.
 
+### 2.7 Preview findings (first answers with a live writer)
+
+The first V2 answers on the preview deployment exposed four defects. Each is
+replayed on the synthetic fixtures with a scripted writer in
+`evaluation/preview-regressions.test.ts`; three of its five cases fail
+without the fix.
+
+- **"Summarize my weekly reviews" showed "0 of 0 statements".** The review
+  tool marks every value partial when fewer than 12 reviews exist. That is a
+  sample-size note: with fewer rows than its limit, every completed review
+  was read. V2 read it as missing records and rejected every claim
+  (`incomplete_evidence`). The V2 adapter now marks a review value partial
+  only when some reviews lack the score it averages. The legacy tool is
+  unchanged.
+- **Bridged measures lost their domain.** The claim check mapped a
+  fixed-label key (`legacy:<tool>:…`) to generic records, so "weekly
+  reviews" in a claim citing review evidence was a `metric_mismatch`. The
+  same applied to debts, tasks, goals, career, signals and runway. Such a
+  key now speaks for its tool's domain.
+- **A tool's own change did not support "higher" or "lower".** A cited
+  metric whose aggregation is a difference (the review trend, the spending
+  change) now supports a direction word with the same sign. The wrong sign
+  is still rejected.
+- **A total passed for a ranking.** "Where do you think I overspend the
+  most?" was briefed as "Recorded money totals", so the total alone was
+  reported as answered. Such questions now need `money.category_ranking`,
+  and only a claim citing an ATLAS ranking answers it. Days, months, single
+  purchases, merchants and change questions keep their own routing.
+
+Supporting changes:
+
+- When no statement survives the draft and its repair, ATLAS shows its own
+  checked figures (as when no model can write), with a disclosure.
+- "X of Y statements" counts the first draft's statements after a repair
+  merge, instead of only those that passed.
+- "Written by" appears only when a model's text is shown.
+- Rejections are logged with rule names and schema paths only
+  ("Analyst V2 claims rejected"), never claim text, questions or values.
+
 ## 3. Hard gates (roadmap §8.4)
 
 | Gate                                                                                      | Status                                                                                                                                        |
@@ -323,7 +362,7 @@ and the pool-meter credentials, then run
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | `npm run lint`         | Pass                                                                                                      |
 | `npm run typecheck`    | Pass                                                                                                      |
-| `npm run test`         | 148 files passed, 7 skipped; 913 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
+| `npm run test`         | 149 files passed, 7 skipped; 921 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
 | `npm run format:check` | Pass                                                                                                      |
 | `npm run build`        | Pass; `/analyst` and `/api/analyst/v2` render per request                                                 |
 

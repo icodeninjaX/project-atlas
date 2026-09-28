@@ -109,6 +109,28 @@ const ENTITY_CAPABILITIES = new Set([
   "reviews.excerpts",
 ]);
 
+/**
+ * A money question that asks where the most goes ("Where do I overspend the
+ * most?", "What is my biggest expense category?"). A change question keeps
+ * its own requirement.
+ */
+export function asksMoneyRanking(
+  question: string,
+  intent: AnalysisBrief["intent"],
+) {
+  if (intent === "explain_change" || intent === "scenario") return false;
+  // A day, month or single purchase is not a category ranking.
+  if (
+    /\b(?:which|what)\s+(?:day|week|month|year|date|transaction|purchase|merchant|store)\b|\bsingle\b|\bmerchants?\b|\bstores?\b/i.test(
+      question,
+    )
+  )
+    return false;
+  return /\b(?:where|which|what)\b[^?]*\b(?:most|biggest|largest|highest|top|overspend\w*)\b|\b(?:biggest|largest|highest|top)\s+(?:expense|spending|income)?\s*categor\w*|\bsaan\b[^?]*\bpinaka/i.test(
+    question,
+  );
+}
+
 export function deterministicBrief(input: {
   question: string;
   plan: TurnPlan | null;
@@ -176,6 +198,20 @@ export function deterministicBrief(input: {
       capabilities = ["debt.one_time_payoff"];
     if (domain === "tasks" && !namedGoal && !domains.includes("goals"))
       capabilities = ["task.ranking"];
+    // "Where do I spend the most?" asks for the ranking, not the total.
+    if (domain === "money" && asksMoneyRanking(question, intent)) {
+      const income = /\b(?:income|salary|earn\w*|kita|sahod)\b/i.test(question);
+      // The same read returns the period total the ranking reconciles to.
+      requirements.push({
+        id: "r_money",
+        question: income
+          ? "Which income categories hold the most recorded income"
+          : "Which expense categories hold the most recorded spending",
+        essential: true,
+        evidenceNeeded: ["money.category_ranking"],
+      });
+      continue;
+    }
     if (
       domain === "money" &&
       (intent === "explain_change" ||

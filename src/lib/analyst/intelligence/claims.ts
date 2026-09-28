@@ -7,6 +7,7 @@ import type {
   EvidenceV2,
   Period,
 } from "./contracts";
+import { fixedLabelDomain } from "./legacy-evidence";
 import {
   DOMAIN_TERMS,
   semanticsFor,
@@ -182,6 +183,9 @@ function overlapsMonth(periods: Period[], month: number, year?: number) {
 type Numeric = { value: number; unit: string };
 
 function metricDomains(metricKey: string, unit: string): MetricDomain[] {
+  // A bridged tool's fixed-label measure speaks for that tool's domain.
+  const fixed = fixedLabelDomain(metricKey);
+  if (fixed) return [fixed];
   const keys = metricKey.replace(/_contribution$/, "").split("-");
   return keys.flatMap((key) => textDomains(semanticsFor(key, unit as never)));
 }
@@ -412,15 +416,24 @@ function checkComparison(
   }
   if (!stated) return null;
   // Without a declared pair, a direction must match a cited ATLAS change.
-  const changes = cited.derived.filter(
-    (item) =>
+  const changes = [
+    ...cited.derived.flatMap((item) =>
       (item.operation === "difference" ||
         item.operation === "percent_change" ||
         item.operation === "contribution") &&
-      item.output.status === "defined",
-  );
-  const agrees = changes.some((item) => {
-    const value = item.output.status === "defined" ? item.output.value : 0;
+      item.output.status === "defined"
+        ? [item.output.value]
+        : [],
+    ),
+    // A change the approved tool computed itself (its own measure of a
+    // difference) carries its sign the same way.
+    ...cited.evidence.flatMap((item) =>
+      item.kind === "metric" && item.semantics.aggregation === "difference"
+        ? [item.value]
+        : [],
+    ),
+  ];
+  const agrees = changes.some((value) => {
     return stated === "higher"
       ? value > 0
       : stated === "lower"

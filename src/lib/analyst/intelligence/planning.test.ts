@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deterministicBrief } from "./planning";
+import { asksMoneyRanking, deterministicBrief } from "./planning";
 
 const now = new Date("2026-09-24T04:00:00.000Z");
 const capabilities = (question: string) =>
@@ -89,5 +89,35 @@ describe("deterministic brief capability routing", () => {
         "How has my available cash changed while I pay down my card?",
       ).flat(),
     ).toEqual(expect.arrayContaining(["money.totals", "debt.payments"]));
+  });
+});
+
+describe("money ranking questions", () => {
+  it("asks for the category ranking, not the total", () => {
+    expect(capabilities("Where do you think I overspend the most?")).toEqual([
+      ["money.category_ranking"],
+    ]);
+    expect(capabilities("What is my biggest expense category?")).toEqual([
+      ["money.category_ranking"],
+    ]);
+    expect(
+      deterministicBrief({
+        question: "Where do I spend the most?",
+        plan: null,
+        now,
+      }).requirements[0]?.question,
+    ).toMatch(/categories hold the most/);
+  });
+
+  it("leaves totals, changes and single days alone", () => {
+    expect(asksMoneyRanking("How much did I spend this month?", "lookup")).toBe(
+      false,
+    );
+    expect(asksMoneyRanking("Which day did I spend the most?", "lookup")).toBe(
+      false,
+    );
+    expect(
+      asksMoneyRanking("Which category increased the most?", "explain_change"),
+    ).toBe(false);
   });
 });
