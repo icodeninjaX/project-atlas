@@ -1,4 +1,5 @@
 import { claimCanShip } from "./claims";
+import { deterministicDraft } from "./fallback";
 import type {
   AnalysisBrief,
   AnalyticalClaim,
@@ -53,6 +54,8 @@ export type SynthesisInput = {
   path: "simple" | "deep";
   /** Reasons the investigation already established for unresolved requirements. */
   knownReasons: ReadonlyMap<string, UnresolvedReason>;
+  /** Selected evidence IDs per requirement, for the no-model fallback. */
+  byRequirement?: Readonly<Record<string, string[]>>;
   limitations: string[];
   now: Date;
   models: {
@@ -294,6 +297,32 @@ export async function synthesizeAnswer(
         return result;
       });
 
+  // With no evidence at all there is nothing a writer could cite, so no
+  // provider call is made; the unresolved reasons explain the gap.
+  if (input.evidence.length === 0) {
+    const answer = recompute(assemble(null));
+    const reasons = answer.unresolved.map((item) => item.reason);
+    const status = reasons.includes("operational_failure")
+      ? "error"
+      : reasons.length > 0 &&
+          reasons.every((reason) => reason === "unsupported_capability")
+        ? "unsupported_capability"
+        : "insufficient_evidence";
+    return {
+      answer: {
+        ...answer,
+        status,
+        verification: { ...answer.verification, rejectionReasons: [] },
+      },
+      stages,
+      models: {
+        writer: { requested: input.models.writer, resolved: null },
+        reviewer: null,
+        fallback: false,
+      },
+      review: "not_required",
+    };
+  }
   let drafted = await write("writer");
   // A used-up pool refuses before anything is sent; the default model may
   // still write. The switch is disclosed exactly once.
@@ -317,14 +346,29 @@ export async function synthesizeAnswer(
     fallback,
   });
   if (drafted.status === "error") {
-    const answer = recompute(assemble(null));
+    // No model could write: ATLAS states its own figures, checked like any
+    // claim (roadmap §9.5 step 4). With none to show, the run is an
+    // operational error, never a claim that the records are empty.
+    const answer = recompute(
+      assemble(
+        deterministicDraft(
+          input.brief,
+          input.evidence,
+          input.byRequirement ?? {},
+        ),
+      ),
+    );
+    const shown = answer.claims.some(claimCanShip);
     return {
       answer: {
         ...answer,
+        status: shown ? "fallback_facts" : "error",
         limitations: [
           ...answer.limitations,
           ...disclosures,
-          "An explanation is unavailable, so only the checked ATLAS facts are shown.",
+          shown
+            ? "An explanation is unavailable right now, so only checked ATLAS figures are shown."
+            : "An explanation is unavailable right now, and no checked figures could be shown. This does not mean your records are empty; try again shortly.",
         ],
       },
       stages,

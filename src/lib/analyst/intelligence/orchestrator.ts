@@ -224,12 +224,14 @@ function assess(
         : mine.some(useful);
     const some =
       capabilities.length > 0 ? capabilities.some(satisfied) : covered;
+    // A read that errored leaves the answer unknown, so it is never
+    // reported as missing records (roadmap §9.5). `unavailable_source` also
+    // covers a database outage, since the shared transport cannot tell the
+    // two apart; the wording discloses nothing about whether a record exists.
     const failed = mine.some(
       (outcome) =>
         outcome.result.status === "error" &&
-        !["unavailable_source", "partial"].includes(
-          outcome.result.error?.code ?? "",
-        ),
+        outcome.result.error?.code !== "partial",
     );
     const state =
       covered && complete

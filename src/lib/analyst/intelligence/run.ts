@@ -51,6 +51,8 @@ export type V2RunDeps = {
   clock: () => number;
   emit?: (event: V2ProgressEvent) => void;
   signal?: AbortSignal;
+  /** Receives the run ledger, so usage can be settled even if the run throws. */
+  onLedger?: (ledger: RunLedger) => void;
 };
 
 export type V2RunInput = {
@@ -213,6 +215,7 @@ export async function runAnalystV2(
     deps.clock,
     deps.signal,
   );
+  deps.onLedger?.(ledger);
   const investigation = await runInvestigation({
     check,
     proposer: capabilityProposer(now),
@@ -314,6 +317,7 @@ export async function runAnalystV2(
     knownReasons: new Map(
       investigation.unresolved.map((item) => [item.requirementId, item.reason]),
     ),
+    byRequirement: investigation.selection.byRequirement,
     limitations: investigation.limitations,
     now,
     models: {

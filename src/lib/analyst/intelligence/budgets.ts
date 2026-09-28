@@ -193,11 +193,18 @@ export class RunLedger {
       inputTokens?: number;
       outputTokens?: number;
     },
-    reserved: { tokens: number; costUsdMicros: number },
+    reserved: {
+      tokens: number;
+      costUsdMicros: number;
+      inputTokens?: number;
+      outputTokens?: number;
+    },
   ) {
     this.usage.providerCalls += 1;
-    this.usage.inputTokens += usage.inputTokens ?? 0;
-    this.usage.outputTokens += usage.outputTokens ?? 0;
+    // Unknown usage is charged at the reserved upper bound, never as zero:
+    // the provider may have processed the call.
+    this.usage.inputTokens += usage.inputTokens ?? reserved.inputTokens ?? 0;
+    this.usage.outputTokens += usage.outputTokens ?? reserved.outputTokens ?? 0;
     this.usage.tokens += usage.tokens ?? reserved.tokens;
     this.usage.costUsdMicros += usage.costUsdMicros ?? reserved.costUsdMicros;
   }
