@@ -223,7 +223,7 @@ proposed direction, and "no" declines. Only a ₱ amount, a percentage or
 
 The first V2 answers on the preview deployment exposed four defects. Each is
 replayed on the synthetic fixtures with a scripted writer in
-`evaluation/preview-regressions.test.ts`; nine of its eleven
+`evaluation/preview-regressions.test.ts`; ten of its twelve
 cases fail without the fixes, and the other two guard against loosening
 the checks.
 
@@ -287,7 +287,7 @@ the figure, date, domain or certainty checks, leaving the requirement
 Claims now name a record by mention: its handle in double braces, such as
 `{{category:<id>}}` (`mentions.ts`). The checks read a mention as a plain
 word, and a mention must name a member the claim cites (`unknown_mention`
-otherwise). The owner sees the label only at presentation, and a missing
+otherwise), as must any other double-brace token. The owner sees the label only at presentation, and a missing
 label reads "an unnamed category". Stored conversation context keeps the
 mention, so a name never reaches a provider. ATLAS's ranking statement
 uses a mention and no longer depends on labels, and the writer is told to
@@ -407,7 +407,7 @@ and the pool-meter credentials, then run
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | `npm run lint`         | Pass                                                                                                      |
 | `npm run typecheck`    | Pass                                                                                                      |
-| `npm run test`         | 150 files passed, 7 skipped; 931 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
+| `npm run test`         | 151 files passed, 7 skipped; 933 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
 | `npm run format:check` | Pass                                                                                                      |
 | `npm run build`        | Pass; `/analyst` and `/api/analyst/v2` render per request                                                 |
 

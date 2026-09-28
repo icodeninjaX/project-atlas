@@ -525,4 +525,38 @@ describe("preview regressions", () => {
       "Largest recorded expense category: Must-pay loan & bills 2026-09, ₱5,000.00 from Sep 1, 2026 to Sep 24, 2026.",
     );
   });
+
+  it("rejects a malformed mention instead of showing the raw token", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { response } = await ask(
+      "Where do you think I overspend the most?",
+      (input, stage) => {
+        if (stage !== "writer") return null;
+        const rank = input.derivedFacts.find(
+          (item) => item.operation === "rank",
+        )!;
+        return draftOf(
+          [
+            claim(
+              "c1",
+              "r_money",
+              "{{category:groceries}} is your largest spending category at ₱5,000.00.",
+              "cohort:expense_by_category",
+              [],
+              [rank.id],
+            ),
+          ],
+          ["c1"],
+        );
+      },
+    );
+    const logged = JSON.stringify(warn.mock.calls);
+    warn.mockRestore();
+    expect(logged).toContain("unknown_mention");
+    expect(JSON.stringify(response.presentation)).not.toContain("{{");
+    // ATLAS answers with its own ranking instead.
+    expect(shown(response)[0]).toMatch(
+      /^Largest recorded expense category: Groceries/,
+    );
+  });
 });

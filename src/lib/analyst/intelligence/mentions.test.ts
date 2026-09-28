@@ -27,6 +27,10 @@ describe("record mentions", () => {
     expect(validMention(`category:${id}`)).toBe(true);
     expect(validMention("uncategorized")).toBe(true);
     expect(validMention(`planet:${id}`)).toBe(false);
-    expect(mentionedHandles("{{category:not-an-id}}")).toEqual([]);
+    // A malformed token is still a mention, so the checks reject it.
+    expect(mentionedHandles("{{ category:groceries }}")).toEqual([
+      "category:groceries",
+    ]);
+    expect(validMention("category:groceries")).toBe(false);
   });
 });

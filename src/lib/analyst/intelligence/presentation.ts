@@ -107,8 +107,11 @@ export function presentAnswer(
     recommendation: claim.recommendation
       ? {
           tradeoff: show(claim.recommendation.tradeoff),
-          constraints: claim.recommendation.constraints,
-          nextAction: claim.recommendation.nextAction,
+          constraints: claim.recommendation.constraints.map(show),
+          nextAction: {
+            ...claim.recommendation.nextAction,
+            label: show(claim.recommendation.nextAction.label),
+          },
           conditional: claim.recommendation.conditional,
         }
       : null,

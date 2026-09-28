@@ -8,11 +8,15 @@ import { parseHandle } from "./tools/contracts";
  * checks never read a label as a figure, date or measure.
  */
 
-const MENTION = /\{\{\s*([a-z_]+:[0-9A-Fa-f-]{36}|uncategorized)\s*\}\}/g;
+// Any double-brace token is a mention; one that is not a valid handle
+// fails the checks rather than reaching the owner as a raw token.
+const MENTION = /\{\{([^{}]{0,120})\}\}/g;
 
-/** The handles a text mentions, in order. */
+/** The handles a text mentions, in order, well-formed or not. */
 export function mentionedHandles(text: string) {
-  return [...text.matchAll(MENTION)].map((match) => match[1]!.toLowerCase());
+  return [...text.matchAll(MENTION)].map((match) =>
+    match[1]!.trim().toLowerCase(),
+  );
 }
 
 /** Whether a mention names a well-formed handle. */
@@ -34,7 +38,7 @@ export function renderMentions(
   labels: ReadonlyMap<string, string>,
 ) {
   return text.replace(MENTION, (_, raw: string) => {
-    const handle = raw.toLowerCase();
+    const handle = raw.trim().toLowerCase();
     if (handle === "uncategorized") return "Uncategorized";
     const label = labels.get(handle);
     if (label) return label;
