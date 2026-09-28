@@ -127,6 +127,6 @@ calls a model.
 - No route or UI uses the token yet; the V2 route and workspace arrive in
   AI-04 and AI-06.
 
-**Next phase: AI-04** — a bounded investigative controller: the analysis
+**Next phase: AI-04** (done; see [analyst-intelligence-investigation.md](analyst-intelligence-investigation.md)) — a bounded investigative controller: the analysis
 brief, dependent tool calls, requirement-aware evidence selection and one
 whole-run budget, using this context as its starting point.
