@@ -176,14 +176,20 @@ export function eligibility(
 export type ProviderStage = "planner" | "writer" | "critic" | "repair";
 
 /**
- * A prior turn, tagged with what its answer drew on. An empty question
- * means policy withheld the earlier question and kept only its answer.
+ * A prior turn, tagged with what its answer drew on. `question` and
+ * `answer` are free text: the person's words, and model prose that may
+ * repeat them. `facts` restates the answer from the aggregate values it
+ * cited, and is what a route without private text receives instead.
  */
 export type HistoryTurn = {
   question: string;
   answer: string;
   domains: ConsentDomain[];
   profiles: FieldProfile[];
+  /** The cited aggregate values, as text; empty when none were numeric. */
+  facts?: string;
+  /** Set once the free text was replaced by `facts`. */
+  aggregateOnly?: boolean;
 };
 
 /** An owner-only label (a title or name) that a stage wants to show a model. */
@@ -243,25 +249,35 @@ export function filterProviderPayload(
       excluded.push({ kind: "history", ref: `turn:${index}`, reason });
       return [];
     }
-    // An earlier question is the person's free text, which may name records
-    // or hold private narrative whatever its answer drew on, so it travels
-    // only where the most sensitive profile may. Its checked answer can
-    // still be sent on its own.
-    if (!turn.question) return [turn];
-    const withheld = questionEligibility(turn.domains, consent, route);
+    // An earlier question is the person's free text, and its answer's prose
+    // may repeat that text (a record name, a private remark) whatever the
+    // answer's evidence was. Both travel only where the most sensitive
+    // profile may; elsewhere the turn is restated from its cited aggregates.
+    if (turn.aggregateOnly) return [turn];
+    const withheld = freeTextEligibility(turn.domains, consent, route);
     if (!withheld) return [turn];
     excluded.push({
       kind: "history",
-      ref: `turn:${index}:question`,
+      ref: `turn:${index}:text`,
       reason: withheld,
     });
-    return turn.answer ? [{ ...turn, question: "" }] : [];
+    return turn.facts
+      ? [
+          {
+            ...turn,
+            question: "",
+            answer: turn.facts,
+            facts: turn.facts,
+            aggregateOnly: true,
+          },
+        ]
+      : [];
   });
   return { payload: { ...payload, evidence, labels, history }, excluded };
 }
 
-/** Whether an earlier free-text question may reach a provider. */
-function questionEligibility(
+/** Whether an earlier turn's free text may reach a provider. */
+function freeTextEligibility(
   domains: ConsentDomain[],
   consent: AnalystConsent | null,
   route: ProviderRoute,

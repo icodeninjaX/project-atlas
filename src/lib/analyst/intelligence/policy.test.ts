@@ -178,17 +178,9 @@ describe("provider payload policy", () => {
       "review.score",
     ]);
     expect(filtered.labels).toEqual([]);
-    // Earlier questions are free text: withheld, while their answers stay.
-    expect(filtered.history).toEqual([
-      expect.objectContaining({
-        question: "",
-        answer: "Scores were recorded.",
-      }),
-      expect.objectContaining({
-        question: "",
-        answer: "Expenses were recorded.",
-      }),
-    ]);
+    // Earlier turns are free text; with no cited figures to restate them,
+    // nothing of them is sent.
+    expect(filtered.history).toEqual([]);
     expect(
       excluded.filter((item) => item.reason === "route_ineligible"),
     ).toHaveLength(5);
@@ -211,7 +203,7 @@ describe("provider payload policy", () => {
     );
     expect(shared.payload.history).toEqual([]);
     expect(shared.excluded).toContainEqual(
-      expect.objectContaining({ kind: "history", ref: "turn:0:question" }),
+      expect.objectContaining({ kind: "history", ref: "turn:0:text" }),
     );
     expect(() =>
       assertProviderPayload(shared.payload, consent, SHARED_ROUTE),
@@ -228,6 +220,33 @@ describe("provider payload policy", () => {
         verified,
       ).payload.history,
     ).toEqual([turn]);
+  });
+
+  it("restates an earlier turn from its cited figures where free text may not go", () => {
+    const turn = {
+      question: "How much did I spend on my Toyota loan?",
+      answer: "Your Toyota loan payments were ₱12,000.00.",
+      domains: ["debts" as const],
+      profiles: ["aggregate" as const],
+      facts: "debt_payments_centavos 2026-09-01..2026-09-24: 1200000",
+    };
+    const { payload: filtered } = filterProviderPayload(
+      { ...payload("writer"), history: [turn] },
+      consent,
+      SHARED_ROUTE,
+    );
+    expect(filtered.history).toEqual([
+      {
+        ...turn,
+        question: "",
+        answer: "debt_payments_centavos 2026-09-01..2026-09-24: 1200000",
+        aggregateOnly: true,
+      },
+    ]);
+    expect(JSON.stringify(filtered)).not.toContain("Toyota");
+    expect(() =>
+      assertProviderPayload(filtered, consent, SHARED_ROUTE),
+    ).not.toThrow();
   });
 
   it("sends nothing without consent", () => {

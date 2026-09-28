@@ -52,11 +52,13 @@ checked findings only. The planner and the writer receive them as
 `previousTurns`; `filterProviderPayload` still drops any turn whose answer
 the current consent and route would not allow.
 
-An earlier question is the person's free text and may name records or hold
-private narrative whatever its answer drew on, so it is sent only where the
-`sensitive_narrative` profile is allowed. Otherwise the question is withheld
-and only its checked answer is sent. On today's shared route that means the
-models see earlier answers, not earlier questions.
+An earlier question is the person's free text, and its answer's prose may
+repeat that text (a record name, a private remark) whatever the answer's
+evidence was. Both are sent only where the `sensitive_narrative` profile is
+allowed. Elsewhere the turn is restated from the numeric values its findings
+cited (`facts`: measure, period, value) and sent as `aggregateOnly`; a turn
+with no such values is not sent. On today's shared route the models see
+earlier figures, never earlier questions or answer prose.
 
 ## 3. A writer that reasons before it writes (`writer.ts`)
 

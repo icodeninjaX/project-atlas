@@ -751,13 +751,12 @@ describe("Analyst V2 with the analysis planner (mocked provider)", () => {
         .input as {
         previousTurns: Array<{ question: string; answer: string }>;
       };
-      // The shared route carries aggregates only, so the earlier question
-      // (free text) is withheld and its checked answer is kept.
+      // The shared route carries aggregates only, so the earlier turn is
+      // restated from the figures it cited, never its question or prose.
       expect(input.previousTurns).toEqual([
         {
           question: "",
-          answer:
-            "Recorded expenses were ₱11,000.00 from 2026-09-01 to 2026-09-24.",
+          answer: "expense_centavos 2026-09-01..2026-09-24: 1100000",
         },
       ]);
     }
