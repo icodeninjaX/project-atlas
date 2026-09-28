@@ -384,7 +384,7 @@ export async function synthesizeAnswer(
           input.brief,
           input.evidence,
           input.byRequirement ?? {},
-          { derived: input.derived, labels: input.labels },
+          input.derived,
         ),
       ),
     );

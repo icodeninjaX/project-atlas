@@ -24,6 +24,7 @@ export const WRITER_SYSTEM = [
   "Kinds: fact and calculation state what the records show; interpretation and hypothesis must be hedged (may, might, could, suggests); association only with the approved association test; limitation explains a gap.",
   "A recommendation needs a recommendation object: objectiveRequirementId (the requirement it serves), constraints, a trade-off, and one next action (a label, and optionally an ATLAS page path). If it depends on an assumption, set conditional true and cite the assumption ID. Never give generic advice.",
   "Never claim causes, certainty or forecasts. Associations are not causes; accounting contributions are not reasons.",
+  "Owner names may be withheld. To name a category or record, write its handle in double braces exactly as the evidence or ranking gives it, such as {{category:<id>}}; ATLAS shows the owner its name. Cite the evidence or derived fact that contains that handle. Never write a raw ID or guess a name.",
   "Write in the brief's language and response style. Put the one to three claims that answer the question directly in directAnswerClaimIds. Use short section headings without figures. Set table to null.",
 ].join(" ");
 

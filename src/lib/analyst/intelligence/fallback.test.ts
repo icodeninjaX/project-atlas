@@ -51,34 +51,21 @@ describe("deterministic fallback draft", () => {
         evidenceNeeded: ["money.category_ranking"],
       })),
     };
-    const labels = (fact.top ?? []).map((handle) => ({
-      handle,
-      domain: "money" as const,
-      text: "Groceries",
-    }));
     const draft = deterministicDraft(
       ranked,
       members,
       { r_money: members.map((item) => item.id) },
-      { derived: [fact], labels },
+      [fact],
     );
     expect(draft.claims[0]).toMatchObject({
       id: "c1",
       derivedFactIds: ["derived.rank.test"],
       scopeId: fact.scopeId,
     });
+    // The category is a mention; the owner sees its label at presentation.
     expect(draft.claims[0]!.text).toMatch(
-      /^(?:Largest|Tied for the largest) recorded expense category: Groceries/,
+      /^(?:Largest|Tied for the largest) recorded expense category: \{\{[^{}]+\}\},/,
     );
     expect(draft.directAnswerClaimIds).toEqual(["c1"]);
-    // Without the owner's label, ATLAS does not name the category.
-    expect(
-      deterministicDraft(
-        ranked,
-        members,
-        { r_money: members.map((item) => item.id) },
-        { derived: [fact], labels: [] },
-      ).claims.some((claim) => claim.derivedFactIds.length > 0),
-    ).toBe(false);
   });
 });

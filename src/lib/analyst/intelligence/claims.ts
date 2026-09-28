@@ -8,6 +8,7 @@ import type {
   Period,
 } from "./contracts";
 import { fixedLabelDomain } from "./legacy-evidence";
+import { mentionedHandles, validMention, withoutMentions } from "./mentions";
 import {
   DOMAIN_TERMS,
   semanticsFor,
@@ -40,6 +41,7 @@ export type ClaimCheckContext = {
 export type ClaimRejectionV2 =
   | "duplicate_reference"
   | "unknown_evidence"
+  | "unknown_mention"
   | "unknown_derived_fact"
   | "unknown_requirement"
   | "unknown_assumption"
@@ -494,7 +496,7 @@ export function checkClaim(
     reasons.push("scope_mismatch");
   // Everything shown with the claim is checked with it, including a
   // recommendation's trade-off, constraints and next step.
-  const text = [
+  const raw = [
     claim.text,
     claim.recommendation?.tradeoff,
     ...(claim.recommendation?.constraints ?? []),
@@ -502,6 +504,28 @@ export function checkClaim(
   ]
     .filter(Boolean)
     .join(" ");
+  // A mention names a record the claim cites; the checks read the rest.
+  const citedMembers = new Set([
+    ...cited.evidence.flatMap((item) => [
+      ...(item.scope.cohort ? [item.scope.cohort.member] : []),
+      ...item.provenance.sourceRefs.map((ref) => ref.handle),
+    ]),
+    ...cited.derived.flatMap((item) => [
+      ...(item.ranking ?? []).map((entry) => entry.member),
+      // A share names the member it divides.
+      ...item.operands.flatMap((id) => {
+        const member = ctx.evidence.get(id)?.scope.cohort?.member;
+        return member ? [member] : [];
+      }),
+    ]),
+  ]);
+  if (
+    mentionedHandles(raw).some(
+      (handle) => !validMention(handle) || !citedMembers.has(handle),
+    )
+  )
+    reasons.push("unknown_mention");
+  const text = withoutMentions(raw);
   if (causal.test(text)) reasons.push("causal_wording");
   if (certainty.test(text)) reasons.push("certainty_wording");
   if (unverifiable.test(text)) reasons.push("unverifiable_wording");
