@@ -73,7 +73,7 @@ When a pool is refused:
 With `OPENAI_ADMIN_KEY` set (an API Platform organization admin key, server
 only), ATLAS also reads today's usage from OpenAI's organization Usage API
 (`/v1/organization/usage/completions`, grouped by model and service tier) and
-records it per pool (`supabase/migrations/20260927170000_openai_provider_usage.sql`):
+records it per pool (`supabase/migrations/20260928011336_openai_provider_usage.sql`):
 
 - The meter counts the larger of its own ledger and OpenAI's figure plus the
   reservations made since 15 minutes before that figure was read (usage data
