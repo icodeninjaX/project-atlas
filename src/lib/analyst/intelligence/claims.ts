@@ -59,7 +59,10 @@ export type ClaimRejectionV2 =
   | "undefined_result"
   | "unhedged_interpretation"
   | "association_without_test"
-  | "recommendation_without_objective";
+  | "recommendation_without_objective"
+  | "recommendation_incomplete"
+  | "unstated_assumption"
+  | "generic_recommendation";
 
 const causal =
   /\b(?:because|caus\w*|due to|driven by|results? in|resulted|triggered|leads? to|led to|responsible for|explains?|explained|thanks to|as a result|dahil sa|dahil|sanhi|sanhi ng|kaya naman)\b/i;
@@ -69,6 +72,10 @@ const unverifiable =
   /\b(?:significant\w*|statistically|strong(?:ly)?|hundred|thousand|million|billion|dozen|double[ds]?|twice|triple[ds]?|half|halved|centavos|libo|milyon|doble|kalahati)\b/i;
 const superlative =
   /\b(?:largest|highest|biggest|greatest|most|smallest|lowest|least|pinaka\w*)\b/i;
+const conditional = /\b(?:if|assuming|provided that|kung|basta)\b/i;
+// Advice that fits anyone says nothing about this user's records.
+const generic =
+  /\b(?:stay (?:focused|motivated|consistent|positive)|work harder|keep (?:it )?up|do your best|try your best|be more disciplined|manage your time better|believe in yourself|keep going|stay on track)\b/i;
 const tieMarker = /\b(?:tie|tied|tying|ties|magkatabla|pantay)\b/i;
 const hedge =
   /\b(?:may|might|could|suggests?|possibly|maaaring|baka|posibleng|marahil)\b/i;
@@ -465,7 +472,16 @@ export function checkClaim(
     ].some((scope) => scope !== claim.scopeId)
   )
     reasons.push("scope_mismatch");
-  const text = claim.text;
+  // Everything shown with the claim is checked with it, including a
+  // recommendation's trade-off, constraints and next step.
+  const text = [
+    claim.text,
+    claim.recommendation?.tradeoff,
+    ...(claim.recommendation?.constraints ?? []),
+    claim.recommendation?.nextAction.label,
+  ]
+    .filter(Boolean)
+    .join(" ");
   if (causal.test(text)) reasons.push("causal_wording");
   if (certainty.test(text)) reasons.push("certainty_wording");
   if (unverifiable.test(text)) reasons.push("unverifiable_wording");
@@ -516,12 +532,21 @@ export function checkClaim(
     !cited.evidence.some((item) => item.semantics.metricKey === "correlation")
   )
     reasons.push("association_without_test");
-  if (
-    claim.kind === "recommendation" &&
-    claim.assumptionIds.length === 0 &&
-    claim.answersRequirementIds.length === 0
-  )
-    reasons.push("recommendation_without_objective");
+  if (claim.kind === "recommendation") {
+    const recommendation = claim.recommendation;
+    if (!recommendation) reasons.push("recommendation_incomplete");
+    else {
+      if (!requirementIds.has(recommendation.objectiveRequirementId))
+        reasons.push("recommendation_without_objective");
+      // A conditional option names the assumption it depends on.
+      if (
+        (recommendation.conditional || conditional.test(claim.text)) &&
+        claim.assumptionIds.length === 0
+      )
+        reasons.push("unstated_assumption");
+    }
+    if (generic.test(text)) reasons.push("generic_recommendation");
+  }
 
   return finish(
     claim,

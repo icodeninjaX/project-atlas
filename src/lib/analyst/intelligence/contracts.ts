@@ -408,6 +408,33 @@ const comparisonSchema = z
   })
   .strict();
 
+/**
+ * A recommendation names the user's objective (a brief requirement), the
+ * constraints and trade-off it weighs, and one next step. The step may link
+ * to an existing screen; it never performs a change.
+ */
+export const recommendationSchema = z
+  .object({
+    objectiveRequirementId: handle,
+    constraints: z.array(z.string().trim().min(3).max(160)).max(4),
+    tradeoff: z.string().trim().min(8).max(300),
+    nextAction: z
+      .object({
+        label: z.string().trim().min(3).max(80),
+        href: z
+          .string()
+          .max(120)
+          .regex(
+            /^\/(?:tasks|goals|money|debts|career|decisions|reviews|knowledge|analyst|timeline)(?:[/?#][A-Za-z0-9_?=&%./:#-]*)?$/,
+          )
+          .nullable(),
+      })
+      .strict(),
+    conditional: z.boolean(),
+  })
+  .strict();
+export type Recommendation = z.infer<typeof recommendationSchema>;
+
 /** What a writer may propose. It never carries a verification verdict. */
 export const draftClaimSchema = z
   .object({
@@ -420,6 +447,8 @@ export const draftClaimSchema = z
     assumptionIds: z.array(handle).max(6),
     scopeId: handle,
     comparison: comparisonSchema.nullable(),
+    /** Required for a recommendation: its objective, trade-off and next step. */
+    recommendation: recommendationSchema.nullable().optional(),
   })
   .strict();
 export type DraftClaim = z.infer<typeof draftClaimSchema>;
@@ -555,7 +584,7 @@ export type AnswerV2 = {
     claimsProposed: number;
     claimsPassed: number;
     rejectionReasons: string[];
-    semanticReview: "not_run";
+    semanticReview: "not_run" | "completed" | "unavailable" | "not_required";
     repairEligible: boolean;
   };
   /** AI-03 attaches the next-turn context reference. */

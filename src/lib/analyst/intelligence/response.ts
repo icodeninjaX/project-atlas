@@ -203,3 +203,104 @@ function unresolvedOf(coverage: RequirementCoverage[]) {
       : [],
   );
 }
+
+/**
+ * Recomputes an answer after its claims changed (semantic review, repair or a
+ * merge). Coverage, status, unresolved reasons, sources, the direct answer
+ * and sections are derived again from the claims that can ship. A reviewer's
+ * "not answered" overrides an attached claim, and a reason already known
+ * from the investigation (unsupported, excluded, missing data) replaces a
+ * generic one.
+ */
+export function recomputeAnswer(
+  answer: AnswerV2,
+  brief: AnalysisBrief,
+  options: {
+    evidence: EvidenceV2[];
+    derived: DerivedFact[];
+    requirementVerdicts?: ReadonlyMap<string, boolean>;
+    knownReasons?: ReadonlyMap<string, RequirementCoverage["reason"]>;
+  },
+): AnswerV2 {
+  const coverage = evaluateCoverage(brief, answer.claims).map((item) => {
+    const verdict = options.requirementVerdicts?.get(item.requirementId);
+    let next: RequirementCoverage =
+      verdict === undefined
+        ? item
+        : { ...item, semantic: verdict ? "confirmed" : "rejected" };
+    if (verdict === false && next.state === "answered")
+      next = {
+        ...next,
+        state: "unresolved",
+        reason: "claim_rejected",
+        claimIds: [],
+      };
+    const known = options.knownReasons?.get(item.requirementId);
+    if (
+      next.state === "unresolved" &&
+      known &&
+      next.reason !== "claim_rejected"
+    )
+      next = { ...next, reason: known };
+    return next;
+  });
+  const shipped = answer.claims.filter(claimCanShip);
+  const shippedIds = new Set(shipped.map((claim) => claim.id));
+  const byEvidence = new Map(options.evidence.map((item) => [item.id, item]));
+  const byDerived = new Map(options.derived.map((item) => [item.id, item]));
+  const sources = new Map<string, string>();
+  for (const claim of shipped) {
+    const ids = [
+      ...claim.evidenceIds,
+      ...claim.derivedFactIds.flatMap(
+        (id) => byDerived.get(id)?.operands ?? [],
+      ),
+    ];
+    for (const id of ids)
+      for (const ref of byEvidence.get(id)?.provenance.sourceRefs ?? [])
+        sources.set(ref.handle, ref.href);
+  }
+  const unresolved = coverage.flatMap((item) =>
+    item.state === "unresolved" && item.reason
+      ? [{ requirementId: item.requirementId, reason: item.reason }]
+      : [],
+  );
+  return {
+    ...answer,
+    status: resultStatus(coverage, shipped),
+    directAnswerClaimIds: answer.directAnswerClaimIds.filter((id) =>
+      shippedIds.has(id),
+    ),
+    sections: answer.sections
+      .map((section) => ({
+        ...section,
+        claimIds: section.claimIds.filter((id) => shippedIds.has(id)),
+      }))
+      .filter((section) => section.claimIds.length > 0),
+    table:
+      answer.table && shippedIds.has(answer.table.captionClaimId)
+        ? answer.table
+        : null,
+    sources: [...sources].map(([handle, href]) => ({ handle, href })),
+    coverage,
+    unresolved,
+    verification: {
+      ...answer.verification,
+      claimsProposed: answer.claims.length,
+      claimsPassed: shipped.length,
+      rejectionReasons: [
+        ...new Set(
+          answer.claims.flatMap((claim) =>
+            claimCanShip(claim) ? [] : claim.verification.reasons,
+          ),
+        ),
+      ],
+      repairEligible: coverage.some(
+        (item) =>
+          item.essential &&
+          item.state === "unresolved" &&
+          item.reason === "claim_rejected",
+      ),
+    },
+  };
+}

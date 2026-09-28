@@ -149,6 +149,25 @@ export class RunLedger {
     return null;
   }
 
+  /**
+   * Whether an answer-stage call (writer, reviewer or repair) fits. These
+   * calls may spend the reserve; nothing else may.
+   */
+  canCallAnswerStage(
+    tokens: number,
+    costUsdMicros: number,
+    timeMs: number,
+  ): BudgetRefusal | null {
+    if (this.signal?.aborted) return "cancelled";
+    const b = this.budget;
+    if (this.usage.providerCalls + 1 > b.providerCalls) return "provider_calls";
+    if (this.usage.tokens + tokens > b.tokens) return "tokens";
+    if (this.usage.costUsdMicros + costUsdMicros > b.costUsdMicros)
+      return "cost";
+    if (this.elapsedMs() + timeMs > b.deadlineMs) return "deadline";
+    return null;
+  }
+
   recordRound(calls: number) {
     this.usage.rounds += 1;
     this.usage.toolCalls += calls;

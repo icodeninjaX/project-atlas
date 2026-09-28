@@ -172,5 +172,5 @@ Not run: a real database, browser tests and live models.
 - The time budget assumes the platform's 60-second route limit; this module
   does not change `maxDuration`.
 
-**Next phase: AI-05** — semantic review, completeness repair and supported
+**Next phase: AI-05** (done; see [analyst-intelligence-review.md](analyst-intelligence-review.md)) — semantic review, completeness repair and supported
 recommendations over the claim ledger.
