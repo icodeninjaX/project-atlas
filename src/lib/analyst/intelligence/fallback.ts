@@ -45,9 +45,12 @@ export function deterministicDraft(
     (byRequirement[requirement.id] ?? [])
       .map((id) => byId.get(id))
       .filter((item): item is Numeric => Boolean(item && isShown(item)))
-      .filter((item) => !used.has(item.id) && used.add(item.id))
+      .filter((item) => !used.has(item.id))
       .slice(0, MAX_PER_REQUIREMENT)
       .map((item) => {
+        // Only a figure that is shown is used; one past this requirement's
+        // limit stays available to a later requirement.
+        used.add(item.id);
         const label = item.semantics.definition.split(":")[0]!.trim();
         const scope =
           item.scope.type === "entity" ? ` (${item.scope.description})` : "";

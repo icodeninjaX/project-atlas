@@ -186,19 +186,40 @@ difficult cases, and three runs per holdout case.
 | `writer.live.eval.test.ts` (AI-06) | Each picker model's structured-output support                                                          | 7 writer calls                                   |
 | `review.live.eval.test.ts` (AI-05) | Reviewer false approvals and false rejections                                                          | 1 reviewer call                                  |
 
-The comparison harness runs every holdout case on each arm and reports:
+The comparison harness runs every holdout case on each arm. It records what
+each run actually did:
+
+- the status and visible text;
+- the tools it called, recorded at each arm's tool entry point;
+- the owner IDs its reads filtered on, taken from the emulator's requests;
+- provider calls, settled tokens and latency.
+
+From those it reports:
 
 - status counts and status agreement;
 - stability across runs;
-- forbidden-claim hits and hard-gate failures;
-- provider calls and settled tokens;
-- median latency.
+- forbidden-claim hits;
+- owner-isolation failures;
+- security forbidden claims;
+- budget overruns;
+- tokens and median latency.
 
-Facts, usefulness and preference are left for a human or grader. It was
-checked end to end with `ATLAS_EVAL_DRY_RUN=1`, which blocks every provider
-request. That dry run produced 180 samples, 0 provider calls, and no crashes
-or hard-gate failures on any arm. It shows only that the harness works: with
-the provider blocked, every arm falls back.
+Neither arm reports the corpus's requirement IDs or extracted fact values, so
+facts, requirement coverage, usefulness and preference are **not scored**
+from placeholders. `ATLAS_EVAL_OUTPUT=<file>` saves every sample for a grader
+instead.
+
+The harness was checked end to end with `ATLAS_EVAL_DRY_RUN=1`, which blocks
+every provider request:
+
+- 180 samples, 0 provider calls, and no crashes;
+- no owner-isolation failures or forbidden claims on any arm;
+- no sample read more than one owner's records;
+- V2 recorded 90 tool calls. Legacy recorded none, because its planner needs
+  the provider.
+
+This shows only that the harness works: with the provider blocked, every arm
+falls back.
 
 To run it, with approval: set `ATLAS_ANALYST_V2_LIVE_EVALS=1`, the OpenAI key
 and the pool-meter credentials, then run
@@ -227,7 +248,7 @@ and the pool-meter credentials, then run
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | `npm run lint`         | Pass                                                                                                      |
 | `npm run typecheck`    | Pass                                                                                                      |
-| `npm run test`         | 145 files passed, 7 skipped; 893 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
+| `npm run test`         | 146 files passed, 7 skipped; 894 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
 | `npm run format:check` | Pass                                                                                                      |
 | `npm run build`        | Pass; `/analyst` and `/api/analyst/v2` render per request                                                 |
 

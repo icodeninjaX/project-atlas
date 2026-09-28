@@ -19,10 +19,13 @@ import { scoreRun, type ObservedRun } from "./scoring";
  * - `v2`: the new architecture with the default model.
  *
  * Each holdout case runs `RELEASE_THRESHOLDS.liveRunsPerHoldoutCase` times
- * per arm. The run records status, deterministic score checks, provider
- * calls, settled tokens and latency, and prints the per-arm summary with its
- * variability. Facts, usefulness and preference need a human or grader and
- * are left as `needs_review`; this suite asserts no quality threshold.
+ * per arm. It records what each run actually did: its status and text, the
+ * tools it called, the owners its reads named, provider calls, settled tokens
+ * and latency. It prints, per arm, only the checks those observations
+ * support: status, forbidden claims, owner isolation and budget. Facts,
+ * requirement coverage, usefulness and preference need a grader, so they are
+ * never scored from placeholders; set ATLAS_EVAL_OUTPUT to a file path to
+ * save every sample for grading. This suite asserts no quality threshold.
  *
  * It sends metered requests with synthetic aggregates only. Run it only with
  * explicit approval: ATLAS_ANALYST_V2_LIVE_EVALS=1, a configured OpenAI key
@@ -34,8 +37,24 @@ import { scoreRun, type ObservedRun } from "./scoring";
 vi.mock("server-only", () => ({}));
 const state = vi.hoisted(() => ({
   createClient: vi.fn(),
+  tools: [] as string[],
 }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: state.createClient }));
+// The legacy planner calls tools through this export; record each call.
+vi.mock("@/lib/analyst/tools/server", async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import("@/lib/analyst/tools/server")>();
+  return {
+    ...original,
+    invokeAnalystTool: ((name: string, ...rest: unknown[]) => {
+      state.tools.push(name);
+      return (original.invokeAnalystTool as (...args: unknown[]) => unknown)(
+        name,
+        ...rest,
+      );
+    }) as typeof original.invokeAnalystTool,
+  };
+});
 vi.mock("next/server", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/server")>()),
   after: () => undefined,
@@ -67,9 +86,28 @@ let settled: { input: number | null; output: number | null } = {
 };
 const nativeFetch = globalThis.fetch;
 
+/** Owner IDs that the recorded reads named in their filters. */
+function ownersRead() {
+  const owners = new Set<string>();
+  for (const url of emulator.requests) {
+    const match = url.searchParams
+      .get("user_id")
+      ?.match(/^eq\.([0-9a-f-]{36})$/);
+    if (match) owners.add(match[1]!);
+  }
+  return [...owners];
+}
+
+/** Starts the record of the turn being scored. */
+function startObserving() {
+  emulator.requests.length = 0;
+  state.tools.length = 0;
+  providerCalls = 0;
+}
+
 function loadFixtures(item: EvalCase) {
   emulator = createEmulator(fixtureTables(item.variant), item.owner);
-  providerCalls = 0;
+  startObserving();
   settled = { input: null, output: null };
   vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
@@ -169,7 +207,10 @@ async function runV2(item: EvalCase) {
         route: SHARED_ROUTE,
       },
       {
-        invoke: (tool, input) => invokeAnalystToolV2(tool, input, policy),
+        invoke: (tool, input) => {
+          state.tools.push(tool);
+          return invokeAnalystToolV2(tool, input, policy);
+        },
         authorize: (handles) => authorizeHandlesV2(handles, policy),
         stageCaller: (ledger) =>
           createStageCaller({ ledger, consent, route: SHARED_ROUTE }),
@@ -181,7 +222,8 @@ async function runV2(item: EvalCase) {
   let context: string | null = null;
   for (const turn of item.prior)
     context = (await ask(turn.question, context)).context;
-  providerCalls = 0;
+  // Only the final turn is scored; earlier turns just build its context.
+  startObserving();
   const response = await ask(item.question, context);
   settled = {
     input: response.usage.inputTokens,
@@ -216,12 +258,14 @@ async function sample(item: EvalCase, arm: Arm, run: number): Promise<Sample> {
     model: null,
     status: result.status,
     text: result.text,
+    // Graded separately: neither arm reports the corpus's requirement IDs or
+    // extracted fact values, so these are left for the grader.
     claims: result.claims,
     facts: {},
     unresolvedRequirementIds: [],
-    toolCalls: [],
+    toolCalls: [...state.tools],
     modelCalls: providerCalls,
-    ownerIdsTouched: [item.owner],
+    ownerIdsTouched: ownersRead(),
   };
   return {
     arm,
@@ -250,6 +294,11 @@ suite("live holdout comparison (opt-in)", () => {
         )
           samples.push(await sample(item, arm, run));
     vi.unstubAllGlobals();
+    if (process.env.ATLAS_EVAL_OUTPUT)
+      (await import("node:fs")).writeFileSync(
+        process.env.ATLAS_EVAL_OUTPUT,
+        JSON.stringify(samples, null, 2),
+      );
     const byCase = new Map(HOLDOUT_CASES.map((item) => [item.id, item]));
     for (const arm of ARMS) {
       const mine = samples.filter((item) => item.arm === arm);
@@ -278,7 +327,18 @@ suite("live holdout comparison (opt-in)", () => {
           ).length,
           forbiddenHits: scores.filter((score) => score.checks.forbidden.length)
             .length,
-          hardGateFailures: scores.flatMap((score) => score.hardGateFailures),
+          // Observed hard gates only; coverage gates need the grader.
+          ownerIsolationFailures: scores.filter(
+            (score) => !score.checks.ownership,
+          ).length,
+          securityForbiddenClaims: scores.filter((score) =>
+            score.hardGateFailures.includes("security_forbidden_claim"),
+          ).length,
+          overBudget: scores.filter((score) => !score.checks.budget).length,
+          toolCalls: mine.reduce(
+            (sum, item) => sum + item.observed.toolCalls.length,
+            0,
+          ),
           providerCalls: mine.reduce(
             (sum, item) => sum + item.observed.modelCalls,
             0,
