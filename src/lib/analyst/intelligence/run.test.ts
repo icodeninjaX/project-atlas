@@ -280,6 +280,77 @@ describe("Analyst V2 end to end (mocked provider)", () => {
     });
   });
 
+  it("compares two extra payments against one runway baseline (Q10)", async () => {
+    writer = () => ({
+      version: "2",
+      directAnswerClaimIds: [],
+      claims: [],
+      sections: [],
+      table: null,
+    });
+    await ask(
+      "Compare paying an extra ₱2,000 monthly versus ₱4,000 monthly on my Synthetic Card debt.",
+    ).result;
+    // The writer's first draft request carries the selected evidence.
+    const evidence = providerRequests.find(
+      (item) => item.schema === "atlas_answer_v2",
+    )!.input.evidence as Array<{ definition: string; value?: number }>;
+    const months = (label: string) =>
+      evidence.find((item) => item.definition === `${label} · Runway estimate`)
+        ?.value;
+    // ₱60,000.00 liquid over a monthly need of ₱9,500.00 essentials plus the
+    // ₱2,000.00 card minimum, plus each extra payment.
+    expect(months("Current")).toBeCloseTo(6_000_000 / 1_150_000, 6);
+    expect(months("Option 1")).toBeCloseTo(6_000_000 / 1_350_000, 6);
+    expect(months("Option 2")).toBeCloseTo(6_000_000 / 1_550_000, 6);
+  });
+
+  it("asks to confirm an income assumption, then runs the scenario on yes (Q43)", async () => {
+    writer = () => ({
+      version: "2",
+      directAnswerClaimIds: [],
+      claims: [],
+      sections: [],
+      table: null,
+    });
+    const first = await ask("What if my income drops?").result;
+    expect(first.status).toBe("clarification_required");
+    expect(first.presentation.limitations.join(" ")).toMatch(
+      /assume your monthly income falls by 20%/,
+    );
+    // Nothing is assumed or sent before the user confirms.
+    expect(providerRequests).toEqual([]);
+    await ask("Yes", { context: first.context }).result;
+    // The writer's first draft request carries the selected evidence.
+    const evidence = providerRequests.find(
+      (item) => item.schema === "atlas_answer_v2",
+    )!.input.evidence as Array<{ definition: string; value?: number }>;
+    expect(
+      evidence.find((item) => item.definition === "Option 1 · Monthly income")
+        ?.value,
+    ).toBe(4_000_000);
+  });
+
+  it("runs a different percentage given in reply to the assumption question", async () => {
+    writer = () => ({
+      version: "2",
+      directAnswerClaimIds: [],
+      claims: [],
+      sections: [],
+      table: null,
+    });
+    const first = await ask("What if my income drops?").result;
+    await ask("10%", { context: first.context }).result;
+    const evidence = providerRequests.find(
+      (item) => item.schema === "atlas_answer_v2",
+    )!.input.evidence as Array<{ definition: string; value?: number }>;
+    // "10%" keeps the proposed direction: a 10% drop from ₱50,000.00.
+    expect(
+      evidence.find((item) => item.definition === "Option 1 · Monthly income")
+        ?.value,
+    ).toBe(4_500_000);
+  });
+
   it("carries the subject into a follow-up and changes only the period (Q39)", async () => {
     const first = await ask("How much did I spend this month?").result;
     expect(first.context).not.toBeNull();

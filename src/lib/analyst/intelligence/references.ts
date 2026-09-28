@@ -121,3 +121,39 @@ export function debtScenario(question: string): DebtScenario | null {
     oneTimePayoff: oneTime,
   };
 }
+
+/** The context key of a user-confirmed monthly income change, in percent. */
+export const INCOME_CHANGE_KEY = "monthly_income_change_percent";
+/** The default the user is asked to confirm; never applied unconfirmed. */
+export const PROPOSED_INCOME_CHANGE_PERCENT = -20;
+
+/**
+ * An income drop without an amount ("What if my income drops?"): the
+ * scenario needs a number, so the user is asked to confirm one first.
+ */
+export function vagueIncomeDrop(question: string) {
+  return (
+    debtScenario(question)?.incomeChangePercent == null &&
+    // A stated amount (₱, % or "percent") is never replaced by a proposal;
+    // other numbers, such as a year, are not amounts.
+    !/[₱%]|\bpercent\b|\bpesos?\b/i.test(question) &&
+    /\b(?:income|salary|sahod|kita)\b[^?.]*\b(?:drops?|falls?|decreases?|goes down|is cut|shrinks?|bumaba)\b|\b(?:lose|lost|cut)\b[^?.]*\b(?:income|salary|job)\b/i.test(
+      question,
+    )
+  );
+}
+
+/** A confirmed income change carried in the brief's assumptions. */
+export function assumedIncomeChange(
+  assumptions: ReadonlyArray<{ id: string; text: string; origin: string }>,
+): number | null {
+  const item = assumptions.find(
+    (entry) =>
+      entry.id === `a_${INCOME_CHANGE_KEY}` &&
+      (entry.origin === "user_confirmed" || entry.origin === "user_stated"),
+  );
+  const value = Number(item?.text.match(/:\s*(-?\d+(?:\.\d+)?)\s*$/)?.[1]);
+  return item && Number.isFinite(value) && value >= -100 && value <= 100
+    ? value
+    : null;
+}

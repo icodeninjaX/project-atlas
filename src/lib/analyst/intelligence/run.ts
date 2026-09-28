@@ -35,7 +35,13 @@ import {
   type V2ToolName,
   type V2ToolResult,
 } from "./tools/contracts";
-import { applyTurn, classifyTurn, recordAnswer } from "./turns";
+import {
+  INCOME_CHANGE_KEY,
+  PROPOSED_INCOME_CHANGE_PERCENT,
+  assumedIncomeChange,
+  vagueIncomeDrop,
+} from "./references";
+import { applyTurn, askAssumption, classifyTurn, recordAnswer } from "./turns";
 
 /**
  * One Analyst V2 request, end to end (AI-06): open and re-authorize the
@@ -209,6 +215,45 @@ export async function runAnalystV2(
 
   const brief = deterministicBrief({ question: plan.question, plan, now });
   const language = brief.language === "fil-en" ? "fil-en" : "en";
+  // A scenario needs a number: an unstated income drop is proposed to the
+  // user and runs only once confirmed, never assumed silently.
+  if (
+    brief.requirements.some((item) =>
+      item.evidenceNeeded.includes("debt.scenario"),
+    ) &&
+    vagueIncomeDrop(plan.question) &&
+    assumedIncomeChange(brief.assumptions) === null
+  ) {
+    const percent = Math.abs(PROPOSED_INCOME_CHANGE_PERCENT);
+    const ask =
+      language === "fil-en"
+        ? `Ipagpapalagay ko bang bababa nang ${percent}% ang buwanang kita mo? Sumagot ng oo para patakbuhin ang scenario, o magbigay ng ibang porsyento.`
+        : `Should I assume your monthly income falls by ${percent}%? Reply yes to run the scenario, or give a different percentage.`;
+    return {
+      version: "2",
+      status: "clarification_required",
+      presentation: presentAnswer(emptyAnswer("clarification_required", ask), {
+        language,
+        style,
+        requirementText: (id) => id,
+        asOf: null,
+      }),
+      candidates: [],
+      suggestions: [],
+      models: { planner, writer: null, reviewer: null, fallback: false },
+      context: seal(
+        askAssumption(
+          plan.context,
+          plan.question,
+          INCOME_CHANGE_KEY,
+          PROPOSED_INCOME_CHANGE_PERCENT,
+        ),
+      ),
+      contextNotice,
+      outcome: "insufficient",
+      usage: new RunLedger(RUN_BUDGETS.simple, deps.clock).usage,
+    };
+  }
   const check = checkBrief(brief, {
     consent: input.consent,
     route: input.route,

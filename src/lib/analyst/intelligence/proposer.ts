@@ -1,6 +1,10 @@
 import { manilaToday } from "@/lib/analyst/evidence";
 import type { AnalysisBrief } from "./contracts";
-import { debtScenario, referencePhrase } from "./references";
+import {
+  assumedIncomeChange,
+  debtScenario,
+  referencePhrase,
+} from "./references";
 import type {
   InvestigationView,
   Proposal,
@@ -163,7 +167,17 @@ export function capabilityProposer(now: Date): Proposer {
             continue;
           }
           if (capability === "debt.scenario") {
-            const scenario = debtScenario(view.brief.question);
+            // A stated change, or one the user confirmed in this conversation.
+            const confirmed = assumedIncomeChange(view.brief.assumptions);
+            const scenario =
+              debtScenario(view.brief.question) ??
+              (confirmed === null
+                ? null
+                : {
+                    extraMonthlyPesos: [],
+                    incomeChangePercent: confirmed,
+                    oneTimePayoff: false,
+                  });
             if (!scenario) {
               add("getRunway", {}, requirement.id);
               continue;

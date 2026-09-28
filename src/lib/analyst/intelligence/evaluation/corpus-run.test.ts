@@ -147,10 +147,9 @@ async function runCase(item: EvalCase): Promise<CaseRun> {
   }
 }
 
-// Both are runway scenarios: V2 resolves the debt and calls the scenario
-// engine, but the frozen fixtures record no account balances, so the
-// engine (like the legacy path) reports insufficient history.
-const NO_EVIDENCE_YET = ["Q10", "Q43"];
+// Empty since the runway supplement (runway-fixtures.ts) gave the scenario
+// cases Q10 and Q43 the balances and budget the runway engine needs.
+const NO_EVIDENCE_YET: string[] = [];
 
 /**
  * AI-07 deterministic corpus run. Every one of the 60 cases, development and

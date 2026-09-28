@@ -275,6 +275,26 @@ export function classifyTurn(
       };
     if (no.test(text))
       return { kind: "decline_assumption", question: pending.question };
+    // A different percentage answers the question too. An unsigned amount
+    // keeps the proposed direction: "10%" to "assume a 20% drop" is a drop.
+    const percent = text.match(percentOnly);
+    if (
+      percent &&
+      typeof pending.proposed === "number" &&
+      pending.key.endsWith("_percent")
+    ) {
+      const stated = Number(percent[1]);
+      const value = percent[1]!.startsWith("-")
+        ? stated
+        : (pending.proposed < 0 ? -1 : 1) * Math.abs(stated);
+      if (Math.abs(value) <= 100)
+        return {
+          kind: "confirm_assumption",
+          key: pending.key,
+          value,
+          question: pending.question,
+        };
+    }
   }
   if (why.test(text) && text.length <= 60)
     return {
