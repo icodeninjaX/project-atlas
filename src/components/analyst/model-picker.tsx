@@ -13,7 +13,13 @@ import { cn } from "@/lib/utils";
 
 type PoolStatus = Record<
   FreePool,
-  { used: number; budget: number; dailyTokens: number }
+  {
+    used: number;
+    budget: number;
+    dailyTokens: number;
+    /** When OpenAI's own count was last read, if the sync is set up. */
+    syncedAt?: string | null;
+  }
 >;
 
 // Room one question needs: the planner and answer (small) or an answer with
@@ -352,6 +358,10 @@ export function ModelPicker({
             })}
           </div>
           <p className="text-muted-foreground px-3 pt-3 pb-1.5 text-[11px] leading-4">
+            {usage === "ready" &&
+            (pools?.small.syncedAt || pools?.large.syncedAt)
+              ? "Usage includes OpenAI’s own count, refreshed every few minutes. "
+              : null}
             Every figure is checked against your records whichever model
             explains. GPT-5.4 mini always plans which records to read.
           </p>

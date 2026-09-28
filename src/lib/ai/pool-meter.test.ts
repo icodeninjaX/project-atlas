@@ -18,6 +18,11 @@ const supabase = vi.hoisted(() => ({
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => (supabase.admin ? { rpc: supabase.rpc } : null),
 }));
+const usage = vi.hoisted(() => ({ sync: vi.fn() }));
+vi.mock("./provider-usage", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./provider-usage")>()),
+  refreshProviderUsage: usage.sync,
+}));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     rpc: supabase.statusRpc,
@@ -37,6 +42,9 @@ const settleCalls = () =>
   supabase.rpc.mock.calls.filter(([name]) => name === "settle_ai_pool_tokens");
 
 beforeEach(() => {
+  delete process.env.OPENAI_ADMIN_KEY;
+  usage.sync.mockReset();
+  usage.sync.mockResolvedValue("fresh");
   supabase.admin = true;
   supabase.getUser.mockResolvedValue({ data: { user: { id: "owner-a" } } });
   supabase.statusRpc.mockReset();
@@ -157,13 +165,238 @@ describe("free daily pool meter", () => {
       error: null,
     });
     expect(await readPoolStatus()).toEqual({
-      large: { used: 1000, budget: 225000, dailyTokens: 250000 },
-      small: { used: 0, budget: 2250000, dailyTokens: 2500000 },
+      large: {
+        used: 1000,
+        budget: 225000,
+        dailyTokens: 250000,
+        syncedAt: null,
+      },
+      small: { used: 0, budget: 2250000, dailyTokens: 2500000, syncedAt: null },
     });
     supabase.statusRpc.mockResolvedValueOnce({
       data: null,
       error: { message: "x" },
     });
     expect(await readPoolStatus()).toBeNull();
+    expect(usage.sync).not.toHaveBeenCalled();
+  });
+  it("refreshes OpenAI's count before showing a stale status", async () => {
+    process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
+    const row = (used: number, syncedAt: string | null) => [
+      { pool: "large", used, budget: 225000, dailyTokens: 250000, syncedAt },
+      { pool: "small", used, budget: 2250000, dailyTokens: 2500000, syncedAt },
+    ];
+    const fresh = new Date().toISOString();
+    supabase.statusRpc
+      .mockResolvedValueOnce({ data: row(0, null), error: null })
+      .mockResolvedValueOnce({ data: row(69542, fresh), error: null });
+    expect((await readPoolStatus())?.small).toMatchObject({
+      used: 69542,
+      syncedAt: fresh,
+    });
+    expect(usage.sync).toHaveBeenCalledTimes(1);
+    // A recent figure is shown without asking OpenAI again.
+    supabase.statusRpc.mockResolvedValueOnce({
+      data: row(69542, fresh),
+      error: null,
+    });
+    await readPoolStatus();
+    expect(usage.sync).toHaveBeenCalledTimes(1);
+  });
+  it("refreshes a stale OpenAI count and reserves again before sending", async () => {
+    const stale = new Date(Date.now() - 10 * 60_000).toISOString();
+    const fresh = new Date().toISOString();
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(Response.json({ usage: {}, choices: [] }));
+    const reservations = vi.fn();
+    supabase.rpc.mockImplementation(async (name: string) =>
+      name === "reserve_ai_pool_tokens"
+        ? { data: reservations(), error: null }
+        : { data: null, error: null },
+    );
+    // Without the admin key there is nothing to refresh.
+    reservations.mockReturnValue({
+      status: "reserved",
+      reservation_id: 9,
+      provider_synced_at: stale,
+    });
+    await meteredOpenAIFetch(url, init, options(fetch));
+    expect(usage.sync).not.toHaveBeenCalled();
+
+    process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
+    supabase.rpc.mockClear();
+    fetch.mockClear();
+    reservations
+      .mockReturnValueOnce({
+        status: "reserved",
+        reservation_id: 9,
+        provider_synced_at: stale,
+      })
+      .mockReturnValueOnce({
+        status: "reserved",
+        reservation_id: 10,
+        provider_synced_at: fresh,
+      });
+    await meteredOpenAIFetch(url, init, options(fetch));
+    expect(usage.sync).toHaveBeenCalledTimes(1);
+    // The first reservation is released and the call runs on the second.
+    expect(
+      supabase.rpc.mock.calls.map(([name, args]) => [name, args.p_id]),
+    ).toEqual([
+      ["reserve_ai_pool_tokens", undefined],
+      ["settle_ai_pool_tokens", 9],
+      ["reserve_ai_pool_tokens", undefined],
+      ["settle_ai_pool_tokens", 10],
+    ]);
+    expect(settleCalls()[0]![1]).toEqual({ p_id: 9, p_used: 0 });
+    expect(usage.sync.mock.invocationCallOrder[0]).toBeLessThan(
+      fetch.mock.invocationCallOrder[0]!,
+    );
+  });
+  it("refuses when OpenAI's fresh count leaves no room", async () => {
+    process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
+    const fetch = vi.fn();
+    const reservations = vi
+      .fn()
+      .mockReturnValueOnce({
+        status: "reserved",
+        reservation_id: 9,
+        provider_synced_at: null,
+      })
+      .mockReturnValueOnce({ status: "exhausted", pool: "large" });
+    supabase.rpc.mockImplementation(async (name: string) =>
+      name === "reserve_ai_pool_tokens"
+        ? { data: reservations(), error: null }
+        : { data: null, error: null },
+    );
+    await expect(
+      meteredOpenAIFetch(url, init, options(fetch)),
+    ).rejects.toBeInstanceOf(PoolExhaustedError);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(settleCalls()).toEqual([
+      ["settle_ai_pool_tokens", { p_id: 9, p_used: 0 }],
+    ]);
+  });
+  it("retries a refusal made against a stale OpenAI count", async () => {
+    process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
+    const stale = new Date(Date.now() - 10 * 60_000).toISOString();
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(Response.json({ usage: {}, choices: [] }));
+    const reservations = vi
+      .fn()
+      .mockReturnValueOnce({
+        status: "exhausted",
+        pool: "large",
+        provider_synced_at: stale,
+      })
+      .mockReturnValueOnce({
+        status: "reserved",
+        reservation_id: 10,
+        provider_synced_at: new Date().toISOString(),
+      });
+    supabase.rpc.mockImplementation(async (name: string) =>
+      name === "reserve_ai_pool_tokens"
+        ? { data: reservations(), error: null }
+        : { data: null, error: null },
+    );
+    await meteredOpenAIFetch(url, init, options(fetch));
+    expect(usage.sync).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    // Nothing was reserved by the refusal, so nothing is released.
+    expect(settleCalls()).toEqual([
+      ["settle_ai_pool_tokens", { p_id: 10, p_used: null }],
+    ]);
+
+    // A refusal against a fresh count stands without a refresh.
+    usage.sync.mockClear();
+    fetch.mockClear();
+    reservations.mockReturnValueOnce({
+      status: "exhausted",
+      pool: "large",
+      provider_synced_at: new Date().toISOString(),
+    });
+    await expect(
+      meteredOpenAIFetch(url, init, options(fetch)),
+    ).rejects.toBeInstanceOf(PoolExhaustedError);
+    expect(usage.sync).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("sends nothing when the first reservation cannot be released", async () => {
+    process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
+    const fetch = vi.fn();
+    supabase.rpc.mockImplementation(async (name: string) =>
+      name === "reserve_ai_pool_tokens"
+        ? {
+            data: {
+              status: "reserved",
+              reservation_id: 9,
+              provider_synced_at: null,
+            },
+            error: null,
+          }
+        : { data: null, error: { message: "down" } },
+    );
+    await expect(
+      meteredOpenAIFetch(url, init, options(fetch)),
+    ).rejects.toBeInstanceOf(PoolMeterError);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(
+      supabase.rpc.mock.calls.filter(
+        ([name]) => name === "reserve_ai_pool_tokens",
+      ),
+    ).toHaveLength(1);
+  });
+  it("sends nothing while another instance's refresh is still unresolved", async () => {
+    process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
+    usage.sync.mockResolvedValueOnce("pending");
+    const fetch = vi.fn();
+    supabase.rpc.mockImplementation(async (name: string) =>
+      name === "reserve_ai_pool_tokens"
+        ? {
+            data: {
+              status: "reserved",
+              reservation_id: 9,
+              provider_synced_at: null,
+            },
+            error: null,
+          }
+        : { data: null, error: null },
+    );
+    await expect(
+      meteredOpenAIFetch(url, init, options(fetch)),
+    ).rejects.toBeInstanceOf(PoolMeterError);
+    expect(fetch).not.toHaveBeenCalled();
+    // The reservation is released rather than left counted.
+    expect(settleCalls()).toEqual([
+      ["settle_ai_pool_tokens", { p_id: 9, p_used: 0 }],
+    ]);
+  });
+  it("keeps the ledger reservation when the refresh fails", async () => {
+    process.env.OPENAI_ADMIN_KEY = "sk-admin-test";
+    usage.sync.mockResolvedValueOnce("failed");
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(Response.json({ usage: {}, choices: [] }));
+    supabase.rpc.mockImplementation(async (name: string) =>
+      name === "reserve_ai_pool_tokens"
+        ? {
+            data: {
+              status: "reserved",
+              reservation_id: 9,
+              provider_synced_at: null,
+            },
+            error: null,
+          }
+        : { data: null, error: null },
+    );
+    await meteredOpenAIFetch(url, init, options(fetch));
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(
+      supabase.rpc.mock.calls.filter(
+        ([name]) => name === "reserve_ai_pool_tokens",
+      ),
+    ).toHaveLength(1);
   });
 });

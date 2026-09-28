@@ -68,10 +68,48 @@ When a pool is refused:
 - The weekly insight keeps the week open and prepares it on a later visit.
 - Capture asks the user to use a manual form until the reset.
 
+## OpenAI's own count
+
+With `OPENAI_ADMIN_KEY` set (an API Platform organization admin key, server
+only), ATLAS also reads today's usage from OpenAI's organization Usage API
+(`/v1/organization/usage/completions`, grouped by model and service tier) and
+records it per pool (`supabase/migrations/20260928011336_openai_provider_usage.sql`):
+
+- The meter counts the larger of its own ledger and OpenAI's figure plus the
+  reservations made since 15 minutes before that figure was read (usage data
+  lags). Usage the meter never saw now counts: requests before it existed, the
+  Playground, and other apps on the organization.
+- The figure refreshes when it is more than five minutes old, before the
+  picker shows its meters and before the next pooled call is sent. That call
+  then releases its first reservation and reserves again against the fresh
+  figure, so usage outside the meter cannot let it cross the limit. The
+  refresh adds one Usage API call at most every five minutes; if it fails,
+  the ledger decision stands.
+- Refreshes are coalesced: callers in one server instance share a single
+  in-flight refresh, and across instances only the caller that claims it
+  (`claim_ai_pool_provider_sync`) calls the Usage API and releases the claim
+  when it finishes. The others wait until its figure lands or its claim
+  ends (released, or lapsed after 15 seconds), then keep their ledger
+  decision if no fresh figure arrived.
+- A failed check on another instance's claim keeps the caller waiting; it
+  only gives up when a fresh figure lands, the claim is released, or the wait
+  outlasts the claim. After a failed refresh (a revoked admin key, say), each
+  server instance keeps the ledger decision for a minute before asking
+  OpenAI again.
+- A replaced reservation must be released first; if the release fails,
+  nothing is sent and the first reservation stays counted.
+- `OPENAI_PROJECT_ID` (optional) narrows the count to ATLAS's project. Without
+  it the whole organization counts, which can only stop ATLAS sooner.
+- Without the admin key, or when OpenAI cannot be reached, the meter keeps
+  using its ledger alone.
+- `ai_pool_provider_usage.details` keeps the per-model and service-tier
+  breakdown for review, including any usage OpenAI reports outside the free
+  tier.
+
 ## Limits of the meter
 
-- It counts only ATLAS's traffic. Keep other apps off ATLAS's OpenAI project,
-  or lower `stop_ratio` to leave them room.
+- Without the admin key it counts only ATLAS's traffic. Keep other apps off
+  ATLAS's OpenAI project, or lower `stop_ratio` to leave them room.
 - A single PDF whose real usage is more than about 450K tokens could still
   cross the limit, because its reservation is capped at 200K. Capture files
   are at most 4 MB.

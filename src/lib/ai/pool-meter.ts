@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { freePoolFor, type FreePool } from "./pools";
+import { providerUsageStale, refreshProviderUsage } from "./provider-usage";
 
 export type PoolFeature =
   | "analyst_planner"
@@ -94,30 +95,68 @@ export async function meteredOpenAIFetch(
     data: { user },
   } = await session.auth.getUser();
   if (!user) throw new PoolMeterError("unauthenticated");
-  const { data, error } = await admin.rpc("reserve_ai_pool_tokens", {
-    p_user_id: user.id,
-    p_model: options.model,
-    p_feature: options.feature,
-    p_tokens: Math.max(1, Math.ceil(options.reserveTokens)),
-  });
-  const reservation = data as {
+  type Reservation = {
     status?: string;
     reservation_id?: number;
+    provider_synced_at?: string | null;
   } | null;
-  if (error || !reservation?.status) throw new PoolMeterError("unavailable");
-  if (reservation.status === "exhausted") throw new PoolExhaustedError(pool);
-  if (reservation.status !== "reserved" || !reservation.reservation_id)
-    throw new PoolMeterError(reservation.status);
-  const settle = async (used: number | null) => {
+  const reserve = async () => {
+    const { data, error } = await admin.rpc("reserve_ai_pool_tokens", {
+      p_user_id: user.id,
+      p_model: options.model,
+      p_feature: options.feature,
+      p_tokens: Math.max(1, Math.ceil(options.reserveTokens)),
+    });
+    return error ? null : (data as Reservation);
+  };
+  const settleReservation = async (id: number, used: number | null) => {
     try {
-      await admin.rpc("settle_ai_pool_tokens", {
-        p_id: reservation.reservation_id,
-        p_used: used,
-      });
+      await admin.rpc("settle_ai_pool_tokens", { p_id: id, p_used: used });
     } catch {
       /* The reservation stays counted at its full size. */
     }
   };
+  let reservation = await reserve();
+  // A stale OpenAI count is refreshed before anything is sent, then the
+  // request reserves again against it, so usage outside the meter cannot
+  // let this request cross the limit. A refusal against a stale count is
+  // retried too, since a newer count can free room. If the refresh fails,
+  // the ledger decision stands; if its outcome is still unknown, nothing is
+  // sent.
+  if (
+    (reservation?.status === "exhausted" ||
+      (reservation?.status === "reserved" && reservation.reservation_id)) &&
+    process.env.OPENAI_ADMIN_KEY &&
+    providerUsageStale(reservation.provider_synced_at)
+  ) {
+    const refresh = await refreshProviderUsage();
+    if (refresh !== "failed") {
+      if (reservation.status === "reserved" && reservation.reservation_id) {
+        // Only a released reservation may be replaced; otherwise nothing is
+        // sent and the first one stays counted.
+        const { error: releaseError } = await admin
+          .rpc("settle_ai_pool_tokens", {
+            p_id: reservation.reservation_id,
+            p_used: 0,
+          })
+          .then(
+            (result) => result,
+            () => ({ error: true }),
+          );
+        if (releaseError) throw new PoolMeterError("release_failed");
+      }
+      if (refresh === "pending")
+        throw new PoolMeterError("usage_refresh_pending");
+      reservation = await reserve();
+    }
+  }
+  if (!reservation?.status) throw new PoolMeterError("unavailable");
+  if (reservation.status === "exhausted") throw new PoolExhaustedError(pool);
+  if (reservation.status !== "reserved" || !reservation.reservation_id)
+    throw new PoolMeterError(reservation.status);
+  const reservationId = reservation.reservation_id;
+  const settle = (used: number | null) =>
+    settleReservation(reservationId, used);
   let response: Response;
   try {
     response = await send(url, init);
@@ -135,27 +174,43 @@ export async function meteredOpenAIFetch(
   return response;
 }
 
-/** Today's use of each pool, or null when the meter is unavailable. */
-export async function readPoolStatus() {
+export type PoolStatus = Record<
+  FreePool,
+  { used: number; budget: number; dailyTokens: number; syncedAt: string | null }
+>;
+
+async function readStatusOnce(): Promise<PoolStatus | null> {
   const client = await createClient();
   if (!client) return null;
   const { data, error } = await client.rpc("ai_pool_status");
   if (error || !Array.isArray(data)) return null;
-  const status: Partial<
-    Record<FreePool, { used: number; budget: number; dailyTokens: number }>
-  > = {};
+  const status: Partial<PoolStatus> = {};
   for (const row of data as Array<Record<string, unknown>>) {
     if (row.pool !== "large" && row.pool !== "small") continue;
     status[row.pool] = {
       used: Number(row.used) || 0,
       budget: Number(row.budget) || 0,
       dailyTokens: Number(row.dailyTokens) || 0,
+      syncedAt: typeof row.syncedAt === "string" ? row.syncedAt : null,
     };
   }
-  return status.large && status.small
-    ? (status as Record<
-        FreePool,
-        { used: number; budget: number; dailyTokens: number }
-      >)
-    : null;
+  return status.large && status.small ? (status as PoolStatus) : null;
+}
+
+/**
+ * Today's use of each pool, or null when the meter is unavailable. A stale
+ * OpenAI figure is refreshed first, so the picker shows OpenAI's own count.
+ */
+export async function readPoolStatus(): Promise<PoolStatus | null> {
+  const status = await readStatusOnce();
+  if (
+    !status ||
+    !process.env.OPENAI_ADMIN_KEY ||
+    (!providerUsageStale(status.large.syncedAt) &&
+      !providerUsageStale(status.small.syncedAt))
+  )
+    return status;
+  return (await refreshProviderUsage()) === "fresh"
+    ? await readStatusOnce()
+    : status;
 }
