@@ -2,7 +2,11 @@ import { randomBytes } from "node:crypto";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AI_MODELS } from "@/lib/ai/models";
-import { legacyEquivalentConsent, SHARED_ROUTE } from "../policy";
+import {
+  filterProviderPayload,
+  legacyEquivalentConsent,
+  SHARED_ROUTE,
+} from "../policy";
 import { runAnalystV2, type V2Response } from "../run";
 import type { StageCaller } from "../stages";
 import { authorizeHandlesV2, invokeAnalystToolV2 } from "../tools/server";
@@ -46,20 +50,39 @@ import { FIXTURE_CLOCK, OWNER_A } from "./fixtures";
  */
 
 type Input = {
+  labels: unknown[];
   requirements: Array<{ id: string }>;
   evidence: Array<{ id: string }>;
-  derivedFacts: Array<{ id: string; operation: string }>;
+  derivedFacts: Array<{
+    id: string;
+    operation: string;
+    top: string[] | null;
+    ranking: Array<{ member: string }> | null;
+  }>;
 };
 type Draft = (input: Input, stage: string) => unknown;
 
-async function ask(question: string, draft: Draft) {
-  emulator = createEmulator(fixtureTables(), OWNER_A);
+async function ask(
+  question: string,
+  draft: Draft,
+  rename?: { from: string; to: string },
+) {
+  const tables = fixtureTables();
+  if (rename)
+    tables.transaction_categories = tables.transaction_categories!.map((row) =>
+      row.name === rename.from ? { ...row, name: rename.to } : row,
+    );
+  emulator = createEmulator(tables, OWNER_A);
   const policy = { consent, route: SHARED_ROUTE };
   const stages: string[] = [];
   const caller: StageCaller = async (request) => {
     stages.push(request.stage);
+    // The writer sees what production sends: the shared route withholds
+    // owner names.
     const content = draft(
-      request.render(request.payload) as Input,
+      request.render(
+        filterProviderPayload(request.payload, consent, SHARED_ROUTE).payload,
+      ) as Input,
       request.stage,
     );
     return content
@@ -385,5 +408,121 @@ describe("preview regressions", () => {
       "Your recorded expenses total ₱11,000.00 from September 1 to 24, 2026.",
     ]);
     expect(response.status).toBe("answered");
+  });
+
+  it("names a category by mention when the route withholds names", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    let labels: unknown[] = ["unset"];
+    const { response } = await ask(
+      "Where do you think I overspend the most?",
+      (input) => {
+        labels = input.labels;
+        const rank = input.derivedFacts.find(
+          (item) => item.operation === "rank",
+        )!;
+        const [top, second] = rank.ranking!;
+        return draftOf(
+          [
+            claim(
+              "c1",
+              "r_money",
+              `{{${top!.member}}} is your largest spending category at ₱5,000.00.`,
+              "cohort:expense_by_category",
+              [],
+              [rank.id],
+            ),
+            // A mention of a record the claim does not cite is rejected.
+            claim(
+              "c2",
+              "r_money",
+              `{{${second!.member}}} is your second largest category at ₱2,800.00.`,
+              "whole_domain:expense",
+              [find(input, "expense.total")],
+            ),
+          ],
+          ["c1"],
+        );
+      },
+    );
+    warn.mockRestore();
+    // Production's shared route sends no owner names to the writer.
+    expect(labels).toEqual([]);
+    expect(response.status).toBe("answered");
+    expect(shown(response)).toEqual([
+      "Groceries is your largest spending category at ₱5,000.00.",
+    ]);
+  });
+
+  it("answers from ATLAS's ranking when the writer only reports missing names", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { response, stages } = await ask(
+      "Where do you think I overspend the most?",
+      (input) => {
+        const rank = input.derivedFacts.find(
+          (item) => item.operation === "rank",
+        )!;
+        return draftOf(
+          [
+            {
+              ...claim(
+                "c1",
+                "r_money",
+                "Category names and a budget are missing, so the records cannot establish which spending was excessive.",
+                "cohort:expense_by_category",
+                [],
+              ),
+              kind: "limitation",
+            },
+            // The shape of the live rejection: a raw ID read as a figure.
+            claim(
+              "c2",
+              "r_money",
+              "The largest category is category f3ee7a14 at ₱5,000.00.",
+              "cohort:expense_by_category",
+              [],
+              [rank.id],
+            ),
+          ],
+          ["c1"],
+        );
+      },
+    );
+    warn.mockRestore();
+    expect(stages).toEqual(["writer", "repair"]);
+    expect(response.status).toBe("answered");
+    expect(shown(response)[0]).toBe(
+      "Largest recorded expense category: Groceries, ₱5,000.00 from Sep 1, 2026 to Sep 24, 2026.",
+    );
+    expect(response.presentation.unresolved).toEqual([]);
+  });
+
+  it("states ATLAS's ranking even when the category's own name has figures and domain words", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { response } = await ask(
+      "Where do you think I overspend the most?",
+      () =>
+        draftOf(
+          [
+            {
+              ...claim(
+                "c1",
+                "r_money",
+                "Category names are missing, so the records cannot establish which spending was excessive.",
+                "cohort:expense_by_category",
+                [],
+              ),
+              kind: "limitation",
+            },
+          ],
+          ["c1"],
+        ),
+      // A real name the checks would read as a figure, a date and debt.
+      { from: "Groceries", to: "Must-pay loan & bills 2026-09" },
+    );
+    warn.mockRestore();
+    expect(response.status).toBe("answered");
+    expect(shown(response)[0]).toBe(
+      "Largest recorded expense category: Must-pay loan & bills 2026-09, ₱5,000.00 from Sep 1, 2026 to Sep 24, 2026.",
+    );
   });
 });

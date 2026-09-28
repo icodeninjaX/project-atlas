@@ -1,6 +1,5 @@
 import type { AnalysisBrief, DerivedFact, EvidenceV2 } from "./contracts";
 import { formatMoney } from "./language";
-import type { ProviderLabel } from "./policy";
 
 /**
  * The deterministic draft used when no model can write (AI-07, roadmap
@@ -35,21 +34,14 @@ function valueText(item: Numeric) {
 }
 
 /**
- * The leading member of a complete ATLAS ranking, named by its owner label,
- * for a requirement that asks where the most goes. A tie names every tied
- * member. Returns null without a defined, complete ranking or a label.
+ * The leading member of a complete ATLAS ranking, as a mention the owner
+ * sees by its label, for a requirement that asks where the most goes. A tie
+ * names every tied member. Returns null without a defined, complete ranking.
  */
-function rankingText(
-  fact: DerivedFact,
-  labels: ReadonlyMap<string, string>,
-  kind: string,
-) {
+function rankingText(fact: DerivedFact, kind: string) {
   if (fact.output.status !== "defined" || !fact.complete || !fact.top?.length)
     return null;
-  const names = fact.top.map((member) =>
-    member === "uncategorized" ? "Uncategorized" : labels.get(member),
-  );
-  if (names.some((name) => !name)) return null;
+  const names = fact.top.map((member) => `{{${member}}}`);
   const [period] = fact.periods;
   const amount = formatMoney(fact.output.value);
   const span = `from ${period!.from} to ${period!.through}`;
@@ -62,14 +54,8 @@ export function deterministicDraft(
   brief: AnalysisBrief,
   evidence: EvidenceV2[],
   byRequirement: Readonly<Record<string, string[]>>,
-  ranked: { derived: DerivedFact[]; labels: ProviderLabel[] } = {
-    derived: [],
-    labels: [],
-  },
+  derived: DerivedFact[] = [],
 ) {
-  const labels = new Map(
-    ranked.labels.map((label) => [label.handle, label.text]),
-  );
   const byId = new Map(evidence.map((item) => [item.id, item]));
   const used = new Set<string>();
   let next = 0;
@@ -78,7 +64,7 @@ export function deterministicDraft(
     if (!requirement.evidenceNeeded.includes("money.category_ranking"))
       return [];
     const selected = new Set(byRequirement[requirement.id] ?? []);
-    const fact = ranked.derived.find(
+    const fact = derived.find(
       (item) =>
         item.operation === "rank" &&
         item.operands.some((id) => selected.has(id)),
@@ -86,7 +72,7 @@ export function deterministicDraft(
     const kind = /\bincome\b/i.test(requirement.question)
       ? "income"
       : "expense";
-    const text = fact && rankingText(fact, labels, kind);
+    const text = fact && rankingText(fact, kind);
     if (!fact || !text) return [];
     return [
       {

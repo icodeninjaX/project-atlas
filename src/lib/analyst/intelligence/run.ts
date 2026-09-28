@@ -386,6 +386,9 @@ export async function runAnalystV2(
     style: detectStyle(plan.question, brief.intent),
     requirementText,
     asOf,
+    labels: new Map(
+      investigation.labels.map((label) => [label.handle, label.text]),
+    ),
   });
   const next = recordAnswer(plan.context, {
     brief,

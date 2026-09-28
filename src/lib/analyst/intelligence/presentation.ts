@@ -5,6 +5,7 @@ import type {
   ResultStatus,
   UnresolvedReason,
 } from "./contracts";
+import { renderMentions } from "./mentions";
 import { readableText, UI_TEXT, type StyleRequest } from "./language";
 
 /**
@@ -90,17 +91,22 @@ export function presentAnswer(
     style: StyleRequest;
     requirementText: (id: string) => string;
     asOf: string | null;
+    /** Owner labels for mentioned records, shown only to the owner. */
+    labels?: ReadonlyMap<string, string>;
   },
 ): Presentation {
   const { language } = options;
+  const labels = options.labels ?? new Map<string, string>();
+  const show = (text: string) =>
+    renderMentions(readableText(text, language), labels);
   const shipped = answer.claims.filter(claimCanShip);
   const present = (claim: AnalyticalClaim): PresentedClaim => ({
     id: claim.id,
     kind: claim.kind,
-    text: readableText(claim.text, language),
+    text: show(claim.text),
     recommendation: claim.recommendation
       ? {
-          tradeoff: readableText(claim.recommendation.tradeoff, language),
+          tradeoff: show(claim.recommendation.tradeoff),
           constraints: claim.recommendation.constraints,
           nextAction: claim.recommendation.nextAction,
           conditional: claim.recommendation.conditional,

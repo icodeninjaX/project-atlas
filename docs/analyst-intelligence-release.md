@@ -223,7 +223,7 @@ proposed direction, and "no" declines. Only a ₱ amount, a percentage or
 
 The first V2 answers on the preview deployment exposed four defects. Each is
 replayed on the synthetic fixtures with a scripted writer in
-`evaluation/preview-regressions.test.ts`; six of its eight
+`evaluation/preview-regressions.test.ts`; nine of its eleven
 cases fail without the fixes, and the other two guard against loosening
 the checks.
 
@@ -272,6 +272,26 @@ with the whole-account total. Three changes follow:
   uses the owner's label, and is omitted without one.
 
 Direct answers are now shown in the answer's own order.
+
+**On production the writer never sees category names.** The shared
+provider route allows only aggregate figures, so owner labels (a
+basic-context field) are withheld. The regression harness had rendered the
+unfiltered payload and missed this; it now applies the production filter.
+The live answer showed both consequences. The writer named categories by
+raw ID, whose digits failed the figure check, and said the names were
+missing. ATLAS's own ranking statement put the owner's label into claim
+text, so a name with digits or words such as "loan" or "must" could fail
+the figure, date, domain or certainty checks, leaving the requirement
+"Not enough evidence".
+
+Claims now name a record by mention: its handle in double braces, such as
+`{{category:<id>}}` (`mentions.ts`). The checks read a mention as a plain
+word, and a mention must name a member the claim cites (`unknown_mention`
+otherwise). The owner sees the label only at presentation, and a missing
+label reads "an unnamed category". Stored conversation context keeps the
+mention, so a name never reaches a provider. ATLAS's ranking statement
+uses a mention and no longer depends on labels, and the writer is told to
+mention records by handle and never write raw IDs.
 
 Supporting changes:
 
@@ -387,7 +407,7 @@ and the pool-meter credentials, then run
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | `npm run lint`         | Pass                                                                                                      |
 | `npm run typecheck`    | Pass                                                                                                      |
-| `npm run test`         | 149 files passed, 7 skipped; 926 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
+| `npm run test`         | 150 files passed, 7 skipped; 931 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
 | `npm run format:check` | Pass                                                                                                      |
 | `npm run build`        | Pass; `/analyst` and `/api/analyst/v2` render per request                                                 |
 
