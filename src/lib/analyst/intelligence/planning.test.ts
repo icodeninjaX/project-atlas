@@ -13,11 +13,25 @@ const capabilities = (question: string) =>
  */
 describe("deterministic brief capability routing", () => {
   it("reads goals and tasks as a whole when none is named", () => {
+    expect(capabilities("How are my goals going?")).toEqual([
+      ["goal.overview"],
+    ]);
+    // Ranking unnamed goals is unsupported: the overview and task focus are
+    // context and cannot answer which goal to prioritize.
+    const brief = deterministicBrief({
+      question: "Which of my goals should get my limited attention this week?",
+      plan: null,
+      now,
+    });
     expect(
-      capabilities(
-        "Which of my goals should get my limited attention this week?",
-      ),
-    ).toEqual([["goal.overview", "task.ranking"]]);
+      brief.requirements.map(({ evidenceNeeded, essential }) => [
+        evidenceNeeded,
+        essential,
+      ]),
+    ).toEqual([
+      [["goal.ranking"], true],
+      [["goal.overview", "task.ranking"], false],
+    ]);
     expect(capabilities("Which task should I do first?")).toEqual([
       ["task.ranking"],
     ]);
@@ -39,6 +53,14 @@ describe("deterministic brief capability routing", () => {
     expect(brief.requirements.map((item) => item.evidenceNeeded)).toEqual([
       ["debt.scenario"],
     ]);
+  });
+
+  it("records a one-time payoff as unsupported", () => {
+    expect(
+      capabilities(
+        "What if I pay off my card with a one-time ₱40,000 payment?",
+      ),
+    ).toEqual([["debt.one_time_payoff"]]);
   });
 
   it("treats a decision about studying as a decision, not knowledge", () => {

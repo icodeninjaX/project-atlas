@@ -147,11 +147,33 @@ export function deterministicBrief(input: {
     const base = requirementFor[domain];
     if (!base) continue;
     let capabilities = [...base.capabilities];
-    if (domain === "goals" && !namedGoal)
-      capabilities = [
-        "goal.overview",
-        ...(intent === "prioritize" ? ["task.ranking"] : []),
-      ];
+    // No tool compares goals by name, so ranking unnamed goals is recorded
+    // as unsupported; the overview and task focus are context, not an answer.
+    if (domain === "goals" && !namedGoal && intent === "prioritize") {
+      requirements.push(
+        {
+          id: "r_goals",
+          question: "Which goal should get attention",
+          essential: true,
+          evidenceNeeded: ["goal.ranking"],
+        },
+        {
+          id: "r_goals_context",
+          question: "Current state across goals and tasks",
+          essential: false,
+          evidenceNeeded: ["goal.overview", "task.ranking"],
+        },
+      );
+      continue;
+    }
+    if (domain === "goals" && !namedGoal) capabilities = ["goal.overview"];
+    const scenario = domain === "runway" ? debtScenario(question) : null;
+    if (
+      scenario?.oneTimePayoff &&
+      scenario.extraMonthlyPesos.length === 0 &&
+      scenario.incomeChangePercent === null
+    )
+      capabilities = ["debt.one_time_payoff"];
     if (domain === "tasks" && !namedGoal && !domains.includes("goals"))
       capabilities = ["task.ranking"];
     if (

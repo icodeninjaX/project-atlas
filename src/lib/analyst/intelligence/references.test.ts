@@ -24,6 +24,19 @@ describe("reference phrases", () => {
     expect(
       referencePhrase("Was studying part-time the right call?", "decision"),
     ).toBe("studying part-time");
+    // Question grammar after the name is not part of it.
+    expect(
+      referencePhrase(
+        "Was my decision to study part-time the right call?",
+        "decision",
+      ),
+    ).toBe("study part-time");
+    expect(
+      referencePhrase(
+        "Was my decision to study part-time successful?",
+        "decision",
+      ),
+    ).toBe("study part-time");
     expect(
       referencePhrase(
         "How is my Land a developer job goal going this month?",
@@ -69,6 +82,23 @@ describe("debt scenarios", () => {
       incomeChangePercent: null,
       oneTimePayoff: false,
     });
+  });
+
+  it("reads a monthly cadence anywhere in an extra-payment question", () => {
+    expect(
+      debtScenario("What if I pay an extra ₱2,000 toward my card each month?"),
+    ).toMatchObject({ extraMonthlyPesos: ["2000"] });
+    expect(
+      debtScenario(
+        "Compare ₱2,000 versus ₱4,000 in extra monthly payments on my card.",
+      ),
+    ).toMatchObject({ extraMonthlyPesos: ["2000", "4000"] });
+    // An income amount is never read as a payment.
+    expect(
+      debtScenario(
+        "What if my monthly income is ₱50,000 and I pay an extra ₱2,000 on my card?",
+      ),
+    ).toMatchObject({ extraMonthlyPesos: ["2000"] });
   });
 
   it("reads an income change with an extra payment", () => {

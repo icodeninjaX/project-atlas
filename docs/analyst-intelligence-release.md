@@ -97,17 +97,17 @@ Every case runs through the full V2 path, including prior turns, against the
 owner-scoped emulator. No model is available, so this measures the
 architecture, not a model's writing.
 
-| Measure                                               | Result                                                                                   |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Cases run                                             | 60 (40 development, 20 holdout)                                                          |
-| Crashes                                               | 0                                                                                        |
-| Another owner's records or identity in visible output | 0                                                                                        |
-| Unsafe progress events                                | 0                                                                                        |
-| Statuses                                              | 53 `fallback_facts`, 3 `error`, 2 `insufficient_evidence`, 2 `clarification_required`    |
-| `fallback_facts` answers with no checked figure       | 0 (was 58 before fix 1)                                                                  |
-| Maximum tool calls in one run                         | 5, within the deep envelope of 8                                                         |
-| Cases over their frozen per-case tool budget          | 2: Q28, Q38 (4 calls against 3; V2 takes the deep path for these relationship questions) |
-| Answerable cases reaching any evidence                | **47 of 49** (was 35 of 49 at the AI-07 release decision; see §2.5)                      |
+| Measure                                               | Result                                                                                                            |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Cases run                                             | 60 (40 development, 20 holdout)                                                                                   |
+| Crashes                                               | 0                                                                                                                 |
+| Another owner's records or identity in visible output | 0                                                                                                                 |
+| Unsafe progress events                                | 0                                                                                                                 |
+| Statuses                                              | 53 `fallback_facts`, 3 `error`, 2 `clarification_required`, 1 `insufficient_evidence`, 1 `unsupported_capability` |
+| `fallback_facts` answers with no checked figure       | 0 (was 58 before fix 1)                                                                                           |
+| Maximum tool calls in one run                         | 5, within the deep envelope of 8                                                                                  |
+| Cases over their frozen per-case tool budget          | 2: Q28, Q38 (4 calls against 3; V2 takes the deep path for these relationship questions)                          |
+| Answerable cases reaching any evidence                | **47 of 49** (was 35 of 49 at the AI-07 release decision; see §2.5)                                               |
 
 The two answerable cases that still reach no evidence are runway scenarios
 (Q10, Q43). V2 resolves the debt and calls the scenario engine, but the frozen
@@ -169,6 +169,12 @@ The fixes:
   resolves the debt, then compares the stated extra monthly payments (one or
   two options) with any income change; it takes the deep path because it
   needs two rounds. A one-time payoff is not modeled, as before.
+- **Honest limits.** Ranking unnamed goals ("which of my goals should get
+  attention") is recorded as an unsupported `goal.ranking` requirement, with
+  the goal overview and task focus as non-essential context, so the answer is
+  partial rather than an apparent ranking. A one-time payoff is an
+  unsupported `debt.one_time_payoff` requirement (Q11 now reports
+  `unsupported_capability`, as the corpus expects).
 - **References.** `references.ts` extracts the phrase that names one record
   ("study part-time", "Synthetic"). Resolution also accepts a whole-word
   match of a two-or-more-word phrase in any order, with light stemming;
@@ -282,7 +288,7 @@ and the pool-meter credentials, then run
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | `npm run lint`         | Pass                                                                                                      |
 | `npm run typecheck`    | Pass                                                                                                      |
-| `npm run test`         | 148 files passed, 7 skipped; 906 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
+| `npm run test`         | 148 files passed, 7 skipped; 908 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
 | `npm run format:check` | Pass                                                                                                      |
 | `npm run build`        | Pass; `/analyst` and `/api/analyst/v2` render per request                                                 |
 

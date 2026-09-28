@@ -161,6 +161,28 @@ export const CAPABILITY_MANIFEST: readonly CapabilityDescriptor[] = [
     unsupported: ["Which goal matters most to the user", "Progress history"],
   }),
   entry({
+    id: "goal.ranking",
+    domain: "goals",
+    profile: "aggregate",
+    status: "unsupported",
+    description:
+      "Ranking goals against each other for attention. No tool compares goals by name; counts across all goals cannot say which one matters most.",
+    tools: [],
+    supportedHistory: "None.",
+    unsupported: ["Which goal to prioritize"],
+  }),
+  entry({
+    id: "debt.one_time_payoff",
+    domain: "runway",
+    profile: "aggregate",
+    status: "unsupported",
+    description:
+      "A one-time lump-sum debt payoff. The runway engine models extra monthly payments only.",
+    tools: [],
+    supportedHistory: "None.",
+    unsupported: ["One-time payoff", "Payoff dates"],
+  }),
+  entry({
     id: "goal.history",
     domain: "goals",
     profile: "aggregate",
