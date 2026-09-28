@@ -107,8 +107,8 @@ export function presentAnswer(
         }
       : null,
   });
-  // In the answer's own order of direct claims.
-  let direct = answer.directAnswerClaimIds.flatMap((id) =>
+  // In the answer's own order of direct claims, each shown once.
+  let direct = [...new Set(answer.directAnswerClaimIds)].flatMap((id) =>
     shipped.filter((claim) => claim.id === id),
   );
   if (direct.length === 0)

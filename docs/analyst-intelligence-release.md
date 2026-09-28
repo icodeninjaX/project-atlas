@@ -223,7 +223,7 @@ proposed direction, and "no" declines. Only a ₱ amount, a percentage or
 
 The first V2 answers on the preview deployment exposed four defects. Each is
 replayed on the synthetic fixtures with a scripted writer in
-`evaluation/preview-regressions.test.ts`; five of its seven
+`evaluation/preview-regressions.test.ts`; six of its eight
 cases fail without the fixes, and the other two guard against loosening
 the checks.
 
@@ -387,7 +387,7 @@ and the pool-meter credentials, then run
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | `npm run lint`         | Pass                                                                                                      |
 | `npm run typecheck`    | Pass                                                                                                      |
-| `npm run test`         | 149 files passed, 7 skipped; 925 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
+| `npm run test`         | 149 files passed, 7 skipped; 926 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
 | `npm run format:check` | Pass                                                                                                      |
 | `npm run build`        | Pass; `/analyst` and `/api/analyst/v2` render per request                                                 |
 

@@ -358,4 +358,32 @@ describe("preview regressions", () => {
       /does not have enough records/,
     );
   });
+
+  it("adds ATLAS's ranking beside a writer claim numbered c99, and shows a direct claim once", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { response } = await ask(
+      "Where do you think I overspend the most?",
+      (input, stage) =>
+        stage === "writer"
+          ? draftOf(
+              [
+                claim(
+                  "c99",
+                  input.requirements[0]!.id,
+                  "Your recorded expenses total ₱11,000.00 from September 1 to 24, 2026.",
+                  "whole_domain:expense",
+                  [find(input, "expense.total")],
+                ),
+              ],
+              ["c99", "c99"],
+            )
+          : null,
+    );
+    warn.mockRestore();
+    expect(shown(response)).toEqual([
+      "Largest recorded expense category: Groceries, ₱5,000.00 from Sep 1, 2026 to Sep 24, 2026.",
+      "Your recorded expenses total ₱11,000.00 from September 1 to 24, 2026.",
+    ]);
+    expect(response.status).toBe("answered");
+  });
 });

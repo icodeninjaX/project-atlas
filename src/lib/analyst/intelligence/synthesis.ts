@@ -222,19 +222,24 @@ function logRejections(stages: StageLog[], reasons: string[], draft: unknown) {
 
 function merge(first: AnswerV2, repaired: AnswerV2): AnswerV2 {
   const kept = first.claims.filter(claimCanShip);
-  const offset = kept.reduce(
-    (max, claim) => Math.max(max, Number(claim.id.slice(1))),
-    0,
-  );
+  // Added claims take the lowest IDs no kept claim uses, so a kept "c99"
+  // never crowds them out.
+  const taken = new Set(kept.map((claim) => claim.id));
+  let next = 0;
+  const freeId = () => {
+    do next += 1;
+    while (next <= MAX_CLAIM_NUMBER && taken.has(`c${next}`));
+    return next <= MAX_CLAIM_NUMBER ? `c${next}` : null;
+  };
   const rename = new Map<string, string>();
   const keptText = new Set(kept.map((claim) => claim.text));
   const added: AnalyticalClaim[] = [];
   for (const claim of repaired.claims.filter(claimCanShip)) {
     if (keptText.has(claim.text)) continue;
-    const next = offset + added.length + 1;
-    if (next > MAX_CLAIM_NUMBER) break;
-    rename.set(claim.id, `c${next}`);
-    added.push({ ...claim, id: `c${next}` });
+    const id = freeId();
+    if (!id) break;
+    rename.set(claim.id, id);
+    added.push({ ...claim, id });
   }
   const renamed = (ids: string[]) =>
     ids.flatMap((id) => (rename.has(id) ? [rename.get(id)!] : []));
