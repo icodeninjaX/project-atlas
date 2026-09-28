@@ -178,12 +178,56 @@ describe("provider payload policy", () => {
       "review.score",
     ]);
     expect(filtered.labels).toEqual([]);
+    // Earlier questions are free text: withheld, while their answers stay.
+    expect(filtered.history).toEqual([
+      expect.objectContaining({
+        question: "",
+        answer: "Scores were recorded.",
+      }),
+      expect.objectContaining({
+        question: "",
+        answer: "Expenses were recorded.",
+      }),
+    ]);
     expect(
       excluded.filter((item) => item.reason === "route_ineligible"),
-    ).toHaveLength(3);
+    ).toHaveLength(5);
     expect(() =>
       assertProviderPayload(payload("writer"), everything, SHARED_ROUTE),
     ).toThrow(ProviderPolicyViolation);
+  });
+
+  it("withholds an earlier question whose answer drew on no records", () => {
+    const turn = {
+      question: "Is my Toyota loan decision working out?",
+      answer: "",
+      domains: [],
+      profiles: ["aggregate" as const],
+    };
+    const shared = filterProviderPayload(
+      { ...payload("planner"), history: [turn] },
+      consent,
+      SHARED_ROUTE,
+    );
+    expect(shared.payload.history).toEqual([]);
+    expect(shared.excluded).toContainEqual(
+      expect.objectContaining({ kind: "history", ref: "turn:0:question" }),
+    );
+    expect(() =>
+      assertProviderPayload(shared.payload, consent, SHARED_ROUTE),
+    ).not.toThrow();
+    // A verified route with consent to private text may carry it.
+    const everything: AnalystConsent = {
+      ...consent,
+      profiles: ["aggregate", "basic_context", "sensitive_narrative"],
+    };
+    expect(
+      filterProviderPayload(
+        { ...payload("planner"), history: [turn] },
+        everything,
+        verified,
+      ).payload.history,
+    ).toEqual([turn]);
   });
 
   it("sends nothing without consent", () => {

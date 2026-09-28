@@ -49,8 +49,14 @@ The sealed context now keeps the last four questions with the data areas
 and field profiles their answers drew on (`history`, default `[]`, so older
 tokens still open). `historyTurns` rebuilds each turn's answer from its
 checked findings only. The planner and the writer receive them as
-`previousTurns`; `filterProviderPayload` still drops any turn whose content
+`previousTurns`; `filterProviderPayload` still drops any turn whose answer
 the current consent and route would not allow.
+
+An earlier question is the person's free text and may name records or hold
+private narrative whatever its answer drew on, so it is sent only where the
+`sensitive_narrative` profile is allowed. Otherwise the question is withheld
+and only its checked answer is sent. On today's shared route that means the
+models see earlier answers, not earlier questions.
 
 ## 3. A writer that reasons before it writes (`writer.ts`)
 

@@ -175,7 +175,10 @@ export function eligibility(
 
 export type ProviderStage = "planner" | "writer" | "critic" | "repair";
 
-/** A prior turn, tagged with what it contained when it was produced. */
+/**
+ * A prior turn, tagged with what its answer drew on. An empty question
+ * means policy withheld the earlier question and kept only its answer.
+ */
 export type HistoryTurn = {
   question: string;
   answer: string;
@@ -227,7 +230,7 @@ export function filterProviderPayload(
     if (reason) excluded.push({ kind: "label", ref: label.handle, reason });
     return !reason;
   });
-  const history = payload.history.filter((turn, index) => {
+  const history = payload.history.flatMap((turn, index) => {
     const reason =
       turn.domains
         .flatMap((domain) =>
@@ -236,11 +239,45 @@ export function filterProviderPayload(
           ),
         )
         .find((item) => item !== null) ?? (consent ? null : "no_consent");
-    if (reason)
+    if (reason) {
       excluded.push({ kind: "history", ref: `turn:${index}`, reason });
-    return !reason;
+      return [];
+    }
+    // An earlier question is the person's free text, which may name records
+    // or hold private narrative whatever its answer drew on, so it travels
+    // only where the most sensitive profile may. Its checked answer can
+    // still be sent on its own.
+    if (!turn.question) return [turn];
+    const withheld = questionEligibility(turn.domains, consent, route);
+    if (!withheld) return [turn];
+    excluded.push({
+      kind: "history",
+      ref: `turn:${index}:question`,
+      reason: withheld,
+    });
+    return turn.answer ? [{ ...turn, question: "" }] : [];
   });
   return { payload: { ...payload, evidence, labels, history }, excluded };
+}
+
+/** Whether an earlier free-text question may reach a provider. */
+function questionEligibility(
+  domains: ConsentDomain[],
+  consent: AnalystConsent | null,
+  route: ProviderRoute,
+): ExclusionReason | null {
+  if (!consent) return "no_consent";
+  if (!consent.profiles.includes("sensitive_narrative"))
+    return "profile_not_consented";
+  if (!route.profiles.includes("sensitive_narrative"))
+    return "route_ineligible";
+  return (
+    domains
+      .map((domain) =>
+        eligibility(domain, "sensitive_narrative", consent, route),
+      )
+      .find((item) => item !== null) ?? null
+  );
 }
 
 export class ProviderPolicyViolation extends Error {
