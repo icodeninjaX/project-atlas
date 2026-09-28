@@ -237,7 +237,7 @@ describe("preview regressions", () => {
     ]);
   });
 
-  it("does not report a bare total as answering where spending is highest", async () => {
+  it("answers a ranking with ATLAS's own ranking when the writer gives only a total", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { response, stages } = await ask(
       "Where do you think I overspend the most?",
@@ -256,12 +256,134 @@ describe("preview regressions", () => {
         ),
     );
     warn.mockRestore();
-    // The ranking was asked for, so a repair is requested and the answer
-    // is not marked answered.
+    // The total alone does not answer it, so a repair is requested; with
+    // none, ATLAS states the top of its ranking first.
     expect(stages).toEqual(["writer", "repair"]);
-    expect(response.status).not.toBe("answered");
-    expect(response.presentation.unresolved).toEqual([
-      expect.objectContaining({ requirementId: "r_money" }),
+    expect(response.status).toBe("answered");
+    expect(shown(response)).toEqual([
+      "Largest recorded expense category: Groceries, ₱5,000.00 from Sep 1, 2026 to Sep 24, 2026.",
+      "Your recorded expenses total ₱11,000.00 from September 1 to 24, 2026.",
     ]);
+  });
+
+  it("checks a share of the total against ATLAS's share, and reports a rejection as one", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { response } = await ask(
+      "Where do you think I overspend the most?",
+      (input, stage) => {
+        const rank = input.derivedFacts.find(
+          (item) => item.operation === "rank",
+        )!.id;
+        const share = input.derivedFacts.find((item) =>
+          item.id.startsWith("derived.share.category:f3ee7a14"),
+        )!.id;
+        return draftOf(
+          [
+            claim(
+              "c1",
+              "r_money",
+              stage === "writer"
+                ? // 5,000 of 11,000 is 45.5%, not 50%.
+                  "Groceries is your largest category at ₱5,000.00, 50% of your ₱11,000.00 total."
+                : "Groceries is your largest category at ₱5,000.00, 45.5% of your ₱11,000.00 total.",
+              "cohort:expense_by_category",
+              [],
+              [rank, share],
+            ),
+            {
+              ...claim(
+                "c2",
+                "r_money",
+                "A ranking alone cannot show overspending; no budget is recorded.",
+                "cohort:expense_by_category",
+                [],
+              ),
+              kind: "limitation",
+            },
+          ],
+          ["c1"],
+        );
+      },
+    );
+    warn.mockRestore();
+    expect(response.status).toBe("answered");
+    expect(shown(response)[0]).toBe(
+      "Groceries is your largest category at ₱5,000.00, 45.5% of your ₱11,000.00 total.",
+    );
+  });
+
+  it("never reports a rejected ranking beside a caveat as missing records", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { response, stages } = await ask(
+      "Where do you think I overspend the most?",
+      (input, stage) => {
+        if (stage !== "writer") return null;
+        const rank = input.derivedFacts.find(
+          (item) => item.operation === "rank",
+        )!.id;
+        return draftOf(
+          [
+            // A share the writer computed itself, across two scopes.
+            claim(
+              "c1",
+              "r_money",
+              "Groceries is your largest category at ₱5,000.00, about 45% of your ₱11,000.00 total.",
+              "cohort:expense_by_category",
+              [find(input, "expense.total")],
+              [rank],
+            ),
+            {
+              ...claim(
+                "c2",
+                "r_money",
+                "Spending rank alone cannot establish overspending; no budgets or spending targets are supplied.",
+                "cohort:expense_by_category",
+                [],
+              ),
+              kind: "limitation",
+            },
+          ],
+          ["c1"],
+        );
+      },
+    );
+    warn.mockRestore();
+    // The rejection earns a repair; with none, ATLAS states its ranking.
+    expect(stages).toEqual(["writer", "repair"]);
+    expect(response.status).toBe("answered");
+    expect(shown(response)[0]).toMatch(
+      /^Largest recorded expense category: Groceries/,
+    );
+    expect(JSON.stringify(response.presentation)).not.toMatch(
+      /does not have enough records/,
+    );
+  });
+
+  it("adds ATLAS's ranking beside a writer claim numbered c99, and shows a direct claim once", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { response } = await ask(
+      "Where do you think I overspend the most?",
+      (input, stage) =>
+        stage === "writer"
+          ? draftOf(
+              [
+                claim(
+                  "c99",
+                  input.requirements[0]!.id,
+                  "Your recorded expenses total ₱11,000.00 from September 1 to 24, 2026.",
+                  "whole_domain:expense",
+                  [find(input, "expense.total")],
+                ),
+              ],
+              ["c99", "c99"],
+            )
+          : null,
+    );
+    warn.mockRestore();
+    expect(shown(response)).toEqual([
+      "Largest recorded expense category: Groceries, ₱5,000.00 from Sep 1, 2026 to Sep 24, 2026.",
+      "Your recorded expenses total ₱11,000.00 from September 1 to 24, 2026.",
+    ]);
+    expect(response.status).toBe("answered");
   });
 });

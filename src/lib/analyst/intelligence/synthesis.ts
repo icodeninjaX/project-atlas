@@ -11,7 +11,11 @@ import type {
   UnresolvedReason,
 } from "./contracts";
 import type { HistoryTurn, ProviderLabel, ProviderPayload } from "./policy";
-import { recomputeAnswer, assembleAnswer } from "./response";
+import {
+  answersRequirement,
+  assembleAnswer,
+  recomputeAnswer,
+} from "./response";
 import {
   applyReview,
   interpretive,
@@ -218,19 +222,24 @@ function logRejections(stages: StageLog[], reasons: string[], draft: unknown) {
 
 function merge(first: AnswerV2, repaired: AnswerV2): AnswerV2 {
   const kept = first.claims.filter(claimCanShip);
-  const offset = kept.reduce(
-    (max, claim) => Math.max(max, Number(claim.id.slice(1))),
-    0,
-  );
+  // Added claims take the lowest IDs no kept claim uses, so a kept "c99"
+  // never crowds them out.
+  const taken = new Set(kept.map((claim) => claim.id));
+  let next = 0;
+  const freeId = () => {
+    do next += 1;
+    while (next <= MAX_CLAIM_NUMBER && taken.has(`c${next}`));
+    return next <= MAX_CLAIM_NUMBER ? `c${next}` : null;
+  };
   const rename = new Map<string, string>();
   const keptText = new Set(kept.map((claim) => claim.text));
   const added: AnalyticalClaim[] = [];
   for (const claim of repaired.claims.filter(claimCanShip)) {
     if (keptText.has(claim.text)) continue;
-    const next = offset + added.length + 1;
-    if (next > MAX_CLAIM_NUMBER) break;
-    rename.set(claim.id, `c${next}`);
-    added.push({ ...claim, id: `c${next}` });
+    const id = freeId();
+    if (!id) break;
+    rename.set(claim.id, id);
+    added.push({ ...claim, id });
   }
   const renamed = (ids: string[]) =>
     ids.flatMap((id) => (rename.has(id) ? [rename.get(id)!] : []));
@@ -375,6 +384,7 @@ export async function synthesizeAnswer(
           input.brief,
           input.evidence,
           input.byRequirement ?? {},
+          { derived: input.derived, labels: input.labels },
         ),
       ),
     );
@@ -510,6 +520,53 @@ export async function synthesizeAnswer(
           rejectionReasons: answer.verification.rejectionReasons,
         },
       };
+    }
+  } else {
+    // An essential requirement the writer left unanswered gets ATLAS's own
+    // checked statement for it (such as the top of its ranking), first.
+    const open = new Set(
+      answer.coverage
+        .filter((item) => item.essential && item.state === "unresolved")
+        .map((item) => item.requirementId),
+    );
+    const figures = checkedFigures();
+    const answering = figures.claims.filter((claim) =>
+      input.brief.requirements.some(
+        (requirement) =>
+          open.has(requirement.id) && answersRequirement(requirement, claim),
+      ),
+    );
+    if (open.size > 0 && answering.length > 0) {
+      const kept = new Set(
+        answer.claims.filter(claimCanShip).map((claim) => claim.id),
+      );
+      const merged = merge(answer, { ...figures, claims: answering });
+      const added = merged.claims
+        .filter((claim) => !kept.has(claim.id))
+        .map((claim) => claim.id);
+      // The reviewer's verdicts stand, except for what ATLAS now answers.
+      const answered = new Set(
+        answering.flatMap((claim) => claim.answersRequirementIds),
+      );
+      const standing = new Map(
+        answer.coverage.flatMap((item) =>
+          item.semantic === "confirmed" || item.semantic === "rejected"
+            ? answered.has(item.requirementId)
+              ? []
+              : [[item.requirementId, item.semantic === "confirmed"] as const]
+            : [],
+        ),
+      );
+      answer = recompute(
+        {
+          ...merged,
+          directAnswerClaimIds: [
+            ...added,
+            ...merged.directAnswerClaimIds.filter((id) => !added.includes(id)),
+          ].slice(0, 3),
+        },
+        standing.size ? standing : undefined,
+      );
     }
   }
   return {

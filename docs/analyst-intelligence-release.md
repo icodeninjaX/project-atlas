@@ -223,8 +223,9 @@ proposed direction, and "no" declines. Only a ₱ amount, a percentage or
 
 The first V2 answers on the preview deployment exposed four defects. Each is
 replayed on the synthetic fixtures with a scripted writer in
-`evaluation/preview-regressions.test.ts`; three of its five cases fail
-without the fix.
+`evaluation/preview-regressions.test.ts`; six of its eight
+cases fail without the fixes, and the other two guard against loosening
+the checks.
 
 - **"Summarize my weekly reviews" showed "0 of 0 statements".** The review
   tool marks every value partial when fewer than 12 reviews exist. That is a
@@ -247,6 +248,30 @@ without the fix.
   reported as answered. Such questions now need `money.category_ranking`,
   and only a claim citing an ATLAS ranking answers it. Days, months, single
   purchases, merchants and change questions keep their own routing.
+
+A second preview answer to the same question came back as "Not enough
+evidence". The writer's ranking statement was rejected, and its caveat
+("no budgets or spending targets are supplied") was reported as missing
+records. The likeliest rejected phrasing is a share the writer worked out
+itself ("about 45% of your ₱11,000.00 total"), which also mixed a category
+with the whole-account total. Three changes follow:
+
+- **Shares are derived.** For the three leading members of a ranked set,
+  ATLAS computes each one's share of its whole-domain total (a `ratio` in
+  the member's set scope). A claim citing a share may state the part and
+  total it divides. A figure that disagrees, such as 50% for 45.5%, is
+  still rejected.
+- **A rejection is reported as one.** When a claim for a requirement was
+  rejected, the requirement reads "failed ATLAS checks" (`claim_rejected`)
+  even if a caveat shipped beside it. The status is no longer "Not enough
+  evidence", and the rejection earns the repair it was denied before.
+- **ATLAS answers the ranking itself.** If an essential requirement is
+  still unanswered after the repair, ATLAS adds its own checked statement
+  for it, first: "Largest recorded expense category: Groceries, ₱5,000.00
+  …" (a tie names every tied member). The statement cites the ranking and
+  uses the owner's label, and is omitted without one.
+
+Direct answers are now shown in the answer's own order.
 
 Supporting changes:
 
@@ -362,7 +387,7 @@ and the pool-meter credentials, then run
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | `npm run lint`         | Pass                                                                                                      |
 | `npm run typecheck`    | Pass                                                                                                      |
-| `npm run test`         | 149 files passed, 7 skipped; 921 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
+| `npm run test`         | 149 files passed, 7 skipped; 926 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
 | `npm run format:check` | Pass                                                                                                      |
 | `npm run build`        | Pass; `/analyst` and `/api/analyst/v2` render per request                                                 |
 

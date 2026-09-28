@@ -107,8 +107,10 @@ export function presentAnswer(
         }
       : null,
   });
-  const directIds = new Set(answer.directAnswerClaimIds);
-  let direct = shipped.filter((claim) => directIds.has(claim.id));
+  // In the answer's own order of direct claims, each shown once.
+  let direct = [...new Set(answer.directAnswerClaimIds)].flatMap((id) =>
+    shipped.filter((claim) => claim.id === id),
+  );
   if (direct.length === 0)
     direct = shipped.filter((claim) => claim.kind !== "limitation").slice(0, 1);
   const rest = shipped.filter((claim) => !direct.includes(claim));

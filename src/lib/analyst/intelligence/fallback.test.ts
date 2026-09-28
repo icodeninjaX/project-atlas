@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { PERIODS } from "./evaluation/fixtures";
-import { brief, wholeExpenseTotal } from "./evaluation/v2-fixtures";
+import { rank } from "./calculations";
+import {
+  brief,
+  categoryBreakdown,
+  wholeExpenseTotal,
+} from "./evaluation/v2-fixtures";
 import { deterministicDraft } from "./fallback";
 
 describe("deterministic fallback draft", () => {
@@ -32,5 +37,48 @@ describe("deterministic fallback draft", () => {
     ]);
     // A figure already shown is not repeated for another requirement.
     expect(new Set(draft.claims.map((claim) => claim.id)).size).toBe(4);
+  });
+
+  it("answers a ranking requirement with the top of ATLAS's ranking", () => {
+    const members = categoryBreakdown("current", PERIODS.currentMonthToDate);
+    const fact = rank("derived.rank.test", members);
+    const base = brief([["r_money", true]]);
+    const ranked = {
+      ...base,
+      requirements: base.requirements.map((item) => ({
+        ...item,
+        question: "Which expense categories hold the most recorded spending",
+        evidenceNeeded: ["money.category_ranking"],
+      })),
+    };
+    const labels = (fact.top ?? []).map((handle) => ({
+      handle,
+      domain: "money" as const,
+      text: "Groceries",
+    }));
+    const draft = deterministicDraft(
+      ranked,
+      members,
+      { r_money: members.map((item) => item.id) },
+      { derived: [fact], labels },
+    );
+    expect(draft.claims[0]).toMatchObject({
+      id: "c1",
+      derivedFactIds: ["derived.rank.test"],
+      scopeId: fact.scopeId,
+    });
+    expect(draft.claims[0]!.text).toMatch(
+      /^(?:Largest|Tied for the largest) recorded expense category: Groceries/,
+    );
+    expect(draft.directAnswerClaimIds).toEqual(["c1"]);
+    // Without the owner's label, ATLAS does not name the category.
+    expect(
+      deterministicDraft(
+        ranked,
+        members,
+        { r_money: members.map((item) => item.id) },
+        { derived: [fact], labels: [] },
+      ).claims.some((claim) => claim.derivedFactIds.length > 0),
+    ).toBe(false);
   });
 });
