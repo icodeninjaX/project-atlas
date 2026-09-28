@@ -146,7 +146,7 @@ Not run:
 5. `getRelationshipPaths` may stop before visiting every second-hop record;
    the result is then `partial`.
 
-**Next phase: AI-03** — structured conversation context: session-scoped,
+**Next phase: AI-03** (done; see [analyst-intelligence-conversation.md](analyst-intelligence-conversation.md)) — structured conversation context: session-scoped,
 reauthorized entity handles; periods and assumptions carried between turns;
 "Why?", candidate selection, period changes, scenario updates, corrections
 and topic shifts; and invalidation of stored context by the consent

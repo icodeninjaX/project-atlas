@@ -273,3 +273,35 @@ export async function invokeAnalystToolV2(
     controller.abort();
   }
 }
+
+/**
+ * The subset of handles the signed-in owner can still read. Used to
+ * re-authorize conversation context on every turn: a deleted record and
+ * another owner's record are both simply absent. An outage throws rather
+ * than silently dropping context.
+ */
+export async function authorizeHandlesV2(
+  handles: string[],
+  options: { consent: AnalystConsent | null; route: ProviderRoute },
+): Promise<ReadonlySet<string>> {
+  const valid = [...new Set(handles)].filter((item) => parseHandle(item));
+  const found = new Set<string>();
+  for (
+    let index = 0;
+    index < valid.length;
+    index += V2_TOOL_LIMITS.detailHandles
+  ) {
+    const result = await invokeAnalystToolV2(
+      "getAnalystRecordDetails",
+      { handles: valid.slice(index, index + V2_TOOL_LIMITS.detailHandles) },
+      options,
+    );
+    if (
+      result.status === "error" &&
+      result.error?.code !== "unavailable_source"
+    )
+      throw new ToolFailure(result.error?.code ?? "unavailable_source");
+    for (const label of result.labels) found.add(label.handle);
+  }
+  return found;
+}
