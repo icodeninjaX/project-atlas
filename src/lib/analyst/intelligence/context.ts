@@ -6,7 +6,12 @@ import {
 } from "node:crypto";
 import { z } from "zod";
 import { CONSENT_DOMAINS, periodSchema } from "./contracts";
-import { consentFingerprint, type AnalystConsent } from "./policy";
+import {
+  consentFingerprint,
+  FIELD_PROFILES,
+  type AnalystConsent,
+  type HistoryTurn,
+} from "./policy";
 
 /**
  * Structured conversation context for Analyst V2 (AI-03). It keeps what a
@@ -35,6 +40,8 @@ export const CONTEXT_LIMITS = Object.freeze({
   candidates: 10,
   questionChars: 500,
   findingTextChars: 300,
+  historyTurns: 4,
+  historyQuestionChars: 300,
   tokenChars: 16_000,
 });
 
@@ -171,9 +178,48 @@ export const conversationContextSchema = z
       ])
       .nullable(),
     lastQuestion: text(CONTEXT_LIMITS.questionChars).nullable(),
+    /**
+     * The latest questions, with the data areas and field profiles their
+     * answers drew on, so a later turn can show them to a model only while
+     * policy still allows everything they contained. Answers are rebuilt
+     * from `findings`, which hold checked claims only.
+     */
+    history: z
+      .array(
+        z
+          .object({
+            turn: z.number().int().min(0),
+            question: text(CONTEXT_LIMITS.historyQuestionChars),
+            domains: z
+              .array(z.enum(CONSENT_DOMAINS))
+              .max(CONSENT_DOMAINS.length),
+            profiles: z.array(z.enum(FIELD_PROFILES)).min(1).max(3),
+          })
+          .strict(),
+      )
+      .max(CONTEXT_LIMITS.historyTurns)
+      .default([]),
   })
   .strict();
 export type ConversationContext = z.infer<typeof conversationContextSchema>;
+
+/**
+ * Earlier turns as a model may see them: each question with the checked
+ * findings that answered it. Filtering by consent and route happens later,
+ * per turn, in `filterProviderPayload`.
+ */
+export function historyTurns(context: ConversationContext): HistoryTurn[] {
+  return context.history.map((entry) => ({
+    question: entry.question,
+    answer: context.findings
+      .filter((finding) => finding.turn === entry.turn)
+      .map((finding) => finding.text)
+      .join(" ")
+      .slice(0, 1_200),
+    domains: entry.domains,
+    profiles: entry.profiles,
+  }));
+}
 
 /** A fresh context for a new conversation; nothing carries over. */
 export function newConversation(
@@ -198,6 +244,7 @@ export function newConversation(
     unresolved: [],
     pendingClarification: null,
     lastQuestion: null,
+    history: [],
   };
 }
 

@@ -1,6 +1,6 @@
 import { after, NextResponse } from "next/server";
 import { z } from "zod";
-import { resolveAnalystModel } from "@/lib/ai/models";
+import { AI_MODELS, resolveAnalystModel } from "@/lib/ai/models";
 import { NDJSON_TYPE } from "@/lib/analyst/freeform/progress";
 import {
   contextKey,
@@ -23,7 +23,8 @@ import { createClient } from "@/lib/supabase/server";
  * Analyst V2 (AI-06). Off unless `ATLAS_ANALYST_V2=1`; the legacy freeform
  * route is unchanged. Identity comes from the session, consent from the
  * request's versioned consent object, and every read and provider call runs
- * through the V2 policy, tools and run budget. One question uses one Analyst
+ * through the V2 policy, tools and run budget. The analysis planner runs on
+ * the planner model before retrieval. One question uses one Analyst
  * request from the existing quota, finished exactly once.
  */
 
@@ -137,6 +138,7 @@ export async function POST(request: Request) {
           onLedger: (value) => {
             ledger = value;
           },
+          planModel: AI_MODELS.planner,
         },
       );
       // Quota bookkeeping stays on the server.

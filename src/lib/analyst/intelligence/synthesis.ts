@@ -10,6 +10,7 @@ import type {
   RequirementCoverage,
   UnresolvedReason,
 } from "./contracts";
+import type { AnalysisPlan } from "./planner";
 import type { HistoryTurn, ProviderLabel, ProviderPayload } from "./policy";
 import {
   answersRequirement,
@@ -23,9 +24,11 @@ import {
   REVIEW_LIMITS,
   REVIEW_SCHEMA,
   REVIEW_SYSTEM,
+  WHOLE_ANSWER_TARGET,
 } from "./review";
 import type { StageCaller, StageResult } from "./stages";
 import {
+  draftOf,
   renderWriterInput,
   WRITER_LIMITS,
   WRITER_SCHEMA,
@@ -42,8 +45,9 @@ import {
  * 3. A reviewer confirms interpretive claims and requirement coverage when
  *    the answer interprets or the run was deep. A lookup made only of facts
  *    needs no review call.
- * 4. If an essential requirement lost its claim, one repair asks the writer
- *    for the missing content, with the reasons. Repaired claims pass the same
+ * 4. If an essential requirement lost its claim, or the reviewer found the
+ *    answer as a whole shallow or beside the question, one repair asks the
+ *    writer for the missing content, with the reasons. Repaired claims pass the same
  *    deterministic checks and, when interpretive, a second review.
  * 5. Only claims that passed every applicable check ship. When the budget
  *    cannot pay for a check, the claims that needed it are withheld and the
@@ -56,6 +60,8 @@ export type SynthesisInput = {
   derived: DerivedFact[];
   labels: ProviderLabel[];
   history: HistoryTurn[];
+  /** The planner's reading of the question; null when it did not run. */
+  plan?: AnalysisPlan | null;
   path: "simple" | "deep";
   /** Reasons the investigation already established for unresolved requirements. */
   knownReasons: ReadonlyMap<string, UnresolvedReason>;
@@ -154,7 +160,12 @@ async function review(
     schema: REVIEW_SCHEMA,
     system: REVIEW_SYSTEM,
     payload: payloadFor(input, "critic"),
-    render: renderReviewInput(input.brief, candidates, input.derived),
+    render: renderReviewInput(
+      input.brief,
+      candidates,
+      input.derived,
+      input.plan ?? null,
+    ),
     maxOutputTokens: REVIEW_LIMITS.outputTokens,
     timeoutMs: REVIEW_LIMITS.timeoutMs,
   });
@@ -272,7 +283,7 @@ export async function synthesizeAnswer(
       brief: input.brief,
       evidence: input.evidence,
       derived: input.derived,
-      draft,
+      draft: draftOf(draft),
       now: input.now,
       model: null,
       limitations: input.limitations,
@@ -314,7 +325,11 @@ export async function synthesizeAnswer(
         schema: WRITER_SCHEMA,
         system: WRITER_SYSTEM,
         payload: payloadFor(input, stage),
-        render: renderWriterInput(input.brief, input.derived),
+        render: renderWriterInput(
+          input.brief,
+          input.derived,
+          input.plan ?? null,
+        ),
         extraMessages,
         maxOutputTokens: WRITER_LIMITS.outputTokens,
         timeoutMs: WRITER_LIMITS.timeoutMs,
@@ -438,9 +453,14 @@ export async function synthesizeAnswer(
   const qualified = answer.claims.some(
     (claim) => claim.verification.semantic === "qualified",
   );
+  // The reviewer judged the answer as a whole beside the question or shallow.
+  const deepen = instructions.some((item) =>
+    item.startsWith(`${WHOLE_ANSWER_TARGET}:`),
+  );
   const eligible =
     answer.verification.repairEligible ||
     qualified ||
+    deepen ||
     answer.coverage.some(
       (item) =>
         item.essential &&
@@ -499,7 +519,7 @@ export async function synthesizeAnswer(
   logRejections(
     stages,
     [...firstDraft.reasons, ...answer.verification.rejectionReasons],
-    drafted.content,
+    draftOf(drafted.content),
   );
   // Nothing the writer proposed survived the checks, even after a repair:
   // ATLAS states its own checked figures instead of an empty answer.

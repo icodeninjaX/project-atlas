@@ -16,7 +16,8 @@ import {
 } from "./policy";
 
 /**
- * One provider call for an answer stage (AI-05): writer, critic or repair.
+ * One provider call for a model stage: the analysis planner (before
+ * retrieval) or an answer stage (AI-05): writer, critic or repair.
  * The request content is rendered only from the policy-filtered payload and
  * asserted again before sending; the call must fit the run ledger; usage is
  * charged from the provider's report or, when unknown, at the reserved
@@ -25,7 +26,7 @@ import {
  */
 
 export type StageRequest = {
-  stage: "writer" | "critic" | "repair";
+  stage: "planner" | "writer" | "critic" | "repair";
   model: string;
   schemaName: string;
   schema: unknown;

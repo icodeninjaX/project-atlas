@@ -35,40 +35,58 @@ export type RunBudget = {
 export const RUN_BUDGETS: Record<RunPath, RunBudget> = {
   simple: {
     path: "simple",
-    deadlineMs: 50_000,
+    deadlineMs: 54_000,
     rounds: 1,
     toolCalls: 3,
     queries: 72,
     evidenceBytes: 120_000,
-    providerCalls: 3,
-    tokens: 40_000,
-    costUsdMicros: 120_000,
+    providerCalls: 4,
+    tokens: 60_000,
+    costUsdMicros: 150_000,
     reserve: {
-      timeMs: 26_000,
-      providerCalls: 2,
-      tokens: 30_000,
-      costUsdMicros: 100_000,
+      timeMs: 28_000,
+      providerCalls: 3,
+      tokens: 40_000,
+      costUsdMicros: 110_000,
     },
     roundTimeMs: 12_000,
   },
   deep: {
     path: "deep",
-    deadlineMs: 50_000,
+    deadlineMs: 54_000,
     rounds: 3,
     toolCalls: 8,
     queries: 200,
     evidenceBytes: 240_000,
-    providerCalls: 7,
-    tokens: 90_000,
-    costUsdMicros: 250_000,
+    providerCalls: 8,
+    tokens: 120_000,
+    costUsdMicros: 300_000,
     reserve: {
-      timeMs: 26_000,
+      timeMs: 28_000,
       providerCalls: 3,
-      tokens: 45_000,
-      costUsdMicros: 160_000,
+      tokens: 60_000,
+      costUsdMicros: 180_000,
     },
     roundTimeMs: 12_000,
   },
+};
+
+/**
+ * The analysis planner's own allowance: one provider call that must finish
+ * well inside the run, leaving retrieval and the answer their full budgets.
+ */
+export const PLANNER_BUDGET: RunBudget = {
+  path: "simple",
+  deadlineMs: 12_000,
+  rounds: 0,
+  toolCalls: 0,
+  queries: 0,
+  evidenceBytes: 0,
+  providerCalls: 1,
+  tokens: 30_000,
+  costUsdMicros: 45_000,
+  reserve: { timeMs: 0, providerCalls: 0, tokens: 0, costUsdMicros: 0 },
+  roundTimeMs: 0,
 };
 
 export type Usage = {
@@ -112,8 +130,19 @@ export class RunLedger {
     readonly budget: RunBudget,
     private readonly clock: () => number = Date.now,
     private readonly signal?: AbortSignal,
+    /** When the run began, if earlier than this ledger (the planner ran first). */
+    startedAt?: number,
   ) {
-    this.startedAt = clock();
+    this.startedAt = startedAt ?? clock();
+  }
+
+  /** Carries another ledger's provider usage into this one (the planner's). */
+  absorb(usage: Usage) {
+    this.usage.providerCalls += usage.providerCalls;
+    this.usage.inputTokens += usage.inputTokens;
+    this.usage.outputTokens += usage.outputTokens;
+    this.usage.tokens += usage.tokens;
+    this.usage.costUsdMicros += usage.costUsdMicros;
   }
 
   elapsedMs() {

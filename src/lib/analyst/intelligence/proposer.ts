@@ -1,5 +1,6 @@
 import { manilaToday } from "@/lib/analyst/evidence";
 import type { AnalysisBrief } from "./contracts";
+import { requirementMoneyKind } from "./planner";
 import {
   assumedIncomeChange,
   debtScenario,
@@ -249,11 +250,7 @@ export function capabilityProposer(now: Date): Proposer {
             continue;
           }
           if (moneyCapabilities.has(capability)) {
-            const kind = /\b(?:income|salary|earn\w*|kita|sahod)\b/i.test(
-              requirement.question,
-            )
-              ? "income"
-              : "expense";
+            const kind = requirementMoneyKind(requirement);
             const periods = view.brief.periods.length
               ? view.brief.periods
               : [{ ...period(view.brief, now) }];

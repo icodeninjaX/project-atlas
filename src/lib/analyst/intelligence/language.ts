@@ -40,10 +40,8 @@ export type StyleRequest = {
 };
 
 /** The response style the user asked for, or a default that fits the intent. */
-export function detectStyle(
-  question: string,
-  intent: AnalysisBrief["intent"],
-): StyleRequest {
+/** The style the person asked for in words, or null when they did not say. */
+export function explicitStyle(question: string): StyleRequest | null {
   const text = question.toLowerCase();
   const count = text.match(
     /\b(?:in|within|sa)\s+(\d|one|two|three|four|five|isa|dalawa|tatlo|tatlong|apat|lima)\s*(?:-|na)?\s*(?:sentences?|pangungusap)\b/,
@@ -63,10 +61,19 @@ export function detectStyle(
     return { style: "detailed", maxSentences: null };
   if (/\b(?:briefly|short answer|quick|tl;?dr|maikli)\b/.test(text))
     return { style: "concise", maxSentences: 2 };
-  return {
-    style: intent === "lookup" ? "concise" : "standard",
-    maxSentences: null,
-  };
+  return null;
+}
+
+export function detectStyle(
+  question: string,
+  intent: AnalysisBrief["intent"],
+): StyleRequest {
+  return (
+    explicitStyle(question) ?? {
+      style: intent === "lookup" ? "concise" : "standard",
+      maxSentences: null,
+    }
+  );
 }
 
 const pesos = new Intl.NumberFormat("en-PH", {
