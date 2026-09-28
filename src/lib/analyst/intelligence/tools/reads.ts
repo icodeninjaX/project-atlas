@@ -162,7 +162,43 @@ function label(
   };
 }
 
-const basisRank = { exact: 0, mentioned: 1, contains: 2 } as const;
+const basisRank = { exact: 0, mentioned: 1, contains: 2, words: 3 } as const;
+
+const STOP_WORDS = new Set([
+  "the",
+  "and",
+  "for",
+  "with",
+  "from",
+  "into",
+  "about",
+  "that",
+  "this",
+  "was",
+  "were",
+  "are",
+  "our",
+  "your",
+  "my",
+  "its",
+  "not",
+]);
+/** A light English stem, so "studying" and "study" count as one word. */
+const stem = (word: string) =>
+  word.length > 5 && word.endsWith("ing")
+    ? word.slice(0, -3)
+    : word.length > 4 && word.endsWith("ed")
+      ? word.slice(0, -2)
+      : word.length > 3 && word.endsWith("s") && !word.endsWith("ss")
+        ? word.slice(0, -1)
+        : word;
+/** Significant stemmed words, so "part-time study" matches "Study part-time instead…". */
+const significant = (normalized: string) =>
+  normalized
+    .trim()
+    .split(" ")
+    .filter((word) => word.length >= 3 && !STOP_WORDS.has(word))
+    .map(stem);
 
 /** Owner-only name resolution with explicit ambiguity; it never picks for the user. */
 export async function resolveEntities(
@@ -170,6 +206,7 @@ export async function resolveEntities(
   { client, owner }: ReadContext,
 ): Promise<V2ToolPayload> {
   const phrase = normalize(input.text);
+  const phraseWords = significant(phrase);
   const payload = emptyPayload();
   const results = await Promise.all(
     input.types.map(async (type) => {
@@ -209,7 +246,13 @@ export async function resolveEntities(
               ? "mentioned"
               : name.includes(phrase)
                 ? "contains"
-                : null;
+                : // Every word of a two-plus-word phrase, in any order.
+                  phraseWords.length >= 2 &&
+                    phraseWords.every((word) =>
+                      significant(name).includes(word),
+                    )
+                  ? "words"
+                  : null;
         if (next && (!basis || basisRank[next] < basisRank[basis]))
           basis = next;
       }

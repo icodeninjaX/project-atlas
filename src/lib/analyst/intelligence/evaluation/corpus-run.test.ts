@@ -147,22 +147,10 @@ async function runCase(item: EvalCase): Promise<CaseRun> {
   }
 }
 
-const NO_EVIDENCE_YET = [
-  "Q06",
-  "Q10",
-  "Q18",
-  "Q19",
-  "Q23",
-  "Q26",
-  "Q30",
-  "Q31",
-  "Q32",
-  "Q33",
-  "Q35",
-  "Q43",
-  "Q44",
-  "Q52",
-];
+// Both are runway scenarios: V2 resolves the debt and calls the scenario
+// engine, but the frozen fixtures record no account balances, so the
+// engine (like the legacy path) reports insufficient history.
+const NO_EVIDENCE_YET = ["Q10", "Q43"];
 
 /**
  * AI-07 deterministic corpus run. Every one of the 60 cases, development and
@@ -215,10 +203,8 @@ describe("V2 over the whole evaluation corpus (no model)", () => {
     expect(
       runs.filter((run) => run.toolCalls > run.budget).map((run) => run.id),
     ).toEqual(["Q28", "Q38"]);
-    // Release blocker, recorded rather than hidden: answerable cases whose
-    // capabilities V2 cannot read yet (debt scenarios, task priority, job
-    // applications, decisions, weekly reviews, signals). Shrinking this list
-    // is progress; any addition is a regression.
+    // Answerable cases that reach no evidence, recorded rather than hidden.
+    // Shrinking this list is progress; any addition is a regression.
     expect(
       runs
         .filter((run) => run.answerable && run.evidence === 0)

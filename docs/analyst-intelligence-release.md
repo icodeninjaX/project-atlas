@@ -5,9 +5,9 @@ built on the [AI-06 communication and interface](analyst-intelligence-communicat
 
 > **Release decision: not released.** V2 stays behind `ATLAS_ANALYST_V2`, which
 > is off by default. Two hard gates are not satisfied (§3), the quality
-> targets are unmeasured because no live evaluation was authorized (§4), and
-> the deterministic corpus run already shows a capability gap that rules out
-> the answerable-coverage target (§2.2). Nothing in this phase enables V2
+> targets are unmeasured because no live evaluation was authorized (§4).
+> The capability gap found here has since been closed: 47 of 49 answerable
+> corpus cases now reach evidence (§2.5). Nothing in this phase enables V2
 > anywhere.
 
 | Field               | Value                                                                                                                 |
@@ -97,39 +97,33 @@ Every case runs through the full V2 path, including prior turns, against the
 owner-scoped emulator. No model is available, so this measures the
 architecture, not a model's writing.
 
-| Measure                                               | Result                                                                                   |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Cases run                                             | 60 (40 development, 20 holdout)                                                          |
-| Crashes                                               | 0                                                                                        |
-| Another owner's records or identity in visible output | 0                                                                                        |
-| Unsafe progress events                                | 0                                                                                        |
-| Statuses                                              | 39 `fallback_facts`, 19 `insufficient_evidence`, 2 `clarification_required`              |
-| `fallback_facts` answers with no checked figure       | 0 (was 58 before fix 1)                                                                  |
-| Maximum tool calls in one run                         | 5, within the deep envelope of 8                                                         |
-| Cases over their frozen per-case tool budget          | 2: Q28, Q38 (4 calls against 3; V2 takes the deep path for these relationship questions) |
-| Answerable cases reaching any evidence                | **35 of 49 (71%)**                                                                       |
+| Measure                                               | Result                                                                                                            |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Cases run                                             | 60 (40 development, 20 holdout)                                                                                   |
+| Crashes                                               | 0                                                                                                                 |
+| Another owner's records or identity in visible output | 0                                                                                                                 |
+| Unsafe progress events                                | 0                                                                                                                 |
+| Statuses                                              | 53 `fallback_facts`, 3 `error`, 2 `clarification_required`, 1 `insufficient_evidence`, 1 `unsupported_capability` |
+| `fallback_facts` answers with no checked figure       | 0 (was 58 before fix 1)                                                                                           |
+| Maximum tool calls in one run                         | 5, within the deep envelope of 8                                                                                  |
+| Cases over their frozen per-case tool budget          | 2: Q28, Q38 (4 calls against 3; V2 takes the deep path for these relationship questions)                          |
+| Answerable cases reaching any evidence                | **47 of 49** (was 35 of 49 at the AI-07 release decision; see §2.5)                                               |
 
-**The capability gap is a release blocker.** Fourteen answerable cases get
-no evidence from V2 at all:
+The two answerable cases that still reach no evidence are runway scenarios
+(Q10, Q43). V2 resolves the debt and calls the scenario engine, but the frozen
+fixtures record no account balances, so the engine reports insufficient
+history, as the legacy path does. The test pins this list: shrinking it is
+progress, and any addition fails.
 
-| Area                          | Cases              |
-| ----------------------------- | ------------------ |
-| Cash and debt scenarios       | Q06, Q10           |
-| Goal attention and task order | Q18, Q19           |
-| Job applications              | Q23, Q44           |
-| Weekly reviews                | Q26, Q52           |
-| Signals                       | Q30                |
-| Decisions                     | Q31, Q32, Q33, Q35 |
-| Clarification follow-up       | Q43                |
+The three `error` results are questions whose only evidence is marked
+partial (weekly review scores from fewer than 12 reviews). With no model
+available, the fallback shows only complete figures, so those runs report
+that no checked figure could be shown. A writer can still cite the partial
+figures with their limitation.
 
-These are the legacy-only capabilities recorded in AI-04. Since at most 71% of
-answerable cases can be answered from evidence, the ≥90% answerable-coverage
-target cannot be met by any writer model. The test pins this list: shrinking
-it is progress, and any addition fails.
-
-Q15 ("How is my main goal going?") returns `insufficient_evidence` where the
-corpus expects `clarification_required`. The deterministic brief does not
-treat "main goal" as ambiguous.
+Q15 ("How is my main goal going?") now gets an overview of all active goals.
+The corpus expects V2 to ask which goal; "main goal" is not yet treated as
+ambiguous.
 
 ### 2.3 Shared-client regressions
 
@@ -143,6 +137,52 @@ the freeform route suites (148 tests).
 `page.test.tsx` shows the server flag alone chooses the workspace, on each
 request. With the flag off, or for a signed-out visitor, users get the legacy
 workspace. With it off, `/api/analyst/v2` returns 404.
+
+### 2.5 Capability gap closed (follow-up to the release decision)
+
+The AI-07 run showed 14 answerable cases reaching no evidence. The causes:
+
+- **Aggregate questions went through a name lookup.** Job applications,
+  weekly reviews, signals, task priority and debts were sent to
+  `resolveAnalystEntities` with the whole sentence, which never matches a
+  record name.
+- **Named records were searched by the whole sentence.** "My decision to
+  study part-time" never matched "Study part-time instead of full-time".
+- **Some briefs chose the wrong capability.** An extra-payment comparison
+  mapped to payment history, and a decision about studying added a knowledge
+  requirement.
+
+The fixes:
+
+- **Bridged tools.** Nine existing aggregate tools are available to V2
+  unchanged: `getDebtProgress`, `getDebtPayments`, `getTaskFocus`,
+  `getGoalProgress`, `getCareerPipeline`, `getWeeklyReviewMetrics`,
+  `getSignals`, `getRunway` and `compareFinancialScenarios`. Each keeps its
+  own input schema, session identity, owner filter, bounded transport and
+  timeout. Their evidence is adapted to EvidenceV2 with its fixed label and
+  real domain, in an isolated comparable group. Every label was checked in
+  source to be fixed vocabulary (templates, stage and signal enums), never a
+  record name. Numeric figures travel as aggregates; text values stay
+  `basic_context` and are filtered on the shared route.
+- **Routing.** Whole-domain capabilities go to the bridged tools, and a new
+  `goal.overview` capability covers "which of my goals". A payment scenario
+  resolves the debt, then compares the stated extra monthly payments (one or
+  two options) with any income change; it takes the deep path because it
+  needs two rounds. A one-time payoff is not modeled, as before.
+- **Honest limits.** Ranking unnamed goals ("which of my goals should get
+  attention") is recorded as an unsupported `goal.ranking` requirement, with
+  the goal overview and task focus as non-essential context, so the answer is
+  partial rather than an apparent ranking. A one-time payoff is an
+  unsupported `debt.one_time_payoff` requirement (Q11 now reports
+  `unsupported_capability`, as the corpus expects).
+- **References.** `references.ts` extracts the phrase that names one record
+  ("study part-time", "Synthetic"). Resolution also accepts a whole-word
+  match of a two-or-more-word phrase in any order, with light stemming;
+  several matches still ask rather than guess.
+- **Test data.** The emulator's goal, milestone, debt and job-application
+  rows gained the `created_at` and `updated_at` columns the schema requires
+  (NOT NULL). Without them the signals engine crashed on synthetic data. The
+  frozen fixture datasets are unchanged.
 
 ## 3. Hard gates (roadmap §8.4)
 
@@ -161,7 +201,7 @@ difficult cases, and three runs per holdout case.
 
 | Target                                            | Status                                                       |
 | ------------------------------------------------- | ------------------------------------------------------------ |
-| ≥90% answerable cases fully correct               | Unmeasured; **bounded above by 71% evidence reach** (§2.2)   |
+| ≥90% answerable cases fully correct               | Unmeasured; evidence reach is 47 of 49 (§2.5)                |
 | ≥85% hard-question subset meets the rubric        | Unmeasured                                                   |
 | ≥90% conversation continuity                      | Unmeasured live; deterministic follow-up tests pass          |
 | New path preferred on ≥65% of hard non-tied pairs | Unmeasured                                                   |
@@ -248,7 +288,7 @@ and the pool-meter credentials, then run
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | `npm run lint`         | Pass                                                                                                      |
 | `npm run typecheck`    | Pass                                                                                                      |
-| `npm run test`         | 146 files passed, 7 skipped; 894 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
+| `npm run test`         | 148 files passed, 7 skipped; 908 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
 | `npm run format:check` | Pass                                                                                                      |
 | `npm run build`        | Pass; `/analyst` and `/api/analyst/v2` render per request                                                 |
 
@@ -256,9 +296,10 @@ and the pool-meter credentials, then run
 
 Each item needs explicit authorization from the owner:
 
-1. **Close the capability gap** (§2.2): V2 read tools for debt scenarios,
-   task priority, job applications, decisions, weekly reviews and signals,
-   plus ambiguity detection for Q15.
+1. **Finish the remaining routing gaps:** ask which goal for "my main goal"
+   (Q15), and synthetic runway fixtures (account balances) so the scenario
+   cases (Q10, Q43) can be evaluated. The capability gap itself is closed
+   (§2.5).
 2. **Verify the provider route.** Confirm the OpenAI project's data-sharing
    setting, or configure and verify a non-sharing route (AI-02).
 3. **Run the live evaluations** (§6) within an approved budget, with human

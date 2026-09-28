@@ -42,6 +42,8 @@ export type BriefCheck =
     };
 
 const deepCapabilities = new Set([
+  // A payment scenario resolves the debt, then compares options.
+  "debt.scenario",
   "graph.paths",
   "decision.context",
   "decision.text",

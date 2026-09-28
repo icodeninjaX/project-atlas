@@ -1,5 +1,6 @@
 import { manilaToday } from "@/lib/analyst/evidence";
 import type { AnalysisBrief } from "./contracts";
+import { debtScenario, referencePhrase } from "./references";
 import type {
   InvestigationView,
   Proposal,
@@ -80,6 +81,29 @@ function pathNodes(outcomes: ToolOutcome[], type: string) {
   ].filter((handle) => parseHandle(handle));
 }
 
+/** The search phrase for a record of `type`: its name, never the sentence. */
+function searchPhrase(brief: AnalysisBrief, type: V2EntityType) {
+  return (
+    referencePhrase(brief.question, type) ??
+    brief.unresolvedReferences[0] ??
+    brief.question.slice(0, 120)
+  );
+}
+
+/**
+ * Whether the brief names one application: a phrase in the question, or a
+ * reference that is neither the whole question nor another record's name.
+ */
+function namedApplication(brief: AnalysisBrief) {
+  if (referencePhrase(brief.question, "job_application")) return true;
+  const others = (["goal", "decision", "debt", "knowledge_concept"] as const)
+    .map((type) => referencePhrase(brief.question, type))
+    .filter(Boolean);
+  return brief.unresolvedReferences.some(
+    (item) => item !== brief.question.slice(0, 120) && !others.includes(item),
+  );
+}
+
 function period(brief: AnalysisBrief, now: Date) {
   const first = brief.periods[0];
   if (first) return { from: first.from, through: first.through };
@@ -112,6 +136,103 @@ export function capabilityProposer(now: Date): Proposer {
           (item) => item.id === progress.requirementId,
         )!;
         for (const capability of requirement.evidenceNeeded) {
+          // Whole-domain questions are answered by the existing aggregate
+          // tools, which need no resolved record.
+          const aggregate: Record<string, string> = {
+            "task.ranking": "getTaskFocus",
+            "goal.overview": "getGoalProgress",
+            "reviews.scores": "getWeeklyReviewMetrics",
+            "signals.current": "getSignals",
+          };
+          if (aggregate[capability]) {
+            add(aggregate[capability]!, {}, requirement.id);
+            continue;
+          }
+          if (capability === "debt.payments") {
+            const window = period(view.brief, now);
+            add("getDebtProgress", {}, requirement.id);
+            add("getDebtPayments", window, requirement.id);
+            continue;
+          }
+          if (
+            capability === "career.applications" &&
+            !namedApplication(view.brief) &&
+            !resolved(view, "job_application").handle
+          ) {
+            add("getCareerPipeline", {}, requirement.id);
+            continue;
+          }
+          if (capability === "debt.scenario") {
+            const scenario = debtScenario(view.brief.question);
+            if (!scenario) {
+              add("getRunway", {}, requirement.id);
+              continue;
+            }
+            // A one-time payoff is outside the runway engine; nothing is
+            // read and the requirement stays unanswered with its reason.
+            if (
+              scenario.extraMonthlyPesos.length === 0 &&
+              scenario.incomeChangePercent === null
+            )
+              continue;
+            const income =
+              scenario.incomeChangePercent === null
+                ? {}
+                : { monthlyIncomeChangePercent: scenario.incomeChangePercent };
+            const unchanged = {
+              monthlyIncomePesos: null,
+              ...income,
+              monthlyExpenseChangePesos: null,
+              oneTimePurchasePesos: null,
+            };
+            if (scenario.extraMonthlyPesos.length === 0) {
+              add(
+                "compareFinancialScenarios",
+                { alternatives: [{ ...unchanged, extraDebtPayment: null }] },
+                requirement.id,
+              );
+              continue;
+            }
+            // Extra payments apply to one resolved debt, never a guess.
+            const debt = resolved(view, "debt");
+            if (debt.ambiguous)
+              return {
+                requests: [],
+                clarification: { candidates: debt.ambiguous },
+              };
+            if (!debt.handle) {
+              const triedDebt = view.outcomes.some(
+                (item) =>
+                  item.request.tool === "resolveAnalystEntities" &&
+                  (item.request.input as { types: string[] }).types.includes(
+                    "debt",
+                  ),
+              );
+              if (!triedDebt)
+                add(
+                  "resolveAnalystEntities",
+                  {
+                    text:
+                      referencePhrase(view.brief.question, "debt") ?? "debt",
+                    types: ["debt"],
+                  },
+                  requirement.id,
+                );
+              continue;
+            }
+            const debtId = parseHandle(debt.handle)!.id;
+            add(
+              "compareFinancialScenarios",
+              {
+                alternatives: scenario.extraMonthlyPesos.map((amountPesos) => ({
+                  ...unchanged,
+                  extraDebtPayment: { debtId, amountPesos },
+                })),
+              },
+              requirement.id,
+            );
+            continue;
+          }
           if (moneyCapabilities.has(capability)) {
             const kind = /\b(?:income|salary|earn\w*|kita|sahod)\b/i.test(
               requirement.question,
@@ -165,12 +286,7 @@ export function capabilityProposer(now: Date): Proposer {
           if (!handle) {
             add(
               "resolveAnalystEntities",
-              {
-                text:
-                  view.brief.unresolvedReferences[0] ??
-                  view.brief.question.slice(0, 120),
-                types: [type],
-              },
+              { text: searchPhrase(view.brief, type), types: [type] },
               requirement.id,
             );
             continue;

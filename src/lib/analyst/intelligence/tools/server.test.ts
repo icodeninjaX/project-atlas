@@ -18,6 +18,7 @@ import {
   type AnalystConsent,
   type ProviderRoute,
 } from "../policy";
+import { BRIDGED_TOOLS } from "./contracts";
 import { V2_TABLES, invokeAnalystToolV2, listAnalystToolsV2 } from "./server";
 
 vi.mock("server-only", () => ({}));
@@ -91,8 +92,44 @@ describe("Analyst V2 tool registry", () => {
       "getGoalAnalysisContext",
       "getDecisionAnalysisContext",
       "getRelationshipPaths",
+      // Existing aggregate tools, called unchanged and adapted.
+      ...BRIDGED_TOOLS,
     ]);
     expect(listAnalystToolsV2().every((tool) => tool.readOnly)).toBe(true);
+  });
+
+  it("runs bridged aggregate tools unchanged and adapts their fixed labels", async () => {
+    const focus = await invoke("getTaskFocus", {});
+    expect(focus.status).toBe("ready");
+    expect(focus.tool).toBe("getTaskFocus");
+    const open = focus.evidence.find((item) =>
+      item.id.startsWith("getTaskFocus.tasks.open."),
+    )!;
+    // The tool's fixed label survives, in the task domain, as an aggregate.
+    expect(open).toMatchObject({
+      kind: "metric",
+      value: 2,
+      domain: "tasks",
+      semantics: { definition: "Open tasks", aggregation: "count" },
+      sharing: { route: "aggregate" },
+    });
+    const pipeline = await invoke("getCareerPipeline", {});
+    expect(
+      pipeline.evidence.map((item) => item.semantics.definition),
+    ).toContain("Applications with overdue next action");
+    // Inputs are validated with the tool's own schema before anything runs.
+    expect(
+      (
+        await invoke("getDebtPayments", {
+          from: "2026-09-24",
+          through: "2026-09-01",
+        })
+      ).error?.code,
+    ).toBe("invalid_input");
+    // "Not enough history" stays insufficient, never an operational error.
+    const runway = await invoke("getRunway", {});
+    expect(runway.status).toBe("insufficient");
+    expect(runway.error).toBeUndefined();
   });
 
   it("rejects unknown tools, raw IDs, SQL, oversized and duplicate input before reading", async () => {
@@ -308,7 +345,7 @@ describe("record details (AI-02B)", () => {
       attributedTo: "user",
       text: INJECTION_REFLECTION,
     });
-    expect(listAnalystToolsV2()).toHaveLength(7);
+    expect(listAnalystToolsV2()).toHaveLength(7 + BRIDGED_TOOLS.length);
     // Even retrieved text never reaches the shared route.
     const filtered = filterProviderPayload(
       {

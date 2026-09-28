@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  toolDescriptions,
+  toolInputs,
+  type ToolName,
+} from "@/lib/analyst/tools/contracts";
 import { validTimelineDate } from "@/lib/timeline/timeline";
 import type { ConsentDomain, EvidenceV2 } from "../contracts";
 
@@ -97,6 +102,29 @@ export const V2_TOOL_LIMITS = Object.freeze({
   timeoutMs: 12_000,
 });
 
+/**
+ * Existing aggregate tools that V2 calls unchanged, with their own inputs,
+ * owner scoping, bounded transport and fixed-vocabulary labels. Their
+ * evidence is adapted to EvidenceV2 (`legacy-evidence.ts`); nothing new is
+ * read. They answer the aggregate questions (debt state, task focus, goal
+ * progress, the career pipeline, review scores, signals, runway scenarios)
+ * that the V2 entity tools cannot.
+ */
+export const BRIDGED_TOOLS = [
+  "getDebtProgress",
+  "getDebtPayments",
+  "getTaskFocus",
+  "getGoalProgress",
+  "getCareerPipeline",
+  "getWeeklyReviewMetrics",
+  "getSignals",
+  "getRunway",
+  "compareFinancialScenarios",
+] as const satisfies readonly ToolName[];
+export type BridgedTool = (typeof BRIDGED_TOOLS)[number];
+export const isBridgedTool = (name: string): name is BridgedTool =>
+  (BRIDGED_TOOLS as readonly string[]).includes(name);
+
 export const v2ToolInputs = {
   resolveAnalystEntities: z
     .object({
@@ -152,6 +180,15 @@ export const v2ToolInputs = {
       depth: z.union([z.literal(1), z.literal(2)]).default(2),
     })
     .strict(),
+  getDebtProgress: toolInputs.getDebtProgress,
+  getDebtPayments: toolInputs.getDebtPayments,
+  getTaskFocus: toolInputs.getTaskFocus,
+  getGoalProgress: toolInputs.getGoalProgress,
+  getCareerPipeline: toolInputs.getCareerPipeline,
+  getWeeklyReviewMetrics: toolInputs.getWeeklyReviewMetrics,
+  getSignals: toolInputs.getSignals,
+  getRunway: toolInputs.getRunway,
+  compareFinancialScenarios: toolInputs.compareFinancialScenarios,
 } as const;
 export type V2ToolName = keyof typeof v2ToolInputs;
 export type V2ToolInput<N extends V2ToolName> = z.infer<
@@ -173,6 +210,15 @@ export const v2ToolDescriptions: Record<V2ToolName, string> = {
     "A resolved decision's dates, review window, revisions, observations and the existing before/after comparison. Plan text and notes only with includeText and policy approval.",
   getRelationshipPaths:
     "Native and manual relationships up to two hops from a resolved record, with provenance, cycle cuts and truncation.",
+  getDebtProgress: toolDescriptions.getDebtProgress,
+  getDebtPayments: toolDescriptions.getDebtPayments,
+  getTaskFocus: toolDescriptions.getTaskFocus,
+  getGoalProgress: toolDescriptions.getGoalProgress,
+  getCareerPipeline: toolDescriptions.getCareerPipeline,
+  getWeeklyReviewMetrics: toolDescriptions.getWeeklyReviewMetrics,
+  getSignals: toolDescriptions.getSignals,
+  getRunway: toolDescriptions.getRunway,
+  compareFinancialScenarios: toolDescriptions.compareFinancialScenarios,
 };
 
 /** Owner-only display text. It reaches a provider only through policy. */
@@ -186,7 +232,7 @@ export type OwnerLabel = {
 export type EntityCandidate = {
   handle: string;
   type: V2EntityType;
-  basis: "exact" | "mentioned" | "contains";
+  basis: "exact" | "mentioned" | "contains" | "words";
 };
 
 export type V2FailureCode =

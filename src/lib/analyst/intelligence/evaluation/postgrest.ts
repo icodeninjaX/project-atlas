@@ -42,6 +42,7 @@ function rowsFor(data: FixtureDataset, owner: FixtureOwner): Tables {
       progress_percent: g.progressPercent,
       target_date: g.targetDate,
       created_at: "2026-07-01T00:00:00Z",
+      updated_at: "2026-07-01T00:00:00Z",
       area: "career",
       description: null,
     })),
@@ -55,6 +56,7 @@ function rowsFor(data: FixtureDataset, owner: FixtureOwner): Tables {
       completed_at: at(t.completedOn),
       related_goal_id: t.goalId ? u(t.goalId) : null,
       created_at: "2026-07-01T00:00:00Z",
+      updated_at: "2026-07-01T00:00:00Z",
     })),
     goal_milestones: data.milestones.map((m, index) => ({
       id: u(m.id),
@@ -64,6 +66,8 @@ function rowsFor(data: FixtureDataset, owner: FixtureOwner): Tables {
       completed_at: at(m.completedOn),
       target_date: null,
       sort_order: index,
+      created_at: "2026-07-01T00:00:00Z",
+      updated_at: at(m.completedOn) ?? "2026-07-01T00:00:00Z",
     })),
     transaction_categories: data.categories.map((c) => ({
       id: u(c.id),
@@ -87,6 +91,9 @@ function rowsFor(data: FixtureDataset, owner: FixtureOwner): Tables {
       creditor_name: d.name,
       status: d.status,
       current_balance_centavos: d.balanceCentavos,
+      // NOT NULL in the schema; the signals engine reads them.
+      created_at: "2026-07-01T00:00:00Z",
+      updated_at: "2026-07-01T00:00:00Z",
     })),
     job_applications: data.applications.map((a) => ({
       id: u(a.id),
@@ -96,6 +103,8 @@ function rowsFor(data: FixtureDataset, owner: FixtureOwner): Tables {
       stage: a.stage,
       applied_at: null,
       next_action_at: at(a.followUpOn),
+      created_at: "2026-07-01T00:00:00Z",
+      updated_at: "2026-07-01T00:00:00Z",
     })),
     job_application_events: [],
     knowledge_concepts: data.concepts.map((k) => ({

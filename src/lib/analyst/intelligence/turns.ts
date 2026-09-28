@@ -48,7 +48,7 @@ export type TurnInterpretation =
 const topicTerms: Array<[ConsentDomain, RegExp]> = [
   [
     "money",
-    /\b(?:spend\w*|spent|expenses?|income|salary|budget|money|transactions?|categor\w*|gastos|kita|pera|sahod)\b/i,
+    /\b(?:spend\w*|spent|expenses?|income|salary|budget|money|cash|transactions?|categor\w*|gastos|kita|pera|sahod)\b/i,
   ],
   ["debts", /\b(?:debts?|loans?|card|utang)\b/i],
   ["tasks", /\b(?:tasks?|to-?dos?|gawain)\b/i],
@@ -56,8 +56,12 @@ const topicTerms: Array<[ConsentDomain, RegExp]> = [
   ["career", /\b(?:job|applications?|career|interviews?|recruiter|trabaho)\b/i],
   ["reviews", /\b(?:weekly reviews?|reviews?|reflections?)\b/i],
   ["knowledge", /\b(?:knowledge|concepts?|study|studying)\b/i],
-  ["decisions", /\b(?:decisions?|decided|desisyon)\b/i],
+  [
+    "decisions",
+    /\b(?:decisions?|decided|desisyon|right (?:call|choice|move))\b/i,
+  ],
   ["runway", /\b(?:runway|scenario|what if)\b/i],
+  ["signals", /\b(?:signals?)\b/i],
 ];
 
 export function topicDomains(message: string): ConsentDomain[] {
