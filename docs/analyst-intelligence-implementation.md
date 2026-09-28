@@ -682,7 +682,7 @@ Model selection reaches the actual writer; the planner stays intentionally confi
 - [x] Freeze the release corpus and holdout split before final tuning. _(Fingerprinted in `evaluation/freeze.test.ts`.)_
 - [ ] Run deterministic unit/integration/ownership tests and opted-in synthetic provider evaluations. _(Deterministic suites and the whole-corpus run pass; opt-in provider evaluations not authorized, not run.)_
 - [ ] Compare the existing path, model-only upgrade, and architectural upgrade on identical fixtures. _(Three-arm harness built and dry-run with the provider blocked; not run live.)_
-- [ ] Evaluate hard-question completeness, source correctness, conversational continuity, and reviewer error rates. _(Needs the live runs; evidence reach is 47 of 49 answerable cases.)_
+- [ ] Evaluate hard-question completeness, source correctness, conversational continuity, and reviewer error rates. _(Needs the live runs; evidence reach is 49 of 49 answerable cases.)_
 - [x] Run fault injection for timeouts, invalid provider output, missing usage, pool exhaustion, meter failure, source errors, consent changes, and cancellation.
 - [x] Test run-level quota finalization and per-call token settlement across retries and fallbacks.
 - [x] Verify shared-client regressions in Capture, weekly insights, and the preset Analyst endpoint when affected.
@@ -1221,7 +1221,7 @@ Updated during authorized implementation. AI-00 evidence is in [analyst-intellig
 | AI-04 | Implemented locally, 2026-09-28 | Lint, typecheck, 842 unit tests, format and build pass; see [investigation §7](analyst-intelligence-investigation.md#7-validation) | Not run (deterministic proposer; no model calls)      | Not run             | No model proposer yet; legacy-only capabilities not yet reachable                             |
 | AI-05 | Implemented locally, 2026-09-28 | Lint, typecheck, 855 unit tests, format and build pass; see [review §7](analyst-intelligence-review.md#7-validation)               | Not run (opt-in reviewer eval exists, not authorized) | Not run             | Reviewer accuracy unmeasured until the live evaluation is approved                            |
 | AI-06 | Implemented locally, 2026-09-28 | Lint, typecheck, 874 unit tests, format and build pass; see [communication §9](analyst-intelligence-communication.md#9-validation) | Not run (opt-in writer check exists, not authorized)  | Not run             | Writer model structured-output support unverified; planner is deterministic; no tables yet    |
-| AI-07 | Hardened locally; not released  | Lint, typecheck, 908 unit tests, format and build pass; see [release §8](analyst-intelligence-release.md#8-validation)             | Not run (three-arm harness exists, dry-run only)      | Not run             | Provider route unverified; live evaluations not run; 47 of 49 answerable cases reach evidence |
+| AI-07 | Hardened locally; not released  | Lint, typecheck, 911 unit tests, format and build pass; see [release §8](analyst-intelligence-release.md#8-validation)             | Not run (three-arm harness exists, dry-run only)      | Not run             | Provider route unverified; live evaluations not run; 49 of 49 answerable cases reach evidence |
 
 ### 13.2 Definition of done
 

@@ -8,6 +8,12 @@ import {
 } from "./corpus";
 import { EXPECTED_FACTS } from "./expected";
 import { FIXTURE_DATASETS, FIXTURE_VERSION } from "./fixtures";
+import {
+  RUNWAY_FIXTURE_VERSION,
+  RUNWAY_SUPPLEMENTS,
+  runwayBudgetItems,
+} from "./runway-fixtures";
+import { OWNER_A } from "./fixtures";
 
 /**
  * AI-07 corpus freeze. The release corpus, its holdout split, the expected
@@ -64,5 +70,21 @@ describe("frozen release corpus", () => {
       thresholds: fingerprint(RELEASE_THRESHOLDS),
     };
     expect(actual).toEqual(FROZEN);
+  });
+
+  // A versioned supplement added after the freeze, pinned separately so the
+  // original fingerprints above never move. See the release report.
+  it("pins the runway supplement", () => {
+    expect({
+      version: RUNWAY_FIXTURE_VERSION,
+      supplement: fingerprint({
+        supplements: RUNWAY_SUPPLEMENTS,
+        budgetItems: runwayBudgetItems(OWNER_A),
+      }),
+    }).toEqual({
+      version: "2026-09-28.1",
+      supplement:
+        "e2ef41731305ef92165246308512f60922eaee804b3a71ddd3a64bd04092e5d8",
+    });
   });
 });

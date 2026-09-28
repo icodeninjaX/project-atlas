@@ -7,6 +7,7 @@ import {
   type FixtureOwner,
   type FixtureVariant,
 } from "./fixtures";
+import { RUNWAY_SUPPLEMENTS, runwayBudgetItems } from "./runway-fixtures";
 
 /**
  * A small in-memory PostgREST used by tests to run the real Analyst tools and
@@ -188,9 +189,95 @@ function rowsFor(data: FixtureDataset, owner: FixtureOwner): Tables {
   };
 }
 
+/**
+ * Adds the versioned runway supplement (`runway-fixtures.ts`) for the rich
+ * dataset: account balances, essential flags, debt terms, profile income,
+ * the runway target and the budget. Other rows get the schema's defaults.
+ */
+function withRunway(
+  tables: Tables,
+  owner: FixtureOwner,
+  variant: FixtureVariant,
+): Tables {
+  const supplement = variant === "rich" ? RUNWAY_SUPPLEMENTS[owner] : undefined;
+  const u = fixtureUuid;
+  const essential = new Set(
+    (supplement?.essentialCategoryIds ?? []).map((id) => u(id)),
+  );
+  const terms = Object.fromEntries(
+    Object.entries(supplement?.debtTerms ?? {}).map(([id, value]) => [
+      u(id),
+      value,
+    ]),
+  );
+  return {
+    ...tables,
+    transaction_categories: (tables.transaction_categories ?? []).map(
+      (row) => ({
+        ...row,
+        is_essential: essential.has(String(row.id)),
+        is_system: false,
+      }),
+    ),
+    debts: (tables.debts ?? []).map((row) => ({
+      ...row,
+      interest_rate_percent: terms[String(row.id)]?.interestRatePercent ?? 0,
+      minimum_payment_centavos:
+        terms[String(row.id)]?.minimumPaymentCentavos ?? 0,
+    })),
+    financial_account_balances: (supplement?.accounts ?? []).map((item) => ({
+      id: u(item.id),
+      user_id: owner,
+      name: item.name,
+      account_type: item.accountType,
+      current_balance_centavos: item.balanceCentavos,
+      include_in_runway: item.includeInRunway,
+      is_archived: false,
+    })),
+    profiles: supplement
+      ? [
+          {
+            id: owner,
+            monthly_net_income_centavos: supplement.monthlyNetIncomeCentavos,
+          },
+        ]
+      : [],
+    user_preferences: supplement
+      ? [{ user_id: owner, runway_target_months: supplement.targetMonths }]
+      : [],
+    monthly_budgets: supplement
+      ? [
+          {
+            id: u(supplement.budget.id),
+            user_id: owner,
+            month_start: supplement.budget.monthStart,
+            expected_income_centavos: supplement.budget.expectedIncomeCentavos,
+          },
+        ]
+      : [],
+    budget_items: supplement
+      ? runwayBudgetItems(owner).map((item) => ({
+          id: u(`${supplement.budget.id}:${item.categoryId}`),
+          user_id: owner,
+          monthly_budget_id: u(supplement.budget.id),
+          category_id: u(item.categoryId),
+          planned_centavos: item.plannedCentavos,
+        }))
+      : [],
+  };
+}
+
 export function fixtureTables(variant: FixtureVariant = "rich"): Tables {
-  const a = rowsFor(FIXTURE_DATASETS[variant][OWNER_A], OWNER_A);
-  const b = rowsFor(FIXTURE_DATASETS[variant][OWNER_B], OWNER_B);
+  const a = withRunway(
+    rowsFor(FIXTURE_DATASETS[variant][OWNER_A], OWNER_A),
+    OWNER_A,
+    variant,
+  );
+  const b = withRunway(
+    rowsFor(FIXTURE_DATASETS[variant][OWNER_B], OWNER_B),
+    OWNER_B,
+    variant,
+  );
   return Object.fromEntries(
     Object.keys(a).map((table) => [table, [...a[table]!, ...(b[table] ?? [])]]),
   );

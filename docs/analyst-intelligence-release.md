@@ -6,9 +6,9 @@ built on the [AI-06 communication and interface](analyst-intelligence-communicat
 > **Release decision: not released.** V2 stays behind `ATLAS_ANALYST_V2`, which
 > is off by default. Two hard gates are not satisfied (§3), the quality
 > targets are unmeasured because no live evaluation was authorized (§4).
-> The capability gap found here has since been closed: 47 of 49 answerable
-> corpus cases now reach evidence (§2.5). Nothing in this phase enables V2
-> anywhere.
+> The capability gap found here has since been closed: all 49 answerable
+> corpus cases now reach evidence (§2.5, §2.6). Nothing in this phase enables
+> V2 anywhere.
 
 | Field               | Value                                                                                                                 |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -97,29 +97,26 @@ Every case runs through the full V2 path, including prior turns, against the
 owner-scoped emulator. No model is available, so this measures the
 architecture, not a model's writing.
 
-| Measure                                               | Result                                                                                                            |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Cases run                                             | 60 (40 development, 20 holdout)                                                                                   |
-| Crashes                                               | 0                                                                                                                 |
-| Another owner's records or identity in visible output | 0                                                                                                                 |
-| Unsafe progress events                                | 0                                                                                                                 |
-| Statuses                                              | 53 `fallback_facts`, 3 `error`, 2 `clarification_required`, 1 `insufficient_evidence`, 1 `unsupported_capability` |
-| `fallback_facts` answers with no checked figure       | 0 (was 58 before fix 1)                                                                                           |
-| Maximum tool calls in one run                         | 5, within the deep envelope of 8                                                                                  |
-| Cases over their frozen per-case tool budget          | 2: Q28, Q38 (4 calls against 3; V2 takes the deep path for these relationship questions)                          |
-| Answerable cases reaching any evidence                | **47 of 49** (was 35 of 49 at the AI-07 release decision; see §2.5)                                               |
+| Measure                                               | Result                                                                                   |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Cases run                                             | 60 (40 development, 20 holdout)                                                          |
+| Crashes                                               | 0                                                                                        |
+| Another owner's records or identity in visible output | 0                                                                                        |
+| Unsafe progress events                                | 0                                                                                        |
+| Statuses                                              | 54 `fallback_facts`, 4 `error`, 1 `clarification_required`, 1 `unsupported_capability`   |
+| `fallback_facts` answers with no checked figure       | 0 (was 58 before fix 1)                                                                  |
+| Maximum tool calls in one run                         | 5, within the deep envelope of 8                                                         |
+| Cases over their frozen per-case tool budget          | 2: Q28, Q38 (4 calls against 3; V2 takes the deep path for these relationship questions) |
+| Answerable cases reaching any evidence                | **49 of 49** (was 35 of 49 at the AI-07 release decision; see §2.5 and §2.6)             |
 
-The two answerable cases that still reach no evidence are runway scenarios
-(Q10, Q43). V2 resolves the debt and calls the scenario engine, but the frozen
-fixtures record no account balances, so the engine reports insufficient
-history, as the legacy path does. The test pins this list: shrinking it is
-progress, and any addition fails.
+No answerable case reaches zero evidence. The test pins that list (now
+empty): any addition fails.
 
-The three `error` results are questions whose only evidence is marked
-partial (weekly review scores from fewer than 12 reviews). With no model
-available, the fallback shows only complete figures, so those runs report
-that no checked figure could be shown. A writer can still cite the partial
-figures with their limitation.
+The four `error` results have evidence that the no-model fallback does not
+state as plain figures: weekly review scores from fewer than 12 reviews
+(marked partial), and Q10's scenario outputs (estimates under stated
+assumptions, not recorded totals). Those runs report that no checked figure
+could be shown. A writer can still cite them with their limitations.
 
 Q15 ("How is my main goal going?") now gets an overview of all active goals.
 The corpus expects V2 to ask which goal; "main goal" is not yet treated as
@@ -184,6 +181,42 @@ The fixes:
   (NOT NULL). Without them the signals engine crashed on synthetic data. The
   frozen fixture datasets are unchanged.
 
+### 2.6 Runway fixtures and the income assumption (Q10, Q43)
+
+The frozen datasets record no account balances, so the runway engine could
+not compute the two scenario cases. `evaluation/runway-fixtures.ts` adds a
+versioned supplement (`RUNWAY_FIXTURE_VERSION` 2026-09-28.1) for owner A's
+rich dataset. The emulator serves it beside the frozen datasets, which are
+unchanged; the supplement is pinned by its own fingerprint in
+`freeze.test.ts`, so the original fingerprints never move.
+
+| Supplement data        | Value                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| Runway accounts        | Synthetic Savings ₱60,000.00 (in the reserve); Synthetic Wallet ₱2,500.00 (excluded) |
+| Essential categories   | Groceries, Transport, Utilities, Health                                              |
+| Synthetic Card terms   | 24% interest, ₱2,000.00 minimum payment                                              |
+| September budget       | Planned essentials ₱9,500.00; expected income ₱50,000.00; the datasets' dining limit |
+| Profile income, target | ₱50,000.00 monthly; 6 months                                                         |
+
+The frozen transactions record only August among the three months before
+the fixture clock, so the engine uses its budget fallback. The results check
+by hand: ₱60,000.00 over a monthly need of ₱11,500.00 (₱9,500.00 essentials
+plus the ₱2,000.00 minimum) is about 5.2 months; an extra ₱2,000.00 or
+₱4,000.00 a month gives about 4.4 or 3.9 months. `run.test.ts` asserts these.
+
+Owner B and the bulk dataset have no supplement, so their runway still
+reports insufficient history. Other rows gained the schema's defaults
+(`is_essential` false, zero debt terms). Serving the budget also exposes the
+datasets' existing September dining limit to the signals engine.
+
+**Q43 needed one behavior, not just data.** "What if my income drops?" names
+no amount, and a scenario needs one. V2 now asks, "Should I assume your
+monthly income falls by 20%?", recording a pending assumption in the sealed
+context. It sends nothing to a provider and assumes nothing. When the user
+says yes, the turn machinery from AI-03 records the assumption as
+`user_confirmed`, and the proposer runs the scenario with it. A different
+percentage or "no" is handled by the same machinery.
+
 ## 3. Hard gates (roadmap §8.4)
 
 | Gate                                                                                      | Status                                                                                                                                        |
@@ -201,7 +234,7 @@ difficult cases, and three runs per holdout case.
 
 | Target                                            | Status                                                       |
 | ------------------------------------------------- | ------------------------------------------------------------ |
-| ≥90% answerable cases fully correct               | Unmeasured; evidence reach is 47 of 49 (§2.5)                |
+| ≥90% answerable cases fully correct               | Unmeasured; evidence reach is 49 of 49 (§2.5, §2.6)          |
 | ≥85% hard-question subset meets the rubric        | Unmeasured                                                   |
 | ≥90% conversation continuity                      | Unmeasured live; deterministic follow-up tests pass          |
 | New path preferred on ≥65% of hard non-tied pairs | Unmeasured                                                   |
@@ -288,7 +321,7 @@ and the pool-meter credentials, then run
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | `npm run lint`         | Pass                                                                                                      |
 | `npm run typecheck`    | Pass                                                                                                      |
-| `npm run test`         | 148 files passed, 7 skipped; 908 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
+| `npm run test`         | 148 files passed, 7 skipped; 911 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
 | `npm run format:check` | Pass                                                                                                      |
 | `npm run build`        | Pass; `/analyst` and `/api/analyst/v2` render per request                                                 |
 
@@ -296,10 +329,8 @@ and the pool-meter credentials, then run
 
 Each item needs explicit authorization from the owner:
 
-1. **Finish the remaining routing gaps:** ask which goal for "my main goal"
-   (Q15), and synthetic runway fixtures (account balances) so the scenario
-   cases (Q10, Q43) can be evaluated. The capability gap itself is closed
-   (§2.5).
+1. **Finish the remaining routing gap:** ask which goal for "my main goal"
+   (Q15). The capability gap is closed (§2.5, §2.6).
 2. **Verify the provider route.** Confirm the OpenAI project's data-sharing
    setting, or configure and verify a non-sharing route (AI-02).
 3. **Run the live evaluations** (§6) within an approved budget, with human

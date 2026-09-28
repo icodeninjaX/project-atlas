@@ -126,10 +126,20 @@ describe("Analyst V2 tool registry", () => {
         })
       ).error?.code,
     ).toBe("invalid_input");
-    // "Not enough history" stays insufficient, never an operational error.
+    // With the runway supplement the engine reports owner A's reserve.
     const runway = await invoke("getRunway", {});
-    expect(runway.status).toBe("insufficient");
-    expect(runway.error).toBeUndefined();
+    expect(runway.status).toBe("ready");
+    expect(
+      runway.evidence.find(
+        (item) => item.semantics.definition === "Available liquid balance",
+      ),
+    ).toMatchObject({ value: 6_000_000, domain: "runway" });
+    // Owner B has no balances: "not enough history" stays insufficient,
+    // never an operational error.
+    signIn(OWNER_B);
+    const none = await invoke("getRunway", {});
+    expect(none.status).toBe("insufficient");
+    expect(none.error).toBeUndefined();
   });
 
   it("rejects unknown tools, raw IDs, SQL, oversized and duplicate input before reading", async () => {
