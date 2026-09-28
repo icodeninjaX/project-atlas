@@ -11,6 +11,7 @@ import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
 import { SHARED_ROUTE, parseConsent } from "@/lib/analyst/intelligence/policy";
 import type { V2StreamEvent } from "@/lib/analyst/intelligence/progress";
 import { runAnalystV2, type V2Response } from "@/lib/analyst/intelligence/run";
+import type { RunLedger } from "@/lib/analyst/intelligence/budgets";
 import { createStageCaller } from "@/lib/analyst/intelligence/stages";
 import {
   authorizeHandlesV2,
@@ -112,6 +113,7 @@ export async function POST(request: Request) {
     signal?: AbortSignal,
   ) => {
     let result: V2Response | null = null;
+    let ledger: RunLedger | null = null;
     try {
       result = await runAnalystV2(
         {
@@ -132,6 +134,9 @@ export async function POST(request: Request) {
           clock: Date.now,
           emit,
           signal,
+          onLedger: (value) => {
+            ledger = value;
+          },
         },
       );
       // Quota bookkeeping stays on the server.
@@ -145,12 +150,16 @@ export async function POST(request: Request) {
         body: { error: "Analysis could not be completed. Try again." },
       };
     } finally {
+      // A run that threw still settles the tokens it was charged.
+      const charged = (ledger as RunLedger | null)?.usage;
+      const usage =
+        result?.usage ?? (charged?.providerCalls ? charged : undefined);
       try {
         await supabase.rpc("finish_ai_analyst_request", {
           p_id: requestId,
           p_outcome: result?.outcome ?? "provider_error",
-          p_input_tokens: result?.usage.inputTokens ?? null,
-          p_output_tokens: result?.usage.outputTokens ?? null,
+          p_input_tokens: usage?.inputTokens ?? null,
+          p_output_tokens: usage?.outputTokens ?? null,
         });
       } catch {
         /* Audit failure must not replace the answer. */

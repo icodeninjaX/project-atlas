@@ -565,15 +565,37 @@ describe("answer synthesis", () => {
     ).toMatchObject({ semantic: "unsupported" });
   });
 
-  it("falls back to checked facts when the writer fails", async () => {
+  it("falls back to checked ATLAS figures when the writer fails", async () => {
+    const { result } = run(
+      { atlas_answer_v2: ["error"], atlas_answer_review: [] },
+      { byRequirement: { total: ["total.current", "total.previous"] } },
+    );
+    const answer = (await result).answer;
+    expect(answer.status).toBe("fallback_facts");
+    const shipped = answer.claims.filter(
+      (item) => item.verification.deterministic === "passed",
+    );
+    // Every figure shown passed the same checks a written claim would.
+    expect(shipped.map((item) => item.evidenceIds)).toEqual([
+      ["total.current"],
+      ["total.previous"],
+    ]);
+    expect(shipped.every((item) => item.kind === "fact")).toBe(true);
+    expect(answer.limitations.join(" ")).toMatch(
+      /only checked ATLAS figures are shown/,
+    );
+  });
+
+  it("reports an operational error, not empty records, when nothing can be shown", async () => {
     const { result } = run({
       atlas_answer_v2: ["error"],
       atlas_answer_review: [],
     });
-    const answer = await result;
-    expect(answer.answer.status).toBe("fallback_facts");
-    expect(answer.answer.limitations.join(" ")).toMatch(
-      /only the checked ATLAS facts/,
+    const answer = (await result).answer;
+    expect(answer.status).toBe("error");
+    expect(answer.claims.filter((item) => item.kind === "fact")).toEqual([]);
+    expect(answer.limitations.join(" ")).toMatch(
+      /does not mean your records are empty/,
     );
   });
 

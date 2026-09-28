@@ -120,7 +120,12 @@ export function createStageCaller(options: {
               ),
             }
           : { tokens: null, costUsdMicros: null },
-        { tokens: reservedTokens, costUsdMicros: reservedCost },
+        {
+          tokens: reservedTokens,
+          costUsdMicros: reservedCost,
+          inputTokens: Buffer.byteLength(body),
+          outputTokens: request.maxOutputTokens,
+        },
       );
     if (result.status === "error")
       return { status: "error", code: result.code };

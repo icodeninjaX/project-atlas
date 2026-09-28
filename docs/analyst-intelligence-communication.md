@@ -232,7 +232,5 @@ therefore **unverified**.
 - **Browser checks.** No signed-in browser run and no two-owner database run
   was done. Both belong to AI-07.
 
-**Next phase: AI-07** — held-out evaluation, fault injection, quota and
-token settlement checks, signed-in browser and two-owner database runs, and a
-release evidence report. Production enablement stays behind the server flag,
-with explicit authorization.
+**Next phase: AI-07** — done locally and not released; see
+[release evidence](analyst-intelligence-release.md).

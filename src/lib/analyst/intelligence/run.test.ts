@@ -16,7 +16,7 @@ import {
 } from "./language";
 import { SHARED_ROUTE, legacyEquivalentConsent } from "./policy";
 import { safeProgress, type V2ProgressEvent } from "./progress";
-import { runAnalystV2 } from "./run";
+import { runAnalystV2, type V2Response } from "./run";
 import { createStageCaller } from "./stages";
 import { authorizeHandlesV2, invokeAnalystToolV2 } from "./tools/server";
 
@@ -24,6 +24,7 @@ vi.mock("server-only", () => ({}));
 const state = vi.hoisted(() => ({
   createClient: vi.fn(),
   exhausted: new Set<string>(),
+  meterDown: false,
 }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: state.createClient }));
 vi.mock("@/lib/ai/pool-meter", async (importOriginal) => {
@@ -39,6 +40,7 @@ vi.mock("@/lib/ai/pool-meter", async (importOriginal) => {
     ) => {
       if (state.exhausted.has(options.model))
         throw new original.PoolExhaustedError("large");
+      if (state.meterDown) throw new original.PoolMeterError("synthetic");
       return (options.fetch ?? globalThis.fetch)(url, init);
     },
   };
@@ -61,6 +63,14 @@ type Evidence = {
   measure: string;
 };
 let writer: (input: Record<string, unknown>) => unknown;
+/** Injected provider or source faults for the AI-07 fault suite. */
+let fault:
+  | null
+  | "timeout"
+  | "invalid_output"
+  | "missing_usage"
+  | "http_error"
+  | "source_error";
 
 const pesos = (centavos: number) =>
   `₱${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(centavos / 100)}`;
@@ -103,6 +113,8 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"], now });
   process.env.OPENAI_API_KEY = "sk-synthetic";
   state.exhausted.clear();
+  state.meterDown = false;
+  fault = null;
   providerRequests = [];
   writer = totalWriter();
   emulator = createEmulator(fixtureTables(), OWNER_A);
@@ -112,7 +124,11 @@ beforeEach(() => {
       const url = new URL(
         input instanceof Request ? input.url : input.toString(),
       );
-      if (url.hostname !== "api.openai.com") return emulator.fetch(input, init);
+      if (url.hostname !== "api.openai.com") {
+        if (fault === "source_error" && url.pathname.startsWith("/rest/"))
+          return Response.json({ message: "unavailable" }, { status: 503 });
+        return emulator.fetch(input, init);
+      }
       const body = JSON.parse(String(init?.body));
       const payload = JSON.parse(body.messages[1].content);
       providerRequests.push({
@@ -120,13 +136,26 @@ beforeEach(() => {
         schema: body.response_format.json_schema.name,
         input: payload,
       });
+      if (fault === "timeout")
+        throw Object.assign(new Error("The operation was aborted."), {
+          name: "AbortError",
+        });
+      if (fault === "http_error")
+        return Response.json({ error: { message: "down" } }, { status: 500 });
       return Response.json({
         model: body.model,
-        usage: { prompt_tokens: 800, completion_tokens: 200 },
+        ...(fault !== "missing_usage" && {
+          usage: { prompt_tokens: 800, completion_tokens: 200 },
+        }),
         choices: [
           {
             finish_reason: "stop",
-            message: { content: JSON.stringify(writer(payload)) },
+            message: {
+              content:
+                fault === "invalid_output"
+                  ? "not json"
+                  : JSON.stringify(writer(payload)),
+            },
           },
         ],
       });
@@ -159,28 +188,32 @@ function ask(
     model?: AnalystModelId;
     context?: string | null;
     contextKey?: Buffer | null;
+    consent?: typeof consent;
+    signal?: AbortSignal;
   } = {},
 ) {
   const events: V2ProgressEvent[] = [];
-  const policy = { consent, route: SHARED_ROUTE };
+  const granted = options.consent ?? consent;
+  const policy = { consent: granted, route: SHARED_ROUTE };
   const result = runAnalystV2(
     {
       ownerId: OWNER_A,
       question,
       contextToken: options.context ?? null,
       model: options.model ?? AI_MODELS.analyst,
-      consent,
+      consent: granted,
       route: SHARED_ROUTE,
     },
     {
       invoke: (tool, input) => invokeAnalystToolV2(tool, input, policy),
       authorize: (handles) => authorizeHandlesV2(handles, policy),
       stageCaller: (ledger) =>
-        createStageCaller({ ledger, consent, route: SHARED_ROUTE }),
+        createStageCaller({ ledger, consent: granted, route: SHARED_ROUTE }),
       contextKey: options.contextKey === undefined ? key : options.contextKey,
       now: () => now,
       clock: () => 0,
       emit: (event) => events.push(event),
+      signal: options.signal,
     },
   );
   return { result, events };
@@ -384,5 +417,91 @@ describe("communication helpers", () => {
         question: "private",
       } as unknown as V2ProgressEvent),
     ).toThrow();
+  });
+});
+
+describe("Analyst V2 under injected faults (AI-07)", () => {
+  const question = "How much did I spend this month?";
+  const noEmptyRecordsClaim = (response: V2Response) =>
+    expect(JSON.stringify(response.presentation)).not.toMatch(
+      /no (?:recorded )?(?:expenses|records|spending)|₱0\.00/i,
+    );
+
+  it.each([
+    ["timeout", "timeout"],
+    ["invalid_output", "provider_error"],
+    ["http_error", "provider_error"],
+  ] as const)(
+    "shows checked figures when the writer fails with %s",
+    async (injected, outcome) => {
+      fault = injected;
+      const response = await ask(question).result;
+      expect(response.status).toBe("fallback_facts");
+      expect(response.presentation.direct[0]?.text).toContain("₱11,000.00");
+      expect(response.presentation.limitations.join(" ")).toMatch(
+        /only checked ATLAS figures/,
+      );
+      expect(response.outcome).toBe(outcome);
+      // A provider that may have processed the call is charged.
+      expect(response.usage.providerCalls).toBe(1);
+    },
+  );
+
+  it("charges unknown usage at the reserved upper bound, never as zero", async () => {
+    fault = "missing_usage";
+    const response = await ask(question).result;
+    expect(response.status).toBe("answered");
+    expect(response.usage.providerCalls).toBe(1);
+    expect(response.usage.inputTokens).toBeGreaterThan(800);
+    expect(response.usage.outputTokens).toBeGreaterThanOrEqual(1_200);
+  });
+
+  it("sends nothing and settles nothing when the pool is used up or the meter is down", async () => {
+    state.exhausted.add(AI_MODELS.analyst);
+    const exhausted = await ask(question).result;
+    expect(exhausted.status).toBe("fallback_facts");
+    expect(exhausted.outcome).toBe("pool_exhausted");
+    expect(exhausted.usage.providerCalls).toBe(0);
+    state.exhausted.clear();
+    state.meterDown = true;
+    const metered = await ask(question).result;
+    expect(metered.status).toBe("fallback_facts");
+    expect(metered.outcome).toBe("provider_error");
+    expect(metered.usage.providerCalls).toBe(0);
+    expect(providerRequests).toEqual([]);
+  });
+
+  it("never reports a failed source as empty records", async () => {
+    fault = "source_error";
+    const response = await ask(question).result;
+    expect(response.status).toBe("error");
+    expect(response.presentation.unresolved.map((item) => item.reason)).toEqual(
+      ["operational_failure"],
+    );
+    expect(response.presentation.unresolved[0]?.text).not.toMatch(
+      /enough records/,
+    );
+    noEmptyRecordsClaim(response);
+    // Nothing to cite, so no metered writer call is spent.
+    expect(providerRequests).toEqual([]);
+  });
+
+  it("starts fresh, and says so, when consent changes between turns", async () => {
+    const first = await ask(question).result;
+    const narrower = { ...consent, domains: ["money" as const] };
+    const second = await ask("What about last month?", {
+      context: first.context,
+      consent: narrower,
+    }).result;
+    expect(second.contextNotice).toMatch(/sharing choices changed/);
+  });
+
+  it("stops before any provider call when the request is cancelled", async () => {
+    const cancelled = new AbortController();
+    cancelled.abort();
+    const response = await ask(question, { signal: cancelled.signal }).result;
+    expect(response.status).toBe("error");
+    expect(providerRequests).toEqual([]);
+    expect(response.usage.providerCalls).toBe(0);
   });
 });
