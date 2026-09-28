@@ -259,10 +259,15 @@ export async function runInvestigation(input: {
   signal?: AbortSignal;
   budget?: RunBudget;
   selection?: { items: number; bytes: number };
+  /** One ledger for the whole request, shared with the answer stages. */
+  ledger?: RunLedger;
+  /** Reports each round as it starts: tool names only, never inputs. */
+  onRound?: (round: number, tools: V2ToolName[]) => void;
 }): Promise<InvestigationResult> {
   const { brief, readiness } = input.check;
   const budget = input.budget ?? RUN_BUDGETS[input.check.path];
-  const ledger = new RunLedger(budget, input.clock, input.signal);
+  const ledger =
+    input.ledger ?? new RunLedger(budget, input.clock, input.signal);
   const startedAt = new Date(input.clock?.() ?? Date.now()).toISOString();
   const outcomes: ToolOutcome[] = [];
   const rejected: RejectedRequest[] = [];
@@ -389,6 +394,10 @@ export async function runInvestigation(input: {
       break;
     }
     ledger.recordRound(accepted.length);
+    input.onRound?.(
+      round,
+      accepted.map((request) => request.tool),
+    );
     const before = outcomes.reduce(
       (sum, item) =>
         sum + item.result.evidence.length + item.result.candidates.length,

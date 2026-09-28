@@ -111,6 +111,8 @@ export function createStageCaller(options: {
         known
           ? {
               tokens: result.inputTokens! + result.outputTokens!,
+              inputTokens: result.inputTokens!,
+              outputTokens: result.outputTokens!,
               costUsdMicros: estimatedCostUsdMicros(
                 request.model,
                 result.inputTokens!,

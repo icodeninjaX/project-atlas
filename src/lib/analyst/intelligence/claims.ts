@@ -501,8 +501,14 @@ export function checkClaim(
   const dateReason = checkDates(text, cited, ctx.now);
   if (dateReason) reasons.push(dateReason);
   if (!checkFigures(text, cited)) reasons.push("figure");
+  // A limitation that states no figure cannot relabel a value.
+  const figureFreeLimitation = claim.kind === "limitation" && !/\d/.test(text);
   for (const [domain, pattern] of Object.entries(DOMAIN_TERMS))
-    if (pattern!.test(text) && !cited.domains.has(domain as MetricDomain)) {
+    if (
+      !figureFreeLimitation &&
+      pattern!.test(text) &&
+      !cited.domains.has(domain as MetricDomain)
+    ) {
       reasons.push("metric_mismatch");
       break;
     }

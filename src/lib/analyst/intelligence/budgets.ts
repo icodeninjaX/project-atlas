@@ -72,6 +72,8 @@ export const RUN_BUDGETS: Record<RunPath, RunBudget> = {
 };
 
 export type Usage = {
+  inputTokens: number;
+  outputTokens: number;
   rounds: number;
   toolCalls: number;
   queries: number;
@@ -94,6 +96,8 @@ export type BudgetRefusal =
 
 export class RunLedger {
   readonly usage: Usage = {
+    inputTokens: 0,
+    outputTokens: 0,
     rounds: 0,
     toolCalls: 0,
     queries: 0,
@@ -183,10 +187,17 @@ export class RunLedger {
    * because the provider may have processed the request.
    */
   recordProvider(
-    usage: { tokens: number | null; costUsdMicros: number | null },
+    usage: {
+      tokens: number | null;
+      costUsdMicros: number | null;
+      inputTokens?: number;
+      outputTokens?: number;
+    },
     reserved: { tokens: number; costUsdMicros: number },
   ) {
     this.usage.providerCalls += 1;
+    this.usage.inputTokens += usage.inputTokens ?? 0;
+    this.usage.outputTokens += usage.outputTokens ?? 0;
     this.usage.tokens += usage.tokens ?? reserved.tokens;
     this.usage.costUsdMicros += usage.costUsdMicros ?? reserved.costUsdMicros;
   }

@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
   CONSENT_DOMAINS,
@@ -85,10 +84,24 @@ export function consentFingerprint(consent: AnalystConsent | null) {
     domains: [...new Set(consent.domains)].sort(),
     profiles: [...new Set(consent.profiles)].sort(),
   };
-  return createHash("sha256")
-    .update(JSON.stringify(allowed))
-    .digest("hex")
-    .slice(0, 16);
+  return (
+    fnv(JSON.stringify(allowed), 0x811c9dc5) +
+    fnv(JSON.stringify(allowed), 0x01000193)
+  );
+}
+
+/**
+ * FNV-1a, 32 bits. The fingerprint only has to change when consent changes;
+ * it is stored inside the sealed context, so it needs no secrecy, and a pure
+ * function keeps this module usable in the browser.
+ */
+function fnv(text: string, seed: number) {
+  let hash = seed >>> 0;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(16).padStart(8, "0");
 }
 
 export function contextValidFor(

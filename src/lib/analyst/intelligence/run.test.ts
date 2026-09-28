@@ -1,0 +1,388 @@
+import { randomBytes } from "node:crypto";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { AI_MODELS, type AnalystModelId } from "@/lib/ai/models";
+import { OWNER_A } from "./evaluation/fixtures";
+import {
+  createEmulator,
+  fixtureTables,
+  type Emulator,
+} from "./evaluation/postgrest";
+import {
+  detectLanguage,
+  detectStyle,
+  formatDay,
+  formatMoney,
+} from "./language";
+import { SHARED_ROUTE, legacyEquivalentConsent } from "./policy";
+import { safeProgress, type V2ProgressEvent } from "./progress";
+import { runAnalystV2 } from "./run";
+import { createStageCaller } from "./stages";
+import { authorizeHandlesV2, invokeAnalystToolV2 } from "./tools/server";
+
+vi.mock("server-only", () => ({}));
+const state = vi.hoisted(() => ({
+  createClient: vi.fn(),
+  exhausted: new Set<string>(),
+}));
+vi.mock("@/lib/supabase/server", () => ({ createClient: state.createClient }));
+vi.mock("@/lib/ai/pool-meter", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/ai/pool-meter")>();
+  return {
+    ...original,
+    // The meter has its own tests; here it passes through, or refuses a
+    // model whose pool is marked used up, before anything is sent.
+    meteredOpenAIFetch: (
+      url: string,
+      init: RequestInit,
+      options: { model: string; fetch?: typeof fetch },
+    ) => {
+      if (state.exhausted.has(options.model))
+        throw new original.PoolExhaustedError("large");
+      return (options.fetch ?? globalThis.fetch)(url, init);
+    },
+  };
+});
+
+const now = new Date("2026-09-24T04:00:00.000Z");
+const consent = legacyEquivalentConsent("2026-09-24T00:00:00.000Z");
+const key = randomBytes(32);
+let emulator: Emulator;
+let providerRequests: Array<{
+  model: string;
+  schema: string;
+  input: Record<string, unknown>;
+}>;
+type Evidence = {
+  id: string;
+  value?: number;
+  scope: { type: string };
+  period: { from: string; through: string };
+  measure: string;
+};
+let writer: (input: Record<string, unknown>) => unknown;
+
+const pesos = (centavos: number) =>
+  `₱${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(centavos / 100)}`;
+
+/** A writer that cites the whole-period expense total it was given. */
+function totalWriter(extra: (total: Evidence) => unknown[] = () => []) {
+  return (input: Record<string, unknown>) => {
+    const evidence = input.evidence as Evidence[];
+    const total = evidence.find(
+      (item) =>
+        item.scope.type === "whole_domain" &&
+        item.measure === "expense_centavos",
+    )!;
+    const requirement = (input.requirements as Array<{ id: string }>)[0]!.id;
+    return {
+      version: "2",
+      directAnswerClaimIds: ["c1"],
+      claims: [
+        {
+          id: "c1",
+          kind: "fact",
+          text: `Recorded expenses were ${pesos(total.value!)} from ${total.period.from} to ${total.period.through}.`,
+          answersRequirementIds: [requirement],
+          evidenceIds: [total.id],
+          derivedFactIds: [],
+          assumptionIds: [],
+          scopeId: "whole_domain:expense",
+          comparison: null,
+          recommendation: null,
+        },
+        ...(extra(total) as object[]),
+      ],
+      sections: [],
+      table: null,
+    };
+  };
+}
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"], now });
+  process.env.OPENAI_API_KEY = "sk-synthetic";
+  state.exhausted.clear();
+  providerRequests = [];
+  writer = totalWriter();
+  emulator = createEmulator(fixtureTables(), OWNER_A);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(
+        input instanceof Request ? input.url : input.toString(),
+      );
+      if (url.hostname !== "api.openai.com") return emulator.fetch(input, init);
+      const body = JSON.parse(String(init?.body));
+      const payload = JSON.parse(body.messages[1].content);
+      providerRequests.push({
+        model: body.model,
+        schema: body.response_format.json_schema.name,
+        input: payload,
+      });
+      return Response.json({
+        model: body.model,
+        usage: { prompt_tokens: 800, completion_tokens: 200 },
+        choices: [
+          {
+            finish_reason: "stop",
+            message: { content: JSON.stringify(writer(payload)) },
+          },
+        ],
+      });
+    }),
+  );
+  state.createClient.mockImplementation(
+    async (options: { fetch?: typeof fetch } = {}) => {
+      const client = createSupabaseClient(
+        "http://localhost:54321",
+        "synthetic-key",
+        {
+          global: { fetch: options.fetch },
+          auth: { persistSession: false, autoRefreshToken: false },
+        },
+      );
+      const getUser = client.auth.getUser.bind(client.auth);
+      client.auth.getUser = () => getUser("synthetic-access-token");
+      return client;
+    },
+  );
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+function ask(
+  question: string,
+  options: {
+    model?: AnalystModelId;
+    context?: string | null;
+    contextKey?: Buffer | null;
+  } = {},
+) {
+  const events: V2ProgressEvent[] = [];
+  const policy = { consent, route: SHARED_ROUTE };
+  const result = runAnalystV2(
+    {
+      ownerId: OWNER_A,
+      question,
+      contextToken: options.context ?? null,
+      model: options.model ?? AI_MODELS.analyst,
+      consent,
+      route: SHARED_ROUTE,
+    },
+    {
+      invoke: (tool, input) => invokeAnalystToolV2(tool, input, policy),
+      authorize: (handles) => authorizeHandlesV2(handles, policy),
+      stageCaller: (ledger) =>
+        createStageCaller({ ledger, consent, route: SHARED_ROUTE }),
+      contextKey: options.contextKey === undefined ? key : options.contextKey,
+      now: () => now,
+      clock: () => 0,
+      emit: (event) => events.push(event),
+    },
+  );
+  return { result, events };
+}
+
+describe("Analyst V2 end to end (mocked provider)", () => {
+  it("answers a lookup with the chosen writer and reports safe progress", async () => {
+    const { result, events } = ask("How much did I spend this month?", {
+      model: "gpt-5.4-mini-2026-03-17",
+    });
+    const response = await result;
+    expect(response.status).toBe("answered");
+    expect(response.presentation.direct[0]?.text).toBe(
+      "Recorded expenses were ₱11,000.00 from Sep 1, 2026 to Sep 24, 2026.",
+    );
+    // The chosen model writes; planning stays deterministic and is recorded as such.
+    expect(providerRequests.map((item) => [item.schema, item.model])).toEqual([
+      ["atlas_answer_v2", "gpt-5.4-mini-2026-03-17"],
+    ]);
+    expect(response.models).toMatchObject({
+      planner: { requested: "deterministic" },
+      writer: {
+        requested: "gpt-5.4-mini-2026-03-17",
+        resolved: "gpt-5.4-mini-2026-03-17",
+      },
+      reviewer: null,
+      fallback: false,
+    });
+    expect(
+      events.map((event) =>
+        event.stage === "reading"
+          ? `reading:${event.round}:${event.domains.join()}`
+          : event.stage,
+      ),
+    ).toEqual(["understanding", "reading:1:money", "writing", "checking"]);
+    // Progress never carries record text, figures or percentages.
+    expect(JSON.stringify(events)).not.toMatch(/₱|Groceries|%|\d{3,}/);
+    expect(response.outcome).toBe("success");
+    expect(response.usage).toMatchObject({
+      providerCalls: 1,
+      inputTokens: 800,
+      outputTokens: 200,
+    });
+  });
+
+  it("falls back from a used-up large pool and discloses it exactly once", async () => {
+    state.exhausted.add("gpt-6-sol");
+    const response = await ask("How much did I spend this month?", {
+      model: "gpt-6-sol",
+    }).result;
+    expect(response.status).toBe("answered");
+    expect(providerRequests.map((item) => item.model)).toEqual([
+      AI_MODELS.analyst,
+    ]);
+    const disclosures = response.presentation.limitations.filter((item) =>
+      item.includes("free daily allowance"),
+    );
+    expect(disclosures).toEqual([
+      "GPT-6 Sol's free daily allowance is used up, so GPT-4o mini wrote this answer. It resets at 8:00 AM Manila time.",
+    ]);
+    expect(response.models).toMatchObject({
+      fallback: true,
+      writer: { requested: "gpt-6-sol", resolved: AI_MODELS.analyst },
+    });
+  });
+
+  it("carries the subject into a follow-up and changes only the period (Q39)", async () => {
+    const first = await ask("How much did I spend this month?").result;
+    expect(first.context).not.toBeNull();
+    const second = await ask("What about last month?", {
+      context: first.context,
+    }).result;
+    expect(second.status).toBe("answered");
+    const evidence = providerRequests[1]!.input.evidence as Evidence[];
+    expect(
+      evidence.find((item) => item.scope.type === "whole_domain")?.period,
+    ).toEqual({ from: "2026-08-01", through: "2026-08-31" });
+    expect(second.presentation.direct[0]?.text).toMatch(
+      /Aug 1, 2026 to Aug 31, 2026/,
+    );
+  });
+
+  it("keeps a three-sentence answer short without losing the caveat (Q48)", async () => {
+    writer = totalWriter((total) => [
+      {
+        id: "c2",
+        kind: "fact",
+        text: `The total covers ${total.period.from} to ${total.period.through}.`,
+        answersRequirementIds: [],
+        evidenceIds: [total.id],
+        derivedFactIds: [],
+        assumptionIds: [],
+        scopeId: "whole_domain:expense",
+        comparison: null,
+        recommendation: null,
+      },
+      {
+        id: "c3",
+        kind: "fact",
+        text: `That total is ${pesos(total.value!)}.`,
+        answersRequirementIds: [],
+        evidenceIds: [total.id],
+        derivedFactIds: [],
+        assumptionIds: [],
+        scopeId: "whole_domain:expense",
+        comparison: null,
+        recommendation: null,
+      },
+      {
+        id: "c4",
+        kind: "limitation",
+        text: "Spending you did not record in ATLAS is not included.",
+        answersRequirementIds: [],
+        evidenceIds: [],
+        derivedFactIds: [],
+        assumptionIds: [],
+        scopeId: "whole_domain:expense",
+        comparison: null,
+        recommendation: null,
+      },
+    ]);
+    const response = await ask(
+      "In three sentences, how much did I spend this month?",
+    ).result;
+    const p = response.presentation;
+    const shown = [...p.direct, ...p.findings, ...p.options].length;
+    expect(shown + 1).toBeLessThanOrEqual(3);
+    expect(p.limitations[0]).toBe(
+      "Spending you did not record in ATLAS is not included.",
+    );
+    expect(p.shortened?.hidden).toBeGreaterThan(0);
+  });
+
+  it("answers a Taglish question in Filipino labels with the same verified facts (Q49)", async () => {
+    const response = await ask("Magkano ang gastos ko ngayong buwan?").result;
+    expect(response.presentation.language).toBe("fil-en");
+    expect(response.presentation.statusLabel).toBe("May sagot");
+    expect(response.presentation.direct[0]?.text).toContain("₱11,000.00");
+    expect(response.presentation.direct[0]?.text).toContain("Set 1, 2026");
+    const verification = Object.values(response.presentation.verification)
+      .filter(Boolean)
+      .join(" ");
+    expect(verification).not.toMatch(/100\s?%|fully accurate|guarantee/i);
+  });
+
+  it("suggests follow-ups that fit the answer and never repeat the question", async () => {
+    const withContext = await ask("How much did I spend this month?").result;
+    const texts = withContext.suggestions.map((item) => item.text);
+    expect(texts).not.toContain("How much did I spend this month?");
+    expect(texts).toContain("What about last month?");
+    // Without context nothing refers back to a subject that would be lost.
+    const stateless = await ask("How much did I spend this month?", {
+      contextKey: null,
+    }).result;
+    expect(stateless.context).toBeNull();
+    expect(stateless.suggestions.every((item) => !item.referential)).toBe(true);
+  });
+
+  it("asks for a complete question when a short message has no context", async () => {
+    const response = await ask("Why?").result;
+    expect(response.status).toBe("clarification_required");
+    expect(providerRequests).toEqual([]);
+  });
+
+  it("starts fresh, and says so, when the context cannot be verified", async () => {
+    const response = await ask("How much did I spend this month?", {
+      context: "tampered-token",
+    }).result;
+    expect(response.contextNotice).toMatch(/could not be/);
+    expect(response.status).toBe("answered");
+  });
+});
+
+describe("communication helpers", () => {
+  it("detects Taglish and requested formats", () => {
+    expect(
+      detectLanguage(
+        "Mas malaki ba ang gastos ko ngayong buwan kaysa noong nakaraang buwan?",
+      ),
+    ).toBe("fil-en");
+    expect(detectLanguage("How much did I spend this month?")).toBe("en");
+    expect(
+      detectStyle("In three sentences, what changed?", "explain_change"),
+    ).toEqual({ style: "concise", maxSentences: 3 });
+    expect(
+      detectStyle("Sa tatlong pangungusap, ano ang nagbago?", "explain_change"),
+    ).toEqual({ style: "concise", maxSentences: 3 });
+    expect(detectStyle("Show it as a table", "lookup").style).toBe("table");
+    expect(detectStyle("How much did I spend?", "lookup").style).toBe(
+      "concise",
+    );
+    expect(formatMoney(1_100_000)).toBe("₱11,000.00");
+    expect(formatDay("2026-09-24", "fil-en")).toBe("Set 24, 2026");
+  });
+
+  it("refuses progress events with anything beyond the fixed vocabulary", () => {
+    expect(() =>
+      safeProgress({
+        type: "stage",
+        stage: "writing",
+        question: "private",
+      } as unknown as V2ProgressEvent),
+    ).toThrow();
+  });
+});

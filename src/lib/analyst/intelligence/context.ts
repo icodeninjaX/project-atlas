@@ -353,6 +353,8 @@ export const v2RequestSchema = z
     question: z.string().trim().min(1).max(V2_REQUEST_LIMITS.questionChars),
     context: z.string().max(CONTEXT_LIMITS.tokenChars).nullable().default(null),
     model: z.string().max(64).optional(),
+    /** Versioned consent; parsed and checked separately by `parseConsent`. */
+    consent: z.unknown().optional(),
   })
   .strict();
 

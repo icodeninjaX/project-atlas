@@ -55,9 +55,20 @@ export type SynthesisInput = {
   knownReasons: ReadonlyMap<string, UnresolvedReason>;
   limitations: string[];
   now: Date;
-  models: { writer: string; reviewer: string };
+  models: {
+    writer: string;
+    reviewer: string;
+    /** Used, and disclosed once, if the writer's free pool is used up. */
+    writerFallback?: string | null;
+    /** Display names for the disclosure. */
+    label?: (model: string) => string;
+  };
   call: StageCaller;
+  /** Receives the reviewer model the provider reported. */
+  onReviewer?: (resolved: string | null) => void;
 };
+
+export type ModelUse = { requested: string; resolved: string | null };
 
 export type StageLog = {
   stage: "writer" | "critic" | "repair";
@@ -68,6 +79,7 @@ export type StageLog = {
 export type SynthesisResult = {
   answer: AnswerV2;
   stages: StageLog[];
+  models: { writer: ModelUse; reviewer: ModelUse | null; fallback: boolean };
   review: "completed" | "unavailable" | "not_required";
 };
 
@@ -144,6 +156,7 @@ async function review(
     ...(result.status === "error" && { code: result.code }),
   });
   if (result.status === "error") return null;
+  input.onReviewer?.(result.resolvedModel);
   const applied = applyReview(result.content, input.brief, candidates);
   const reviewed = new Map(applied.claims.map((claim) => [claim.id, claim]));
   return {
@@ -242,6 +255,17 @@ export async function synthesizeAnswer(
         RequirementCoverage["reason"]
       >,
     });
+  let writerModel = input.models.writer;
+  let fallback = false;
+  let writerResolved: string | null = null;
+  let reviewerUse: ModelUse | null = null;
+  const reviewInput: SynthesisInput = {
+    ...input,
+    onReviewer: (resolved) => {
+      reviewerUse = { requested: input.models.reviewer, resolved };
+    },
+  };
+  const disclosures: string[] = [];
   const write = (
     stage: "writer" | "repair",
     extra?: StageLog[] | undefined,
@@ -250,7 +274,7 @@ export async function synthesizeAnswer(
     input
       .call({
         stage,
-        model: input.models.writer,
+        model: writerModel,
         schemaName: "atlas_answer_v2",
         schema: WRITER_SCHEMA,
         system: WRITER_SYSTEM,
@@ -266,10 +290,32 @@ export async function synthesizeAnswer(
           status: result.status,
           ...(result.status === "error" && { code: result.code }),
         });
+        if (result.status === "ok") writerResolved = result.resolvedModel;
         return result;
       });
 
-  const drafted = await write("writer");
+  let drafted = await write("writer");
+  // A used-up pool refuses before anything is sent; the default model may
+  // still write. The switch is disclosed exactly once.
+  if (
+    drafted.status === "error" &&
+    drafted.code === "pool_exhausted" &&
+    input.models.writerFallback &&
+    input.models.writerFallback !== writerModel
+  ) {
+    const label = input.models.label ?? ((model: string) => model);
+    disclosures.push(
+      `${label(writerModel)}'s free daily allowance is used up, so ${label(input.models.writerFallback)} wrote this answer. It resets at 8:00 AM Manila time.`,
+    );
+    writerModel = input.models.writerFallback;
+    fallback = true;
+    drafted = await write("writer");
+  }
+  const models = () => ({
+    writer: { requested: input.models.writer, resolved: writerResolved },
+    reviewer: reviewerUse,
+    fallback,
+  });
   if (drafted.status === "error") {
     const answer = recompute(assemble(null));
     return {
@@ -277,10 +323,12 @@ export async function synthesizeAnswer(
         ...answer,
         limitations: [
           ...answer.limitations,
+          ...disclosures,
           "An explanation is unavailable, so only the checked ATLAS facts are shown.",
         ],
       },
       stages,
+      models: models(),
       review: "not_required",
     };
   }
@@ -294,7 +342,7 @@ export async function synthesizeAnswer(
     ? "completed"
     : "not_required";
   if (reviewState === "completed") {
-    const reviewed = await review(input, answer, stages);
+    const reviewed = await review(reviewInput, answer, stages);
     if (reviewed) {
       answer = { ...answer, claims: reviewed.claims };
       verdicts = reviewed.requirements;
@@ -330,7 +378,7 @@ export async function synthesizeAnswer(
       // A repaired claim is verified again from the start, never inherited.
       let secondVerdicts: Map<string, boolean> | undefined;
       if (needsReview(second.claims)) {
-        const reviewed = await review(input, second, stages);
+        const reviewed = await review(reviewInput, second, stages);
         if (reviewed) {
           second = { ...second, claims: reviewed.claims };
           secondVerdicts = reviewed.requirements;
@@ -366,9 +414,11 @@ export async function synthesizeAnswer(
   return {
     answer: {
       ...answer,
+      limitations: [...answer.limitations, ...disclosures],
       verification: { ...answer.verification, semanticReview: reviewState },
     },
     stages,
+    models: models(),
     review: reviewState,
   };
 }

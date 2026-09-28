@@ -226,6 +226,14 @@ describe("Analyst V2 claim checks", () => {
     expect(reasons(claim(text("Mas malaki"), { ...refs, comparison }))).toEqual(
       [],
     );
+    // Verb forms cannot slip a direction past the structured comparison.
+    const verb = (word: string) =>
+      `${word} ang naitalang gastos sa ₱11,000.00 mula ₱9,100.00 noong nakaraang buwan.`;
+    expect(reasons(claim(verb("Tumaas"), refs))).toContain("comparison");
+    expect(reasons(claim(verb("Bumaba"), { ...refs, comparison }))).toContain(
+      "comparison",
+    );
+    expect(reasons(claim(verb("Tumaas"), { ...refs, comparison }))).toEqual([]);
   });
 
   it("states a zero-baseline percent change as undefined, never as a figure", () => {

@@ -163,6 +163,5 @@ the deterministic checks, so they would reach the reviewer.
 - The writer schema always leaves `table` null; tables arrive with the AI-06
   interface.
 
-**Next phase: AI-06** — adaptive communication, requested and resolved model
-metadata for the planner, writer and reviewer, the model picker integration,
-English and Filipino/Taglish, progress rounds, and mobile layouts.
+**Next phase: AI-06** — implemented; see
+[communication, model controls and interface](analyst-intelligence-communication.md).
