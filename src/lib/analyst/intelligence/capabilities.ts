@@ -73,6 +73,19 @@ export const CAPABILITY_MANIFEST: readonly CapabilityDescriptor[] = [
     unsupported: ["Merchant-level breakdown", "Why a category changed"],
   }),
   entry({
+    id: "money.category_ranking",
+    domain: "money",
+    profile: "aggregate",
+    status: "available",
+    description:
+      "Which categories hold the most recorded money for a period, ranked by ATLAS from the complete per-category aggregate.",
+    tools: ["getMoneyBreakdown"],
+    supportedHistory: "Any period of up to 366 days.",
+    unsupported: [
+      "Whether spending is too high; ATLAS has no budget or target to judge it against",
+    ],
+  }),
+  entry({
     id: "money.full_aggregate",
     domain: "money",
     profile: "aggregate",

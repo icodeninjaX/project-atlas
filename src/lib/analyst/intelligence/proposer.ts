@@ -43,6 +43,7 @@ const entityFor: Record<string, V2EntityType> = {
 const moneyCapabilities = new Set([
   "money.totals",
   "money.category_breakdown",
+  "money.category_ranking",
   "money.full_aggregate",
   "money.income_semantics",
   "money.aligned_comparison",

@@ -203,10 +203,9 @@ export function AnswerCard({
         <p>{p.verification.figures}</p>
         <p>{p.verification.review}</p>
         {p.verification.freshness && <p>{p.verification.freshness}</p>}
-        {writer && (
-          <p>
-            Written by {optionFor(writer.resolved ?? writer.requested).label}.
-          </p>
+        {/* Only a model that answered wrote it; checked ATLAS figures are ATLAS's own. */}
+        {writer?.resolved && p.status !== "fallback_facts" && (
+          <p>Written by {optionFor(writer.resolved).label}.</p>
         )}
       </div>
       {p.sources.length > 0 && (
