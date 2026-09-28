@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { debtScenario, referencePhrase } from "./references";
+import { debtScenario, referencePhrase, vagueIncomeDrop } from "./references";
 
 describe("reference phrases", () => {
   it("finds the phrase that names one record", () => {
@@ -68,6 +68,18 @@ describe("reference phrases", () => {
     expect(
       referencePhrase("How much did I spend this month?", "decision"),
     ).toBeNull();
+  });
+});
+
+describe("vague income drops", () => {
+  it("asks for an amount only when none is stated", () => {
+    expect(vagueIncomeDrop("What if my income drops?")).toBe(true);
+    // A year is not an amount.
+    expect(vagueIncomeDrop("What if my income drops in 2027?")).toBe(true);
+    expect(vagueIncomeDrop("What if my income drops by 10%?")).toBe(false);
+    expect(vagueIncomeDrop("What if my income drops by ₱5,000?")).toBe(false);
+    expect(vagueIncomeDrop("What if my income drops 10 percent?")).toBe(false);
+    expect(vagueIncomeDrop("How much did I spend this month?")).toBe(false);
   });
 });
 

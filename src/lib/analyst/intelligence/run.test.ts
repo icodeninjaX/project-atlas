@@ -331,6 +331,26 @@ describe("Analyst V2 end to end (mocked provider)", () => {
     ).toBe(4_000_000);
   });
 
+  it("runs a different percentage given in reply to the assumption question", async () => {
+    writer = () => ({
+      version: "2",
+      directAnswerClaimIds: [],
+      claims: [],
+      sections: [],
+      table: null,
+    });
+    const first = await ask("What if my income drops?").result;
+    await ask("10%", { context: first.context }).result;
+    const evidence = providerRequests.find(
+      (item) => item.schema === "atlas_answer_v2",
+    )!.input.evidence as Array<{ definition: string; value?: number }>;
+    // "10%" keeps the proposed direction: a 10% drop from ₱50,000.00.
+    expect(
+      evidence.find((item) => item.definition === "Option 1 · Monthly income")
+        ?.value,
+    ).toBe(4_500_000);
+  });
+
   it("carries the subject into a follow-up and changes only the period (Q39)", async () => {
     const first = await ask("How much did I spend this month?").result;
     expect(first.context).not.toBeNull();

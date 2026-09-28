@@ -134,7 +134,9 @@ export const PROPOSED_INCOME_CHANGE_PERCENT = -20;
 export function vagueIncomeDrop(question: string) {
   return (
     debtScenario(question)?.incomeChangePercent == null &&
-    !/[₱%]|\d/.test(question) &&
+    // A stated amount (₱, % or "percent") is never replaced by a proposal;
+    // other numbers, such as a year, are not amounts.
+    !/[₱%]|\bpercent\b|\bpesos?\b/i.test(question) &&
     /\b(?:income|salary|sahod|kita)\b[^?.]*\b(?:drops?|falls?|decreases?|goes down|is cut|shrinks?|bumaba)\b|\b(?:lose|lost|cut)\b[^?.]*\b(?:income|salary|job)\b/i.test(
       question,
     )

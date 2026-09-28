@@ -214,8 +214,10 @@ no amount, and a scenario needs one. V2 now asks, "Should I assume your
 monthly income falls by 20%?", recording a pending assumption in the sealed
 context. It sends nothing to a provider and assumes nothing. When the user
 says yes, the turn machinery from AI-03 records the assumption as
-`user_confirmed`, and the proposer runs the scenario with it. A different
-percentage or "no" is handled by the same machinery.
+`user_confirmed`, and the proposer runs the scenario with it. A reply with
+a different percentage ("10%") confirms that value instead, keeping the
+proposed direction, and "no" declines. Only a ₱ amount, a percentage or
+"percent" counts as a stated amount; a year such as 2027 does not.
 
 ## 3. Hard gates (roadmap §8.4)
 
@@ -321,7 +323,7 @@ and the pool-meter credentials, then run
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | `npm run lint`         | Pass                                                                                                      |
 | `npm run typecheck`    | Pass                                                                                                      |
-| `npm run test`         | 148 files passed, 7 skipped; 911 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
+| `npm run test`         | 148 files passed, 7 skipped; 913 tests passed, 38 skipped (the new skip is the opt-in comparison harness) |
 | `npm run format:check` | Pass                                                                                                      |
 | `npm run build`        | Pass; `/analyst` and `/api/analyst/v2` render per request                                                 |
 
