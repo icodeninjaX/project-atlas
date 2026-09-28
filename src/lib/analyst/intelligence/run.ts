@@ -27,7 +27,9 @@ import { presentAnswer, type Presentation } from "./presentation";
 import { safeProgress, type V2ProgressEvent } from "./progress";
 import { capabilityProposer } from "./proposer";
 import type { StageCaller } from "./stages";
+import { REVIEW_LIMITS } from "./review";
 import { synthesizeAnswer } from "./synthesis";
+import { writerTimeoutMs } from "./writer";
 import { LEGACY_TOOL_DOMAINS } from "./legacy-evidence";
 import {
   BRIDGED_TOOLS,
@@ -447,6 +449,10 @@ export async function runAnalystV2(
     })),
     history,
     plan: analysisPlan,
+    writerTimeoutMs: writerTimeoutMs(
+      ledger.remainingForAnswer().timeMs,
+      REVIEW_LIMITS.timeoutMs,
+    ),
     path: check.path,
     knownReasons: new Map(
       investigation.unresolved.map((item) => [item.requirementId, item.reason]),

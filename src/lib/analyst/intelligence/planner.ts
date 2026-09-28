@@ -444,13 +444,19 @@ export async function planAnalysis(input: {
     maxOutputTokens: PLANNER_LIMITS.outputTokens,
     timeoutMs: PLANNER_LIMITS.timeoutMs,
   });
-  if (result.status === "error")
+  if (result.status === "error") {
+    console.warn("Analyst V2 stage failed", {
+      stage: "planner",
+      model: input.model,
+      code: result.code,
+    });
     return {
       brief: input.brief,
       plan: null,
       clarification: null,
       resolvedModel: null,
     };
+  }
   return {
     ...refineBrief(input.brief, result.content, {
       now: input.now,

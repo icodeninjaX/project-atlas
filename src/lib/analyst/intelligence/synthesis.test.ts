@@ -1,3 +1,4 @@
+import { WRITER_LIMITS, writerTimeoutMs } from "./writer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RUN_BUDGETS, RunLedger } from "./budgets";
 import { contribution } from "./calculations";
@@ -731,5 +732,11 @@ describe("reviewer evaluation", () => {
     const answer = await result;
     expect(answer.answer.status).toBe("answered");
     expect(answer.answer.verification.rejectionReasons).toEqual([]);
+  });
+
+  it("gives the first draft the run's remaining time, within bounds", () => {
+    expect(writerTimeoutMs(44_000, 12_000)).toBe(WRITER_LIMITS.maxTimeoutMs);
+    expect(writerTimeoutMs(38_000, 12_000)).toBe(24_000);
+    expect(writerTimeoutMs(20_000, 12_000)).toBe(WRITER_LIMITS.timeoutMs);
   });
 });
