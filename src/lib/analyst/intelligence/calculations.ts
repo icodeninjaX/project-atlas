@@ -122,6 +122,54 @@ function pairBase(id: string, a: NumericEvidence, b: NumericEvidence): Base {
 const complete = (items: NumericEvidence[]) =>
   items.every((item) => item.coverage.query === "complete");
 
+/**
+ * The scope of the owner's whole money flow: recorded income and recorded
+ * expenses read together. They are separate whole-domain scopes, but they
+ * share one comparable group so that they can be netted.
+ */
+export const NET_FLOW_SCOPE = "whole_domain:money_flow";
+export const NET_FLOW_MEMBERS: ReadonlySet<string> = new Set([
+  "whole_domain:income",
+  "whole_domain:expense",
+]);
+
+/**
+ * Recorded income less recorded expenses over one period: whether income
+ * covered spending, and by how much. Both totals must be whole-domain, in
+ * the money-flow group, in integer centavos and over the same period.
+ */
+export function netFlow(id: string, income: EvidenceV2, expense: EvidenceV2) {
+  const a = numeric(income);
+  const b = numeric(expense);
+  assertComparable([a, b]);
+  if (
+    a.semantics.metricKey !== "income_centavos" ||
+    b.semantics.metricKey !== "expense_centavos"
+  )
+    throw new CalculationError("Net flow needs recorded income and expenses.");
+  if (a.scope.type !== "whole_domain" || b.scope.type !== "whole_domain")
+    throw new CalculationError("Net flow needs whole-domain totals.");
+  if (!samePeriod(a.time.period, b.time.period))
+    throw new CalculationError("Net flow needs one period.");
+  return fact(
+    {
+      id,
+      operands: [a.id, b.id],
+      metricKey: "income_centavos-expense_centavos",
+      comparableGroup: a.semantics.comparableGroup,
+      scopeId: NET_FLOW_SCOPE,
+      periods: [a.time.period],
+    },
+    "difference",
+    {
+      status: "defined",
+      value: checkedSum([a.value, -b.value], true),
+      unit: "centavos",
+    },
+    { complete: complete([a, b]) },
+  );
+}
+
 export function difference(
   id: string,
   subject: EvidenceV2,

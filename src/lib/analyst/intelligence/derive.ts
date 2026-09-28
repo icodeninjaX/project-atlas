@@ -2,6 +2,7 @@ import {
   CalculationError,
   contribution,
   difference,
+  netFlow,
   percentChange,
   rank,
   share,
@@ -105,6 +106,23 @@ export function autoDerive(evidence: EvidenceV2[]): DerivedFact[] {
       );
       if (fact && fact.output.status === "defined") facts.push(fact);
     }
+  }
+  // Income against expenses in the same period: did income cover spending?
+  const wholeTotal = (key: string, period: string) =>
+    values.find(
+      (item) =>
+        item.scope.type === "whole_domain" &&
+        item.semantics.metricKey === key &&
+        periodKey(item) === period,
+    );
+  for (const period of new Set(values.map(periodKey))) {
+    const income = wholeTotal("income_centavos", period);
+    const expense = wholeTotal("expense_centavos", period);
+    if (!income || !expense) continue;
+    const fact = attempt(() =>
+      netFlow(`derived.net.${period}`, income, expense),
+    );
+    if (fact) facts.push(fact);
   }
   return facts;
 }

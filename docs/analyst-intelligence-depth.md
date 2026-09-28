@@ -80,6 +80,19 @@ at `answer` when the whole answer misses the question or ignores a baseline
 or connection the evidence supports. That instruction earns the one repair,
 whose claims are checked again from the start.
 
+## 4a. Income against spending (`calculations.ts`, `claims.ts`)
+
+The first production answers failed every claim: income and expenses are
+separate whole-domain scopes, so a claim could not compare them, and
+"Am I doing okay with money?" had no checkable answer. ATLAS now derives
+`netFlow` (recorded income less recorded expenses for one period, scope
+`whole_domain:money_flow`). A claim with that scope may cite the net fact
+and both totals, state all three amounts, and compare the totals with a
+comparison object; any other scope still fails. The facts-only fallback
+leads with the net figure unless the question asked for a ranking. Repair
+requests now explain each rejection in words (`REJECTION_HELP`), and the
+writer is told the exact words the checks reject.
+
 ## 5. How much is shown
 
 A lookup used to hide every finding behind its one-line direct answer. When

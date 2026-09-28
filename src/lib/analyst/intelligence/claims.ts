@@ -7,6 +7,7 @@ import type {
   EvidenceV2,
   Period,
 } from "./contracts";
+import { NET_FLOW_MEMBERS, NET_FLOW_SCOPE } from "./calculations";
 import { fixedLabelDomain } from "./legacy-evidence";
 import { mentionedHandles, validMention, withoutMentions } from "./mentions";
 import {
@@ -66,6 +67,55 @@ export type ClaimRejectionV2 =
   | "recommendation_incomplete"
   | "unstated_assumption"
   | "generic_recommendation";
+
+/**
+ * What each rejection means, in words a writer can act on. A repair request
+ * names these instead of rule codes.
+ */
+export const REJECTION_HELP: Record<ClaimRejectionV2, string> = {
+  duplicate_reference: "cites the same ID twice",
+  unknown_evidence:
+    "cites an evidence ID that is not in evidence (derived fact IDs belong in derivedFactIds)",
+  unknown_mention: "mentions a record whose handle the claim does not cite",
+  unknown_derived_fact: "cites a derived fact ID that is not in derivedFacts",
+  unknown_requirement: "answers a requirement ID that does not exist",
+  unknown_assumption: "cites an assumption ID that does not exist",
+  missing_support: "cites no evidence or derived fact",
+  scope_mismatch:
+    "cites items from another scope; set scopeId to the scope of everything cited, or split the claim (income and expense totals share scopeId whole_domain:money_flow)",
+  causal_wording:
+    "uses cause words (because, due to, driven by, caused, explains, leads to, as a result)",
+  certainty_wording:
+    "uses certainty words (will, always, never, must, definitely, certainly, proves)",
+  unverifiable_wording:
+    "uses words ATLAS cannot check (significant, strongly, double, twice, half, thousand, million); write the figure instead",
+  unsupported_superlative:
+    "uses most, largest, highest or similar without citing a complete ranking",
+  tie_not_disclosed: "hides a tie in the cited ranking; say the items are tied",
+  figure:
+    "states a number that is not a cited value or derived fact; copy figures exactly and never compute them",
+  date: "states a date outside the cited periods",
+  month: "names a month outside the cited periods",
+  metric_mismatch:
+    "names an area (income, expenses, debts, tasks, reviews) that none of its citations measure",
+  comparison:
+    "uses a direction word (more, less, higher, lower, rose, fell) without a matching comparison object or a cited change with that sign",
+  incompatible_comparison:
+    "compares values of different measures, periods or scopes",
+  incomplete_evidence: "relies on evidence that is marked incomplete",
+  undefined_result:
+    "uses a derived result ATLAS could not define; say it cannot be calculated",
+  unhedged_interpretation:
+    "is an interpretation or hypothesis without may, might, could or suggests",
+  association_without_test:
+    "claims an association without the approved association test",
+  recommendation_without_objective:
+    "is a recommendation whose objective is not a requirement ID",
+  recommendation_incomplete:
+    "is a recommendation without its recommendation object",
+  unstated_assumption: "is conditional but cites no assumption ID",
+  generic_recommendation: "gives advice that would fit anyone",
+};
 
 const causal =
   /\b(?:because|caus\w*|due to|driven by|results? in|resulted|triggered|leads? to|led to|responsible for|explains?|explained|thanks to|as a result|dahil sa|dahil|sanhi|sanhi ng|kaya naman)\b/i;
@@ -228,8 +278,9 @@ function cite(claim: DraftClaim, ctx: ClaimCheckContext): Cited {
       });
     if (item.ranking)
       numbers.push({ value: item.ranking.length, unit: "count" });
-    // A share may state the part and total it divides.
-    if (item.operation === "ratio")
+    // A share may state the part and total it divides; a net flow, the
+    // income and expenses it nets.
+    if (item.operation === "ratio" || item.scopeId === NET_FLOW_SCOPE)
       for (const id of item.operands) {
         const operand = ctx.evidence.get(id);
         if (operand?.kind === "metric")
@@ -409,10 +460,14 @@ function checkComparison(
     if (!a || !b) return "comparison";
     const samePeriod =
       a.period.from === b.period.from && a.period.through === b.period.through;
+    // Income and expenses are separate scopes of one money flow.
+    const sameScope =
+      a.scopeId === b.scopeId ||
+      (NET_FLOW_MEMBERS.has(a.scopeId) && NET_FLOW_MEMBERS.has(b.scopeId));
     const compatible =
       a.unit === b.unit &&
       a.group === b.group &&
-      a.scopeId === b.scopeId &&
+      sameScope &&
       (a.metricKey === b.metricKey
         ? a.member === b.member || samePeriod
         : samePeriod);
@@ -485,13 +540,18 @@ export function checkClaim(
   if (!structural) return finish(claim, reasons, "failed", "pending");
 
   const cited = cite(claim, ctx);
-  // A claim speaks for one scope; separate scopes need separate claims.
+  // A claim speaks for one scope; separate scopes need separate claims. A
+  // money-flow claim may cite the income and expense totals it sets side by
+  // side, which share one comparable group.
+  const inScope = (scope: string) =>
+    scope === claim.scopeId ||
+    (claim.scopeId === NET_FLOW_SCOPE && NET_FLOW_MEMBERS.has(scope));
   if (
     claim.kind !== "limitation" &&
     [
       ...cited.evidence.map((item) => item.scope.id),
       ...cited.derived.map((item) => item.scopeId),
-    ].some((scope) => scope !== claim.scopeId)
+    ].some((scope) => !inScope(scope))
   )
     reasons.push("scope_mismatch");
   // Everything shown with the claim is checked with it, including a

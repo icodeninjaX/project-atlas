@@ -1,3 +1,4 @@
+import { NET_FLOW_SCOPE } from "./calculations";
 import type { AnalysisBrief, DerivedFact, EvidenceV2 } from "./contracts";
 import { formatMoney } from "./language";
 
@@ -89,6 +90,36 @@ export function deterministicDraft(
       },
     ];
   });
+  // Income less expenses says whether income covered spending, which is the
+  // plainest answer to how money is going; it is stated once, for the first
+  // requirement whose selected totals it nets.
+  const netClaims = derived.flatMap((fact) => {
+    if (
+      fact.scopeId !== NET_FLOW_SCOPE ||
+      fact.output.status !== "defined" ||
+      !fact.complete
+    )
+      return [];
+    const requirement = brief.requirements.find((item) =>
+      (byRequirement[item.id] ?? []).some((id) => fact.operands.includes(id)),
+    );
+    const [period] = fact.periods;
+    if (!requirement || !period) return [];
+    return [
+      {
+        id: `c${(next += 1)}`,
+        kind: "fact" as const,
+        text: `Recorded income less recorded expenses: ${formatMoney(fact.output.value)} from ${period.from} to ${period.through}.`,
+        answersRequirementIds: [requirement.id],
+        evidenceIds: [],
+        derivedFactIds: [fact.id],
+        assumptionIds: [],
+        scopeId: fact.scopeId,
+        comparison: null,
+        recommendation: null,
+      },
+    ];
+  });
   const claims = brief.requirements.flatMap((requirement) =>
     (byRequirement[requirement.id] ?? [])
       .map((id) => byId.get(id))
@@ -116,12 +147,18 @@ export function deterministicDraft(
         };
       }),
   );
+  // A question that asks where the most goes leads with the ranking;
+  // otherwise the net flow leads.
+  const rankingFirst = brief.requirements
+    .find((item) => item.essential)
+    ?.evidenceNeeded.includes("money.category_ranking");
+  const ordered = rankingFirst
+    ? [...rankingClaims, ...netClaims, ...claims]
+    : [...netClaims, ...rankingClaims, ...claims];
   return {
     version: "2" as const,
-    directAnswerClaimIds: [...rankingClaims, ...claims]
-      .slice(0, 1)
-      .map((claim) => claim.id),
-    claims: [...rankingClaims, ...claims],
+    directAnswerClaimIds: ordered.slice(0, 1).map((claim) => claim.id),
+    claims: ordered,
     sections: [],
     table: null,
   };

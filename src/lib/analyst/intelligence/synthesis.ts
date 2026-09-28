@@ -1,4 +1,4 @@
-import { claimCanShip } from "./claims";
+import { claimCanShip, REJECTION_HELP, type ClaimRejectionV2 } from "./claims";
 import { draftAnswerSchema } from "./contracts";
 import { deterministicDraft } from "./fallback";
 import type {
@@ -195,11 +195,14 @@ async function review(
 }
 
 function feedback(answer: AnswerV2, instructions: string[]) {
+  const explain = (reason: string) =>
+    REJECTION_HELP[reason as ClaimRejectionV2] ??
+    reason.replace(/^review:/, "the reviewer found it ").replaceAll("_", " ");
   const rejected = answer.claims
     .filter((claim) => !claimCanShip(claim))
     .map(
       (claim) =>
-        `Claim ${claim.id} was not accepted: ${claim.verification.reasons.join(", ")}.`,
+        `Claim ${claim.id} was not accepted: it ${claim.verification.reasons.map(explain).join("; it ")}.`,
     );
   const missing = answer.unresolved
     .filter(
