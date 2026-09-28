@@ -280,7 +280,7 @@ Blockers to activation (not to offline work):
 3. Live baseline runs of the legacy path on the corpus are not authorized, so
    the rates in Section 8 have no measured legacy baseline yet.
 
-**Next phase: AI-01** — versioned AnalysisBrief, EvidenceV2, DerivedFact,
+**Next phase: AI-01** (done; see [analyst-intelligence-contracts.md](analyst-intelligence-contracts.md)) — versioned AnalysisBrief, EvidenceV2, DerivedFact,
 ClaimLedger, RequirementCoverage and AnswerV2 contracts; typed metric, entity,
 period and scope assertions (fixing B02–B04, B07); complete contribution and
 ranking derivations with ties (B05, B06); coverage recomputed after claim
