@@ -27,7 +27,9 @@ import { presentAnswer, type Presentation } from "./presentation";
 import { safeProgress, type V2ProgressEvent } from "./progress";
 import { capabilityProposer } from "./proposer";
 import type { StageCaller } from "./stages";
+import { REVIEW_LIMITS } from "./review";
 import { synthesizeAnswer } from "./synthesis";
+import { writerTimeoutMs } from "./writer";
 import { LEGACY_TOOL_DOMAINS } from "./legacy-evidence";
 import {
   BRIDGED_TOOLS,
@@ -116,6 +118,8 @@ export type V2Response = {
 const toolDomains: Record<V2ToolName, ConsentDomain[]> = {
   resolveAnalystEntities: [],
   searchAnalystRecords: [],
+  // Each inventory item carries its own area, filtered by consent.
+  getDataInventory: [],
   getAnalystRecordDetails: [],
   getMoneyBreakdown: ["money"],
   getGoalAnalysisContext: ["goals"],
@@ -293,9 +297,20 @@ export async function runAnalystV2(
         .map((item) => item.id),
     );
     try {
+      // What the owner records, so the plan reads areas that have records.
+      const inventory = await deps
+        .invoke("getDataInventory", {})
+        .catch(() => null);
+      if (inventory && inventory.status !== "error")
+        plannerLedger.recordTool(
+          inventory.metadata.queries,
+          Buffer.byteLength(JSON.stringify(inventory.evidence)),
+        );
       const refined = await planAnalysis({
         brief,
         history,
+        inventory:
+          inventory && inventory.status !== "error" ? inventory.evidence : [],
         model: deps.planModel,
         now,
         allowed,
@@ -447,6 +462,10 @@ export async function runAnalystV2(
     })),
     history,
     plan: analysisPlan,
+    writerTimeoutMs: writerTimeoutMs(
+      ledger.remainingForAnswer().timeMs,
+      REVIEW_LIMITS.timeoutMs,
+    ),
     path: check.path,
     knownReasons: new Map(
       investigation.unresolved.map((item) => [item.requirementId, item.reason]),

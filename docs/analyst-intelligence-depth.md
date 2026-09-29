@@ -43,14 +43,33 @@ starts at the planner's start time and absorbs its usage, so the whole
 request stays inside one deadline (54 s, inside the route's 60 s limit).
 Run budgets gained one provider call and room for the larger writer.
 
+### 1a. Data inventory (`getDataInventory`)
+
+Before planning, a V2 read counts what the owner keeps in each area
+(transactions, active debts, debt payments, open and completed tasks, active
+goals, job applications, weekly reviews, knowledge concepts) and the first
+and latest dates those records span. Each area is two owner-scoped reads of
+one date column with an exact count; no name, note or amount is read. The
+items are aggregate evidence, so the policy filter drops any area the person
+did not share. The planner plans around areas with records and never asks
+for more months than the records span. Its queries count against the run.
+
 ## 2. Conversation memory
 
 The sealed context now keeps the last four questions with the data areas
 and field profiles their answers drew on (`history`, default `[]`, so older
 tokens still open). `historyTurns` rebuilds each turn's answer from its
 checked findings only. The planner and the writer receive them as
-`previousTurns`; `filterProviderPayload` still drops any turn whose content
+`previousTurns`; `filterProviderPayload` still drops any turn whose answer
 the current consent and route would not allow.
+
+An earlier question is the person's free text, and its answer's prose may
+repeat that text (a record name, a private remark) whatever the answer's
+evidence was. Both are sent only where the `sensitive_narrative` profile is
+allowed. Elsewhere the turn is restated from the numeric values its findings
+cited (`facts`: measure, period, value) and sent as `aggregateOnly`; a turn
+with no such values is not sent. On today's shared route the models see
+earlier figures, never earlier questions or answer prose.
 
 ## 3. A writer that reasons before it writes (`writer.ts`)
 
@@ -72,6 +91,38 @@ at `answer` when the whole answer misses the question or ignores a baseline
 or connection the evidence supports. That instruction earns the one repair,
 whose claims are checked again from the start.
 
+## 4a. Income against spending (`calculations.ts`, `claims.ts`)
+
+The first production answers failed every claim: income and expenses are
+separate whole-domain scopes, so a claim could not compare them, and
+"Am I doing okay with money?" had no checkable answer. ATLAS now derives
+`netFlow` (recorded income less recorded expenses for one period, scope
+`whole_domain:money_flow`). A claim with that scope may cite the net fact
+and both totals, state all three amounts, and compare the totals with a
+comparison object; any other scope still fails. The facts-only fallback
+leads with the net figure unless the question asked for a ranking. Repair
+requests now explain each rejection in words (`REJECTION_HELP`), and the
+writer is told the exact words the checks reject.
+
+## 4b. Trends over months (`history.trend`)
+
+"Am I improving?" and "Is this normal for me?" need a baseline longer than
+last month. The existing monthly history tool (`getHistoricalMetricSeries`)
+is now bridged into V2, and the planner may add a `history.trend`
+sub-question naming one measure (income, expenses, debt payments, task
+completions, knowledge reviews or review score) over six or twelve months.
+It becomes its own requirement (`r_planN_trend_<metric>_<months>`), and the
+proposer reads that measure month by month through today.
+
+ATLAS derives the trend itself (`monthlyTrend`), over whole calendar months
+only: a ranking of the months (ties kept), their average, the latest month
+less the average of the months before it, and the run of consecutive rises
+(positive) or falls (negative) ending with the latest month. A superlative
+("highest month since May") needs the ranking; "rose three months in a row"
+needs the run with that sign. The derived change between two periods now
+uses the latest like-for-like pair (`comparablePeriods`), so the month in
+progress is never set against a whole month.
+
 ## 5. How much is shown
 
 A lookup used to hide every finding behind its one-line direct answer. When
@@ -89,9 +140,8 @@ record names, which caps how specific an answer can be.
 
 ## 7. Not in this phase
 
-- A general owner-scoped aggregate tool (measure × group × filter × period)
-  and more derived facts (multi-period trends, run-rate, anomalies).
-- A per-user data inventory for the planner.
+- A general owner-scoped aggregate tool (measure × group × filter × period),
+  category-level trends and run-rate projections.
 - Re-investigation after the draft: the planner front-loads the checks, and
   the reviewer's repair deepens the writing, but no new reads follow a draft.
 - Persistent memory of priorities and preferences across sessions.

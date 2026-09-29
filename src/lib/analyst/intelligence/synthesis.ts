@@ -1,4 +1,4 @@
-import { claimCanShip } from "./claims";
+import { claimCanShip, REJECTION_HELP, type ClaimRejectionV2 } from "./claims";
 import { draftAnswerSchema } from "./contracts";
 import { deterministicDraft } from "./fallback";
 import type {
@@ -62,6 +62,8 @@ export type SynthesisInput = {
   history: HistoryTurn[];
   /** The planner's reading of the question; null when it did not run. */
   plan?: AnalysisPlan | null;
+  /** The first draft's timeout; the writer's minimum when omitted. */
+  writerTimeoutMs?: number;
   path: "simple" | "deep";
   /** Reasons the investigation already established for unresolved requirements. */
   knownReasons: ReadonlyMap<string, UnresolvedReason>;
@@ -174,7 +176,14 @@ async function review(
     status: result.status,
     ...(result.status === "error" && { code: result.code }),
   });
-  if (result.status === "error") return null;
+  if (result.status === "error") {
+    console.warn("Analyst V2 stage failed", {
+      stage: "critic",
+      model: input.models.reviewer,
+      code: result.code,
+    });
+    return null;
+  }
   input.onReviewer?.(result.resolvedModel);
   const applied = applyReview(result.content, input.brief, candidates);
   const reviewed = new Map(applied.claims.map((claim) => [claim.id, claim]));
@@ -186,11 +195,14 @@ async function review(
 }
 
 function feedback(answer: AnswerV2, instructions: string[]) {
+  const explain = (reason: string) =>
+    REJECTION_HELP[reason as ClaimRejectionV2] ??
+    reason.replace(/^review:/, "the reviewer found it ").replaceAll("_", " ");
   const rejected = answer.claims
     .filter((claim) => !claimCanShip(claim))
     .map(
       (claim) =>
-        `Claim ${claim.id} was not accepted: ${claim.verification.reasons.join(", ")}.`,
+        `Claim ${claim.id} was not accepted: it ${claim.verification.reasons.map(explain).join("; it ")}.`,
     );
   const missing = answer.unresolved
     .filter(
@@ -332,7 +344,10 @@ export async function synthesizeAnswer(
         ),
         extraMessages,
         maxOutputTokens: WRITER_LIMITS.outputTokens,
-        timeoutMs: WRITER_LIMITS.timeoutMs,
+        timeoutMs:
+          stage === "writer"
+            ? (input.writerTimeoutMs ?? WRITER_LIMITS.timeoutMs)
+            : WRITER_LIMITS.timeoutMs,
       })
       .then((result) => {
         (extra ?? stages).push({
@@ -340,6 +355,13 @@ export async function synthesizeAnswer(
           status: result.status,
           ...(result.status === "error" && { code: result.code }),
         });
+        // Stage, model and code only, so a failed draft is diagnosable.
+        if (result.status === "error")
+          console.warn("Analyst V2 stage failed", {
+            stage,
+            model: writerModel,
+            code: result.code,
+          });
         if (result.status === "ok") writerResolved = result.resolvedModel;
         return result;
       });

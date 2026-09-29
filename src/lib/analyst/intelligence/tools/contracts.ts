@@ -120,6 +120,7 @@ export const BRIDGED_TOOLS = [
   "getSignals",
   "getRunway",
   "compareFinancialScenarios",
+  "getHistoricalMetricSeries",
 ] as const satisfies readonly ToolName[];
 export type BridgedTool = (typeof BRIDGED_TOOLS)[number];
 export const isBridgedTool = (name: string): name is BridgedTool =>
@@ -180,6 +181,7 @@ export const v2ToolInputs = {
       depth: z.union([z.literal(1), z.literal(2)]).default(2),
     })
     .strict(),
+  getDataInventory: z.object({}).strict(),
   getDebtProgress: toolInputs.getDebtProgress,
   getDebtPayments: toolInputs.getDebtPayments,
   getTaskFocus: toolInputs.getTaskFocus,
@@ -189,6 +191,7 @@ export const v2ToolInputs = {
   getSignals: toolInputs.getSignals,
   getRunway: toolInputs.getRunway,
   compareFinancialScenarios: toolInputs.compareFinancialScenarios,
+  getHistoricalMetricSeries: toolInputs.getHistoricalMetricSeries,
 } as const;
 export type V2ToolName = keyof typeof v2ToolInputs;
 export type V2ToolInput<N extends V2ToolName> = z.infer<
@@ -210,6 +213,8 @@ export const v2ToolDescriptions: Record<V2ToolName, string> = {
     "A resolved decision's dates, review window, revisions, observations and the existing before/after comparison. Plan text and notes only with includeText and policy approval.",
   getRelationshipPaths:
     "Native and manual relationships up to two hops from a resolved record, with provenance, cycle cuts and truncation.",
+  getDataInventory:
+    "How many records the owner keeps in each area (transactions, debts, tasks, goals, job applications, weekly reviews, knowledge concepts) and the dates they span. Counts only; no names or amounts.",
   getDebtProgress: toolDescriptions.getDebtProgress,
   getDebtPayments: toolDescriptions.getDebtPayments,
   getTaskFocus: toolDescriptions.getTaskFocus,
@@ -219,6 +224,7 @@ export const v2ToolDescriptions: Record<V2ToolName, string> = {
   getSignals: toolDescriptions.getSignals,
   getRunway: toolDescriptions.getRunway,
   compareFinancialScenarios: toolDescriptions.compareFinancialScenarios,
+  getHistoricalMetricSeries: toolDescriptions.getHistoricalMetricSeries,
 };
 
 /** Owner-only display text. It reaches a provider only through policy. */

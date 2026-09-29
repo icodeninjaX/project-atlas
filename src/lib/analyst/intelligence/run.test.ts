@@ -629,10 +629,24 @@ describe("Analyst V2 with the analysis planner (mocked provider)", () => {
     expect(Object.keys(providerRequests[0]!.input).sort()).toEqual([
       "catalog",
       "currentReading",
+      "inventory",
       "previousTurns",
       "question",
       "today",
     ]);
+    // It sees how much each area holds, as counts and dates only.
+    const inventory = providerRequests[0]!.input.inventory as Array<{
+      area: string;
+      records: string;
+      count: number;
+    }>;
+    expect(inventory.find((item) => item.area === "money")).toMatchObject({
+      records: "Recorded income and expense transactions",
+    });
+    expect(
+      inventory.find((item) => item.area === "money")!.count,
+    ).toBeGreaterThan(0);
+    expect(JSON.stringify(inventory)).not.toMatch(/creditor|title|name"/);
     const writerInput = providerRequests.find(
       (item) => item.schema === "atlas_answer_v2",
     )!.input as {
@@ -751,11 +765,12 @@ describe("Analyst V2 with the analysis planner (mocked provider)", () => {
         .input as {
         previousTurns: Array<{ question: string; answer: string }>;
       };
+      // The shared route carries aggregates only, so the earlier turn is
+      // restated from the figures it cited, never its question or prose.
       expect(input.previousTurns).toEqual([
         {
-          question: "How much did I spend this month?",
-          answer:
-            "Recorded expenses were ₱11,000.00 from 2026-09-01 to 2026-09-24.",
+          question: "",
+          answer: "expense_centavos 2026-09-01..2026-09-24: 1100000",
         },
       ]);
     }

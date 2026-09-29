@@ -175,12 +175,21 @@ export function eligibility(
 
 export type ProviderStage = "planner" | "writer" | "critic" | "repair";
 
-/** A prior turn, tagged with what it contained when it was produced. */
+/**
+ * A prior turn, tagged with what its answer drew on. `question` and
+ * `answer` are free text: the person's words, and model prose that may
+ * repeat them. `facts` restates the answer from the aggregate values it
+ * cited, and is what a route without private text receives instead.
+ */
 export type HistoryTurn = {
   question: string;
   answer: string;
   domains: ConsentDomain[];
   profiles: FieldProfile[];
+  /** The cited aggregate values, as text; empty when none were numeric. */
+  facts?: string;
+  /** Set once the free text was replaced by `facts`. */
+  aggregateOnly?: boolean;
 };
 
 /** An owner-only label (a title or name) that a stage wants to show a model. */
@@ -227,7 +236,7 @@ export function filterProviderPayload(
     if (reason) excluded.push({ kind: "label", ref: label.handle, reason });
     return !reason;
   });
-  const history = payload.history.filter((turn, index) => {
+  const history = payload.history.flatMap((turn, index) => {
     const reason =
       turn.domains
         .flatMap((domain) =>
@@ -236,11 +245,55 @@ export function filterProviderPayload(
           ),
         )
         .find((item) => item !== null) ?? (consent ? null : "no_consent");
-    if (reason)
+    if (reason) {
       excluded.push({ kind: "history", ref: `turn:${index}`, reason });
-    return !reason;
+      return [];
+    }
+    // An earlier question is the person's free text, and its answer's prose
+    // may repeat that text (a record name, a private remark) whatever the
+    // answer's evidence was. Both travel only where the most sensitive
+    // profile may; elsewhere the turn is restated from its cited aggregates.
+    if (turn.aggregateOnly) return [turn];
+    const withheld = freeTextEligibility(turn.domains, consent, route);
+    if (!withheld) return [turn];
+    excluded.push({
+      kind: "history",
+      ref: `turn:${index}:text`,
+      reason: withheld,
+    });
+    return turn.facts
+      ? [
+          {
+            ...turn,
+            question: "",
+            answer: turn.facts,
+            facts: turn.facts,
+            aggregateOnly: true,
+          },
+        ]
+      : [];
   });
   return { payload: { ...payload, evidence, labels, history }, excluded };
+}
+
+/** Whether an earlier turn's free text may reach a provider. */
+function freeTextEligibility(
+  domains: ConsentDomain[],
+  consent: AnalystConsent | null,
+  route: ProviderRoute,
+): ExclusionReason | null {
+  if (!consent) return "no_consent";
+  if (!consent.profiles.includes("sensitive_narrative"))
+    return "profile_not_consented";
+  if (!route.profiles.includes("sensitive_narrative"))
+    return "route_ineligible";
+  return (
+    domains
+      .map((domain) =>
+        eligibility(domain, "sensitive_narrative", consent, route),
+      )
+      .find((item) => item !== null) ?? null
+  );
 }
 
 export class ProviderPolicyViolation extends Error {

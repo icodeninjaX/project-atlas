@@ -1,6 +1,6 @@
 import { manilaToday } from "@/lib/analyst/evidence";
 import type { AnalysisBrief } from "./contracts";
-import { requirementMoneyKind } from "./planner";
+import { requirementMoneyKind, requirementTrend } from "./planner";
 import {
   assumedIncomeChange,
   debtScenario,
@@ -152,6 +152,29 @@ export function capabilityProposer(now: Date): Proposer {
           };
           if (aggregate[capability]) {
             add(aggregate[capability]!, {}, requirement.id);
+            continue;
+          }
+          // A trend reads its measure month by month through today, starting
+          // on the first day of the earliest month.
+          if (capability === "history.trend") {
+            const trend = requirementTrend(requirement);
+            if (!trend) continue;
+            const today = manilaToday(now);
+            const year = Number(today.slice(0, 4));
+            const month = Number(today.slice(5, 7)) - (trend.months - 1);
+            const start = new Date(Date.UTC(year, month - 1, 1))
+              .toISOString()
+              .slice(0, 10);
+            add(
+              "getHistoricalMetricSeries",
+              {
+                from: start,
+                through: today,
+                metric: trend.metric,
+                grain: "month",
+              },
+              requirement.id,
+            );
             continue;
           }
           if (capability === "debt.payments") {

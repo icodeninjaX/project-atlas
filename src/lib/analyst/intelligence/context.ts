@@ -205,20 +205,40 @@ export type ConversationContext = z.infer<typeof conversationContextSchema>;
 
 /**
  * Earlier turns as a model may see them: each question with the checked
- * findings that answered it. Filtering by consent and route happens later,
- * per turn, in `filterProviderPayload`.
+ * findings that answered it, and the same findings restated from their
+ * cited numeric values alone. Filtering by consent and route happens later,
+ * per turn, in `filterProviderPayload`, which sends only `facts` where
+ * free text may not go.
  */
 export function historyTurns(context: ConversationContext): HistoryTurn[] {
-  return context.history.map((entry) => ({
-    question: entry.question,
-    answer: context.findings
-      .filter((finding) => finding.turn === entry.turn)
-      .map((finding) => finding.text)
-      .join(" ")
-      .slice(0, 1_200),
-    domains: entry.domains,
-    profiles: entry.profiles,
-  }));
+  return context.history.map((entry) => {
+    const findings = context.findings.filter(
+      (finding) => finding.turn === entry.turn,
+    );
+    const facts = [
+      ...new Set(
+        findings.flatMap((finding) =>
+          finding.cited.flatMap((item) =>
+            typeof item.value === "number" || typeof item.value === "boolean"
+              ? [
+                  `${item.metricKey} ${item.period.from}..${item.period.through}: ${item.value}`,
+                ]
+              : [],
+          ),
+        ),
+      ),
+    ];
+    return {
+      question: entry.question,
+      answer: findings
+        .map((finding) => finding.text)
+        .join(" ")
+        .slice(0, 1_200),
+      domains: entry.domains,
+      profiles: entry.profiles,
+      facts: facts.join("; ").slice(0, 1_200),
+    };
+  });
 }
 
 /** A fresh context for a new conversation; nothing carries over. */

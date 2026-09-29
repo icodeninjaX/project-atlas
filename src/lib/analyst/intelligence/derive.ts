@@ -1,7 +1,11 @@
 import {
   CalculationError,
+  comparablePeriods,
   contribution,
   difference,
+  fullMonth,
+  monthlyTrend,
+  netFlow,
   percentChange,
   rank,
   share,
@@ -77,8 +81,21 @@ export function autoDerive(evidence: EvidenceV2[]): DerivedFact[] {
     const sorted = [...items].sort((a, b) =>
       b.time.period.from.localeCompare(a.time.period.from),
     );
-    if (sorted.length < 2) continue;
-    const [current, previous] = sorted as [EvidenceV2, EvidenceV2];
+    // A month read month by month also gets its trend over whole months.
+    if (sorted.filter((item) => fullMonth(item.time.period)).length >= 2) {
+      const trend = attempt(() => monthlyTrend(`derived.trend.${key}`, sorted));
+      if (trend) facts.push(...trend);
+    }
+    // The latest like-for-like pair: a month in progress is never set
+    // against a whole month, only against the same days of another.
+    const pair = sorted.findIndex(
+      (item, index) =>
+        index + 1 < sorted.length &&
+        comparablePeriods(item.time.period, sorted[index + 1]!.time.period),
+    );
+    if (pair < 0) continue;
+    const current = sorted[pair]!;
+    const previous = sorted[pair + 1]!;
     const change = attempt(() =>
       difference(`derived.change.${key}`, current, previous),
     );
@@ -105,6 +122,23 @@ export function autoDerive(evidence: EvidenceV2[]): DerivedFact[] {
       );
       if (fact && fact.output.status === "defined") facts.push(fact);
     }
+  }
+  // Income against expenses in the same period: did income cover spending?
+  const wholeTotal = (key: string, period: string) =>
+    values.find(
+      (item) =>
+        item.scope.type === "whole_domain" &&
+        item.semantics.metricKey === key &&
+        periodKey(item) === period,
+    );
+  for (const period of new Set(values.map(periodKey))) {
+    const income = wholeTotal("income_centavos", period);
+    const expense = wholeTotal("expense_centavos", period);
+    if (!income || !expense) continue;
+    const fact = attempt(() =>
+      netFlow(`derived.net.${period}`, income, expense),
+    );
+    if (fact) facts.push(fact);
   }
   return facts;
 }

@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { manilaToday, spendingPeriods } from "@/lib/analyst/evidence";
 import { validTimelineDate } from "@/lib/timeline/timeline";
+import { metricDefinitions, type MetricKey } from "@/lib/history/metrics";
 import { CAPABILITY_MANIFEST } from "./capabilities";
-import type { AnalysisBrief } from "./contracts";
+import type { AnalysisBrief, EvidenceV2 } from "./contracts";
 import { explicitStyle } from "./language";
 import type { HistoryTurn, ProviderPayload } from "./policy";
 import type { StageCaller } from "./stages";
@@ -33,8 +34,21 @@ export const PLANNABLE_CAPABILITIES = [
   "career.applications",
   "reviews.scores",
   "signals.current",
+  "history.trend",
 ] as const;
 type PlannableCapability = (typeof PLANNABLE_CAPABILITIES)[number];
+
+/** Measures a trend can follow month by month. */
+export const TREND_METRICS = Object.keys(metricDefinitions) as MetricKey[];
+const TREND_MONTHS = [6, 12] as const;
+const trendSuffix = /_trend_([a-z_]+)_(6|12)$/;
+
+/** The measure and months a trend requirement's ID names, or null. */
+export function requirementTrend(requirement: { id: string }) {
+  const match = trendSuffix.exec(requirement.id);
+  if (!match || !(TREND_METRICS as string[]).includes(match[1]!)) return null;
+  return { metric: match[1] as MetricKey, months: Number(match[2]) as 6 | 12 };
+}
 
 const MONEY = new Set<string>([
   "money.totals",
@@ -67,11 +81,13 @@ export const PLANNER_SYSTEM = [
   "understanding: in one or two sentences, restate what the person actually wants to know and the concern behind it. 'Am I doing okay with money?' asks whether income covers spending and debts, not for one total. No figures.",
   "subQuestions: at most four concrete sub-questions that, together with the current reading, answer the question. Map each to capability IDs from the catalog that can answer it; never invent an ID, and skip what the current reading already covers. When the question is broad, about connections or about what to focus on ('How am I doing?', 'Why do I feel behind?', 'What should I work on?'), look across areas: money flow, debts, goals, tasks, reviews and career. When the question is narrow, add only what changes the answer, or nothing.",
   "moneyKind: for a money capability, say whether it reads expense or income records; ask two sub-questions when both matter, such as savings or whether income covers spending. Otherwise none.",
+  "trendMetric and trendMonths: with history.trend, the measure to follow month by month and over how many months (6, or 12 for a year). Use a trend whenever the answer depends on what is normal or how things are moving: 'am I improving', 'is this normal', 'more than usual', 'lately'. Otherwise trendMetric none.",
   "hypotheses: up to four checks a skeptical analyst would make before trusting a conclusion, such as 'one category may account for most of the change' or 'fewer completed tasks may reflect fewer planned tasks'. Phrase them as checks, never as findings, and use no figures.",
   "comparePreviousPeriod: true when judging the answer needs a baseline: a trend, a change, 'am I improving', 'is this normal', 'too much'.",
   "period: only when the question names a time window in words the current reading missed, such as 'since June', 'the last three months' or 'this year'. Use ISO dates in Asia/Manila, never after today, at most 366 days. Otherwise null.",
   "intent and responseStyle: your reading of the question. Use detailed for broad or why questions and concise for one figure.",
   "clarification: only when no area of the records could meaningfully answer the question, one short question back to the person in their language. Otherwise null. Prefer answering to asking.",
+  "inventory: how many records the person keeps in each area and the dates they span (areas they did not share are absent). Plan around areas that have records; skip areas with none unless the question is about them. Never ask for more months of history than the records span.",
 ].join(" ");
 
 const nullable = (schema: object) => ({ anyOf: [{ type: "null" }, schema] });
@@ -101,7 +117,13 @@ export const PLANNER_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["question", "capabilities", "moneyKind"],
+        required: [
+          "question",
+          "capabilities",
+          "moneyKind",
+          "trendMetric",
+          "trendMonths",
+        ],
         properties: {
           question: { type: "string" },
           capabilities: {
@@ -109,6 +131,8 @@ export const PLANNER_SCHEMA = {
             items: { type: "string", enum: [...PLANNABLE_CAPABILITIES] },
           },
           moneyKind: { type: "string", enum: ["expense", "income", "none"] },
+          trendMetric: { type: "string", enum: [...TREND_METRICS, "none"] },
+          trendMonths: { type: "integer", enum: [...TREND_MONTHS] },
         },
       },
     },
@@ -141,6 +165,10 @@ const plannerOutputSchema = z.object({
         question: text(300),
         capabilities: z.array(z.string().max(60)).max(6),
         moneyKind: z.enum(["expense", "income", "none"]),
+        trendMetric: z
+          .enum(["none", ...TREND_METRICS] as [string, ...string[]])
+          .default("none"),
+        trendMonths: z.union([z.literal(6), z.literal(12)]).default(6),
       }),
     )
     .max(8),
@@ -151,7 +179,7 @@ const plannerOutputSchema = z.object({
     .nullable(),
   clarification: text(300).nullable(),
 });
-export type PlannerOutput = z.infer<typeof plannerOutputSchema>;
+export type PlannerOutput = z.input<typeof plannerOutputSchema>;
 
 /** What the writer and reviewer learn from the plan; it carries no figures. */
 export type AnalysisPlan = {
@@ -187,6 +215,15 @@ export function renderPlannerInput(
       question,
       answer,
     })),
+    inventory: payload.evidence
+      .filter((item) => item.sourceType === "getDataInventory")
+      .map((item) => ({
+        area: item.domain,
+        records: item.semantics.definition.split(":")[0],
+        count: "value" in item ? item.value : null,
+        from: item.time.period.from,
+        through: item.time.period.through,
+      })),
     currentReading: {
       intent: brief.intent,
       requirements: brief.requirements.map((item) => ({
@@ -323,7 +360,27 @@ export function refineBrief(
         ),
       ),
     ];
+    // A trend follows one named measure, so it is its own requirement.
+    if (capabilities.includes("history.trend")) {
+      const metric = sub.trendMetric;
+      const key = `history.trend|${metric}|${sub.trendMonths}`;
+      if (
+        metric !== "none" &&
+        !seen.has(key) &&
+        planned.length < PLANNER_LIMITS.subQuestions
+      ) {
+        seen.add(key);
+        planned.push({
+          id: `r_plan${planned.length + 1}_trend_${metric}_${sub.trendMonths}`,
+          question: sub.question,
+          essential: false,
+          evidenceNeeded: ["history.trend"],
+        });
+      }
+      capabilities.splice(capabilities.indexOf("history.trend"), 1);
+    }
     if (capabilities.length === 0) continue;
+    if (planned.length >= PLANNER_LIMITS.subQuestions) break;
     const money = capabilities.some((id) => MONEY.has(id));
     // One read serves one kind of money record, so a mixed sub-question is
     // split by kind rather than guessed.
@@ -421,6 +478,8 @@ export function refineBrief(
 export async function planAnalysis(input: {
   brief: AnalysisBrief;
   history: HistoryTurn[];
+  /** Aggregate counts of what the owner records; sent through the policy filter. */
+  inventory?: EvidenceV2[];
   model: string;
   now: Date;
   allowed: ReadonlySet<string>;
@@ -437,20 +496,26 @@ export async function planAnalysis(input: {
       stage: "planner",
       question: input.brief.question,
       history: input.history.slice(-PLANNER_LIMITS.historyTurns),
-      evidence: [],
+      evidence: input.inventory ?? [],
       labels: [],
     },
     render: renderPlannerInput(input.brief, input.allowed, input.now),
     maxOutputTokens: PLANNER_LIMITS.outputTokens,
     timeoutMs: PLANNER_LIMITS.timeoutMs,
   });
-  if (result.status === "error")
+  if (result.status === "error") {
+    console.warn("Analyst V2 stage failed", {
+      stage: "planner",
+      model: input.model,
+      code: result.code,
+    });
     return {
       brief: input.brief,
       plan: null,
       clarification: null,
       resolvedModel: null,
     };
+  }
   return {
     ...refineBrief(input.brief, result.content, {
       now: input.now,

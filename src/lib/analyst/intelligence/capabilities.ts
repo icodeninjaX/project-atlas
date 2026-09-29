@@ -338,6 +338,21 @@ export const CAPABILITY_MANIFEST: readonly CapabilityDescriptor[] = [
     unsupported: ["Causation", "Goal-specific attribution"],
   }),
   entry({
+    id: "history.trend",
+    domain: "history",
+    profile: "aggregate",
+    status: "available",
+    description:
+      "One whole-domain measure month by month (recorded income, expenses, debt payments, task completions, knowledge reviews or weekly review score) over six or twelve months; ATLAS ranks the whole months, averages them, sets the latest against the months before it and counts consecutive rises or falls.",
+    tools: ["getHistoricalMetricSeries"],
+    supportedHistory: "Up to twelve calendar months, within the last year.",
+    unsupported: [
+      "Category or record-level trends",
+      "Why a measure changed",
+      "Forecasts",
+    ],
+  }),
+  entry({
     id: "context.follow_up",
     domain: "history",
     profile: "aggregate",
