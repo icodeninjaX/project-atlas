@@ -322,8 +322,11 @@ export function refineBrief(
     allowed: ReadonlySet<string>;
     /** The rules found no topic and used the money default. */
     defaultedTopic: boolean;
+    /** The prefix of added requirement IDs; later additions use their own. */
+    prefix?: string;
   },
 ): RefinedBrief {
+  const prefix = options.prefix ?? "r_plan";
   const parsed = plannerOutputSchema.safeParse(raw);
   if (!parsed.success) return { brief, plan: null, clarification: null };
   const output = parsed.data;
@@ -371,7 +374,7 @@ export function refineBrief(
       ) {
         seen.add(key);
         planned.push({
-          id: `r_plan${planned.length + 1}_trend_${metric}_${sub.trendMonths}`,
+          id: `${prefix}${planned.length + 1}_trend_${metric}_${sub.trendMonths}`,
           question: sub.question,
           essential: false,
           evidenceNeeded: ["history.trend"],
@@ -398,7 +401,7 @@ export function refineBrief(
     seen.add(key);
     for (const id of fresh) seen.add(keyOf([id], MONEY.has(id) ? kind : null));
     planned.push({
-      id: `r_plan${planned.length + 1}${kind ? `_${kind}` : ""}`,
+      id: `${prefix}${planned.length + 1}${kind ? `_${kind}` : ""}`,
       question: sub.question,
       essential: false,
       evidenceNeeded: fresh,
@@ -524,4 +527,67 @@ export async function planAnalysis(input: {
     }),
     resolvedModel: result.resolvedModel,
   };
+}
+
+/** What a writer may ask ATLAS to read after its first draft. */
+export const evidenceRequestSchema = z.object({
+  question: text(300),
+  capabilities: z.array(z.string().max(60)).max(4),
+  moneyKind: z.enum(["expense", "income", "none"]).default("none"),
+  trendMetric: z
+    .enum(["none", ...TREND_METRICS] as [string, ...string[]])
+    .default("none"),
+  trendMonths: z.union([z.literal(6), z.literal(12)]).default(6),
+});
+export type EvidenceRequest = z.input<typeof evidenceRequestSchema>;
+
+/** The JSON schema of one request, shared by the writer's output schema. */
+export const EVIDENCE_REQUEST_SCHEMA =
+  PLANNER_SCHEMA.properties.subQuestions.items;
+
+/**
+ * The requirements a writer's requests add to a brief: the same rules as a
+ * plan (catalog capabilities only, consent-filtered, one kind of money per
+ * read, a trend as its own requirement), under the `r_more` prefix and never
+ * repeating what the brief already reads. Returns only the new requirements.
+ */
+export function requestedRequirements(
+  brief: AnalysisBrief,
+  requests: unknown[],
+  options: { now: Date; allowed: ReadonlySet<string>; limit: number },
+): AnalysisBrief["requirements"] {
+  const parsed = requests.flatMap((item) => {
+    const result = evidenceRequestSchema.safeParse(item);
+    return result.success ? [result.data] : [];
+  });
+  if (parsed.length === 0) return [];
+  const refined = refineBrief(
+    brief,
+    {
+      understanding: "Evidence the first draft asked for.",
+      intent: "lookup",
+      responseStyle: "standard",
+      subQuestions: parsed,
+      hypotheses: [],
+      comparePreviousPeriod: false,
+      period: null,
+      clarification: null,
+    },
+    {
+      now: options.now,
+      allowed: options.allowed,
+      defaultedTopic: false,
+      prefix: "r_more",
+    },
+  );
+  const known = new Set(brief.requirements.map((item) => item.id));
+  return refined.brief.requirements
+    .filter((item) => !known.has(item.id))
+    .slice(
+      0,
+      Math.max(
+        0,
+        Math.min(options.limit, PLANNER_LIMITS.requirements + 4 - known.size),
+      ),
+    );
 }

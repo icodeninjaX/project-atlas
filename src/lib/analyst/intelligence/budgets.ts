@@ -1,3 +1,6 @@
+import { V2_TOOL_LIMITS } from "./tools/contracts";
+import { WRITER_LIMITS } from "./writer";
+
 /**
  * Whole-run budgets for an Analyst V2 investigation (AI-04). One ledger
  * covers every step: tool rounds and calls, database queries, evidence
@@ -89,6 +92,31 @@ export const PLANNER_BUDGET: RunBudget = {
   roundTimeMs: 0,
 };
 
+/**
+ * One read after the first draft, for records the draft asked for. It runs
+ * on its own small allowance, only when the run still has this much time
+ * for the read and the repair that uses it; its usage joins the run ledger.
+ */
+export const FOLLOW_UP_BUDGET: RunBudget = {
+  path: "deep",
+  deadlineMs: 8_000,
+  rounds: 2,
+  toolCalls: 4,
+  queries: 60,
+  evidenceBytes: 80_000,
+  providerCalls: 0,
+  tokens: 0,
+  costUsdMicros: 0,
+  reserve: { timeMs: 0, providerCalls: 0, tokens: 0, costUsdMicros: 0 },
+  roundTimeMs: 6_000,
+};
+/**
+ * The slowest follow-up read (one tool call to its timeout) plus the repair
+ * that uses it, so a read that succeeds always leaves the repair its time.
+ */
+export const FOLLOW_UP_MIN_REMAINING_MS =
+  V2_TOOL_LIMITS.timeoutMs + WRITER_LIMITS.timeoutMs;
+
 export type Usage = {
   inputTokens: number;
   outputTokens: number;
@@ -138,6 +166,8 @@ export class RunLedger {
 
   /** Carries another ledger's usage into this one (the planner's). */
   absorb(usage: Usage) {
+    this.usage.rounds += usage.rounds;
+    this.usage.toolCalls += usage.toolCalls;
     this.usage.queries += usage.queries;
     this.usage.evidenceBytes += usage.evidenceBytes;
     this.usage.providerCalls += usage.providerCalls;

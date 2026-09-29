@@ -9,6 +9,7 @@ import { deterministicBrief } from "./planning";
 import {
   planAnalysis,
   refineBrief,
+  requestedRequirements,
   requirementMoneyKind,
   type PlannerOutput,
 } from "./planner";
@@ -402,5 +403,48 @@ describe("analysis planner", () => {
     expect(
       new Set(result.selection.selected.map((item) => item.domain)),
     ).toEqual(new Set(["money", "debts", "tasks"]));
+  });
+
+  it("turns a draft's requests into new requirements, never repeating a read", () => {
+    const brief = rules("How much did I spend this month?");
+    const added = requestedRequirements(
+      brief,
+      [
+        // Already read by the brief: skipped.
+        {
+          question: "Spending this month",
+          capabilities: ["money.totals"],
+          moneyKind: "expense",
+        },
+        {
+          question: "Debts",
+          capabilities: ["debt.payments", "not.a.capability"],
+        },
+        { question: "Malformed", capabilities: "debt.payments" },
+        {
+          question: "Income this month",
+          capabilities: ["money.totals"],
+          moneyKind: "income",
+        },
+      ],
+      { now, allowed, limit: 2 },
+    );
+    expect(
+      added.map((item) => [item.id, item.essential, item.evidenceNeeded]),
+    ).toEqual([
+      ["r_more1", false, ["debt.payments"]],
+      ["r_more2_income", false, ["money.totals"]],
+    ]);
+    expect(
+      requestedRequirements(
+        brief,
+        [{ question: "Debts", capabilities: ["debt.payments"] }],
+        {
+          now,
+          allowed: new Set([...allowed].filter((id) => id !== "debt.payments")),
+          limit: 2,
+        },
+      ),
+    ).toEqual([]);
   });
 });
