@@ -93,6 +93,25 @@ leads with the net figure unless the question asked for a ranking. Repair
 requests now explain each rejection in words (`REJECTION_HELP`), and the
 writer is told the exact words the checks reject.
 
+## 4b. Trends over months (`history.trend`)
+
+"Am I improving?" and "Is this normal for me?" need a baseline longer than
+last month. The existing monthly history tool (`getHistoricalMetricSeries`)
+is now bridged into V2, and the planner may add a `history.trend`
+sub-question naming one measure (income, expenses, debt payments, task
+completions, knowledge reviews or review score) over six or twelve months.
+It becomes its own requirement (`r_planN_trend_<metric>_<months>`), and the
+proposer reads that measure month by month through today.
+
+ATLAS derives the trend itself (`monthlyTrend`), over whole calendar months
+only: a ranking of the months (ties kept), their average, the latest month
+less the average of the months before it, and the run of consecutive rises
+(positive) or falls (negative) ending with the latest month. A superlative
+("highest month since May") needs the ranking; "rose three months in a row"
+needs the run with that sign. The derived change between two periods now
+uses the latest like-for-like pair (`comparablePeriods`), so the month in
+progress is never set against a whole month.
+
 ## 5. How much is shown
 
 A lookup used to hide every finding behind its one-line direct answer. When
@@ -110,8 +129,8 @@ record names, which caps how specific an answer can be.
 
 ## 7. Not in this phase
 
-- A general owner-scoped aggregate tool (measure × group × filter × period)
-  and more derived facts (multi-period trends, run-rate, anomalies).
+- A general owner-scoped aggregate tool (measure × group × filter × period),
+  category-level trends and run-rate projections.
 - A per-user data inventory for the planner.
 - Re-investigation after the draft: the planner front-loads the checks, and
   the reviewer's repair deepens the writing, but no new reads follow a draft.

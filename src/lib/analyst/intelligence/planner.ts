@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { manilaToday, spendingPeriods } from "@/lib/analyst/evidence";
 import { validTimelineDate } from "@/lib/timeline/timeline";
+import { metricDefinitions, type MetricKey } from "@/lib/history/metrics";
 import { CAPABILITY_MANIFEST } from "./capabilities";
 import type { AnalysisBrief } from "./contracts";
 import { explicitStyle } from "./language";
@@ -33,8 +34,21 @@ export const PLANNABLE_CAPABILITIES = [
   "career.applications",
   "reviews.scores",
   "signals.current",
+  "history.trend",
 ] as const;
 type PlannableCapability = (typeof PLANNABLE_CAPABILITIES)[number];
+
+/** Measures a trend can follow month by month. */
+export const TREND_METRICS = Object.keys(metricDefinitions) as MetricKey[];
+const TREND_MONTHS = [6, 12] as const;
+const trendSuffix = /_trend_([a-z_]+)_(6|12)$/;
+
+/** The measure and months a trend requirement's ID names, or null. */
+export function requirementTrend(requirement: { id: string }) {
+  const match = trendSuffix.exec(requirement.id);
+  if (!match || !(TREND_METRICS as string[]).includes(match[1]!)) return null;
+  return { metric: match[1] as MetricKey, months: Number(match[2]) as 6 | 12 };
+}
 
 const MONEY = new Set<string>([
   "money.totals",
@@ -67,6 +81,7 @@ export const PLANNER_SYSTEM = [
   "understanding: in one or two sentences, restate what the person actually wants to know and the concern behind it. 'Am I doing okay with money?' asks whether income covers spending and debts, not for one total. No figures.",
   "subQuestions: at most four concrete sub-questions that, together with the current reading, answer the question. Map each to capability IDs from the catalog that can answer it; never invent an ID, and skip what the current reading already covers. When the question is broad, about connections or about what to focus on ('How am I doing?', 'Why do I feel behind?', 'What should I work on?'), look across areas: money flow, debts, goals, tasks, reviews and career. When the question is narrow, add only what changes the answer, or nothing.",
   "moneyKind: for a money capability, say whether it reads expense or income records; ask two sub-questions when both matter, such as savings or whether income covers spending. Otherwise none.",
+  "trendMetric and trendMonths: with history.trend, the measure to follow month by month and over how many months (6, or 12 for a year). Use a trend whenever the answer depends on what is normal or how things are moving: 'am I improving', 'is this normal', 'more than usual', 'lately'. Otherwise trendMetric none.",
   "hypotheses: up to four checks a skeptical analyst would make before trusting a conclusion, such as 'one category may account for most of the change' or 'fewer completed tasks may reflect fewer planned tasks'. Phrase them as checks, never as findings, and use no figures.",
   "comparePreviousPeriod: true when judging the answer needs a baseline: a trend, a change, 'am I improving', 'is this normal', 'too much'.",
   "period: only when the question names a time window in words the current reading missed, such as 'since June', 'the last three months' or 'this year'. Use ISO dates in Asia/Manila, never after today, at most 366 days. Otherwise null.",
@@ -101,7 +116,13 @@ export const PLANNER_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["question", "capabilities", "moneyKind"],
+        required: [
+          "question",
+          "capabilities",
+          "moneyKind",
+          "trendMetric",
+          "trendMonths",
+        ],
         properties: {
           question: { type: "string" },
           capabilities: {
@@ -109,6 +130,8 @@ export const PLANNER_SCHEMA = {
             items: { type: "string", enum: [...PLANNABLE_CAPABILITIES] },
           },
           moneyKind: { type: "string", enum: ["expense", "income", "none"] },
+          trendMetric: { type: "string", enum: [...TREND_METRICS, "none"] },
+          trendMonths: { type: "integer", enum: [...TREND_MONTHS] },
         },
       },
     },
@@ -141,6 +164,10 @@ const plannerOutputSchema = z.object({
         question: text(300),
         capabilities: z.array(z.string().max(60)).max(6),
         moneyKind: z.enum(["expense", "income", "none"]),
+        trendMetric: z
+          .enum(["none", ...TREND_METRICS] as [string, ...string[]])
+          .default("none"),
+        trendMonths: z.union([z.literal(6), z.literal(12)]).default(6),
       }),
     )
     .max(8),
@@ -151,7 +178,7 @@ const plannerOutputSchema = z.object({
     .nullable(),
   clarification: text(300).nullable(),
 });
-export type PlannerOutput = z.infer<typeof plannerOutputSchema>;
+export type PlannerOutput = z.input<typeof plannerOutputSchema>;
 
 /** What the writer and reviewer learn from the plan; it carries no figures. */
 export type AnalysisPlan = {
@@ -323,7 +350,27 @@ export function refineBrief(
         ),
       ),
     ];
+    // A trend follows one named measure, so it is its own requirement.
+    if (capabilities.includes("history.trend")) {
+      const metric = sub.trendMetric;
+      const key = `history.trend|${metric}|${sub.trendMonths}`;
+      if (
+        metric !== "none" &&
+        !seen.has(key) &&
+        planned.length < PLANNER_LIMITS.subQuestions
+      ) {
+        seen.add(key);
+        planned.push({
+          id: `r_plan${planned.length + 1}_trend_${metric}_${sub.trendMonths}`,
+          question: sub.question,
+          essential: false,
+          evidenceNeeded: ["history.trend"],
+        });
+      }
+      capabilities.splice(capabilities.indexOf("history.trend"), 1);
+    }
     if (capabilities.length === 0) continue;
+    if (planned.length >= PLANNER_LIMITS.subQuestions) break;
     const money = capabilities.some((id) => MONEY.has(id));
     // One read serves one kind of money record, so a mixed sub-question is
     // split by kind rather than guessed.

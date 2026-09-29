@@ -484,7 +484,8 @@ function checkComparison(
     ...cited.derived.flatMap((item) =>
       (item.operation === "difference" ||
         item.operation === "percent_change" ||
-        item.operation === "contribution") &&
+        item.operation === "contribution" ||
+        item.operation === "streak") &&
       item.output.status === "defined"
         ? [item.output.value]
         : [],

@@ -120,6 +120,7 @@ export const BRIDGED_TOOLS = [
   "getSignals",
   "getRunway",
   "compareFinancialScenarios",
+  "getHistoricalMetricSeries",
 ] as const satisfies readonly ToolName[];
 export type BridgedTool = (typeof BRIDGED_TOOLS)[number];
 export const isBridgedTool = (name: string): name is BridgedTool =>
@@ -189,6 +190,7 @@ export const v2ToolInputs = {
   getSignals: toolInputs.getSignals,
   getRunway: toolInputs.getRunway,
   compareFinancialScenarios: toolInputs.compareFinancialScenarios,
+  getHistoricalMetricSeries: toolInputs.getHistoricalMetricSeries,
 } as const;
 export type V2ToolName = keyof typeof v2ToolInputs;
 export type V2ToolInput<N extends V2ToolName> = z.infer<
@@ -219,6 +221,7 @@ export const v2ToolDescriptions: Record<V2ToolName, string> = {
   getSignals: toolDescriptions.getSignals,
   getRunway: toolDescriptions.getRunway,
   compareFinancialScenarios: toolDescriptions.compareFinancialScenarios,
+  getHistoricalMetricSeries: toolDescriptions.getHistoricalMetricSeries,
 };
 
 /** Owner-only display text. It reaches a provider only through policy. */

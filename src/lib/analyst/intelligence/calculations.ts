@@ -131,6 +131,9 @@ export const NET_FLOW_SCOPE = "whole_domain:money_flow";
 export const NET_FLOW_MEMBERS: ReadonlySet<string> = new Set([
   "whole_domain:income",
   "whole_domain:expense",
+  // The same totals read as a monthly series.
+  "whole_domain:income_centavos",
+  "whole_domain:expense_centavos",
 ]);
 
 /**
@@ -508,4 +511,145 @@ export function contribution(
     { status: "defined", value: totalChange, unit: totalNow.unit },
     { ranking, top, tie: top.length > 1, reconciled },
   );
+}
+
+const DAY_MS = 86_400_000;
+const days = (period: Period) =>
+  (Date.parse(period.through) - Date.parse(period.from)) / DAY_MS + 1;
+
+/** Whether a period is exactly one whole calendar month. */
+export function fullMonth(period: Period) {
+  if (!period.from.endsWith("-01")) return false;
+  if (period.from.slice(0, 7) !== period.through.slice(0, 7)) return false;
+  const [year, month] = period.from.split("-").map(Number) as [number, number];
+  const last = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return Number(period.through.slice(8, 10)) === last;
+}
+
+/**
+ * Whether two periods can be compared as like for like: the same number of
+ * days (this month so far against the same days last month), or two whole
+ * calendar months. A partial month is never set against a full one.
+ */
+export function comparablePeriods(a: Period, b: Period) {
+  return days(a) === days(b) || (fullMonth(a) && fullMonth(b));
+}
+
+/**
+ * Trend facts over one whole-domain measure read month by month. Only whole
+ * calendar months count, so the month in progress never skews them. For two
+ * or more months: a ranking of the months (highest first, ties kept) and
+ * their average. For three or more: the latest month less the average of
+ * the months before it, and the run of consecutive rises or falls that ends
+ * with the latest month. Every fact spans the months it reads.
+ */
+export function monthlyTrend(prefix: string, series: EvidenceV2[]) {
+  const values = series.map(numeric);
+  assertComparable(values);
+  const [first] = values;
+  if (!first) return [];
+  if (
+    values.some(
+      (item) =>
+        item.scope.id !== first.scope.id ||
+        item.semantics.metricKey !== first.semantics.metricKey ||
+        item.scope.type !== "whole_domain",
+    )
+  )
+    throw new CalculationError("A trend reads one whole-domain measure.");
+  const months = values
+    .filter((item) => fullMonth(item.time.period))
+    .sort((a, b) => a.time.period.from.localeCompare(b.time.period.from));
+  if (
+    new Set(months.map((item) => item.time.period.from)).size !== months.length
+  )
+    throw new CalculationError("A trend reads each month once.");
+  if (months.length < 2) return [];
+  const span: Period = {
+    from: months[0]!.time.period.from,
+    through: months.at(-1)!.time.period.through,
+  };
+  const integers = first.unit === "centavos" || first.unit === "count";
+  const base = (id: string, operands: NumericEvidence[]): Base => ({
+    id: `${prefix}.${id}`,
+    operands: operands.map((item) => item.id),
+    metricKey: first.semantics.metricKey,
+    comparableGroup: first.semantics.comparableGroup,
+    scopeId: first.scope.id,
+    periods: [span],
+  });
+  const done = complete(months);
+  const mean = (items: NumericEvidence[]) => {
+    const total = checkedSum(
+      items.map((item) => item.value),
+      first.unit === "centavos",
+    );
+    const raw = total / items.length;
+    return integers ? Math.round(raw) : Math.round(raw * 10) / 10;
+  };
+  const ordered = [...months].sort((a, b) => b.value - a.value);
+  let rankNumber = 0;
+  const ranking = ordered.map((item, index) => {
+    if (index === 0 || item.value !== ordered[index - 1]!.value)
+      rankNumber = index + 1;
+    return {
+      member: `month:${item.time.period.from.slice(0, 7)}`,
+      evidenceId: item.id,
+      value: item.value,
+      rank: rankNumber,
+    };
+  });
+  const top = ranking.filter((entry) => entry.rank === 1);
+  const facts: DerivedFact[] = [
+    fact(
+      base("rank", months),
+      "rank",
+      { status: "defined", value: ordered[0]!.value, unit: first.unit },
+      {
+        ranking,
+        top: top.map((entry) => entry.member),
+        tie: top.length > 1,
+        complete: done,
+      },
+    ),
+    fact(
+      base("mean", months),
+      "mean",
+      { status: "defined", value: mean(months), unit: first.unit },
+      { complete: done },
+    ),
+  ];
+  if (months.length >= 3) {
+    const latest = months.at(-1)!;
+    const earlier = months.slice(0, -1);
+    const baseline = mean(earlier);
+    facts.push(
+      fact(
+        base("latest_vs_mean", months),
+        "difference",
+        {
+          status: "defined",
+          value: checkedSum([latest.value, -baseline], integers),
+          unit: first.unit,
+        },
+        { complete: done },
+      ),
+    );
+    let run = 0;
+    for (let index = months.length - 1; index > 0; index -= 1) {
+      const step = Math.sign(months[index]!.value - months[index - 1]!.value);
+      if (step === 0 || (run !== 0 && step !== Math.sign(run))) break;
+      run += step;
+    }
+    if (Math.abs(run) >= 2)
+      facts.push(
+        fact(
+          base("streak", months.slice(-(Math.abs(run) + 1))),
+          "streak",
+          { status: "defined", value: run, unit: "count" },
+          { complete: done },
+        ),
+      );
+  }
+  return facts;
 }

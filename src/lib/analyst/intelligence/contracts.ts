@@ -336,6 +336,10 @@ export const DERIVED_OPERATIONS = [
   "percent_change",
   "rank",
   "contribution",
+  // A monthly series: the average of its full months, and how many months
+  // in a row it rose (positive) or fell (negative) up to the latest one.
+  "mean",
+  "streak",
 ] as const;
 export type DerivedOperation = (typeof DERIVED_OPERATIONS)[number];
 
