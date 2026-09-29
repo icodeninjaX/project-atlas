@@ -127,14 +127,17 @@ progress is never set against a whole month.
 
 With a plan, the first draft may list up to two records it lacked in
 `needsEvidence`, using the planner's catalog (`moreEvidence` in its input).
-If the run still has 20 s for a read and a repair
-(`FOLLOW_UP_MIN_REMAINING_MS`), ATLAS turns the requests into requirements
+If the run still has time for the slowest read plus a repair
+(`FOLLOW_UP_MIN_REMAINING_MS`, the tool timeout plus the writer timeout), ATLAS turns the requests into requirements
 with the planner's rules (`requestedRequirements`: catalog capabilities
 only, consent-filtered, nothing the brief already reads, IDs `r_moreN`),
 checks them with `checkBrief`, and investigates only those on its own small
 allowance (`FOLLOW_UP_BUDGET`), whose usage joins the run ledger. The new
 evidence is appended, derived facts are recomputed, and the one repair
-revises with it; every claim is checked again from the start. The repair
+revises with it; every claim is checked again from the start. The revision
+replaces the first draft, whose claims were written without the new records
+(it is kept only if the revision ships nothing), and the read's rounds,
+calls and queries join the run's usage. The repair
 is never offered the catalog and its own requests are ignored, so reading
 cannot loop. Without time, or with nothing valid asked, the answer stands.
 

@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AI_MODELS, type AnalystModelId } from "@/lib/ai/models";
+import { FOLLOW_UP_MIN_REMAINING_MS, RUN_BUDGETS } from "./budgets";
 import { OWNER_A } from "./evaluation/fixtures";
 import {
   createEmulator,
@@ -199,6 +200,7 @@ function ask(
     consent?: typeof consent;
     signal?: AbortSignal;
     planModel?: string;
+    clock?: () => number;
   } = {},
 ) {
   const events: V2ProgressEvent[] = [];
@@ -220,7 +222,7 @@ function ask(
         createStageCaller({ ledger, consent: granted, route: SHARED_ROUTE }),
       contextKey: options.contextKey === undefined ? key : options.contextKey,
       now: () => now,
-      clock: () => 0,
+      clock: options.clock ?? (() => 0),
       emit: (event) => events.push(event),
       signal: options.signal,
       planModel: options.planModel ?? null,
@@ -829,5 +831,49 @@ describe("Analyst V2 with the analysis planner (mocked provider)", () => {
       repair!.evidence.some((item) => item.id.startsWith("getDebtProgress.")),
     ).toBe(true);
     expect(["answered", "partial_answer"]).toContain(response.status);
+    // The follow-up read's round and calls count in the run's usage.
+    expect(response.usage.rounds).toBe(2);
+    expect(response.usage.toolCalls).toBeGreaterThanOrEqual(3);
+  });
+
+  it("skips the read when the run could not also afford the repair", async () => {
+    planner = () =>
+      plan({
+        subQuestions: [
+          {
+            question: "How much was spent this month?",
+            capabilities: ["money.totals"],
+            moneyKind: "expense",
+          },
+        ],
+      });
+    const base = totalWriter();
+    let elapsed = 0;
+    writer = (input) => {
+      // The first draft finishes with 27 s left: under the slowest read
+      // plus a repair.
+      elapsed = RUN_BUDGETS.deep.deadlineMs - 27_000;
+      return {
+        ...(base(input) as object),
+        needsEvidence: [
+          {
+            question: "Where do debts stand?",
+            capabilities: ["debt.payments"],
+            moneyKind: "none",
+            trendMetric: "none",
+            trendMonths: 6,
+          },
+        ],
+      };
+    };
+    const response = await ask("How am I doing overall?", {
+      planModel,
+      clock: () => elapsed,
+    }).result;
+    expect(
+      providerRequests.filter((item) => item.schema === "atlas_answer_v2"),
+    ).toHaveLength(1);
+    expect(response.usage.rounds).toBe(1);
+    expect(FOLLOW_UP_MIN_REMAINING_MS).toBeGreaterThan(27_000);
   });
 });

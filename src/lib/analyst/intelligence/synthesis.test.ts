@@ -774,10 +774,16 @@ describe("reviewer evaluation", () => {
       ["total", true],
       ["r_more1_income", false],
     ]);
+    // A caveat the new records make stale.
+    const staleCaveat = claim(
+      "c2",
+      "Recorded income was not in the evidence for this answer.",
+      { kind: "limitation", evidenceIds: [], answersRequirementIds: [] },
+    );
     const { result, bodies } = run(
       {
         atlas_answer_v2: [
-          { ...draft([total]), needsEvidence: [request] },
+          { ...draft([total, staleCaveat]), needsEvidence: [request] },
           // A repair's own requests are ignored: reading never loops.
           { ...draft([total, incomeClaim]), needsEvidence: [request] },
         ],
@@ -823,6 +829,10 @@ describe("reviewer evaluation", () => {
     ).toContain(income.id);
     expect(repair.messages.at(-1).content).toContain(
       "ATLAS read the records you asked for",
+    );
+    // The revision replaced the first draft, so its stale caveat is gone.
+    expect(answer.answer.claims.map((item) => item.text)).not.toContain(
+      staleCaveat.text,
     );
   });
 

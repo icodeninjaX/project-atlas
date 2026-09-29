@@ -549,7 +549,7 @@ export async function synthesizeAnswer(
           feedback(answer, instructions),
           ...(more?.added.length
             ? [
-                `ATLAS read the records you asked for and added them to the evidence, for requirements ${more.added.join(", ")}. Use them to answer those requirements and to deepen the answer where they bear on it.`,
+                `ATLAS read the records you asked for and added them to the evidence, for requirements ${more.added.join(", ")}. Return the complete revised answer: it replaces your first draft, so repeat every claim that still holds, drop any the new records change (such as a caveat that they were unavailable), and use them to answer those requirements.`,
               ]
             : []),
         ].join(" "),
@@ -573,11 +573,15 @@ export async function synthesizeAnswer(
         }
       }
       second = { ...second, claims: dropQualified(second.claims) };
-      const merged = merge(
-        { ...answer, claims: dropQualified(answer.claims) },
-        second,
-      );
-      const combined = new Map(verdicts ?? []);
+      // After a follow-up read the revision replaces the first draft, whose
+      // claims were written without the new records and may no longer hold
+      // (a "not available" caveat, a verdict the new records change). It is
+      // kept only if the revision ships nothing at all.
+      const replace = Boolean(more) && second.claims.some(claimCanShip);
+      const merged = replace
+        ? second
+        : merge({ ...answer, claims: dropQualified(answer.claims) }, second);
+      const combined = new Map(replace ? [] : (verdicts ?? []));
       for (const [id, value] of secondVerdicts ?? [])
         combined.set(id, (combined.get(id) ?? false) || value);
       answer = recompute(merged, combined.size ? combined : undefined);
