@@ -10,7 +10,7 @@ import type {
   RequirementCoverage,
   UnresolvedReason,
 } from "./contracts";
-import type { AnalysisPlan } from "./planner";
+import type { AnalysisPlan, plannerCatalog } from "./planner";
 import type { HistoryTurn, ProviderLabel, ProviderPayload } from "./policy";
 import {
   answersRequirement,
@@ -29,6 +29,7 @@ import {
 import type { StageCaller, StageResult } from "./stages";
 import {
   draftOf,
+  evidenceRequestsOf,
   renderWriterInput,
   WRITER_LIMITS,
   WRITER_SCHEMA,
@@ -45,9 +46,11 @@ import {
  * 3. A reviewer confirms interpretive claims and requirement coverage when
  *    the answer interprets or the run was deep. A lookup made only of facts
  *    needs no review call.
- * 4. If an essential requirement lost its claim, or the reviewer found the
- *    answer as a whole shallow or beside the question, one repair asks the
- *    writer for the missing content, with the reasons. Repaired claims pass the same
+ * 4. If the first draft asked for records it lacked and the run can afford
+ *    it, ATLAS reads them (`followUp`) and the repair revises with them.
+ *    Otherwise, if an essential requirement lost its claim, or the reviewer
+ *    found the answer as a whole shallow or beside the question, one repair
+ *    asks the writer for the missing content, with the reasons. Repaired claims pass the same
  *    deterministic checks and, when interpretive, a second review.
  * 5. Only claims that passed every applicable check ship. When the budget
  *    cannot pay for a check, the claims that needed it are withheld and the
@@ -82,6 +85,23 @@ export type SynthesisInput = {
   call: StageCaller;
   /** Receives the reviewer model the provider reported. */
   onReviewer?: (resolved: string | null) => void;
+  /** What the first draft may ask ATLAS to read; null when it may not. */
+  catalog?: ReturnType<typeof plannerCatalog> | null;
+  /**
+   * Reads what the first draft asked for, once. Returns the widened brief
+   * and evidence, or null when nothing was read (no time, nothing valid).
+   */
+  followUp?: (requests: unknown[]) => Promise<FollowUpResult | null>;
+};
+
+export type FollowUpResult = {
+  brief: AnalysisBrief;
+  evidence: EvidenceV2[];
+  derived: DerivedFact[];
+  labels: ProviderLabel[];
+  byRequirement: Readonly<Record<string, string[]>>;
+  /** The requirements the read added. */
+  added: string[];
 };
 
 export type ModelUse = { requested: string; resolved: string | null };
@@ -287,8 +307,11 @@ function merge(first: AnswerV2, repaired: AnswerV2): AnswerV2 {
 }
 
 export async function synthesizeAnswer(
-  input: SynthesisInput,
+  initial: SynthesisInput,
 ): Promise<SynthesisResult> {
+  // A follow-up read widens the brief and evidence; everything after it
+  // (the repair, its checks and the fallback) uses the widened input.
+  let input = initial;
   const stages: StageLog[] = [];
   const assemble = (draft: unknown) =>
     assembleAnswer({
@@ -317,12 +340,12 @@ export async function synthesizeAnswer(
   let fallback = false;
   let writerResolved: string | null = null;
   let reviewerUse: ModelUse | null = null;
-  const reviewInput: SynthesisInput = {
+  const reviewInput = (): SynthesisInput => ({
     ...input,
     onReviewer: (resolved) => {
       reviewerUse = { requested: input.models.reviewer, resolved };
     },
-  };
+  });
   const disclosures: string[] = [];
   const write = (
     stage: "writer" | "repair",
@@ -337,10 +360,13 @@ export async function synthesizeAnswer(
         schema: WRITER_SCHEMA,
         system: WRITER_SYSTEM,
         payload: payloadFor(input, stage),
+        // Only the first draft may ask for more; a repair works with what
+        // it has, so reading can never loop.
         render: renderWriterInput(
           input.brief,
           input.derived,
           input.plan ?? null,
+          stage === "writer" && input.followUp ? (input.catalog ?? null) : null,
         ),
         extraMessages,
         maxOutputTokens: WRITER_LIMITS.outputTokens,
@@ -458,7 +484,7 @@ export async function synthesizeAnswer(
     ? "completed"
     : "not_required";
   if (reviewState === "completed") {
-    const reviewed = await review(reviewInput, answer, stages);
+    const reviewed = await review(reviewInput(), answer, stages);
     if (reviewed) {
       answer = { ...answer, claims: reviewed.claims };
       verdicts = reviewed.requirements;
@@ -475,11 +501,30 @@ export async function synthesizeAnswer(
   const qualified = answer.claims.some(
     (claim) => claim.verification.semantic === "qualified",
   );
+  // The first draft asked for records it lacked: read them once, if the
+  // run can afford it, and revise with them.
+  const requests = evidenceRequestsOf(drafted.content);
+  const more =
+    requests.length > 0 && input.followUp
+      ? await input.followUp(requests)
+      : null;
+  if (more) {
+    input = {
+      ...input,
+      brief: more.brief,
+      evidence: more.evidence,
+      derived: more.derived,
+      labels: more.labels,
+      byRequirement: { ...(input.byRequirement ?? {}), ...more.byRequirement },
+    };
+    answer = recompute(answer, verdicts);
+  }
   // The reviewer judged the answer as a whole beside the question or shallow.
   const deepen = instructions.some((item) =>
     item.startsWith(`${WHOLE_ANSWER_TARGET}:`),
   );
   const eligible =
+    Boolean(more?.added.length) ||
     answer.verification.repairEligible ||
     qualified ||
     deepen ||
@@ -498,14 +543,24 @@ export async function synthesizeAnswer(
   if (eligible) {
     const repaired = await write("repair", undefined, [
       { role: "assistant", content: JSON.stringify(drafted.content) },
-      { role: "user", content: feedback(answer, instructions) },
+      {
+        role: "user",
+        content: [
+          feedback(answer, instructions),
+          ...(more?.added.length
+            ? [
+                `ATLAS read the records you asked for and added them to the evidence, for requirements ${more.added.join(", ")}. Use them to answer those requirements and to deepen the answer where they bear on it.`,
+              ]
+            : []),
+        ].join(" "),
+      },
     ]);
     if (repaired.status === "ok") {
       let second = assemble(repaired.content);
       // A repaired claim is verified again from the start, never inherited.
       let secondVerdicts: Map<string, boolean> | undefined;
       if (needsReview(second.claims)) {
-        const reviewed = await review(reviewInput, second, stages);
+        const reviewed = await review(reviewInput(), second, stages);
         if (reviewed) {
           second = { ...second, claims: reviewed.claims };
           secondVerdicts = reviewed.requirements;

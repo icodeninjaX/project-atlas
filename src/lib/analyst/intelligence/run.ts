@@ -5,7 +5,13 @@ import {
 } from "@/lib/ai/models";
 import { freePoolFor } from "@/lib/ai/pools";
 import { checkBrief } from "./brief";
-import { PLANNER_BUDGET, RUN_BUDGETS, RunLedger } from "./budgets";
+import {
+  FOLLOW_UP_BUDGET,
+  FOLLOW_UP_MIN_REMAINING_MS,
+  PLANNER_BUDGET,
+  RUN_BUDGETS,
+  RunLedger,
+} from "./budgets";
 import { analystCapabilities } from "./capabilities";
 import {
   historyTurns,
@@ -22,14 +28,19 @@ import { detectStyle, explicitStyle } from "./language";
 import { runInvestigation } from "./orchestrator";
 import { deterministicBrief } from "./planning";
 import type { AnalystConsent, ProviderRoute } from "./policy";
-import { planAnalysis, type AnalysisPlan } from "./planner";
+import {
+  planAnalysis,
+  plannerCatalog,
+  requestedRequirements,
+  type AnalysisPlan,
+} from "./planner";
 import { presentAnswer, type Presentation } from "./presentation";
 import { safeProgress, type V2ProgressEvent } from "./progress";
 import { capabilityProposer } from "./proposer";
 import type { StageCaller } from "./stages";
 import { REVIEW_LIMITS } from "./review";
-import { synthesizeAnswer } from "./synthesis";
-import { writerTimeoutMs } from "./writer";
+import { synthesizeAnswer, type FollowUpResult } from "./synthesis";
+import { WRITER_LIMITS, writerTimeoutMs } from "./writer";
 import { LEGACY_TOOL_DOMAINS } from "./legacy-evidence";
 import {
   BRIDGED_TOOLS,
@@ -286,16 +297,16 @@ export async function runAnalystV2(
   const history = historyTurns(plan.context);
   let analysisPlan: AnalysisPlan | null = null;
   let plannerLedger: RunLedger | null = null;
+  const allowed = new Set(
+    capabilities
+      .filter(
+        (item) => item.status === "available" || item.status === "partial",
+      )
+      .map((item) => item.id),
+  );
   if (deps.planModel && brief.intent !== "scenario") {
     plannerLedger = new RunLedger(PLANNER_BUDGET, deps.clock, deps.signal);
     deps.onLedger?.(plannerLedger);
-    const allowed = new Set(
-      capabilities
-        .filter(
-          (item) => item.status === "available" || item.status === "partial",
-        )
-        .map((item) => item.id),
-    );
     try {
       // What the owner records, so the plan reads areas that have records.
       const inventory = await deps
@@ -434,6 +445,72 @@ export async function runAnalystV2(
   }
 
   const derived = autoDerive(investigation.selection.selected);
+  let evidence = investigation.selection.selected;
+  let ownerLabels = investigation.labels;
+  // With a plan, the first draft may ask for records it lacked. ATLAS reads
+  // them once, through the same checked brief and owner-scoped tools, only
+  // while the run still has time for the read and a repair.
+  const followUp = async (
+    requests: unknown[],
+  ): Promise<FollowUpResult | null> => {
+    if (ledger.remainingForAnswer().timeMs < FOLLOW_UP_MIN_REMAINING_MS)
+      return null;
+    const added = requestedRequirements(brief, requests, {
+      now,
+      allowed,
+      limit: WRITER_LIMITS.evidenceRequests,
+    });
+    if (added.length === 0) return null;
+    // The read investigates only what was asked for.
+    const subCheck = checkBrief(
+      {
+        ...brief,
+        requirements: added.map((item) => ({ ...item, essential: true })),
+      },
+      checkOptions,
+    );
+    if (!subCheck.ok) return null;
+    const readLedger = new RunLedger(FOLLOW_UP_BUDGET, deps.clock, deps.signal);
+    const more = await runInvestigation({
+      check: subCheck,
+      proposer: capabilityProposer(now),
+      invoke: deps.invoke,
+      clock: deps.clock,
+      signal: deps.signal,
+      budget: FOLLOW_UP_BUDGET,
+      ledger: readLedger,
+      onRound: (round, tools) =>
+        emit({
+          type: "stage",
+          stage: "reading",
+          round: investigation.usage.rounds + round,
+          domains: [...new Set(tools.flatMap((tool) => toolDomains[tool]))],
+        }),
+    });
+    ledger.absorb(readLedger.usage);
+    if (more.status === "cancelled" || more.status === "clarification_required")
+      return null;
+    const known = new Set(evidence.map((item) => item.id));
+    const fresh = more.selection.selected.filter((item) => !known.has(item.id));
+    if (fresh.length === 0) return null;
+    evidence = [...evidence, ...fresh];
+    const byHandle = new Map(ownerLabels.map((item) => [item.handle, item]));
+    for (const item of more.labels) byHandle.set(item.handle, item);
+    ownerLabels = [...byHandle.values()];
+    brief = { ...brief, requirements: [...brief.requirements, ...added] };
+    return {
+      brief,
+      evidence,
+      derived: autoDerive(evidence),
+      labels: ownerLabels.map(({ handle, domain, text }) => ({
+        handle,
+        domain,
+        text,
+      })),
+      byRequirement: more.selection.byRequirement,
+      added: added.map((item) => item.id),
+    };
+  };
   const caller = deps.stageCaller(ledger);
   const call: StageCaller = (request) => {
     emit({
@@ -462,6 +539,10 @@ export async function runAnalystV2(
     })),
     history,
     plan: analysisPlan,
+    ...(analysisPlan && {
+      catalog: plannerCatalog(allowed),
+      followUp,
+    }),
     writerTimeoutMs: writerTimeoutMs(
       ledger.remainingForAnswer().timeMs,
       REVIEW_LIMITS.timeoutMs,
@@ -494,14 +575,12 @@ export async function runAnalystV2(
         : detectStyle(plan.question, brief.intent)),
     requirementText,
     asOf,
-    labels: new Map(
-      investigation.labels.map((label) => [label.handle, label.text]),
-    ),
+    labels: new Map(ownerLabels.map((label) => [label.handle, label.text])),
   });
   const next = recordAnswer(plan.context, {
     brief,
     answer,
-    evidence: investigation.selection.selected,
+    evidence,
   });
   const entityDomains = next.entities.flatMap((item) => {
     const parsed = parseHandle(item.handle);

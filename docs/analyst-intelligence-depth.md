@@ -123,6 +123,21 @@ needs the run with that sign. The derived change between two periods now
 uses the latest like-for-like pair (`comparablePeriods`), so the month in
 progress is never set against a whole month.
 
+## 4c. Reading more after the first draft
+
+With a plan, the first draft may list up to two records it lacked in
+`needsEvidence`, using the planner's catalog (`moreEvidence` in its input).
+If the run still has 20 s for a read and a repair
+(`FOLLOW_UP_MIN_REMAINING_MS`), ATLAS turns the requests into requirements
+with the planner's rules (`requestedRequirements`: catalog capabilities
+only, consent-filtered, nothing the brief already reads, IDs `r_moreN`),
+checks them with `checkBrief`, and investigates only those on its own small
+allowance (`FOLLOW_UP_BUDGET`), whose usage joins the run ledger. The new
+evidence is appended, derived facts are recomputed, and the one repair
+revises with it; every claim is checked again from the start. The repair
+is never offered the catalog and its own requests are ignored, so reading
+cannot loop. Without time, or with nothing valid asked, the answer stands.
+
 ## 5. How much is shown
 
 A lookup used to hide every finding behind its one-line direct answer. When
@@ -142,6 +157,4 @@ record names, which caps how specific an answer can be.
 
 - A general owner-scoped aggregate tool (measure × group × filter × period),
   category-level trends and run-rate projections.
-- Re-investigation after the draft: the planner front-loads the checks, and
-  the reviewer's repair deepens the writing, but no new reads follow a draft.
 - Persistent memory of priorities and preferences across sessions.

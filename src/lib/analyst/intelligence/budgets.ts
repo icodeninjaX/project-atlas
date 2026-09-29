@@ -89,6 +89,26 @@ export const PLANNER_BUDGET: RunBudget = {
   roundTimeMs: 0,
 };
 
+/**
+ * One read after the first draft, for records the draft asked for. It runs
+ * on its own small allowance, only when the run still has this much time
+ * for the read and the repair that uses it; its usage joins the run ledger.
+ */
+export const FOLLOW_UP_BUDGET: RunBudget = {
+  path: "deep",
+  deadlineMs: 8_000,
+  rounds: 2,
+  toolCalls: 4,
+  queries: 60,
+  evidenceBytes: 80_000,
+  providerCalls: 0,
+  tokens: 0,
+  costUsdMicros: 0,
+  reserve: { timeMs: 0, providerCalls: 0, tokens: 0, costUsdMicros: 0 },
+  roundTimeMs: 6_000,
+};
+export const FOLLOW_UP_MIN_REMAINING_MS = 20_000;
+
 export type Usage = {
   inputTokens: number;
   outputTokens: number;

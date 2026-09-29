@@ -9,6 +9,7 @@ import {
   V2_NOW,
   categoryBreakdown,
   legacySpendingV2,
+  metricEvidence,
   wholeExpenseTotal,
 } from "./evaluation/v2-fixtures";
 import { SHARED_ROUTE, legacyEquivalentConsent } from "./policy";
@@ -738,5 +739,116 @@ describe("reviewer evaluation", () => {
     expect(writerTimeoutMs(44_000, 12_000)).toBe(WRITER_LIMITS.maxTimeoutMs);
     expect(writerTimeoutMs(38_000, 12_000)).toBe(24_000);
     expect(writerTimeoutMs(20_000, 12_000)).toBe(WRITER_LIMITS.timeoutMs);
+  });
+
+  it("reads what the first draft asked for once, and revises with it", async () => {
+    const income = metricEvidence({
+      id: "income.total",
+      metricKey: "income_centavos",
+      value: 5_050_000,
+      period: PERIODS.currentMonthToDate,
+      scope: {
+        id: "whole_domain:income",
+        type: "whole_domain",
+        description: "All of the owner's recorded income",
+      },
+    });
+    const request = {
+      question: "How much income came in this month?",
+      capabilities: ["money.totals"],
+      moneyKind: "income",
+      trendMetric: "none",
+      trendMonths: 6,
+    };
+    const asked: unknown[][] = [];
+    const incomeClaim = claim(
+      "c2",
+      "Recorded income was ₱50,500.00 this month.",
+      {
+        evidenceIds: [income.id],
+        scopeId: "whole_domain:income",
+        answersRequirementIds: ["r_more1_income"],
+      },
+    );
+    const widened = brief([
+      ["total", true],
+      ["r_more1_income", false],
+    ]);
+    const { result, bodies } = run(
+      {
+        atlas_answer_v2: [
+          { ...draft([total]), needsEvidence: [request] },
+          // A repair's own requests are ignored: reading never loops.
+          { ...draft([total, incomeClaim]), needsEvidence: [request] },
+        ],
+        atlas_answer_review: [],
+      },
+      {
+        catalog: [
+          {
+            id: "money.totals",
+            area: "money",
+            description: "Totals",
+            history: "Any period",
+            cannotSay: [],
+          },
+        ],
+        followUp: async (requests) => {
+          asked.push(requests);
+          return {
+            brief: widened,
+            evidence: [...evidence, income],
+            derived,
+            labels: [],
+            byRequirement: { r_more1_income: [income.id] },
+            added: ["r_more1_income"],
+          };
+        },
+      },
+    );
+    const answer = await result;
+    expect(asked).toEqual([[request]]);
+    expect(stages(answer)).toEqual(["writer:ok", "repair:ok"]);
+    expect(shipped(answer)).toEqual(["c1", "c2"]);
+    expect(answer.answer.coverage.map((item) => item.requirementId)).toEqual([
+      "total",
+      "r_more1_income",
+    ]);
+    const [first, repair] = bodies.map((item) => JSON.parse(item.body));
+    expect(JSON.parse(first.messages[1].content).moreEvidence).toHaveLength(1);
+    const repairInput = JSON.parse(repair.messages[1].content);
+    expect(repairInput.moreEvidence).toBeNull();
+    expect(
+      repairInput.evidence.map((item: { id: string }) => item.id),
+    ).toContain(income.id);
+    expect(repair.messages.at(-1).content).toContain(
+      "ATLAS read the records you asked for",
+    );
+  });
+
+  it("does not revise only because a read was asked for and not made", async () => {
+    const { result } = run(
+      {
+        atlas_answer_v2: [
+          {
+            ...draft([total]),
+            needsEvidence: [
+              {
+                question: "Debts?",
+                capabilities: ["debt.payments"],
+                moneyKind: "none",
+                trendMetric: "none",
+                trendMonths: 6,
+              },
+            ],
+          },
+        ],
+        atlas_answer_review: [],
+      },
+      { followUp: async () => null },
+    );
+    const answer = await result;
+    expect(stages(answer)).toEqual(["writer:ok"]);
+    expect(answer.answer.status).toBe("answered");
   });
 });

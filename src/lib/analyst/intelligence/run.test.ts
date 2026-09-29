@@ -775,4 +775,59 @@ describe("Analyst V2 with the analysis planner (mocked provider)", () => {
       ]);
     }
   });
+
+  it("reads what the first draft asks for, then revises with it", async () => {
+    planner = () =>
+      plan({
+        subQuestions: [
+          {
+            question: "How much was spent this month?",
+            capabilities: ["money.totals"],
+            moneyKind: "expense",
+          },
+        ],
+      });
+    const base = totalWriter();
+    let drafts = 0;
+    writer = (input) => {
+      drafts += 1;
+      return {
+        ...(base(input) as object),
+        needsEvidence:
+          drafts === 1
+            ? [
+                {
+                  question: "Where do debts stand?",
+                  capabilities: ["debt.payments"],
+                  moneyKind: "none",
+                  trendMetric: "none",
+                  trendMonths: 6,
+                },
+              ]
+            : [],
+      };
+    };
+    const response = await ask("How am I doing overall?", { planModel }).result;
+    const drafted = providerRequests.filter(
+      (item) => item.schema === "atlas_answer_v2",
+    );
+    expect(drafted).toHaveLength(2);
+    const [first, repair] = drafted.map(
+      (item) =>
+        item.input as {
+          moreEvidence: unknown[] | null;
+          requirements: Array<{ id: string }>;
+          evidence: Array<{ id: string; definition: string }>;
+        },
+    );
+    expect(first!.moreEvidence?.length).toBeGreaterThan(0);
+    expect(repair!.moreEvidence).toBeNull();
+    expect(repair!.requirements.map((item) => item.id)).toContain("r_more1");
+    // The debt records were read through the owner-scoped tools.
+    expect(repair!.evidence.length).toBeGreaterThan(first!.evidence.length);
+    expect(
+      repair!.evidence.some((item) => item.id.startsWith("getDebtProgress.")),
+    ).toBe(true);
+    expect(["answered", "partial_answer"]).toContain(response.status);
+  });
 });

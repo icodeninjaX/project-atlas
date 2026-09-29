@@ -1,5 +1,9 @@
 import type { AnalysisBrief, DerivedFact, EvidenceV2 } from "./contracts";
-import type { AnalysisPlan } from "./planner";
+import {
+  EVIDENCE_REQUEST_SCHEMA,
+  type AnalysisPlan,
+  type plannerCatalog,
+} from "./planner";
 import type { ProviderPayload } from "./policy";
 
 /**
@@ -21,6 +25,8 @@ export const WRITER_LIMITS = Object.freeze({
   timeoutMs: 16_000,
   /** The most a draft is given, so a slow model still leaves time to check. */
   maxTimeoutMs: 30_000,
+  /** Reads a first draft may ask for. */
+  evidenceRequests: 2,
 });
 
 /**
@@ -51,6 +57,7 @@ export const WRITER_SYSTEM = [
   "A recommendation needs a recommendation object: objectiveRequirementId (the requirement it serves), constraints, a trade-off, and one next action (a label, and optionally an ATLAS page path). If it depends on an assumption, set conditional true and cite the assumption ID. Never give generic advice.",
   "Never claim causes, certainty or forecasts. Associations are not causes; accounting contributions are not reasons. ATLAS rejects any claim containing because, due to, driven by, caused, explains, leads to, as a result, will, always, never, must, definitely, significant, strongly, double, twice, half, thousand or million: write the figure itself, and say what the records show rather than why.",
   "Trends: derived facts over a monthly series read whole months only. rank orders the months (a superlative such as highest month needs it; say tied months are tied), mean is their monthly average, difference latest_vs_mean is the latest whole month less the average of the months before it, and streak counts consecutive rises (positive) or falls (negative) ending with the latest month. Name months in words (August), never as handles. The month in progress is partial: never set it against a whole month.",
+  "needsEvidence: when moreEvidence lists capabilities and answering the question well needs records the evidence lacks, name at most two, each with the catalog capability that reads them (moneyKind, trendMetric and trendMonths as a plan would). ATLAS may read them and ask you to revise with them. Still answer fully from what you have now; leave it empty when the evidence is enough or moreEvidence is null.",
   "evidenceIds lists only IDs from evidence and derivedFactIds only IDs from derivedFacts, each once. Never cite an ID from an earlier turn.",
   "Income against spending: when a derived fact with scopeId whole_domain:money_flow exists, it is recorded income less recorded expenses for its period. A claim comparing the two sets scopeId whole_domain:money_flow, cites that fact and both totals, may state all three amounts, and states the direction with a comparison object (subjectId the expense total, referenceId the income total). A negative net means expenses exceeded income.",
   "Owner names may be withheld. To name a category or record, write its handle in double braces exactly as the evidence or ranking gives it, such as {{category:<id>}}; ATLAS shows the owner its name. Cite the evidence or derived fact that contains that handle. Never write a raw ID or guess a name.",
@@ -64,6 +71,7 @@ export const WRITER_SCHEMA = {
   additionalProperties: false,
   required: [
     "analysis",
+    "needsEvidence",
     "version",
     "directAnswerClaimIds",
     "claims",
@@ -89,6 +97,7 @@ export const WRITER_SCHEMA = {
         confidence: { type: "string", enum: ["high", "medium", "low"] },
       },
     },
+    needsEvidence: { type: "array", items: EVIDENCE_REQUEST_SCHEMA },
     version: { type: "string", enum: ["2"] },
     directAnswerClaimIds: { type: "array", items: { type: "string" } },
     claims: {
@@ -236,7 +245,18 @@ export function draftOf(content: unknown) {
     return content;
   const draft = { ...(content as Record<string, unknown>) };
   delete draft.analysis;
+  delete draft.needsEvidence;
   return draft;
+}
+
+/** The evidence a draft asked ATLAS to read; unchecked until ATLAS reads it. */
+export function evidenceRequestsOf(content: unknown): unknown[] {
+  if (!content || typeof content !== "object" || Array.isArray(content))
+    return [];
+  const requests = (content as Record<string, unknown>).needsEvidence;
+  return Array.isArray(requests)
+    ? requests.slice(0, WRITER_LIMITS.evidenceRequests)
+    : [];
 }
 
 /** The writer's user message, built only from the filtered payload. */
@@ -244,9 +264,12 @@ export function renderWriterInput(
   brief: AnalysisBrief,
   derived: DerivedFact[],
   plan: AnalysisPlan | null = null,
+  /** What the writer may ask ATLAS to read next; null when it may not. */
+  catalog: ReturnType<typeof plannerCatalog> | null = null,
 ) {
   return (payload: ProviderPayload) => ({
     question: payload.question,
+    moreEvidence: catalog,
     analysisPlan: plan
       ? { understanding: plan.understanding, hypotheses: plan.hypotheses }
       : null,
