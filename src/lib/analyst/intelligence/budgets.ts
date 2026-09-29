@@ -136,8 +136,10 @@ export class RunLedger {
     this.startedAt = startedAt ?? clock();
   }
 
-  /** Carries another ledger's provider usage into this one (the planner's). */
+  /** Carries another ledger's usage into this one (the planner's). */
   absorb(usage: Usage) {
+    this.usage.queries += usage.queries;
+    this.usage.evidenceBytes += usage.evidenceBytes;
     this.usage.providerCalls += usage.providerCalls;
     this.usage.inputTokens += usage.inputTokens;
     this.usage.outputTokens += usage.outputTokens;

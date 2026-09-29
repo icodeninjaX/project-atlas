@@ -3,7 +3,7 @@ import { manilaToday, spendingPeriods } from "@/lib/analyst/evidence";
 import { validTimelineDate } from "@/lib/timeline/timeline";
 import { metricDefinitions, type MetricKey } from "@/lib/history/metrics";
 import { CAPABILITY_MANIFEST } from "./capabilities";
-import type { AnalysisBrief } from "./contracts";
+import type { AnalysisBrief, EvidenceV2 } from "./contracts";
 import { explicitStyle } from "./language";
 import type { HistoryTurn, ProviderPayload } from "./policy";
 import type { StageCaller } from "./stages";
@@ -87,6 +87,7 @@ export const PLANNER_SYSTEM = [
   "period: only when the question names a time window in words the current reading missed, such as 'since June', 'the last three months' or 'this year'. Use ISO dates in Asia/Manila, never after today, at most 366 days. Otherwise null.",
   "intent and responseStyle: your reading of the question. Use detailed for broad or why questions and concise for one figure.",
   "clarification: only when no area of the records could meaningfully answer the question, one short question back to the person in their language. Otherwise null. Prefer answering to asking.",
+  "inventory: how many records the person keeps in each area and the dates they span (areas they did not share are absent). Plan around areas that have records; skip areas with none unless the question is about them. Never ask for more months of history than the records span.",
 ].join(" ");
 
 const nullable = (schema: object) => ({ anyOf: [{ type: "null" }, schema] });
@@ -214,6 +215,15 @@ export function renderPlannerInput(
       question,
       answer,
     })),
+    inventory: payload.evidence
+      .filter((item) => item.sourceType === "getDataInventory")
+      .map((item) => ({
+        area: item.domain,
+        records: item.semantics.definition.split(":")[0],
+        count: "value" in item ? item.value : null,
+        from: item.time.period.from,
+        through: item.time.period.through,
+      })),
     currentReading: {
       intent: brief.intent,
       requirements: brief.requirements.map((item) => ({
@@ -468,6 +478,8 @@ export function refineBrief(
 export async function planAnalysis(input: {
   brief: AnalysisBrief;
   history: HistoryTurn[];
+  /** Aggregate counts of what the owner records; sent through the policy filter. */
+  inventory?: EvidenceV2[];
   model: string;
   now: Date;
   allowed: ReadonlySet<string>;
@@ -484,7 +496,7 @@ export async function planAnalysis(input: {
       stage: "planner",
       question: input.brief.question,
       history: input.history.slice(-PLANNER_LIMITS.historyTurns),
-      evidence: [],
+      evidence: input.inventory ?? [],
       labels: [],
     },
     render: renderPlannerInput(input.brief, input.allowed, input.now),

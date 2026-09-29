@@ -43,6 +43,17 @@ starts at the planner's start time and absorbs its usage, so the whole
 request stays inside one deadline (54 s, inside the route's 60 s limit).
 Run budgets gained one provider call and room for the larger writer.
 
+### 1a. Data inventory (`getDataInventory`)
+
+Before planning, a V2 read counts what the owner keeps in each area
+(transactions, active debts, debt payments, open and completed tasks, active
+goals, job applications, weekly reviews, knowledge concepts) and the first
+and latest dates those records span. Each area is two owner-scoped reads of
+one date column with an exact count; no name, note or amount is read. The
+items are aggregate evidence, so the policy filter drops any area the person
+did not share. The planner plans around areas with records and never asks
+for more months than the records span. Its queries count against the run.
+
 ## 2. Conversation memory
 
 The sealed context now keeps the last four questions with the data areas
@@ -131,7 +142,6 @@ record names, which caps how specific an answer can be.
 
 - A general owner-scoped aggregate tool (measure × group × filter × period),
   category-level trends and run-rate projections.
-- A per-user data inventory for the planner.
 - Re-investigation after the draft: the planner front-loads the checks, and
   the reviewer's repair deepens the writing, but no new reads follow a draft.
 - Persistent memory of priorities and preferences across sessions.

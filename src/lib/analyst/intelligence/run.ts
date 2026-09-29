@@ -118,6 +118,8 @@ export type V2Response = {
 const toolDomains: Record<V2ToolName, ConsentDomain[]> = {
   resolveAnalystEntities: [],
   searchAnalystRecords: [],
+  // Each inventory item carries its own area, filtered by consent.
+  getDataInventory: [],
   getAnalystRecordDetails: [],
   getMoneyBreakdown: ["money"],
   getGoalAnalysisContext: ["goals"],
@@ -295,9 +297,20 @@ export async function runAnalystV2(
         .map((item) => item.id),
     );
     try {
+      // What the owner records, so the plan reads areas that have records.
+      const inventory = await deps
+        .invoke("getDataInventory", {})
+        .catch(() => null);
+      if (inventory && inventory.status !== "error")
+        plannerLedger.recordTool(
+          inventory.metadata.queries,
+          Buffer.byteLength(JSON.stringify(inventory.evidence)),
+        );
       const refined = await planAnalysis({
         brief,
         history,
+        inventory:
+          inventory && inventory.status !== "error" ? inventory.evidence : [],
         model: deps.planModel,
         now,
         allowed,

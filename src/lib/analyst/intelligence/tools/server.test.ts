@@ -92,6 +92,7 @@ describe("Analyst V2 tool registry", () => {
       "getGoalAnalysisContext",
       "getDecisionAnalysisContext",
       "getRelationshipPaths",
+      "getDataInventory",
       // Existing aggregate tools, called unchanged and adapted.
       ...BRIDGED_TOOLS,
     ]);
@@ -355,7 +356,7 @@ describe("record details (AI-02B)", () => {
       attributedTo: "user",
       text: INJECTION_REFLECTION,
     });
-    expect(listAnalystToolsV2()).toHaveLength(7 + BRIDGED_TOOLS.length);
+    expect(listAnalystToolsV2()).toHaveLength(8 + BRIDGED_TOOLS.length);
     // Even retrieved text never reaches the shared route.
     const filtered = filterProviderPayload(
       {
@@ -536,5 +537,50 @@ describe("goal, decision and Graph context (AI-02B, AI-02C)", () => {
     const foreign = await invoke("getRelationshipPaths", { start, depth: 2 });
     expect(foreign.error?.code).toBe("unavailable_source");
     expect(foreign.labels).toEqual([]);
+  });
+});
+
+describe("data inventory", () => {
+  const count = (table: string, owner: string) =>
+    (emulator.tables[table] ?? []).filter((row) => row.user_id === owner)
+      .length;
+
+  it("counts each area's records and their dates, owner by owner, as aggregates", async () => {
+    const result = await invoke("getDataInventory", {});
+    expect(result.status).toBe("ready");
+    const money = result.evidence.find(
+      (item) => item.scope.id === "inventory:transactions",
+    )!;
+    expect(money).toMatchObject({
+      kind: "metric",
+      domain: "money",
+      value: count("transactions", OWNER_A),
+      sharing: { route: "aggregate" },
+    });
+    const dates = (emulator.tables.transactions ?? [])
+      .filter((row) => row.user_id === OWNER_A)
+      .map((row) => String(row.transaction_date))
+      .sort();
+    expect(money.time.period).toEqual({
+      from: dates[0],
+      through: dates.at(-1),
+    });
+    expect(result.evidence.map((item) => item.domain)).toEqual(
+      expect.arrayContaining(["money", "debts", "tasks", "goals", "career"]),
+    );
+    // Counts and dates only: no record names, notes or amounts are read.
+    const selects = emulator.requests
+      .filter((url) => url.pathname.startsWith("/rest/v1/"))
+      .map((url) => url.searchParams.get("select"));
+    expect(
+      selects.every((value) => value !== null && !value.includes(",")),
+    ).toBe(true);
+
+    signIn(OWNER_B);
+    const other = await invoke("getDataInventory", {});
+    expect(
+      other.evidence.find((item) => item.scope.id === "inventory:transactions")
+        ?.value,
+    ).toBe(count("transactions", OWNER_B));
   });
 });

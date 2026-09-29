@@ -29,6 +29,7 @@ import {
   type V2ToolResult,
 } from "./contracts";
 import {
+  dataInventory,
   decisionContext,
   goalContext,
   moneyBreakdown,
@@ -278,6 +279,11 @@ export async function invokeAnalystToolV2(
         case "getRelationshipPaths":
           return relationshipPaths(
             v2ToolInputs.getRelationshipPaths.parse(rawInput),
+            context,
+          );
+        case "getDataInventory":
+          return dataInventory(
+            v2ToolInputs.getDataInventory.parse(rawInput),
             context,
           );
       }

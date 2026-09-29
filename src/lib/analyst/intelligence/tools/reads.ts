@@ -1249,3 +1249,167 @@ export async function relationshipPaths(
   }
   return payload;
 }
+
+type InventoryArea = {
+  local: string;
+  table: string;
+  domain:
+    "money" | "debts" | "tasks" | "goals" | "career" | "reviews" | "knowledge";
+  /** What the count is, in words a planner reads. */
+  definition: string;
+  /** The date column that spans the counted records. */
+  dateColumn: string;
+  /** Extra owner-scoped filters: column → PostgREST expression. */
+  filters?: Record<string, string>;
+};
+
+const INVENTORY: readonly InventoryArea[] = [
+  {
+    local: "transactions",
+    table: "transactions",
+    domain: "money",
+    definition: "Recorded income and expense transactions",
+    dateColumn: "transaction_date",
+  },
+  {
+    local: "active_debts",
+    table: "debts",
+    domain: "debts",
+    definition: "Active debts",
+    dateColumn: "created_at",
+    filters: { status: "eq.active" },
+  },
+  {
+    local: "debt_payments",
+    table: "debt_payments",
+    domain: "debts",
+    definition: "Recorded debt payments",
+    dateColumn: "payment_date",
+  },
+  {
+    local: "open_tasks",
+    table: "tasks",
+    domain: "tasks",
+    definition: "Open tasks",
+    dateColumn: "created_at",
+    filters: { completed_at: "is.null" },
+  },
+  {
+    local: "completed_tasks",
+    table: "tasks",
+    domain: "tasks",
+    definition: "Completed tasks",
+    dateColumn: "completed_at",
+    filters: { completed_at: "not.is.null" },
+  },
+  {
+    local: "active_goals",
+    table: "goals",
+    domain: "goals",
+    definition: "Active goals",
+    dateColumn: "created_at",
+    filters: { status: "eq.active" },
+  },
+  {
+    local: "job_applications",
+    table: "job_applications",
+    domain: "career",
+    definition: "Job applications",
+    dateColumn: "created_at",
+  },
+  {
+    local: "weekly_reviews",
+    table: "weekly_reviews",
+    domain: "reviews",
+    definition: "Weekly reviews",
+    dateColumn: "week_start",
+  },
+  {
+    local: "knowledge_concepts",
+    table: "knowledge_concepts",
+    domain: "knowledge",
+    definition: "Knowledge concepts being studied",
+    dateColumn: "created_at",
+    filters: { archived_at: "is.null" },
+  },
+];
+
+const inventoryRow = z.record(z.string(), z.unknown());
+
+/**
+ * What the owner records, area by area: how many records and the dates they
+ * span. Each area is two bounded, owner-scoped reads of one date column
+ * (earliest and latest), and the exact count comes from the same response.
+ * No name, note or amount is read, so every item is an aggregate.
+ */
+export async function dataInventory(
+  _input: V2ToolInput<"getDataInventory">,
+  { client, owner, now }: ReadContext,
+): Promise<V2ToolPayload> {
+  const ctx: BuildContext = {
+    tool: "getDataInventory",
+    retrievedAt: now.toISOString(),
+  };
+  const today = manilaToday(now);
+  const read = async (area: InventoryArea, ascending: boolean) => {
+    let query = client
+      .from(area.table)
+      .select(area.dateColumn, { count: "exact" })
+      .eq("user_id", owner);
+    for (const [column, expression] of Object.entries(area.filters ?? {})) {
+      const [operator, ...rest] = expression.split(".");
+      query = query.filter(column, operator!, rest.join("."));
+    }
+    const result = await query.order(area.dateColumn, { ascending }).limit(1);
+    if (result.error) throw new ToolFailure("unavailable_source");
+    const parsed = z
+      .array(inventoryRow)
+      .max(1)
+      .safeParse(result.data ?? []);
+    if (!parsed.success || typeof result.count !== "number")
+      throw new ToolFailure("invalid_output");
+    const value = parsed.data[0]?.[area.dateColumn];
+    const day =
+      typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)
+        ? value.slice(0, 10)
+        : null;
+    return { count: result.count, day };
+  };
+  const payload = emptyPayload();
+  const results = await Promise.all(
+    INVENTORY.map(async (area) => {
+      const [latest, earliest] = await Promise.all([
+        read(area, false),
+        read(area, true),
+      ]);
+      return { area, latest, earliest };
+    }),
+  );
+  for (const { area, latest, earliest } of results) {
+    const from = earliest.day && earliest.day <= today ? earliest.day : today;
+    const through =
+      latest.day && latest.day <= today && latest.day >= from
+        ? latest.day
+        : from;
+    payload.evidence.push(
+      metric(ctx, {
+        local: `inventory.${area.local}`,
+        domain: area.domain,
+        metricKey: `inventory_${area.local}`,
+        definition: `${area.definition}: how many are stored, and the first and latest dates they span`,
+        period: { from, through },
+        scope: {
+          id: `inventory:${area.local}`,
+          type: "whole_domain",
+          description: area.definition,
+        },
+        value: latest.count,
+        unit: "count",
+      }),
+    );
+  }
+  payload.limitations.push(
+    "The inventory counts stored records; it does not show whether everything was recorded.",
+  );
+  return payload;
+}

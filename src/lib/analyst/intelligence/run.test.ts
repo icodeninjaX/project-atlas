@@ -629,10 +629,24 @@ describe("Analyst V2 with the analysis planner (mocked provider)", () => {
     expect(Object.keys(providerRequests[0]!.input).sort()).toEqual([
       "catalog",
       "currentReading",
+      "inventory",
       "previousTurns",
       "question",
       "today",
     ]);
+    // It sees how much each area holds, as counts and dates only.
+    const inventory = providerRequests[0]!.input.inventory as Array<{
+      area: string;
+      records: string;
+      count: number;
+    }>;
+    expect(inventory.find((item) => item.area === "money")).toMatchObject({
+      records: "Recorded income and expense transactions",
+    });
+    expect(
+      inventory.find((item) => item.area === "money")!.count,
+    ).toBeGreaterThan(0);
+    expect(JSON.stringify(inventory)).not.toMatch(/creditor|title|name"/);
     const writerInput = providerRequests.find(
       (item) => item.schema === "atlas_answer_v2",
     )!.input as {
