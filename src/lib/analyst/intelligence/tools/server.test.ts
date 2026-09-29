@@ -579,8 +579,7 @@ describe("data inventory", () => {
     signIn(OWNER_B);
     const other = await invoke("getDataInventory", {});
     expect(
-      other.evidence.find((item) => item.scope.id === "inventory:transactions")
-        ?.value,
-    ).toBe(count("transactions", OWNER_B));
+      other.evidence.find((item) => item.scope.id === "inventory:transactions"),
+    ).toMatchObject({ value: count("transactions", OWNER_B) });
   });
 });
