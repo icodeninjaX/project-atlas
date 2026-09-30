@@ -63,6 +63,8 @@ export type SynthesisInput = {
   derived: DerivedFact[];
   labels: ProviderLabel[];
   history: HistoryTurn[];
+  /** Priorities the person saved; they frame the answer, never evidence. */
+  priorities?: string[];
   /** The planner's reading of the question; null when it did not run. */
   plan?: AnalysisPlan | null;
   /** The first draft's timeout; the writer's minimum when omitted. */
@@ -131,6 +133,7 @@ function payloadFor(
     history: input.history,
     evidence: input.evidence,
     labels: input.labels,
+    priorities: input.priorities ?? [],
   };
 }
 

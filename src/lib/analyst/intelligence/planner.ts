@@ -5,6 +5,7 @@ import { metricDefinitions, type MetricKey } from "@/lib/history/metrics";
 import { CAPABILITY_MANIFEST } from "./capabilities";
 import type { AnalysisBrief, EvidenceV2 } from "./contracts";
 import { explicitStyle } from "./language";
+import type { PromptPriority } from "./memory";
 import type { HistoryTurn, ProviderPayload } from "./policy";
 import type { StageCaller } from "./stages";
 
@@ -89,6 +90,8 @@ export const PLANNER_SYSTEM = [
   "period: only when the question names a time window in words the current reading missed, such as 'since June', 'the last three months' or 'this year'. Use ISO dates in Asia/Manila, never after today, at most 366 days. Otherwise null.",
   "intent and responseStyle: your reading of the question. Use detailed for broad or why questions and concise for one figure.",
   "clarification: only when no area of the records could meaningfully answer the question, one short question back to the person in their language. Otherwise null. Prefer answering to asking.",
+  "priorities: what the person asked ATLAS to remember as mattering to them, such as saving for a laptop. Let them shape the plan when the question touches them (for 'Am I doing okay?', check what bears on those priorities). relatedPriorities: the IDs of the priorities this question bears on; otherwise an empty list.",
+  "statedPriority: when the question itself states a lasting goal or priority of the person's ('I'm saving for a laptop', 'I want to spend less on food', 'paying off my loan comes first'), restate it in at most twelve words in their language, with no figures, amounts, dates or names of records; otherwise null. A question alone ('how much did I spend?') states none.",
   "inventory: how many records the person keeps in each area and the dates they span (areas they did not share are absent). Plan around areas that have records; skip areas with none unless the question is about them. Never ask for more months of history than the records span.",
 ].join(" ");
 
@@ -106,9 +109,13 @@ export const PLANNER_SCHEMA = {
     "comparePreviousPeriod",
     "period",
     "clarification",
+    "relatedPriorities",
+    "statedPriority",
   ],
   properties: {
     understanding: { type: "string" },
+    relatedPriorities: { type: "array", items: { type: "string" } },
+    statedPriority: nullable({ type: "string" }),
     intent: { type: "string", enum: [...PLANNER_INTENTS] },
     responseStyle: {
       type: "string",
@@ -234,6 +241,12 @@ const plannerOutputSchema = z.object({
 });
 export type PlannerOutput = z.input<typeof plannerOutputSchema>;
 
+/** What the planner says about saved and newly stated priorities. */
+const priorityOutputSchema = z.object({
+  relatedPriorities: z.array(z.string().max(8)).max(20).catch([]).default([]),
+  statedPriority: z.string().max(300).nullable().catch(null).default(null),
+});
+
 /** What the writer and reviewer learn from the plan; it carries no figures. */
 export type AnalysisPlan = {
   understanding: string;
@@ -260,10 +273,15 @@ export function renderPlannerInput(
   brief: AnalysisBrief,
   allowed: ReadonlySet<string>,
   now: Date,
+  priorities: readonly PromptPriority[] = [],
 ) {
   return (payload: ProviderPayload) => ({
     today: manilaToday(now),
     question: payload.question,
+    // Only priorities the policy filter kept, under their short IDs.
+    priorities: priorities.filter((item) =>
+      (payload.priorities ?? []).includes(item.text),
+    ),
     previousTurns: payload.history.map(({ question, answer }) => ({
       question,
       answer,
@@ -562,7 +580,18 @@ export async function planAnalysis(input: {
   allowed: ReadonlySet<string>;
   defaultedTopic: boolean;
   call: StageCaller;
-}): Promise<RefinedBrief & { resolvedModel: string | null }> {
+  /** Saved priorities, under short prompt IDs. */
+  priorities?: PromptPriority[];
+}): Promise<
+  RefinedBrief & {
+    resolvedModel: string | null;
+    /** Prompt IDs of the saved priorities this question bears on. */
+    relatedPriorities: string[];
+    /** A priority the question states, before any validation. */
+    statedPriority: string | null;
+  }
+> {
+  const priorities = input.priorities ?? [];
   const result = await input.call({
     stage: "planner",
     model: input.model,
@@ -575,8 +604,14 @@ export async function planAnalysis(input: {
       history: input.history.slice(-PLANNER_LIMITS.historyTurns),
       evidence: input.inventory ?? [],
       labels: [],
+      priorities: priorities.map((item) => item.text),
     },
-    render: renderPlannerInput(input.brief, input.allowed, input.now),
+    render: renderPlannerInput(
+      input.brief,
+      input.allowed,
+      input.now,
+      priorities,
+    ),
     maxOutputTokens: PLANNER_LIMITS.outputTokens,
     timeoutMs: PLANNER_LIMITS.timeoutMs,
   });
@@ -591,8 +626,12 @@ export async function planAnalysis(input: {
       plan: null,
       clarification: null,
       resolvedModel: null,
+      relatedPriorities: [],
+      statedPriority: null,
     };
   }
+  const about = priorityOutputSchema.safeParse(result.content);
+  const known = new Set(priorities.map((item) => item.id));
   return {
     ...refineBrief(input.brief, result.content, {
       now: input.now,
@@ -600,6 +639,10 @@ export async function planAnalysis(input: {
       defaultedTopic: input.defaultedTopic,
     }),
     resolvedModel: result.resolvedModel,
+    relatedPriorities: about.success
+      ? about.data.relatedPriorities.filter((id) => known.has(id))
+      : [],
+    statedPriority: about.success ? about.data.statedPriority : null,
   };
 }
 

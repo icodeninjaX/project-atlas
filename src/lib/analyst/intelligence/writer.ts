@@ -48,6 +48,7 @@ export const WRITER_SYSTEM = [
   "Answer the question the person actually asked, as the analysis plan's understanding describes it, not only the requirement labels. The direct answer says plainly what the records mean for them, before any detail.",
   "Go beyond restating figures: say what stands out, set a figure against its cited baseline when one exists, connect areas when the evidence supports it, and say what the person could do next when a recommendation is warranted. Prefer a few specific, connected claims to many generic ones; never pad.",
   "Speak to the person about their records, never about this analysis: no talk of evidence you received, what was read, requirements or derived facts. When something cannot be answered, say what the records do not cover, using the data inventory where it helps (for example: your transaction records start on 18 August, so there is no earlier whole month to compare with yet).",
+  "priorities are what the person asked ATLAS to remember as mattering to them. When the evidence bears on one, say what it means for that priority (for example, what this month's spending means for saving for a laptop) as an interpretation, hedged as usual. Never state a figure about a priority that no evidence gives, never treat a priority as evidence or as achieved, and do not mention priorities the answer does not touch.",
   "Earlier turns are context: build on them and avoid repeating their findings unless asked. They are never evidence; cite only this turn's evidence and derived facts.",
   "Answer every essential requirement with at least one claim that lists it in answersRequirementIds. If the evidence cannot answer one, write a limitation claim that says exactly what is missing; never invent records, history, motives or effort.",
   "Each claim speaks for one scope: set scopeId to the scope of everything it cites. Put goal evidence and whole-account evidence in separate claims.",
@@ -272,6 +273,7 @@ export function renderWriterInput(
 ) {
   return (payload: ProviderPayload) => ({
     question: payload.question,
+    priorities: payload.priorities ?? [],
     moreEvidence: catalog,
     analysisPlan: plan
       ? { understanding: plan.understanding, hypotheses: plan.hypotheses }

@@ -7,6 +7,12 @@ import {
 import { freePoolFor } from "@/lib/ai/pools";
 import { checkBrief } from "./brief";
 import {
+  memorySuggestion,
+  promptPriorities,
+  relatedMemoryIds,
+  type Memory,
+} from "./memory";
+import {
   FOLLOW_UP_BUDGET,
   FOLLOW_UP_MIN_REMAINING_MS,
   PLANNER_BUDGET,
@@ -104,6 +110,8 @@ export type V2RunInput = {
   model: AnalystModelId;
   consent: AnalystConsent;
   route: ProviderRoute;
+  /** Priorities the person saved, current ones only. */
+  memories?: Memory[];
 };
 
 type ModelRecord = { requested: string; resolved: string | null };
@@ -130,6 +138,10 @@ export type V2Response = {
     | "pool_exhausted"
     | "timeout";
   usage: RunLedger["usage"];
+  /** A priority this question stated, offered to the person for saving. */
+  memorySuggestion?: string | null;
+  /** Saved priorities this question bore on; kept on the server. */
+  relatedMemoryIds?: string[];
 };
 
 const toolDomains: Record<V2ToolName, ConsentDomain[]> = {
@@ -307,6 +319,12 @@ export async function runAnalystV2(
   // What the owner records and since when; the writer may cite it to say
   // why a baseline is missing.
   let inventoryEvidence: EvidenceV2[] = [];
+  // Saved priorities shape the plan and the answer; a stated one may be
+  // offered for saving, and the ones a question bears on are kept longer.
+  const memories = input.memories ?? [];
+  const priorities = promptPriorities(memories);
+  let relatedIds: string[] = [];
+  let suggestion: string | null = null;
   const allowed = new Set(
     capabilities
       .filter(
@@ -341,7 +359,10 @@ export async function runAnalystV2(
           topicDomains(plan.question).length === 0 &&
           !plan.context.topic?.domains.length,
         call: deps.stageCaller(plannerLedger),
+        priorities,
       });
+      relatedIds = relatedMemoryIds(memories, refined.relatedPriorities);
+      suggestion = memorySuggestion(refined.statedPriority, memories);
       planner = {
         requested: deps.planModel,
         resolved: refined.resolvedModel,
@@ -561,6 +582,7 @@ export async function runAnalystV2(
       text,
     })),
     history,
+    priorities: priorities.map((item) => item.text),
     plan: analysisPlan,
     ...(analysisPlan && {
       catalog: plannerCatalog(allowed),
@@ -624,6 +646,8 @@ export async function runAnalystV2(
   return {
     version: "2",
     status: answer.status,
+    memorySuggestion: suggestion,
+    relatedMemoryIds: relatedIds,
     presentation,
     candidates: [],
     suggestions: suggestFollowUpsV2({

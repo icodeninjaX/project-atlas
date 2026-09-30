@@ -3,6 +3,11 @@
 import { ArrowUp, RotateCcw, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ClaimText } from "@/components/analyst/evidence-display";
+import {
+  MemoryList,
+  MemoryOffer,
+  useMemories,
+} from "@/components/analyst/memory-panel";
 import { ModelPicker, optionFor } from "@/components/analyst/model-picker";
 import { AI_MODELS, type AnalystModelId } from "@/lib/ai/models";
 import { NDJSON_TYPE } from "@/lib/analyst/freeform/progress";
@@ -280,6 +285,7 @@ export function IntelligenceWorkspace({
   const [turns, setTurns] = useState<Turn[]>([]);
   const [context, setContext] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const memory = useMemories(consent !== null);
   const composer = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -491,6 +497,12 @@ export function IntelligenceWorkspace({
                 disabled={pending}
               />
             )}
+            {turn.answer?.memorySuggestion && (
+              <MemoryOffer
+                text={turn.answer.memorySuggestion}
+                onSave={memory.save}
+              />
+            )}
             {turn.answer?.contextNotice && (
               <p className="text-muted-foreground text-xs">
                 {turn.answer.contextNotice}
@@ -557,6 +569,11 @@ export function IntelligenceWorkspace({
           </button>
         </div>
       </form>
+      <MemoryList
+        memories={memory.memories}
+        error={memory.error}
+        onRemove={(id) => void memory.remove(id)}
+      />
     </div>
   );
 }

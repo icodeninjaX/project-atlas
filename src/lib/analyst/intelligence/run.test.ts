@@ -3,6 +3,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AI_MODELS, type AnalystModelId } from "@/lib/ai/models";
 import { FOLLOW_UP_MIN_REMAINING_MS, RUN_BUDGETS } from "./budgets";
+import type { Memory } from "./memory";
 import { OWNER_A } from "./evaluation/fixtures";
 import {
   createEmulator,
@@ -201,6 +202,7 @@ function ask(
     signal?: AbortSignal;
     planModel?: string;
     clock?: () => number;
+    memories?: Memory[];
   } = {},
 ) {
   const events: V2ProgressEvent[] = [];
@@ -214,6 +216,7 @@ function ask(
       model: options.model ?? AI_MODELS.analyst,
       consent: granted,
       route: SHARED_ROUTE,
+      memories: options.memories,
     },
     {
       invoke: (tool, input) => invokeAnalystToolV2(tool, input, policy),
@@ -624,6 +627,34 @@ describe("Analyst V2 with the analysis planner (mocked provider)", () => {
     ...extra,
   });
 
+  it("frames the answer by saved priorities and offers a newly stated one", async () => {
+    const memories: Memory[] = [
+      {
+        id: "7f1a0e1c-0000-4000-8000-000000000001",
+        text: "Saving for a laptop",
+        lastMentionedAt: "2026-09-20T00:00:00.000Z",
+      },
+    ];
+    planner = () =>
+      plan({
+        relatedPriorities: ["p1"],
+        statedPriority: "Paying off my loan comes first",
+      });
+    const response = await ask(
+      "Paying off my loan comes first. How am I doing overall?",
+      { planModel, memories },
+    ).result;
+    expect(providerRequests[0]!.input.priorities).toEqual([
+      { id: "p1", text: "Saving for a laptop" },
+    ]);
+    const writer = providerRequests.find(
+      (item) => item.schema === "atlas_answer_v2",
+    )!.input as { priorities: string[] };
+    expect(writer.priorities).toEqual(["Saving for a laptop"]);
+    expect(response.memorySuggestion).toBe("Paying off my loan comes first");
+    expect(response.relatedMemoryIds).toEqual([memories[0]!.id]);
+  });
+
   it("plans before reading, reads every planned area and briefs the writer", async () => {
     planner = () => plan();
     const response = await ask("How am I doing overall?", { planModel }).result;
@@ -637,6 +668,7 @@ describe("Analyst V2 with the analysis planner (mocked provider)", () => {
       "currentReading",
       "inventory",
       "previousTurns",
+      "priorities",
       "question",
       "today",
     ]);

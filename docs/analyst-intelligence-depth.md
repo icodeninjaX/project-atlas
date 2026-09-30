@@ -191,6 +191,37 @@ calls and queries join the run's usage. The repair
 is never offered the catalog and its own requests are ignored, so reading
 cannot loop. Without time, or with nothing valid asked, the answer stands.
 
+## 4d. Remembered priorities (`memory.ts`, `analyst_memories`)
+
+Analyst can remember lasting goals and priorities the person states in
+words ("I'm saving for a laptop", "paying off my loan comes first") and
+frame later answers around them.
+
+- **Nothing is saved without the person.** The planner may report a
+  `statedPriority` (at most twelve words, no figures); if it passes
+  `memoryText` (3–160 characters, no digits, currency, amounts, links or
+  record handles) and is not already saved, the answer offers it with a
+  Remember button and a notice that saved priorities are sent to the AI
+  provider with questions. Only the confirmed text is stored.
+- **What is kept:** at most ten priorities per owner, text only
+  (`analyst_memories`, owner-only row-level security; the database also
+  rejects figures and an eleventh row, and the text cannot be edited).
+- **How long:** until deleted, or 90 days after the priority last came up.
+  The planner reports which saved priorities a question bears on
+  (`relatedPriorities`, by short prompt IDs `p1…`; database IDs never reach
+  a provider), and the route refreshes those. Reading skips and deletes
+  older ones.
+- **Control:** "What Analyst remembers" lists each priority with the days
+  left and a delete button (`/api/analyst/memories`).
+- **Use:** the planner and writer receive the texts (`priorities` in the
+  provider payload, kept by the policy filter only with consent and only
+  while they still pass `memoryText`). The writer relates findings to a
+  priority as a hedged interpretation and never treats one as evidence.
+
+The table comes from migration `20260930060000_analyst_memories.sql`, which
+must be applied to production before the feature works there; until then
+the store reads as unavailable and Analyst answers without priorities.
+
 ## 5. How much is shown
 
 A lookup used to hide every finding behind its one-line direct answer. When
