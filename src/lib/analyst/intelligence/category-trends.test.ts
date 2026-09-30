@@ -11,6 +11,10 @@ import { V2_NOW, brief, metricEvidence } from "./evaluation/v2-fixtures";
 import { deterministicBrief, withChangeDrivers } from "./planning";
 import { refineBrief, type PlannerOutput } from "./planner";
 import { capabilityProposer, changeDrivers } from "./proposer";
+import { checkBrief } from "./brief";
+import { selectEvidence } from "./evidence";
+import { runInvestigation, selectionLimits } from "./orchestrator";
+import { SHARED_ROUTE, legacyEquivalentConsent } from "./policy";
 import type { ToolOutcome } from "./orchestrator";
 import type { V2ToolResult } from "./tools/contracts";
 import { compactEvidence } from "./writer";
@@ -518,5 +522,133 @@ describe("month-by-month queries", () => {
     ).toEqual([
       expect.objectContaining({ from: "2026-08-01", through: "2026-09-24" }),
     ]);
+  });
+});
+
+describe("change drivers in a run", () => {
+  const base = () =>
+    deterministicBrief({
+      question: "Why did my spending go up?",
+      plan: null,
+      now,
+    });
+  const result = (
+    evidence: EvidenceV2[],
+    labels: string[] = [],
+  ): V2ToolResult => ({
+    tool: null,
+    status: "ready",
+    evidence,
+    labels: labels.map((handle) => ({
+      handle,
+      domain: "money",
+      text: "Owner category",
+      href: "/money/transactions",
+    })),
+    candidates: [],
+    ambiguous: false,
+    nextCursor: null,
+    limitations: [],
+    metadata: { version: "1", durationMs: 1, queries: 1, rows: 1 },
+  });
+
+  it("is not answered when one leading category's read fails", async () => {
+    const consent = legacyEquivalentConsent("2026-09-24T00:00:00.000Z");
+    const check = checkBrief(base(), {
+      consent,
+      route: SHARED_ROUTE,
+      authorizedHandles: new Set(),
+    });
+    if (!check.ok) throw new Error(check.reason);
+    const run = await runInvestigation({
+      check,
+      proposer: capabilityProposer(now),
+      clock: () => 0,
+      invoke: async (tool, input) => {
+        if (tool === "getMoneyBreakdown") {
+          const period = input as Period;
+          return result(
+            period.from === current.from
+              ? breakdown(current, { [food]: 300_000, [fuel]: 150_000 })
+              : breakdown(previous, { [food]: 100_000, [fuel]: 100_000 }),
+            [food, fuel],
+          );
+        }
+        const categories = (input as { categories: string[] }).categories;
+        if (categories[0] === fuel)
+          return {
+            ...result([]),
+            status: "error",
+            error: { code: "unavailable_source", message: "Unavailable" },
+          };
+        return result(series);
+      },
+    });
+    const drivers = run.progress.find(
+      (item) => item.requirementId === "r_money_drivers_expense",
+    );
+    // Food's months were read, fuel's were not: the drivers are not
+    // answered, and the reason says a read failed.
+    expect(drivers).toMatchObject({
+      state: "partial",
+      reason: "operational_failure",
+    });
+    expect(run.stopReason).toBe("sufficient");
+  });
+
+  it("keeps many-category breakdowns whole beside the driver histories", () => {
+    const brief = base();
+    const categories = Array.from(
+      { length: 15 },
+      (_, index) =>
+        `category:00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
+    );
+    const values = (step: number) =>
+      Object.fromEntries(
+        categories.map((handle, index) => [handle, 100_000 + index * step]),
+      );
+    const both = ["r_money", "r_money_drivers_expense"];
+    const history = (tag: string) =>
+      series.map((item) => ({
+        ...item,
+        id: `${item.id}.${tag}`,
+        scope: {
+          ...item.scope,
+          id: `cohort:expense_q${tag}_by_month`,
+          cohort: { ...item.scope.cohort!, setId: `expense_q${tag}_by_month` },
+        },
+      }));
+    const retrieved = [
+      ...breakdown(current, values(1_000)),
+      ...breakdown(previous, values(0)),
+    ]
+      .map((evidence) => ({ evidence, requirementIds: both }))
+      .concat(
+        [...history("a"), ...history("b")].map((evidence) => ({
+          evidence,
+          requirementIds: ["r_money_drivers_expense"],
+        })),
+      );
+    const contribution = (selected: EvidenceV2[]) =>
+      autoDerive(selected).find((item) =>
+        item.id.startsWith("derived.contribution.whole_domain:expense"),
+      );
+    // Before: the histories took room from the breakdowns, whose sets were
+    // cut, so the contribution disappeared.
+    expect(
+      contribution(
+        selectEvidence(brief, retrieved, { items: 40, bytes: 60_000 }).selected,
+      ),
+    ).toBeUndefined();
+    const selection = selectEvidence(
+      brief,
+      retrieved,
+      selectionLimits(brief, "deep"),
+    );
+    expect(selection.dropped).toBe(0);
+    expect(contribution(selection.selected)?.output).toMatchObject({
+      status: "defined",
+      value: 105_000,
+    });
   });
 });

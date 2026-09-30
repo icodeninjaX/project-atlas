@@ -203,7 +203,11 @@ before; each driver's months get their own trend. Every figure of a
 filtered query carries the categories it read (`sourceRefs`, shown to the
 writer as `categories`), so a claim may name the category of a trend it
 cites, and two categories' trends are never confused. Contribution and trend
-are separate scopes, so they are stated in separate claims.
+are separate scopes, so they are stated in separate claims. The requirement
+is answered only when every driver's read succeeded (one failed read is an
+operational failure, not a quiet answer about the other category), and the
+driver histories get their own evidence room (`DRIVER_ROOM`), so the
+breakdowns keep the room they had and stay complete sets.
 
 The investigation used to stop after one round once the essential
 requirements were answered, which cut such a two-step read short. An
