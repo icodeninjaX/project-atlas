@@ -283,6 +283,8 @@ const FAILED_CHECK: Record<string, string> = {
   "review:misses_question": "it did not answer the question",
   "review:shallow": "it only restated figures",
   "review:generic": "it was too generic",
+  "review:not_connected_to_objective":
+    "a suggestion was not tied to what you asked about",
 };
 
 export function failedChecksNote(reasons: readonly string[]) {

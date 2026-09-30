@@ -419,6 +419,23 @@ describe("answer synthesis", () => {
     );
   });
 
+  it("keeps an explicit rejection that names no issue", async () => {
+    const { result } = run(
+      {
+        atlas_answer_v2: [draft([total]), draft([total])],
+        atlas_answer_review: [
+          reviewOf([verdict("c1", "unsupported")], [["total", false, []]]),
+          reviewOf([verdict("c1", "unsupported")], [["total", false, []]]),
+        ],
+      },
+      { path: "deep" },
+    );
+    expect(shipped(await result)).toEqual([]);
+    expect(failedChecksNote(["review:not_connected_to_objective"])).toContain(
+      "not tied to what you asked about",
+    );
+  });
+
   it("still withholds a fact the reviewer finds wrong on substance", async () => {
     const { result } = run(
       {

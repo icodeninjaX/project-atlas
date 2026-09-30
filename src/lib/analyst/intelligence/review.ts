@@ -308,6 +308,8 @@ export function applyReview(
     const factOnlyFaultedAsAnswer =
       !interpretive(claim) &&
       verdict.verdict !== "supported" &&
+      // A verdict with no issue named is an explicit rejection, kept as is.
+      verdict.issues.length > 0 &&
       verdict.issues.every((issue) => ANSWER_LEVEL_ISSUES.has(issue));
     return {
       ...claim,
