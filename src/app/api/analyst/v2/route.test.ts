@@ -6,6 +6,10 @@ const state = vi.hoisted(() => ({
   reservation: { status: "reserved", request_id: 7 } as Record<string, unknown>,
   rpc: vi.fn(),
   run: vi.fn(),
+  record: vi.fn(),
+}));
+vi.mock("@/lib/analyst/intelligence/diagnostics-store", () => ({
+  recordDiagnostics: state.record,
 }));
 vi.mock("@/lib/analyst/intelligence/run", () => ({
   runAnalystV2: state.run,
@@ -47,6 +51,8 @@ beforeEach(() => {
   state.reservation = { status: "reserved", request_id: 7 };
   state.rpc.mockReset();
   state.run.mockReset();
+  state.record.mockReset();
+  state.record.mockResolvedValue(undefined);
   state.rpc.mockImplementation(async (name: string) =>
     name === "reserve_ai_analyst_request_result"
       ? { data: state.reservation, error: null }
@@ -175,6 +181,27 @@ describe("Analyst V2 quota settlement (AI-07)", () => {
         },
       ],
     ]);
+  });
+
+  it("records the run's diagnostics for its owner and never sends them", async () => {
+    const diagnostics = { status: "fallback_facts", outcome: "insufficient" };
+    state.run.mockResolvedValue({
+      version: "2",
+      status: "fallback_facts",
+      outcome: "insufficient",
+      usage: usage(1_600, 400),
+      diagnostics,
+    });
+    const body = await (await post(ask)).json();
+    expect(body).not.toHaveProperty("diagnostics");
+    expect(state.record).toHaveBeenCalledTimes(1);
+    expect(state.record.mock.calls[0]!.slice(1, 3)).toEqual([
+      "00000000-0000-4000-8000-00000000000a",
+      diagnostics,
+    ]);
+    // A failed diagnostics write never costs the answer.
+    state.record.mockRejectedValue(new Error("down"));
+    expect((await post(ask)).status).toBe(200);
   });
 
   it("settles the tokens a run was charged even when it throws", async () => {

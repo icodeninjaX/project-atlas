@@ -246,6 +246,21 @@ figures, a contradiction, overstated certainty) still withholds it, and
 interpretations are unchanged. The facts-only note also names review reasons
 in words.
 
+## 4g. Answer diagnostics (`diagnostics.ts`, `analyst_run_diagnostics`)
+
+Vercel's log view shows the request, not the Analyst's own warnings, so a
+failed answer could only be diagnosed from a screenshot. Each V2 answer now
+saves a codes-only record for its owner: result status and outcome, path,
+whether the planner ran, why the investigation stopped, each read (tool,
+round, status, error code, evidence count), each model stage (status and
+error code), rejection reasons as rule codes, the review state, claims
+proposed and passed, provider calls and total time. `cleanDiagnostics`
+turns anything that is not a short code into `other`, so no question text,
+figure, record name or model text can be stored. Rows are owner-only
+(row-level security; no update), are deleted after 14 days when the owner's
+next record is saved, and a failed write never affects the answer. Migration
+`20260930110000_analyst_run_diagnostics.sql`.
+
 ## 5. How much is shown
 
 A lookup used to hide every finding behind its one-line direct answer. When

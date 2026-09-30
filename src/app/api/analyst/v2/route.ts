@@ -15,6 +15,7 @@ import {
 import type { V2StreamEvent } from "@/lib/analyst/intelligence/progress";
 import { runAnalystV2, type V2Response } from "@/lib/analyst/intelligence/run";
 import type { RunLedger } from "@/lib/analyst/intelligence/budgets";
+import { recordDiagnostics } from "@/lib/analyst/intelligence/diagnostics-store";
 import {
   listMemories,
   touchMemories,
@@ -131,6 +132,7 @@ export async function POST(request: Request) {
   ) => {
     let result: V2Response | null = null;
     let ledger: RunLedger | null = null;
+    const started = Date.now();
     try {
       result = await runAnalystV2(
         {
@@ -165,11 +167,21 @@ export async function POST(request: Request) {
         result.relatedMemoryIds ?? [],
         new Date(),
       ).catch(() => undefined);
-      // Quota bookkeeping and record IDs stay on the server.
+      // How the run went, in codes only, for diagnosing failed answers.
+      if (result.diagnostics)
+        await recordDiagnostics(
+          supabase,
+          user.id,
+          result.diagnostics,
+          Date.now() - started,
+          new Date(),
+        ).catch(() => undefined);
+      // Quota bookkeeping, record IDs and diagnostics stay on the server.
       const body: Partial<V2Response> = { ...result };
       delete body.outcome;
       delete body.usage;
       delete body.relatedMemoryIds;
+      delete body.diagnostics;
       return { status: 200, body };
     } catch {
       return {
