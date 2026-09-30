@@ -5,6 +5,7 @@ import type { DraftClaim, EvidenceV2 } from "./contracts";
 import { autoDerive } from "./derive";
 import { deterministicDraft } from "./fallback";
 import { PERIODS } from "./evaluation/fixtures";
+import { answersRequirement } from "./response";
 import { V2_NOW, brief, metricEvidence } from "./evaluation/v2-fixtures";
 
 const period = PERIODS.currentMonthToDate;
@@ -135,5 +136,80 @@ describe("facts-only fallback", () => {
     );
     expect(draft.directAnswerClaimIds).toEqual([first!.id]);
     expect(claimCanShip(checkClaim(first!, ctx))).toBe(true);
+  });
+});
+
+describe("wording about the analysis itself", () => {
+  it("rejects talk of what the model received or read", () => {
+    for (const text of [
+      "Recorded expenses were ₱51,710.00; the newly read monthly figures were not included in the evidence I received.",
+      "Derived facts show recorded expenses of ₱51,710.00.",
+    ]) {
+      const checked = checkClaim(
+        claim({
+          text,
+          evidenceIds: [expense.id],
+          derivedFactIds: [],
+          scopeId: "whole_domain:expense",
+          comparison: null,
+        }),
+        ctx,
+      );
+      expect(checked.verification.reasons, text).toContain("process_wording");
+    }
+    // Plain statements about the records pass.
+    const plain = checkClaim(
+      claim({
+        text: "Recorded expenses were ₱51,710.00 this month.",
+        evidenceIds: [expense.id],
+        derivedFactIds: [],
+        scopeId: "whole_domain:expense",
+        comparison: null,
+      }),
+      ctx,
+    );
+    expect(plain.verification.reasons).toEqual([]);
+  });
+});
+
+describe("data inventory in an answer", () => {
+  const taskInventory = metricEvidence({
+    id: "getDataInventory.inventory.open_tasks",
+    metricKey: "inventory_open_tasks",
+    value: 12,
+    period: { from: "2026-08-18", through: "2026-09-23" },
+    scope: {
+      id: "inventory:open_tasks",
+      type: "whole_domain",
+      description: "Open tasks",
+    },
+  });
+  const inventoryCtx: ClaimCheckContext = {
+    ...ctx,
+    evidence: new Map([...ctx.evidence, [taskInventory.id, taskInventory]]),
+  };
+  const inventoryClaim = (kind: DraftClaim["kind"]) =>
+    checkClaim(
+      claim({
+        kind,
+        text: "Your task records start on August 18, so there is no earlier whole month to compare with yet.",
+        evidenceIds: [taskInventory.id],
+        derivedFactIds: [],
+        scopeId: "inventory:open_tasks",
+        comparison: null,
+      }),
+      inventoryCtx,
+    );
+
+  it("lets a limitation name the area its inventory item counts", () => {
+    const checked = inventoryClaim("limitation");
+    expect(checked.verification.reasons).toEqual([]);
+    expect(claimCanShip(checked)).toBe(true);
+  });
+
+  it("never answers a requirement with a count of stored records", () => {
+    const checked = inventoryClaim("fact");
+    expect(claimCanShip(checked)).toBe(true);
+    expect(answersRequirement(ctx.brief.requirements[0]!, checked)).toBe(false);
   });
 });

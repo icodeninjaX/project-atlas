@@ -99,8 +99,34 @@ const own = (
   comparableGroup,
 });
 
+/** The data inventory's areas and the domain each one's records belong to. */
+const inventoryDomain: Record<string, MetricDomain> = {
+  transactions: "expense",
+  active_debts: "debt",
+  debt_payments: "debt",
+  open_tasks: "task",
+  completed_tasks: "task",
+  active_goals: "goal",
+  job_applications: "career",
+  weekly_reviews: "review",
+  knowledge_concepts: "knowledge",
+};
+const inventory = Object.fromEntries(
+  Object.entries(inventoryDomain).map(([area, domain]) => [
+    `inventory_${area}`,
+    own(
+      `inventory_${area}`,
+      "Number of stored records in one area, and the dates they span",
+      "count",
+      domain,
+      "count",
+    ),
+  ]),
+);
+
 export const METRIC_SEMANTICS: Record<string, MetricSemantics> = {
   ...historical,
+  ...inventory,
   expense_change_centavos: own(
     "expense_change_centavos",
     "Change in recorded expenses between two aligned periods",
@@ -222,6 +248,8 @@ export function textDomains(semantics: MetricSemantics): MetricDomain[] {
     return ["goal", "income", "expense"];
   // Debt payments are recorded payments toward a debt.
   if (semantics.key === "debt_payments_centavos") return ["debt"];
+  // Transaction records hold both income and expenses.
+  if (semantics.key === "inventory_transactions") return ["income", "expense"];
   // A scenario's income and need are money flows under stated assumptions.
   if (semantics.key === "scenario:monthlyIncomeCentavos")
     return ["runway", "income"];

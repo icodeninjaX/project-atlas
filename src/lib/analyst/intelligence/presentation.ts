@@ -137,6 +137,10 @@ export function presentAnswer(
   );
   let caveats = rest.filter((claim) => claim.kind === "limitation");
   let shortened: Presentation["shortened"] = null;
+  // "As you asked" only when the person asked for a short answer in words.
+  const shortenedNote = options.style.requested
+    ? UI_TEXT[language].shortened
+    : UI_TEXT[language].shortenedAuto;
   const cap = options.style.maxSentences;
   if (cap) {
     // The direct answer first; one sentence stays reserved for a critical caveat.
@@ -161,7 +165,7 @@ export function presentAnswer(
     findings = findings.filter((claim) => kept.includes(claim));
     choices = choices.filter((claim) => kept.includes(claim));
     caveats = critical ? [critical] : [];
-    if (hidden > 0) shortened = { hidden, note: UI_TEXT[language].shortened };
+    if (hidden > 0) shortened = { hidden, note: shortenedNote };
   } else if (
     options.style.style === "concise" &&
     answer.status === "answered"
@@ -170,7 +174,7 @@ export function presentAnswer(
     const hidden = findings.length + choices.length;
     findings = [];
     choices = [];
-    if (hidden > 0) shortened = { hidden, note: UI_TEXT[language].shortened };
+    if (hidden > 0) shortened = { hidden, note: shortenedNote };
   }
   const review =
     answer.verification.semanticReview === "completed"

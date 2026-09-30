@@ -66,7 +66,8 @@ export type ClaimRejectionV2 =
   | "recommendation_without_objective"
   | "recommendation_incomplete"
   | "unstated_assumption"
-  | "generic_recommendation";
+  | "generic_recommendation"
+  | "process_wording";
 
 /**
  * What each rejection means, in words a writer can act on. A repair request
@@ -115,7 +116,14 @@ export const REJECTION_HELP: Record<ClaimRejectionV2, string> = {
     "is a recommendation without its recommendation object",
   unstated_assumption: "is conditional but cites no assumption ID",
   generic_recommendation: "gives advice that would fit anyone",
+  process_wording:
+    "talks about the analysis itself (the evidence it received, reads, requirements, derived facts); say what the person's records show or do not show instead",
 };
+
+// The person reads about their records, never about how ATLAS analyzed
+// them: what a model "received", "read", or which "requirement" it served.
+const processWording =
+  /\b(?:evidence (?:i|we) (?:received|was given|have been given|got)|(?:i|we) (?:received|was given|were given)|newly read|(?:was|were) not (?:included|provided|given) (?:in|to) (?:the|my) (?:evidence|data|input)|derived facts?|requirements? r_\w+|the (?:writer|reviewer|planner|model)\b|in the evidence)\b/i;
 
 const causal =
   /\b(?:because|caus\w*|due to|driven by|results? in|resulted|triggered|leads? to|led to|responsible for|explains?|explained|thanks to|as a result|dahil sa|dahil|sanhi|sanhi ng|kaya naman)\b/i;
@@ -588,6 +596,7 @@ export function checkClaim(
     reasons.push("unknown_mention");
   const text = withoutMentions(raw);
   if (causal.test(text)) reasons.push("causal_wording");
+  if (processWording.test(text)) reasons.push("process_wording");
   if (certainty.test(text)) reasons.push("certainty_wording");
   if (unverifiable.test(text)) reasons.push("unverifiable_wording");
 

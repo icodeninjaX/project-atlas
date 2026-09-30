@@ -37,6 +37,8 @@ export type StyleRequest = {
   style: AnalysisBrief["responseStyle"];
   /** A requested sentence cap, when the user asked for one. */
   maxSentences: number | null;
+  /** Whether the person asked for this style in words. */
+  requested?: boolean;
 };
 
 /** The response style the user asked for, or a default that fits the intent. */
@@ -49,18 +51,22 @@ export function explicitStyle(question: string): StyleRequest | null {
   if (count) {
     const raw = count[1]!;
     const value = /^\d$/.test(raw) ? Number(raw) : numberWords[raw]!;
-    return { style: "concise", maxSentences: Math.max(1, Math.min(value, 5)) };
+    return {
+      style: "concise",
+      maxSentences: Math.max(1, Math.min(value, 5)),
+      requested: true,
+    };
   }
   if (/\b(?:table|tabular|talahanayan)\b/.test(text))
-    return { style: "table", maxSentences: null };
+    return { style: "table", maxSentences: null, requested: true };
   if (
     /\b(?:in detail|detailed|explain fully|full breakdown|step by step|detalyado)\b/.test(
       text,
     )
   )
-    return { style: "detailed", maxSentences: null };
+    return { style: "detailed", maxSentences: null, requested: true };
   if (/\b(?:briefly|short answer|quick|tl;?dr|maikli)\b/.test(text))
-    return { style: "concise", maxSentences: 2 };
+    return { style: "concise", maxSentences: 2, requested: true };
   return null;
 }
 
@@ -147,6 +153,7 @@ export const UI_TEXT = {
     tradeoff: "Trade-off",
     sources: "Sources",
     shortened: "Shortened as you asked.",
+    shortenedAuto: "Shortened to the main answer.",
     showAll: "Show the full answer",
   },
   "fil-en": {
@@ -163,6 +170,7 @@ export const UI_TEXT = {
     tradeoff: "Kapalit",
     sources: "Pinagmulan",
     shortened: "Pinaikli ayon sa hiling mo.",
+    shortenedAuto: "Pinaikli sa pangunahing sagot.",
     showAll: "Ipakita ang buong sagot",
   },
 } as const;
