@@ -22,7 +22,7 @@ export const runDiagnosticsSchema = z.object({
   status: code,
   outcome: code,
   path: code.nullable(),
-  planner: z.enum(["ok", "failed", "off"]),
+  planner: z.enum(["ok", "failed", "off", "unknown"]),
   stopReason: code.nullable(),
   reads: z
     .array(
@@ -56,4 +56,27 @@ export const DIAGNOSTICS_DAYS = 14;
 export function cleanDiagnostics(raw: unknown): RunDiagnostics | null {
   const parsed = runDiagnosticsSchema.safeParse(raw);
   return parsed.success ? parsed.data : null;
+}
+
+/**
+ * The record for a run that ended before an answer was written (a
+ * clarification, a cancellation): its result only.
+ */
+export function minimalDiagnostics(
+  status: string,
+  outcome: string,
+): Omit<RunDiagnostics, "durationMs"> {
+  return {
+    status,
+    outcome,
+    path: null,
+    planner: "unknown",
+    stopReason: null,
+    reads: [],
+    stages: [],
+    rejections: [],
+    review: null,
+    claims: { proposed: 0, passed: 0 },
+    providerCalls: 0,
+  };
 }

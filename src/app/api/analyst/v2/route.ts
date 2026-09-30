@@ -15,6 +15,7 @@ import {
 import type { V2StreamEvent } from "@/lib/analyst/intelligence/progress";
 import { runAnalystV2, type V2Response } from "@/lib/analyst/intelligence/run";
 import type { RunLedger } from "@/lib/analyst/intelligence/budgets";
+import { minimalDiagnostics } from "@/lib/analyst/intelligence/diagnostics";
 import { recordDiagnostics } from "@/lib/analyst/intelligence/diagnostics-store";
 import {
   listMemories,
@@ -168,14 +169,18 @@ export async function POST(request: Request) {
         new Date(),
       ).catch(() => undefined);
       // How the run went, in codes only, for diagnosing failed answers.
-      if (result.diagnostics)
-        await recordDiagnostics(
+      // It is saved alongside the response, never before it, so a slow
+      // write cannot cost the answer; `after` keeps it alive once sent.
+      after(
+        recordDiagnostics(
           supabase,
           user.id,
-          result.diagnostics,
+          result.diagnostics ??
+            minimalDiagnostics(result.status, result.outcome),
           Date.now() - started,
           new Date(),
-        ).catch(() => undefined);
+        ).catch(() => undefined),
+      );
       // Quota bookkeeping, record IDs and diagnostics stay on the server.
       const body: Partial<V2Response> = { ...result };
       delete body.outcome;

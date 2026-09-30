@@ -889,6 +889,11 @@ describe("Analyst V2 with the analysis planner (mocked provider)", () => {
     // The follow-up read's round and calls count in the run's usage.
     expect(response.usage.rounds).toBe(2);
     expect(response.usage.toolCalls).toBeGreaterThanOrEqual(3);
+    // Its reads are in the diagnostics too, numbered after the first round.
+    const debtRead = response.diagnostics!.reads.find(
+      (item) => item.tool === "getDebtProgress",
+    );
+    expect(debtRead).toMatchObject({ round: 2, status: "ready" });
   });
 
   it("skips the read when the run could not also afford the repair", async () => {

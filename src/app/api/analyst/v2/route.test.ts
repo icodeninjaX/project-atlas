@@ -199,9 +199,27 @@ describe("Analyst V2 quota settlement (AI-07)", () => {
       "00000000-0000-4000-8000-00000000000a",
       diagnostics,
     ]);
-    // A failed diagnostics write never costs the answer.
+    // A failed or stuck diagnostics write never costs or delays the answer.
     state.record.mockRejectedValue(new Error("down"));
     expect((await post(ask)).status).toBe(200);
+    state.record.mockReturnValue(new Promise(() => undefined));
+    expect((await post(ask)).status).toBe(200);
+  });
+
+  it("records a run that ended before an answer was written", async () => {
+    state.run.mockResolvedValue({
+      version: "2",
+      status: "clarification_required",
+      outcome: "insufficient",
+      usage: usage(0, 0),
+    });
+    await post(ask);
+    expect(state.record.mock.calls[0]![2]).toMatchObject({
+      status: "clarification_required",
+      outcome: "insufficient",
+      planner: "unknown",
+      reads: [],
+    });
   });
 
   it("settles the tokens a run was charged even when it throws", async () => {
