@@ -90,12 +90,13 @@ function answer(text: string, context: string) {
   };
 }
 
-function setup() {
+function setup(digest: unknown = { digest: null, reason: "nothing_to_show" }) {
   const requests: Array<Record<string, unknown>> = [];
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
       if (url === "/api/analyst/pools") return Response.json({ pools: null });
+      if (url === "/api/analyst/digest") return Response.json(digest);
       const body = JSON.parse(String(init?.body));
       requests.push(body);
       return stream([
@@ -241,5 +242,82 @@ describe("IntelligenceWorkspace", () => {
     expect(
       window.localStorage.getItem(`atlas:analyst-consent-v2:${userId}`),
     ).toBeNull();
+  });
+});
+
+describe("the month's summary", () => {
+  const consent = {
+    version: "2",
+    providerProcessing: true,
+    domains: ["money"],
+    profiles: ["aggregate"],
+    grantedAt: "2026-09-24T00:00:00.000Z",
+  };
+  const summary = {
+    digest: {
+      ...answer(
+        "Recorded spending is ₱1,900.00 above the same days of August.",
+        "unused",
+      ).body,
+      context: undefined,
+    },
+    day: "2026-09-24",
+    cached: true,
+  };
+
+  it("opens the page with the summary, and asks about it in a conversation", async () => {
+    window.localStorage.setItem(
+      `atlas:analyst-consent-v2:${userId}`,
+      JSON.stringify(consent),
+    );
+    const user = userEvent.setup();
+    const requests = setup(summary);
+    expect(
+      await screen.findByRole("heading", { name: "This month so far" }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(/above the same days of August/),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Ask about this" }));
+    await screen.findByText(/Answer 1/);
+    expect(requests.at(-1)).toMatchObject({
+      question: "Why did my spending change this month?",
+      context: null,
+    });
+    // The conversation takes the summary's place.
+    expect(
+      screen.queryByRole("heading", { name: "This month so far" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("sends the consent it was granted, and shows nothing without a summary", async () => {
+    window.localStorage.setItem(
+      `atlas:analyst-consent-v2:${userId}`,
+      JSON.stringify(consent),
+    );
+    setup();
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/analyst/digest",
+        expect.objectContaining({ method: "POST" }),
+      ),
+    );
+    const call = vi
+      .mocked(fetch)
+      .mock.calls.find(([url]) => url === "/api/analyst/digest")!;
+    expect(JSON.parse(String(call[1]!.body)).consent).toEqual(consent);
+    expect(
+      screen.queryByRole("heading", { name: "This month so far" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("asks for nothing before consent", async () => {
+    setup(summary);
+    await screen.findByRole("button", { name: "Allow these areas" });
+    expect(
+      vi
+        .mocked(fetch)
+        .mock.calls.some(([url]) => url === "/api/analyst/digest"),
+    ).toBe(false);
   });
 });

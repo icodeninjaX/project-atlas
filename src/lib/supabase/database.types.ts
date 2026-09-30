@@ -39,6 +39,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      analyst_digests: {
+        Row: {
+          body: Json;
+          consent_key: string;
+          created_at: string;
+          day: string;
+          user_id: string;
+        };
+        Insert: {
+          body: Json;
+          consent_key: string;
+          created_at?: string;
+          day: string;
+          user_id?: string;
+        };
+        Update: {
+          body?: Json;
+          consent_key?: string;
+          created_at?: string;
+          day?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       analyst_memories: {
         Row: {
           created_at: string;

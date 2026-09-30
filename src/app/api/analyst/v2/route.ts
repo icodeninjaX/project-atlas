@@ -1,31 +1,21 @@
 import { after, NextResponse } from "next/server";
-import { z } from "zod";
-import { AI_MODELS, resolveAnalystModel } from "@/lib/ai/models";
+import { resolveAnalystModel } from "@/lib/ai/models";
 import { NDJSON_TYPE } from "@/lib/analyst/freeform/progress";
 import {
-  contextKey,
   parseV2Request,
   needsContext,
 } from "@/lib/analyst/intelligence/context";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
+import { listMemories } from "@/lib/analyst/intelligence/memory-store";
 import {
   parseConsent,
   preferredRoute,
 } from "@/lib/analyst/intelligence/policy";
 import type { V2StreamEvent } from "@/lib/analyst/intelligence/progress";
-import { runAnalystV2, type V2Response } from "@/lib/analyst/intelligence/run";
-import type { RunLedger } from "@/lib/analyst/intelligence/budgets";
-import { minimalDiagnostics } from "@/lib/analyst/intelligence/diagnostics";
-import { recordDiagnostics } from "@/lib/analyst/intelligence/diagnostics-store";
 import {
-  listMemories,
-  touchMemories,
-} from "@/lib/analyst/intelligence/memory-store";
-import { createStageCaller } from "@/lib/analyst/intelligence/stages";
-import {
-  authorizeHandlesV2,
-  invokeAnalystToolV2,
-} from "@/lib/analyst/intelligence/tools/server";
+  reserveAnalystRequest,
+  serveAnalystRun,
+} from "@/lib/analyst/intelligence/serve";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -42,23 +32,6 @@ export const maxDuration = 60;
 const headers = { "Cache-Control": "private, no-store" };
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status, headers });
-const reservationSchema = z.discriminatedUnion("status", [
-  z.object({
-    status: z.literal("reserved"),
-    request_id: z.number().int().positive(),
-  }),
-  z.object({
-    status: z.enum([
-      "unauthenticated",
-      "invalid_type",
-      "invalid_model",
-      "hourly_quota",
-      "daily_quota",
-      "site_quota",
-    ]),
-  }),
-]);
-
 export async function POST(request: Request) {
   if (!analystIntelligenceV2Enabled())
     return json({ error: "Not found." }, 404);
@@ -98,118 +71,26 @@ export async function POST(request: Request) {
   )
     return json({ error: "AI analysis is not configured." }, 503);
 
-  const { data: reservation, error: reservationError } = await supabase.rpc(
-    "reserve_ai_analyst_request_result",
-    {
-      p_type: "freeform",
-      p_model: model,
-    },
-  );
-  const allowed = reservationSchema.safeParse(reservation);
-  if (reservationError || !allowed.success)
-    return json({ error: "Analyst quota is unavailable." }, 503);
-  if (allowed.data.status !== "reserved") {
-    const quota = ["hourly_quota", "daily_quota", "site_quota"].includes(
-      allowed.data.status,
-    );
-    return json(
-      {
-        error: quota
-          ? "Your Analyst usage limit has been reached."
-          : "Analyst is unavailable.",
-      },
-      quota ? 429 : 503,
-    );
-  }
-  const requestId = allowed.data.request_id;
-  const options = { consent, route };
+  const reserved = await reserveAnalystRequest(supabase, model);
+  if (!reserved.ok) return json({ error: reserved.error }, reserved.status);
   // Saved priorities; an unavailable store only means none are used.
   const memories =
     (await listMemories(supabase, user.id, new Date()).catch(() => null)) ?? [];
 
-  const run = async (
-    emit?: (event: V2StreamEvent) => void,
-    signal?: AbortSignal,
-  ) => {
-    let result: V2Response | null = null;
-    let ledger: RunLedger | null = null;
-    const started = Date.now();
-    try {
-      result = await runAnalystV2(
-        {
-          ownerId: user.id,
-          question: parsed.request.question,
-          contextToken: parsed.request.context,
-          model,
-          consent,
-          route,
-          memories,
-        },
-        {
-          invoke: (tool, input) => invokeAnalystToolV2(tool, input, options),
-          authorize: (handles) => authorizeHandlesV2(handles, options),
-          stageCaller: (ledger) =>
-            createStageCaller({ ledger, consent, route }),
-          contextKey: contextKey(),
-          now: () => new Date(),
-          clock: Date.now,
-          emit,
-          signal,
-          onLedger: (value) => {
-            ledger = value;
-          },
-          planModel: AI_MODELS.planner,
-        },
-      );
-      // Priorities this question bore on are kept longer.
-      await touchMemories(
-        supabase,
-        user.id,
-        result.relatedMemoryIds ?? [],
-        new Date(),
-      ).catch(() => undefined);
-      // How the run went, in codes only, for diagnosing failed answers.
-      // It is saved alongside the response, never before it, so a slow
-      // write cannot cost the answer; `after` keeps it alive once sent.
-      after(
-        recordDiagnostics(
-          supabase,
-          user.id,
-          result.diagnostics ??
-            minimalDiagnostics(result.status, result.outcome),
-          Date.now() - started,
-          new Date(),
-        ).catch(() => undefined),
-      );
-      // Quota bookkeeping, record IDs and diagnostics stay on the server.
-      const body: Partial<V2Response> = { ...result };
-      delete body.outcome;
-      delete body.usage;
-      delete body.relatedMemoryIds;
-      delete body.diagnostics;
-      return { status: 200, body };
-    } catch {
-      return {
-        status: 503,
-        body: { error: "Analysis could not be completed. Try again." },
-      };
-    } finally {
-      // A run that threw still settles the tokens it was charged.
-      const charged = (ledger as RunLedger | null)?.usage;
-      const usage =
-        result?.usage ?? (charged?.providerCalls ? charged : undefined);
-      try {
-        await supabase.rpc("finish_ai_analyst_request", {
-          p_id: requestId,
-          p_outcome: result?.outcome ?? "provider_error",
-          p_input_tokens: usage?.inputTokens ?? null,
-          p_output_tokens: usage?.outputTokens ?? null,
-        });
-      } catch {
-        /* Audit failure must not replace the answer. */
-      }
-    }
-  };
+  const run = (emit?: (event: V2StreamEvent) => void, signal?: AbortSignal) =>
+    serveAnalystRun({
+      supabase,
+      ownerId: user.id,
+      requestId: reserved.requestId,
+      question: parsed.request.question,
+      contextToken: parsed.request.context,
+      model,
+      consent,
+      route,
+      memories,
+      emit,
+      signal,
+    });
 
   if (!request.headers.get("accept")?.includes(NDJSON_TYPE)) {
     const result = await run();
