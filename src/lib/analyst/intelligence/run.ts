@@ -6,6 +6,7 @@ import {
 } from "@/lib/ai/models";
 import { freePoolFor } from "@/lib/ai/pools";
 import { checkBrief } from "./brief";
+import type { RunDiagnostics } from "./diagnostics";
 import {
   memorySuggestion,
   promptPriorities,
@@ -37,7 +38,7 @@ import type {
 import { autoDerive } from "./derive";
 import { suggestFollowUpsV2, type FollowUp } from "./follow-ups";
 import { detectStyle, explicitStyle } from "./language";
-import { runInvestigation } from "./orchestrator";
+import { runInvestigation, type ToolOutcome } from "./orchestrator";
 import { deterministicBrief } from "./planning";
 import type { AnalystConsent, ProviderRoute } from "./policy";
 import {
@@ -142,6 +143,8 @@ export type V2Response = {
   memorySuggestion?: string | null;
   /** Saved priorities this question bore on; kept on the server. */
   relatedMemoryIds?: string[];
+  /** How the run went, in codes only; kept on the server. */
+  diagnostics?: Omit<RunDiagnostics, "durationMs">;
 };
 
 const toolDomains: Record<V2ToolName, ConsentDomain[]> = {
@@ -324,6 +327,8 @@ export async function runAnalystV2(
   const memories = input.memories ?? [];
   const priorities = promptPriorities(memories);
   let relatedIds: string[] = [];
+  // Reads a first draft asked for, run after the main investigation.
+  const followUpReads: ToolOutcome[] = [];
   let suggestion: string | null = null;
   const allowed = new Set(
     capabilities
@@ -525,6 +530,7 @@ export async function runAnalystV2(
         }),
     });
     ledger.absorb(readLedger.usage);
+    followUpReads.push(...more.outcomes);
     if (more.status === "cancelled" || more.status === "clarification_required")
       return null;
     const known = new Set(evidence.map((item) => item.id));
@@ -643,9 +649,54 @@ export async function runAnalystV2(
   const writerFailed = synthesis.stages.find(
     (item) => item.stage === "writer" && item.status === "error",
   );
+  const outcome: V2Response["outcome"] =
+    answer.status === "answered" || answer.status === "partial_answer"
+      ? "success"
+      : writerFailed?.code === "pool_exhausted"
+        ? "pool_exhausted"
+        : writerFailed?.code === "timeout"
+          ? "timeout"
+          : writerFailed
+            ? "provider_error"
+            : "insufficient";
   return {
     version: "2",
     status: answer.status,
+    diagnostics: {
+      status: answer.status,
+      outcome,
+      path: check.path,
+      planner: deps.planModel ? (analysisPlan ? "ok" : "failed") : "off",
+      stopReason: investigation.stopReason ?? null,
+      reads: [
+        ...investigation.outcomes,
+        // Follow-up rounds continue the main investigation's numbering.
+        ...followUpReads.map((item) => ({
+          ...item,
+          round:
+            item.round +
+            Math.max(0, ...investigation.outcomes.map((read) => read.round)),
+        })),
+      ].map((item) => ({
+        tool: item.request.tool,
+        round: item.round,
+        status: item.result.status,
+        error: item.result.error?.code ?? null,
+        evidence: item.result.evidence.length,
+      })),
+      stages: synthesis.stages.map((item) => ({
+        stage: item.stage,
+        status: item.status,
+        code: item.code ?? null,
+      })),
+      rejections: answer.verification.rejectionReasons,
+      review: synthesis.review ?? null,
+      claims: {
+        proposed: answer.verification.claimsProposed,
+        passed: answer.verification.claimsPassed,
+      },
+      providerCalls: ledger.usage.providerCalls,
+    },
     memorySuggestion: suggestion,
     relatedMemoryIds: relatedIds,
     presentation,
@@ -667,16 +718,7 @@ export async function runAnalystV2(
     },
     context: seal(next),
     contextNotice,
-    outcome:
-      answer.status === "answered" || answer.status === "partial_answer"
-        ? "success"
-        : writerFailed?.code === "pool_exhausted"
-          ? "pool_exhausted"
-          : writerFailed?.code === "timeout"
-            ? "timeout"
-            : writerFailed
-              ? "provider_error"
-              : "insufficient",
+    outcome,
     usage: ledger.usage,
   };
 }

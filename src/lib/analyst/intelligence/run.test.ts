@@ -3,6 +3,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AI_MODELS, type AnalystModelId } from "@/lib/ai/models";
 import { FOLLOW_UP_MIN_REMAINING_MS, RUN_BUDGETS } from "./budgets";
+import { cleanDiagnostics } from "./diagnostics";
 import type { Memory } from "./memory";
 import { OWNER_A } from "./evaluation/fixtures";
 import {
@@ -627,6 +628,24 @@ describe("Analyst V2 with the analysis planner (mocked provider)", () => {
     ...extra,
   });
 
+  it("records how the run went in codes only", async () => {
+    planner = () => plan();
+    const question = "How am I doing overall with my secret laptop fund?";
+    const response = await ask(question, { planModel }).result;
+    const record = response.diagnostics!;
+    expect(record).toMatchObject({
+      status: response.status,
+      planner: "ok",
+      path: "deep",
+    });
+    expect(record.reads.length).toBeGreaterThan(0);
+    expect(record.stages.map((item) => item.stage)).toContain("writer");
+    // Nothing the person wrote or any figure is kept.
+    const text = JSON.stringify(record);
+    expect(text).not.toMatch(/laptop|secret|₱|\d{3,}/);
+    expect(cleanDiagnostics({ ...record, durationMs: 1200 })).not.toBeNull();
+  });
+
   it("frames the answer by saved priorities and offers a newly stated one", async () => {
     const memories: Memory[] = [
       {
@@ -870,6 +889,11 @@ describe("Analyst V2 with the analysis planner (mocked provider)", () => {
     // The follow-up read's round and calls count in the run's usage.
     expect(response.usage.rounds).toBe(2);
     expect(response.usage.toolCalls).toBeGreaterThanOrEqual(3);
+    // Its reads are in the diagnostics too, numbered after the first round.
+    const debtRead = response.diagnostics!.reads.find(
+      (item) => item.tool === "getDebtProgress",
+    );
+    expect(debtRead).toMatchObject({ round: 2, status: "ready" });
   });
 
   it("skips the read when the run could not also afford the repair", async () => {
