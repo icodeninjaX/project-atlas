@@ -33,6 +33,7 @@ import {
   decisionContext,
   goalContext,
   moneyBreakdown,
+  transactionQuery,
   recordDetails,
   relationshipPaths,
   resolveEntities,
@@ -264,6 +265,11 @@ export async function invokeAnalystToolV2(
         case "getMoneyBreakdown":
           return moneyBreakdown(
             v2ToolInputs.getMoneyBreakdown.parse(rawInput),
+            context,
+          );
+        case "queryTransactions":
+          return transactionQuery(
+            v2ToolInputs.queryTransactions.parse(rawInput),
             context,
           );
         case "getGoalAnalysisContext":

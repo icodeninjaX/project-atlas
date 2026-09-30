@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { memoryText } from "./memory";
 import {
   CONSENT_DOMAINS,
   type ConsentDomain,
@@ -219,10 +220,15 @@ export type ProviderPayload = {
   history: HistoryTurn[];
   evidence: EvidenceV2[];
   labels: ProviderLabel[];
+  /**
+   * Priorities the person confirmed for Analyst to remember, sent with their
+   * consent to frame answers. Never a figure or record detail.
+   */
+  priorities?: string[];
 };
 
 export type PayloadExclusion = {
-  kind: "evidence" | "label" | "history";
+  kind: "evidence" | "label" | "history" | "priority";
   ref: string;
   reason: ExclusionReason;
 };
@@ -247,6 +253,18 @@ export function filterProviderPayload(
   const labels = payload.labels.filter((label) => {
     const reason = eligibility(label.domain, "basic_context", consent, route);
     if (reason) excluded.push({ kind: "label", ref: label.handle, reason });
+    return !reason;
+  });
+  // A saved priority is the person's own confirmed words; it travels with
+  // consent, and only while it still holds no figure or record reference.
+  const priorities = (payload.priorities ?? []).filter((text, index) => {
+    const reason: ExclusionReason | null = !consent
+      ? "no_consent"
+      : memoryText(text) === text
+        ? null
+        : "profile_not_consented";
+    if (reason)
+      excluded.push({ kind: "priority", ref: `priority:${index}`, reason });
     return !reason;
   });
   const history = payload.history.flatMap((turn, index) => {
@@ -286,7 +304,16 @@ export function filterProviderPayload(
         ]
       : [];
   });
-  return { payload: { ...payload, evidence, labels, history }, excluded };
+  return {
+    payload: {
+      ...payload,
+      evidence,
+      labels,
+      history,
+      ...(payload.priorities && { priorities }),
+    },
+    excluded,
+  };
 }
 
 /** Whether an earlier turn's free text may reach a provider. */

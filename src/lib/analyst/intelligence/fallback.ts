@@ -18,15 +18,23 @@ const SHOWN_AGGREGATIONS = new Set(["sum", "count", "latest", "value"]);
 
 type Numeric = Extract<EvidenceV2, { kind: "metric" }>;
 
+// Counts about the retrieval itself or the data inventory are context, not
+// findings a person asked for.
+const HIDDEN_METRICS = /^(?:records_count$|inventory_)/;
+
 function isShown(item: EvidenceV2): item is Numeric {
   return (
     item.kind === "metric" &&
+    !HIDDEN_METRICS.test(item.semantics.metricKey) &&
     SHOWN_UNITS.has(item.unit) &&
     SHOWN_AGGREGATIONS.has(item.semantics.aggregation) &&
     (item.scope.type === "whole_domain" || item.scope.type === "entity") &&
     item.coverage.query === "complete"
   );
 }
+
+const statedKey = (item: Numeric) =>
+  `${item.semantics.definition.split(":")[0]}|${item.value}|${item.time.period.from}`;
 
 function valueText(item: Numeric) {
   if (item.unit === "centavos") return formatMoney(item.value);
@@ -59,6 +67,7 @@ export function deterministicDraft(
 ) {
   const byId = new Map(evidence.map((item) => [item.id, item]));
   const used = new Set<string>();
+  const stated = new Set<string>();
   let next = 0;
   // A ranking question is answered first, from ATLAS's own ranking.
   const rankingClaims = brief.requirements.flatMap((requirement) => {
@@ -125,11 +134,21 @@ export function deterministicDraft(
       .map((id) => byId.get(id))
       .filter((item): item is Numeric => Boolean(item && isShown(item)))
       .filter((item) => !used.has(item.id))
+      // The same figure read twice (once per read, or for a period that
+      // differs only in its last day) is stated once.
+      .filter((item, index, items) => {
+        const key = statedKey(item);
+        return (
+          !stated.has(key) &&
+          items.findIndex((other) => statedKey(other) === key) === index
+        );
+      })
       .slice(0, MAX_PER_REQUIREMENT)
       .map((item) => {
         // Only a figure that is shown is used; one past this requirement's
         // limit stays available to a later requirement.
         used.add(item.id);
+        stated.add(statedKey(item));
         const label = item.semantics.definition.split(":")[0]!.trim();
         const scope =
           item.scope.type === "entity" ? ` (${item.scope.description})` : "";

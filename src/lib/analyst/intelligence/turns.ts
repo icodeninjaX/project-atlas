@@ -205,11 +205,24 @@ export function resolvePeriod(
       : target > month
         ? year - 1
         : year;
+    const from = iso(targetYear, target, 1);
+    // "since August" runs from its first day through today, within a year.
+    const since = new RegExp(
+      `\\b(?:since|from|mula(?: noong)?|simula(?: noong)?)\\s+${named[0]}`,
+    ).test(text);
+    if (since && from <= today) {
+      const earliest = shift(today, -365);
+      return {
+        from: from < earliest ? earliest : from,
+        through: today,
+        label: `since ${named[0]}`,
+      };
+    }
     const through =
       targetYear === year && target === month
         ? today
         : iso(targetYear, target, lastDay(targetYear, target));
-    return { from: iso(targetYear, target, 1), through, label: named[0] };
+    return { from, through, label: named[0] };
   }
   return null;
 }

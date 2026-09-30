@@ -42,6 +42,14 @@ const TOP_SHARES = 3;
 const periodKey = (item: EvidenceV2) =>
   `${item.time.period.from}..${item.time.period.through}`;
 
+/**
+ * The whole-domain scope a set's members add up to: a set `<name>_by_<group>`
+ * belongs to the total `whole_domain:<name>`, so a set is never divided by,
+ * or reconciled with, the total of a differently filtered read.
+ */
+const setTotalScope = (member: EvidenceV2) =>
+  `whole_domain:${member.scope.cohort!.setId.split("_by_")[0]}`;
+
 /** Money totals that get a pace: recorded income and expenses by period. */
 const PACED_SCOPES = new Set(["whole_domain:income", "whole_domain:expense"]);
 
@@ -84,9 +92,12 @@ export function autoDerive(
     // The leading members' shares of their total, so a writer never
     // divides: "Groceries is 45.5% of recorded expenses".
     const [first] = members;
+    // Only additive measures divide into shares; an average does not.
+    if (!["sum", "count"].includes(first!.semantics.aggregation)) continue;
     const total = values.find(
       (item) =>
         item.scope.type === "whole_domain" &&
+        item.scope.id === setTotalScope(first!) &&
         item.semantics.metricKey === first!.semantics.metricKey &&
         periodKey(item) === periodKey(first!),
     );
@@ -137,8 +148,11 @@ export function autoDerive(
     if (percent) facts.push(percent);
     // The same measure by category in both periods explains the change arithmetically.
     const setFor = (total: EvidenceV2) =>
-      [...sets.entries()].find(([setKey]) =>
-        setKey.endsWith(`|${total.semantics.metricKey}|${periodKey(total)}`),
+      [...sets.entries()].find(
+        ([setKey, members]) =>
+          setKey.endsWith(
+            `|${total.semantics.metricKey}|${periodKey(total)}`,
+          ) && setTotalScope(members[0]!) === total.scope.id,
       )?.[1];
     const now = setFor(current);
     const before = setFor(previous);

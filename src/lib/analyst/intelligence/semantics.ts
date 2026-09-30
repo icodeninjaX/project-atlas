@@ -124,7 +124,44 @@ const inventory = Object.fromEntries(
   ]),
 );
 
+/** Figures from a transaction query, kept apart from the fixed money reads. */
+const query = Object.fromEntries(
+  (["expense", "income"] as const).flatMap((kind) => [
+    [
+      `${kind}_query_centavos`,
+      own(
+        `${kind}_query_centavos`,
+        `Total of the recorded ${kind} transactions a query matched`,
+        "centavos",
+        kind,
+        "sum",
+      ),
+    ],
+    [
+      `${kind}_query_count`,
+      own(
+        `${kind}_query_count`,
+        `Number of recorded ${kind} transactions a query matched`,
+        "count",
+        kind,
+        "count",
+      ),
+    ],
+    [
+      `${kind}_query_average_centavos`,
+      own(
+        `${kind}_query_average_centavos`,
+        `Average amount per recorded ${kind} transaction a query matched`,
+        "centavos",
+        kind,
+        "mean",
+      ),
+    ],
+  ]),
+);
+
 export const METRIC_SEMANTICS: Record<string, MetricSemantics> = {
+  ...query,
   ...historical,
   ...inventory,
   expense_change_centavos: own(

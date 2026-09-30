@@ -15,6 +15,10 @@ import {
 import type { V2StreamEvent } from "@/lib/analyst/intelligence/progress";
 import { runAnalystV2, type V2Response } from "@/lib/analyst/intelligence/run";
 import type { RunLedger } from "@/lib/analyst/intelligence/budgets";
+import {
+  listMemories,
+  touchMemories,
+} from "@/lib/analyst/intelligence/memory-store";
 import { createStageCaller } from "@/lib/analyst/intelligence/stages";
 import {
   authorizeHandlesV2,
@@ -117,6 +121,9 @@ export async function POST(request: Request) {
   }
   const requestId = allowed.data.request_id;
   const options = { consent, route };
+  // Saved priorities; an unavailable store only means none are used.
+  const memories =
+    (await listMemories(supabase, user.id, new Date()).catch(() => null)) ?? [];
 
   const run = async (
     emit?: (event: V2StreamEvent) => void,
@@ -133,6 +140,7 @@ export async function POST(request: Request) {
           model,
           consent,
           route,
+          memories,
         },
         {
           invoke: (tool, input) => invokeAnalystToolV2(tool, input, options),
@@ -150,10 +158,18 @@ export async function POST(request: Request) {
           planModel: AI_MODELS.planner,
         },
       );
-      // Quota bookkeeping stays on the server.
+      // Priorities this question bore on are kept longer.
+      await touchMemories(
+        supabase,
+        user.id,
+        result.relatedMemoryIds ?? [],
+        new Date(),
+      ).catch(() => undefined);
+      // Quota bookkeeping and record IDs stay on the server.
       const body: Partial<V2Response> = { ...result };
       delete body.outcome;
       delete body.usage;
+      delete body.relatedMemoryIds;
       return { status: 200, body };
     } catch {
       return {

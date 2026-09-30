@@ -86,6 +86,31 @@ export const analysisBriefSchema = z
             question: shortText,
             essential: z.boolean(),
             evidenceNeeded: z.array(handle).max(12),
+            /**
+             * What a planned transaction query reads. The category is a
+             * phrase from the question, resolved to the owner's categories
+             * before any read; it is never a record ID.
+             */
+            transactionQuery: z
+              .object({
+                kind: z.enum(["expense", "income"]),
+                groupBy: z.enum([
+                  "none",
+                  "category",
+                  "weekday",
+                  "weekend",
+                  "month",
+                ]),
+                measures: z
+                  .array(z.enum(["total", "count", "average"]))
+                  .min(1)
+                  .max(3),
+                category: z.string().trim().min(2).max(80).nullable(),
+                minAmountPesos: z.number().min(0).max(1e9).nullable(),
+                maxAmountPesos: z.number().min(0).max(1e9).nullable(),
+              })
+              .strict()
+              .optional(),
           })
           .strict(),
       )

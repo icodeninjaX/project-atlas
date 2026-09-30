@@ -25,6 +25,8 @@ import {
   toHandle,
   type EntityCandidate,
   type OwnerLabel,
+  type QueryGroup,
+  type QueryMeasure,
   type V2EntityType,
   type V2ToolInput,
   type V2ToolPayload,
@@ -705,6 +707,290 @@ export async function moneyBreakdown(
   );
   payload.limitations.push(
     "Totals come from a database aggregate over every matching surviving record. Category names are owner-only labels.",
+  );
+  return payload;
+}
+
+export type QueryRow = {
+  transaction_date: string;
+  amount_centavos: number;
+  category_id: string | null;
+};
+
+const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+
+/** The set members a grouping has over a period, including empty ones. */
+function queryMembers(
+  group: Exclude<QueryGroup, "none" | "category">,
+  from: string,
+  through: string,
+) {
+  if (group === "weekday")
+    return ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
+      (day) => `weekday:${day}`,
+    );
+  if (group === "weekend") return ["day_type:weekday", "day_type:weekend"];
+  const months: string[] = [];
+  let year = Number(from.slice(0, 4));
+  let month = Number(from.slice(5, 7));
+  const last = through.slice(0, 7);
+  for (;;) {
+    const key = `${year}-${String(month).padStart(2, "0")}`;
+    months.push(`month:${key}`);
+    if (key >= last) break;
+    month += 1;
+    if (month > 12) {
+      month = 1;
+      year += 1;
+    }
+  }
+  return months;
+}
+
+/** The member of a grouping that one transaction belongs to. */
+function queryMember(group: QueryGroup, row: QueryRow) {
+  // Matches the category breakdown's member for records with no category.
+  if (group === "category")
+    return row.category_id
+      ? toHandle("category", row.category_id)
+      : "uncategorized";
+  const day =
+    WEEKDAYS[new Date(`${row.transaction_date}T00:00:00Z`).getUTCDay()]!;
+  if (group === "weekday") return `weekday:${day}`;
+  if (group === "weekend")
+    return day === "sat" || day === "sun"
+      ? "day_type:weekend"
+      : "day_type:weekday";
+  return `month:${row.transaction_date.slice(0, 7)}`;
+}
+
+/** A short stable key for a query's filters, so separate queries never mix. */
+function filterKey(input: V2ToolInput<"queryTransactions">) {
+  const text = JSON.stringify([
+    [...input.categories].sort(),
+    input.minAmountPesos,
+    input.maxAmountPesos,
+  ]);
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  const filtered =
+    input.categories.length > 0 ||
+    input.minAmountPesos !== null ||
+    input.maxAmountPesos !== null;
+  return `${input.kind}_q${filtered ? hash.toString(16).padStart(8, "0") : "all"}`;
+}
+
+const QUERY_METRIC: Record<
+  QueryMeasure,
+  { suffix: string; unit: "centavos" | "count" }
+> = {
+  total: { suffix: "query_centavos", unit: "centavos" },
+  count: { suffix: "query_count", unit: "count" },
+  average: { suffix: "query_average_centavos", unit: "centavos" },
+};
+
+/** Total and count per member; the average is derived from them exactly. */
+export function aggregateTransactions(
+  rows: QueryRow[],
+  input: Pick<V2ToolInput<"queryTransactions">, "groupBy" | "from" | "through">,
+) {
+  const groups = new Map<string, { total: number; count: number }>();
+  if (input.groupBy !== "none" && input.groupBy !== "category")
+    for (const member of queryMembers(input.groupBy, input.from, input.through))
+      groups.set(member, { total: 0, count: 0 });
+  const all = { total: 0, count: 0 };
+  for (const row of rows) {
+    all.total += row.amount_centavos;
+    all.count += 1;
+    if (input.groupBy === "none") continue;
+    const member = queryMember(input.groupBy, row);
+    const group = groups.get(member) ?? { total: 0, count: 0 };
+    group.total += row.amount_centavos;
+    group.count += 1;
+    groups.set(member, group);
+    if (!Number.isSafeInteger(group.total) || !Number.isSafeInteger(all.total))
+      throw new ToolFailure("invalid_output");
+  }
+  return { all, groups };
+}
+
+const measured = (
+  measure: QueryMeasure,
+  value: { total: number; count: number },
+) =>
+  measure === "total"
+    ? value.total
+    : measure === "count"
+      ? value.count
+      : value.count === 0
+        ? null
+        : Math.round(value.total / value.count);
+
+const queryRow = z
+  .object({
+    id: z.uuid(),
+    transaction_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    amount_centavos: z.union([z.number(), z.string().regex(/^\d+$/)]),
+    category_id: z.uuid().nullable(),
+  })
+  .strict();
+
+/**
+ * A bounded, owner-scoped transaction query. It reads every matching record
+ * (date, amount and category only; never merchants or notes) in keyset pages
+ * through the tool transport, and computes totals, counts and averages per
+ * group itself. More records than its window is a failure, never a partial
+ * figure. Each query's filters get their own scope, so figures from queries
+ * with different filters are never combined.
+ */
+export async function transactionQuery(
+  input: V2ToolInput<"queryTransactions">,
+  { client, owner, now }: ReadContext,
+): Promise<V2ToolPayload> {
+  const ctx: BuildContext = {
+    tool: "queryTransactions",
+    retrievedAt: now.toISOString(),
+  };
+  if (input.through > manilaToday(now)) throw new ToolFailure("invalid_input");
+  const categoryIds = input.categories.map((item) => parseHandle(item)!.id);
+  const found: QueryRow[] = [];
+  let after: string | null = null;
+  for (let page = 0; ; page += 1) {
+    if (page >= V2_TOOL_LIMITS.queryPages) throw new ToolFailure("partial");
+    let query = client
+      .from("transactions")
+      .select("id,transaction_date,amount_centavos,category_id")
+      .eq("user_id", owner)
+      .eq("transaction_type", input.kind)
+      .gte("transaction_date", input.from)
+      .lte("transaction_date", input.through);
+    if (categoryIds.length) query = query.in("category_id", categoryIds);
+    if (input.minAmountPesos !== null)
+      query = query.gte(
+        "amount_centavos",
+        Math.ceil(input.minAmountPesos * 100),
+      );
+    if (input.maxAmountPesos !== null)
+      query = query.lte(
+        "amount_centavos",
+        Math.floor(input.maxAmountPesos * 100),
+      );
+    if (after) query = query.gt("id", after);
+    const result = await query.order("id").limit(V2_TOOL_LIMITS.queryPage);
+    if (result.error) throw new ToolFailure("unavailable_source");
+    const parsed = z.array(queryRow).safeParse(result.data ?? []);
+    if (!parsed.success) throw new ToolFailure("invalid_output");
+    for (const row of parsed.data)
+      found.push({
+        transaction_date: row.transaction_date,
+        amount_centavos: Number(row.amount_centavos),
+        category_id: row.category_id,
+      });
+    if (parsed.data.length < V2_TOOL_LIMITS.queryPage) break;
+    after = parsed.data.at(-1)!.id;
+  }
+  const { all, groups } = aggregateTransactions(found, input);
+  const payload = emptyPayload();
+  const ids = [
+    ...new Set([
+      ...categoryIds,
+      ...(input.groupBy === "category"
+        ? found.flatMap((row) => (row.category_id ? [row.category_id] : []))
+        : []),
+    ]),
+  ];
+  if (ids.length)
+    payload.labels = rows(
+      await client
+        .from("transaction_categories")
+        .select("id,name")
+        .eq("user_id", owner)
+        .in("id", ids)
+        .limit(ids.length),
+    ).map((row) => label("category", row));
+  const key = filterKey(input);
+  const period = { from: input.from, through: input.through };
+  const coverage = {
+    period: "complete" as const,
+    recordsConsidered: found.length,
+  };
+  const filters = [
+    input.categories.length
+      ? `in ${input.categories.length} chosen categor${input.categories.length === 1 ? "y" : "ies"}`
+      : null,
+    input.minAmountPesos !== null
+      ? `of at least ₱${input.minAmountPesos}`
+      : null,
+    input.maxAmountPesos !== null
+      ? `of at most ₱${input.maxAmountPesos}`
+      : null,
+  ].filter(Boolean);
+  const about = `Recorded ${input.kind} transactions${filters.length ? ` ${filters.join(", ")}` : ""}`;
+  const setId = `${key}_by_${input.groupBy}`;
+  const members = [...groups].sort(([a], [b]) => a.localeCompare(b));
+  for (const measure of input.measures) {
+    const { suffix, unit } = QUERY_METRIC[measure];
+    const metricKey = `${input.kind}_${suffix}`;
+    const definition = `${about}: ${measure === "average" ? "average amount per transaction" : measure === "count" ? "number of transactions" : "total amount"}`;
+    const value = measured(measure, all);
+    if (value !== null)
+      payload.evidence.push(
+        metric(ctx, {
+          local: `${key}.${measure}.all.${input.from}.${input.through}`,
+          domain: "money",
+          metricKey,
+          definition,
+          period,
+          basis: "event_date",
+          scope: {
+            id: `whole_domain:${key}`,
+            type: "whole_domain",
+            description: about,
+          },
+          coverage,
+          value,
+          unit,
+        }),
+      );
+    // An average has no value for an empty group, so it ranks only the
+    // groups that have transactions.
+    const present = members.filter(
+      ([, group]) => measured(measure, group) !== null,
+    );
+    for (const [member, group] of present)
+      payload.evidence.push(
+        metric(ctx, {
+          local: `${key}.${measure}.${member}.${input.from}.${input.through}`,
+          domain: "money",
+          metricKey,
+          definition,
+          period,
+          basis: "event_date",
+          scope: {
+            id: `cohort:${setId}`,
+            type: "cohort",
+            description: `${about}, by ${input.groupBy}`,
+            cohort: {
+              setId,
+              member,
+              setSize: present.length,
+              setComplete: true,
+            },
+          },
+          coverage,
+          ...(member.startsWith("category:") && {
+            refs: [{ handle: member, href: "/money/transactions" }],
+          }),
+          value: measured(measure, group)!,
+          unit,
+        }),
+      );
+  }
+  payload.limitations.push(
+    "ATLAS computed these figures from every matching recorded transaction (date, amount and category only). Transfers and unrecorded spending are not included.",
   );
   return payload;
 }

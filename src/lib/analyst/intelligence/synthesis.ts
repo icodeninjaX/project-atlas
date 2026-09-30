@@ -63,6 +63,8 @@ export type SynthesisInput = {
   derived: DerivedFact[];
   labels: ProviderLabel[];
   history: HistoryTurn[];
+  /** Priorities the person saved; they frame the answer, never evidence. */
+  priorities?: string[];
   /** The planner's reading of the question; null when it did not run. */
   plan?: AnalysisPlan | null;
   /** The first draft's timeout; the writer's minimum when omitted. */
@@ -131,6 +133,7 @@ function payloadFor(
     history: input.history,
     evidence: input.evidence,
     labels: input.labels,
+    priorities: input.priorities ?? [],
   };
 }
 
@@ -245,6 +248,36 @@ function feedback(answer: AnswerV2, instructions: string[]) {
  * Rule names and schema paths only: never claim text, questions, labels or
  * evidence values. This is how a rejected answer is diagnosed from logs.
  */
+/** Why a written answer failed, in the person's words, for the note shown. */
+const FAILED_CHECK: Record<string, string> = {
+  schema: "the written answer was incomplete",
+  figure: "a figure did not match its source",
+  date: "a date was outside the records read",
+  month: "a month was outside the records read",
+  metric_mismatch: "a figure was described as a different measure",
+  scope_mismatch: "it mixed figures from different sets of records",
+  comparison: "a comparison did not match the figures",
+  incompatible_comparison: "it compared figures that cannot be compared",
+  certainty_wording: "it stated something as certain",
+  causal_wording: "it claimed a cause the records cannot show",
+  unhedged_interpretation: "it stated an interpretation as fact",
+  unsupported_superlative:
+    "it called something the highest or lowest without a ranking",
+  unverifiable_wording: "it used wording ATLAS cannot check",
+  process_wording: "it described the analysis instead of the records",
+  projection_wording: "it stated an estimate as recorded",
+  missing_support: "a statement cited no figures",
+};
+
+export function failedChecksNote(reasons: readonly string[]) {
+  const words = [
+    ...new Set(reasons.flatMap((item) => FAILED_CHECK[item] ?? [])),
+  ].slice(0, 2);
+  return words.length
+    ? `The written explanation did not pass ATLAS checks (${words.join("; ")}), so only checked ATLAS figures are shown.`
+    : "The written explanation did not pass ATLAS checks, so only checked ATLAS figures are shown.";
+}
+
 function logRejections(stages: StageLog[], reasons: string[], draft: unknown) {
   const unique = [...new Set(reasons)];
   if (unique.length === 0) return;
@@ -614,7 +647,7 @@ export async function synthesizeAnswer(
         status: "fallback_facts",
         limitations: [
           ...figures.limitations,
-          "The written explanation did not pass ATLAS checks, so only checked ATLAS figures are shown.",
+          failedChecksNote(answer.verification.rejectionReasons),
         ],
         verification: {
           ...figures.verification,

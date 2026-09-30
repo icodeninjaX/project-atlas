@@ -143,6 +143,36 @@ projection must read as an estimate ("at this pace … would"), or it is
 rejected (`projection_wording`). A pace claim may state how many days it
 spans.
 
+## 4b-3. Transaction queries (`queryTransactions`, `money.query`)
+
+The fixed reads answer totals, the category breakdown and monthly history.
+Questions such as "weekends or weekdays?", "how many purchases over
+₱1,000?", "my average purchase" or "dining each month since August" need a
+query. The planner may add a `money.query` sub-question with a query:
+grouping (none, category, weekday, weekend, month), measures (total, count,
+average per transaction), a category phrase from the question and an amount
+range. It becomes its own requirement carrying `transactionQuery`.
+
+The proposer resolves the category phrase among the owner's categories
+first (all equally good matches; none means nothing is read), then calls
+`queryTransactions` for each period. The tool reads date, amount and
+category only, in owner-scoped keyset pages of 500 (at most 3,500 records;
+more is a failure, never a partial figure), and computes every total, count
+and average itself. Its figures use their own metric keys
+(`expense_query_centavos`, `expense_query_count`,
+`expense_query_average_centavos`) and a scope per filter
+(`whole_domain:<kind>_q<hash>`), so they are never netted, paced or compared
+with the fixed reads or with another filter. A set `<name>_by_<group>` is
+divided only by the total `whole_domain:<name>`; averages are ranked but
+never divided into shares. Only the query read answers a query requirement;
+resolving the category is a step. Queries take the multi-round path.
+
+`depth-questions.test.ts` runs such questions end to end on the synthetic
+fixtures (scripted plan, real brief check, resolution, reads and
+derivations) and states the exact figures each answer rests on. Writing it
+found two bugs, now fixed: "since August" was read as August alone, and the
+test database compared numbers as text.
+
 ## 4c. Reading more after the first draft
 
 With a plan, the first draft may list up to two records it lacked in
@@ -160,6 +190,48 @@ replaces the first draft, whose claims were written without the new records
 calls and queries join the run's usage. The repair
 is never offered the catalog and its own requests are ignored, so reading
 cannot loop. Without time, or with nothing valid asked, the answer stands.
+
+## 4d. Remembered priorities (`memory.ts`, `analyst_memories`)
+
+Analyst can remember lasting goals and priorities the person states in
+words ("I'm saving for a laptop", "paying off my loan comes first") and
+frame later answers around them.
+
+- **Nothing is saved without the person.** The planner may report a
+  `statedPriority` (at most twelve words, no figures); if it passes
+  `memoryText` (3–160 characters, no digits, currency, amounts, links or
+  record handles) and is not already saved, the answer offers it with a
+  Remember button and a notice that saved priorities are sent to the AI
+  provider with questions. Only the confirmed text is stored.
+- **What is kept:** at most ten priorities per owner, text only
+  (`analyst_memories`, owner-only row-level security; the database also
+  rejects figures and an eleventh row, and the text cannot be edited).
+- **How long:** until deleted, or 90 days after the priority last came up.
+  The planner reports which saved priorities a question bears on
+  (`relatedPriorities`, by short prompt IDs `p1…`; database IDs never reach
+  a provider), and the route refreshes those. Reading skips and deletes
+  older ones.
+- **Control:** "What Analyst remembers" lists each priority with the days
+  left and a delete button (`/api/analyst/memories`).
+- **Use:** the planner and writer receive the texts (`priorities` in the
+  provider payload, kept by the policy filter only with consent and only
+  while they still pass `memoryText`). The writer relates findings to a
+  priority as a hedged interpretation and never treats one as evidence.
+
+The table comes from migration `20260930060419_analyst_memories.sql`
+(applied to production on 30 September 2026). Where it is missing, the store
+reads as unavailable and Analyst answers without priorities.
+
+## 4e. Facts-only answers people can read
+
+When no written claim survives the checks, the facts-only answer now states
+each figure once (a figure read twice, or for a period that differs only in
+its last day, is not repeated), leaves out retrieval counts and inventory
+counts, and says in words why the written explanation failed
+(`failedChecksNote`, e.g. "a figure did not match its source"). Limitations
+are sorted (`sortLimitations`): notes about the answer itself first, at most
+four shown, repeats of "zero is not proof of no activity" dropped, and notes
+about how records were read go under "How ATLAS read and checked this".
 
 ## 5. How much is shown
 
