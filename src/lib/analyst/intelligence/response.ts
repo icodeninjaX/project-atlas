@@ -22,10 +22,12 @@ import {
 /** Capabilities whose requirement only a cited ATLAS ranking answers. */
 const RANKING_CAPABILITIES = new Set(["money.category_ranking"]);
 const rankingFact = /^derived\.(?:rank|contribution)\./;
+/** Data inventory items: context on what is recorded, never an answer. */
+const inventoryEvidence = /^getDataInventory\./;
 
 /**
  * Whether a claim answers a requirement: it is attached, ships and is not a
- * limitation, and a ranking question is answered by a claim that cites the
+ * limitation, cites more than the data inventory, and a ranking question is answered by a claim that cites the
  * ranking, never by a total alone.
  */
 export function answersRequirement(
@@ -39,6 +41,9 @@ export function answersRequirement(
     claim.answersRequirementIds.includes(requirement.id) &&
     claimCanShip(claim) &&
     claim.kind !== "limitation" &&
+    // A count of stored records explains a gap; it answers nothing asked.
+    (claim.derivedFactIds.length > 0 ||
+      claim.evidenceIds.some((id) => !inventoryEvidence.test(id))) &&
     (!ranked || claim.derivedFactIds.some((id) => rankingFact.test(id)))
   );
 }

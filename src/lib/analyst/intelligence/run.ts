@@ -540,7 +540,12 @@ export async function runAnalystV2(
   };
   const synthesis = await synthesizeAnswer({
     brief,
-    evidence: [...investigation.selection.selected, ...inventoryEvidence],
+    // The inventory explains gaps in what was read; with nothing read, the
+    // no-evidence path reports the gap without a writer.
+    evidence:
+      investigation.selection.selected.length > 0
+        ? [...investigation.selection.selected, ...inventoryEvidence]
+        : [],
     derived,
     labels: investigation.labels.map(({ handle, domain, text }) => ({
       handle,
@@ -598,7 +603,8 @@ export async function runAnalystV2(
   const next = recordAnswer(plan.context, {
     brief,
     answer,
-    evidence,
+    // Claims may cite the inventory; keep it so later turns see those facts.
+    evidence: [...evidence, ...inventoryEvidence],
   });
   const entityDomains = next.entities.flatMap((item) => {
     const parsed = parseHandle(item.handle);
