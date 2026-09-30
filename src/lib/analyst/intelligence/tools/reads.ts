@@ -930,6 +930,12 @@ export async function transactionQuery(
   ].filter(Boolean);
   const about = `Recorded ${input.kind} transactions${filters.length ? ` ${filters.join(", ")}` : ""}`;
   const setId = `${key}_by_${input.groupBy}`;
+  // Every figure of a filtered query names the categories it read, so two
+  // queries on different categories are never confused.
+  const chosen = input.categories.map((handle) => ({
+    handle,
+    href: "/money/transactions",
+  }));
   const members = [...groups].sort(([a], [b]) => a.localeCompare(b));
   for (const measure of input.measures) {
     const { suffix, unit } = QUERY_METRIC[measure];
@@ -951,6 +957,7 @@ export async function transactionQuery(
             description: about,
           },
           coverage,
+          ...(chosen.length > 0 && { refs: chosen }),
           value,
           unit,
         }),
@@ -981,8 +988,13 @@ export async function transactionQuery(
             },
           },
           coverage,
-          ...(member.startsWith("category:") && {
-            refs: [{ handle: member, href: "/money/transactions" }],
+          ...((chosen.length > 0 || member.startsWith("category:")) && {
+            refs: [
+              ...(member.startsWith("category:")
+                ? [{ handle: member, href: "/money/transactions" }]
+                : []),
+              ...chosen.filter((ref) => ref.handle !== member),
+            ],
           }),
           value: measured(measure, group)!,
           unit,

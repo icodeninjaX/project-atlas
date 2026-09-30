@@ -4,10 +4,12 @@ import {
   RUN_BUDGETS,
   type BudgetRefusal,
   type RunBudget,
+  type RunPath,
 } from "./budgets";
 import type { BriefCheck, RequirementReadiness } from "./brief";
 import type { AnalysisBrief, EvidenceV2, UnresolvedReason } from "./contracts";
 import { selectEvidence, type Selection } from "./evidence";
+import { DRIVER_CATEGORIES } from "./proposer";
 import {
   parseHandle,
   v2ToolInputs,
@@ -137,7 +139,43 @@ const toolsFor = new Map(
  */
 const answeredBy = new Map<string, ReadonlySet<string>>([
   ["money.query", new Set(["queryTransactions"])],
+  // The breakdowns only find the leading categories; their months answer.
+  ["money.change_drivers", new Set(["queryTransactions"])],
 ]);
+/**
+ * Capabilities answered only when every read made for them succeeded: each
+ * change-drivers read is one leading category's months, so one failed read
+ * leaves the answer without that category.
+ */
+const EVERY_READ = new Set(["money.change_drivers"]);
+
+/**
+ * Change drivers add one month series per leading category (six months and
+ * the query total each). They get their own room, so the breakdowns they
+ * explain keep the room they had and stay complete.
+ */
+export const DRIVER_ROOM = {
+  items: DRIVER_CATEGORIES * 7,
+  bytes: DRIVER_CATEGORIES * 7 * 2_500,
+};
+
+/** How much evidence a run keeps for the writer. */
+export function selectionLimits(brief: AnalysisBrief, path: RunPath) {
+  const base =
+    path === "deep"
+      ? { items: 40, bytes: 60_000 }
+      : { items: 20, bytes: 30_000 };
+  const drivers = brief.requirements.some((item) =>
+    item.evidenceNeeded.includes("money.change_drivers"),
+  );
+  return drivers
+    ? {
+        items: base.items + DRIVER_ROOM.items,
+        bytes: base.bytes + DRIVER_ROOM.bytes,
+      }
+    : base;
+}
+
 const answers = (capability: string, tool: string) =>
   (answeredBy.get(capability) ?? toolsFor.get(capability)!).has(tool);
 
@@ -216,13 +254,16 @@ function assess(
       );
     // Each capability needs one complete read; a bounded read that was cut
     // short still counts once a complete read covers the same capability.
-    const readyFor = (capability: string) =>
-      mine.some(
-        (outcome) =>
-          useful(outcome) &&
-          outcome.result.status === "ready" &&
-          answers(capability, outcome.request.tool),
+    const readyFor = (capability: string) => {
+      const reads = mine.filter((outcome) =>
+        answers(capability, outcome.request.tool),
       );
+      const ready = (outcome: ToolOutcome) =>
+        useful(outcome) && outcome.result.status === "ready";
+      return EVERY_READ.has(capability)
+        ? reads.length > 0 && reads.every(ready)
+        : reads.some(ready);
+    };
     const complete =
       capabilities.length > 0
         ? capabilities.every(readyFor)
@@ -294,10 +335,19 @@ export async function runInvestigation(input: {
     const open = progress.filter(
       (item) => item.state !== "evidenced" && item.state !== "blocked",
     );
-    if (
-      open.filter((item) => item.essential).length === 0 &&
-      (open.length === 0 || round > 1)
-    ) {
+    // Once the essentials are answered, an optional requirement keeps
+    // reading only while its last step succeeded (a breakdown read before the
+    // categories it names), so a dependent read is not cut off after one step.
+    const advancing = open.some((item) =>
+      outcomes.some(
+        (outcome) =>
+          outcome.round === round - 1 &&
+          outcome.result.status !== "error" &&
+          outcome.request.requirementIds.includes(item.requirementId),
+      ),
+    );
+    const essentialOpen = open.some((item) => item.essential);
+    if (!essentialOpen && (open.length === 0 || (round > 1 && !advancing))) {
       stopReason = "sufficient";
       break;
     }
@@ -384,8 +434,14 @@ export async function runInvestigation(input: {
       accepted.push({ ...request, tool });
     }
     if (accepted.length === 0) {
+      // Nothing more for optional requirements after the essentials are
+      // answered is the normal end of the investigation.
       stopReason =
-        proposal.requests.length === 0 ? "no_proposals" : "no_progress";
+        !essentialOpen && round > 1
+          ? "sufficient"
+          : proposal.requests.length === 0
+            ? "no_proposals"
+            : "no_progress";
       break;
     }
     const room = budget.toolCalls - ledger.usage.toolCalls;
@@ -447,11 +503,7 @@ export async function runInvestigation(input: {
       requirementIds: outcome.request.requirementIds,
     })),
   );
-  const limits =
-    input.selection ??
-    (budget.path === "deep"
-      ? { items: 40, bytes: 60_000 }
-      : { items: 20, bytes: 30_000 });
+  const limits = input.selection ?? selectionLimits(brief, budget.path);
   const selection = selectEvidence(brief, retrieved, limits);
   const essential = progress.filter((item) => item.essential);
   const unresolved = progress.flatMap((item) =>

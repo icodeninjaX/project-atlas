@@ -5,6 +5,7 @@ import { metricDefinitions, type MetricKey } from "@/lib/history/metrics";
 import { CAPABILITY_MANIFEST } from "./capabilities";
 import type { AnalysisBrief, EvidenceV2 } from "./contracts";
 import { explicitStyle } from "./language";
+import { withChangeDrivers } from "./planning";
 import type { PromptPriority } from "./memory";
 import type { HistoryTurn, ProviderPayload } from "./policy";
 import type { StageCaller } from "./stages";
@@ -37,6 +38,7 @@ export const PLANNABLE_CAPABILITIES = [
   "signals.current",
   "history.trend",
   "money.query",
+  "money.change_drivers",
 ] as const;
 type PlannableCapability = (typeof PLANNABLE_CAPABILITIES)[number];
 
@@ -84,6 +86,7 @@ export const PLANNER_SYSTEM = [
   "subQuestions: at most four concrete sub-questions that, together with the current reading, answer the question. Map each to capability IDs from the catalog that can answer it; never invent an ID, and skip what the current reading already covers. When the question is broad, about connections or about what to focus on ('How am I doing?', 'Why do I feel behind?', 'What should I work on?'), look across areas: money flow, debts, goals, tasks, reviews and career. When the question is narrow, add only what changes the answer, or nothing.",
   "moneyKind: for a money capability, say whether it reads expense or income records; ask two sub-questions when both matter, such as savings or whether income covers spending. Otherwise none.",
   "query: with money.query, the transaction query that answers a sub-question the fixed money reads cannot: groupBy (none, category, weekday, weekend for weekends against weekdays, or month), measures (total, count, average per transaction), category (a category named in the question, in the person's words, such as 'food'; otherwise null), and minAmountPesos and maxAmountPesos (an amount range the question names, such as over 1000; otherwise null). Use it for questions like 'weekends or weekdays', 'how many purchases over 1,000', 'average transaction', 'how much on food each month'. moneyKind says expense or income. Otherwise query null.",
+  "money.change_drivers: for why recorded spending or income changed between two periods ('why did I spend more this month?', 'what changed?'), it finds the categories that account for most of the change and how each has moved over recent months. Set comparePreviousPeriod true with it, and moneyKind to the kind that changed. For whether one named category is rising or normal ('is my food spending going up?'), use money.query with groupBy month and that category instead.",
   "trendMetric and trendMonths: with history.trend, the measure to follow month by month and over how many months (6, or 12 for a year). Use a trend whenever the answer depends on what is normal or how things are moving: 'am I improving', 'is this normal', 'more than usual', 'lately'. Otherwise trendMetric none.",
   "hypotheses: up to four checks a skeptical analyst would make before trusting a conclusion, such as 'one category may account for most of the change' or 'fewer completed tasks may reflect fewer planned tasks'. Phrase them as checks, never as findings, and use no figures.",
   "comparePreviousPeriod: true when judging the answer needs a baseline: a trend, a change, 'am I improving', 'is this normal', 'too much'.",
@@ -419,6 +422,8 @@ export function refineBrief(
   const seen = new Set<string>();
   const kept = options.defaultedTopic && !fixedIntent ? [] : brief.requirements;
   for (const item of kept) {
+    if (item.evidenceNeeded.includes("money.change_drivers"))
+      seen.add(`money.change_drivers|${requirementMoneyKind(item)}`);
     for (const capability of item.evidenceNeeded)
       seen.add(keyOf([capability], kindOf(item)));
     seen.add(keyOf(item.evidenceNeeded, kindOf(item)));
@@ -473,6 +478,22 @@ export function refineBrief(
         });
       }
       capabilities.splice(capabilities.indexOf("money.query"), 1);
+    }
+    // Change drivers read one kind of money over two periods, so they are
+    // their own requirement.
+    if (capabilities.includes("money.change_drivers")) {
+      const kind = sub.moneyKind === "income" ? "income" : "expense";
+      const key = `money.change_drivers|${kind}`;
+      if (!seen.has(key) && planned.length < PLANNER_LIMITS.subQuestions) {
+        seen.add(key);
+        planned.push({
+          id: `${prefix}${planned.length + 1}_drivers_${kind}`,
+          question: sub.question,
+          essential: false,
+          evidenceNeeded: ["money.change_drivers"],
+        });
+      }
+      capabilities.splice(capabilities.indexOf("money.change_drivers"), 1);
     }
     if (capabilities.length === 0) continue;
     if (planned.length >= PLANNER_LIMITS.subQuestions) break;
@@ -549,6 +570,17 @@ export function refineBrief(
     ];
   }
 
+  // Drivers explain a change between two periods; with any other number
+  // there is no change to explain.
+  if (periods.length !== 2) {
+    requirements = requirements.filter(
+      (item) => !item.evidenceNeeded.includes("money.change_drivers"),
+    );
+    if (requirements.length === 0) return { brief, plan, clarification: null };
+    if (!requirements.some((item) => item.essential))
+      requirements[0] = { ...requirements[0]!, essential: true };
+  }
+
   const intent = fixedIntent
     ? brief.intent
     : brief.intent === "lookup"
@@ -558,6 +590,14 @@ export function refineBrief(
   // reading of the question decides how much of the answer to show.
   const responseStyle =
     explicitStyle(brief.question)?.style ?? output.responseStyle;
+  // A change the plan compares over two periods gets its drivers.
+  if (requirements.length < PLANNER_LIMITS.requirements)
+    requirements = withChangeDrivers(
+      requirements,
+      intent,
+      periods.length,
+      brief.question,
+    );
   return {
     brief: { ...brief, intent, responseStyle, requirements, periods },
     plan,

@@ -110,6 +110,42 @@ const ENTITY_CAPABILITIES = new Set([
 ]);
 
 /**
+ * "Why did I spend more?" also asks which categories account for the change
+ * and how each has been moving: a money change between exactly two periods
+ * gets a change-drivers requirement, unless it has one.
+ */
+export function withChangeDrivers(
+  requirements: AnalysisBrief["requirements"],
+  intent: AnalysisBrief["intent"],
+  periods: number,
+  question: string,
+): AnalysisBrief["requirements"] {
+  if (
+    intent !== "explain_change" ||
+    periods !== 2 ||
+    requirements.some((item) =>
+      item.evidenceNeeded.includes("money.change_drivers"),
+    ) ||
+    !requirements.some((item) =>
+      item.evidenceNeeded.includes("money.category_breakdown"),
+    )
+  )
+    return requirements;
+  const kind = /\b(?:income|salary|earn\w*|kita|sahod)\b/i.test(question)
+    ? "income"
+    : "expense";
+  return [
+    ...requirements,
+    {
+      id: `r_money_drivers_${kind}`,
+      question: `Which categories account for the change in recorded ${kind === "income" ? "income" : "spending"}, and how each has moved month by month`,
+      essential: false,
+      evidenceNeeded: ["money.change_drivers"],
+    },
+  ];
+}
+
+/**
  * A money question that asks where the most goes ("Where do I overspend the
  * most?", "What is my biggest expense category?"). A change question keeps
  * its own requirement.
@@ -314,7 +350,12 @@ export function deterministicBrief(input: {
       resolution: item.resolution,
     })),
     periods: periods.slice(0, 8),
-    requirements: requirements.slice(0, 12),
+    requirements: withChangeDrivers(
+      requirements,
+      intent,
+      periods.length,
+      question,
+    ).slice(0, 12),
     assumptions: (input.plan?.assumptions ?? []).map((item) => ({
       id: `a_${item.key}`,
       text: `${item.key.replaceAll("_", " ")}: ${item.value}`,

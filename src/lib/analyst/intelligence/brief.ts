@@ -51,6 +51,8 @@ const deepCapabilities = new Set([
   "money.category_breakdown",
   // A query on a named category resolves the category, then reads.
   "money.query",
+  // Change drivers read the breakdowns, then each leading category's months.
+  "money.change_drivers",
   "goal.linked_activity",
 ]);
 const deepIntents = new Set<AnalysisBrief["intent"]>([

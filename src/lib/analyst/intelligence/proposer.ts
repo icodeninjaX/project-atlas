@@ -1,5 +1,5 @@
 import { manilaToday } from "@/lib/analyst/evidence";
-import type { AnalysisBrief } from "./contracts";
+import type { AnalysisBrief, EvidenceV2 } from "./contracts";
 import { requirementMoneyKind, requirementTrend } from "./planner";
 import {
   assumedIncomeChange,
@@ -119,6 +119,95 @@ function period(brief: AnalysisBrief, now: Date) {
   return { from: `${today.slice(0, 8)}01`, through: today };
 }
 
+/** The first day of the month `months - 1` months before `day`'s month. */
+function monthStart(day: string, months: number) {
+  const year = Number(day.slice(0, 4));
+  const month = Number(day.slice(5, 7)) - (months - 1);
+  return new Date(Date.UTC(year, month - 1, 1)).toISOString().slice(0, 10);
+}
+
+/** Months a series reads when the question names no window. */
+const SERIES_MONTHS = 6;
+
+/**
+ * The window a month-by-month query reads: from the earliest period through
+ * the latest. Without a window the person named, it reaches back over the
+ * last six months, so there are whole months to set the latest against.
+ */
+function monthSpan(
+  periods: ReadonlyArray<{
+    from: string;
+    through: string;
+    basis?: AnalysisBrief["periods"][number]["basis"];
+  }>,
+) {
+  const through = periods
+    .map((item) => item.through)
+    .reduce((a, b) => (a > b ? a : b));
+  const earliest = periods
+    .map((item) => item.from)
+    .reduce((a, b) => (a < b ? a : b));
+  const stated = periods.some((item) => item.basis !== "disclosed_default");
+  const series = monthStart(through, SERIES_MONTHS);
+  return {
+    from: stated || earliest < series ? earliest : series,
+    through,
+  };
+}
+
+type Period = { from: string; through: string };
+
+/** Leading categories whose months a change-drivers read follows. */
+export const DRIVER_CATEGORIES = 2;
+
+/**
+ * The categories that moved most in the direction of the total's change
+ * between two complete breakdowns, largest first. Records without a
+ * category cannot be read on their own, so they are never a driver.
+ */
+export function changeDrivers(
+  kind: "expense" | "income",
+  now: EvidenceV2[],
+  before: EvidenceV2[],
+) {
+  const totals = (items: EvidenceV2[]) => {
+    const members = new Map<string, number>();
+    let total: number | null = null;
+    for (const item of items) {
+      if (
+        item.kind !== "metric" ||
+        item.semantics.metricKey !== `${kind}_centavos`
+      )
+        continue;
+      if (item.scope.id === `whole_domain:${kind}`) total = item.value;
+      const member = item.scope.cohort?.member;
+      if (
+        item.scope.cohort?.setId === `${kind}_by_category` &&
+        member?.startsWith("category:")
+      )
+        members.set(member, item.value);
+    }
+    return { total, members };
+  };
+  const current = totals(now);
+  const previous = totals(before);
+  if (current.total === null || previous.total === null) return [];
+  const direction = Math.sign(current.total - previous.total);
+  if (direction === 0) return [];
+  return [...new Set([...current.members.keys(), ...previous.members.keys()])]
+    .map((member) => ({
+      member,
+      change:
+        ((current.members.get(member) ?? 0) -
+          (previous.members.get(member) ?? 0)) *
+        direction,
+    }))
+    .filter((item) => item.change > 0)
+    .sort((a, b) => b.change - a.change || a.member.localeCompare(b.member))
+    .slice(0, DRIVER_CATEGORIES)
+    .map((item) => item.member);
+}
+
 export function capabilityProposer(now: Date): Proposer {
   return {
     provider: null,
@@ -162,15 +251,10 @@ export function capabilityProposer(now: Date): Proposer {
             const trend = requirementTrend(requirement);
             if (!trend) continue;
             const today = manilaToday(now);
-            const year = Number(today.slice(0, 4));
-            const month = Number(today.slice(5, 7)) - (trend.months - 1);
-            const start = new Date(Date.UTC(year, month - 1, 1))
-              .toISOString()
-              .slice(0, 10);
             add(
               "getHistoricalMetricSeries",
               {
-                from: start,
+                from: monthStart(today, trend.months),
                 through: today,
                 metric: trend.metric,
                 grain: "month",
@@ -274,6 +358,61 @@ export function capabilityProposer(now: Date): Proposer {
             );
             continue;
           }
+          if (capability === "money.change_drivers") {
+            const kind = requirementMoneyKind(requirement);
+            const [current, previous] = view.brief.periods
+              .map(({ from, through }): Period => ({ from, through }))
+              .sort((a, b) => b.from.localeCompare(a.from));
+            const read = (item: Period) =>
+              view.outcomes.find((outcome) => {
+                const input = outcome.request.input as Partial<
+                  Period & { kind: string }
+                >;
+                return (
+                  outcome.request.tool === "getMoneyBreakdown" &&
+                  outcome.result.status !== "error" &&
+                  input.from === item.from &&
+                  input.through === item.through &&
+                  input.kind === kind
+                );
+              });
+            if (view.brief.periods.length !== 2 || !current || !previous)
+              continue;
+            const latest = read(current);
+            const earlier = read(previous);
+            if (!latest || !earlier) {
+              for (const item of [current, previous])
+                if (!read(item))
+                  add(
+                    "getMoneyBreakdown",
+                    { from: item.from, through: item.through, kind },
+                    requirement.id,
+                  );
+              continue;
+            }
+            // Each leading category's months, over the last six through the
+            // current period's end.
+            for (const category of changeDrivers(
+              kind,
+              latest.result.evidence,
+              earlier.result.evidence,
+            ))
+              add(
+                "queryTransactions",
+                {
+                  from: monthStart(current.through, SERIES_MONTHS),
+                  through: current.through,
+                  kind,
+                  groupBy: "month",
+                  measures: ["total"],
+                  categories: [category],
+                  minAmountPesos: null,
+                  maxAmountPesos: null,
+                },
+                requirement.id,
+              );
+            continue;
+          }
           if (capability === "money.query") {
             const spec = requirement.transactionQuery;
             if (!spec) continue;
@@ -312,8 +451,17 @@ export function capabilityProposer(now: Date): Proposer {
             }
             const periods = view.brief.periods.length
               ? view.brief.periods
-              : [{ ...period(view.brief, now) }];
-            for (const item of periods)
+              : [
+                  {
+                    ...period(view.brief, now),
+                    basis: "disclosed_default" as const,
+                  },
+                ];
+            // Grouped by month, one read spans every period: the months are
+            // the comparison.
+            for (const item of spec.groupBy === "month"
+              ? [monthSpan(periods)]
+              : periods)
               add(
                 "queryTransactions",
                 {

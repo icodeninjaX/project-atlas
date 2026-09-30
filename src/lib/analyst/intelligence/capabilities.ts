@@ -101,6 +101,20 @@ export const CAPABILITY_MANIFEST: readonly CapabilityDescriptor[] = [
     ],
   }),
   entry({
+    id: "money.change_drivers",
+    domain: "money",
+    profile: "aggregate",
+    status: "available",
+    description:
+      "Which categories account for most of a change in recorded income or expenses between two periods, and how each of those categories has moved month by month over the last six months. ATLAS computes the contributions and trends from every matching record.",
+    tools: ["getMoneyBreakdown", "queryTransactions"],
+    supportedHistory: "Two periods, and six months of each leading category.",
+    unsupported: [
+      "Why a category changed",
+      "Categories without a name (uncategorized records)",
+    ],
+  }),
+  entry({
     id: "money.full_aggregate",
     domain: "money",
     profile: "aggregate",

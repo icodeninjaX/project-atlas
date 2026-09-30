@@ -5,9 +5,14 @@ import { analystCapabilities } from "./capabilities";
 import type { DerivedFact, EvidenceV2 } from "./contracts";
 import { autoDerive } from "./derive";
 import { OWNER_A } from "./evaluation/fixtures";
-import { createEmulator, fixtureTables } from "./evaluation/postgrest";
+import {
+  createEmulator,
+  fixtureTables,
+  fixtureUuid,
+} from "./evaluation/postgrest";
 import { runInvestigation } from "./orchestrator";
 import { deterministicBrief } from "./planning";
+import type { AnalysisBrief } from "./contracts";
 import { refineBrief, type PlannerOutput } from "./planner";
 import { SHARED_ROUTE, legacyEquivalentConsent } from "./policy";
 import { capabilityProposer } from "./proposer";
@@ -222,6 +227,140 @@ describe("questions that need a transaction query", () => {
     expect(
       answered.evidence.some((item) => item.sourceType === "queryTransactions"),
     ).toBe(false);
+  });
+});
+
+/**
+ * Owner A's records with three earlier months of dining and groceries: dining
+ * ₱500, ₱600 and ₱700 in May through July (then ₱800 in August), and
+ * groceries ₱4,000 each month.
+ */
+function withHistory() {
+  const tables = fixtureTables();
+  const row = (id: string, category: string, amount: number, date: string) => ({
+    id: fixtureUuid(id),
+    user_id: OWNER_A,
+    category_id: fixtureUuid(category),
+    transaction_type: "expense",
+    amount_centavos: amount,
+    transaction_date: date,
+    merchant_or_source: "Synthetic merchant",
+    description: null,
+  });
+  tables.transactions!.push(
+    row("tx-h-0510", "cat-a-dining", 50_000, "2026-05-10"),
+    row("tx-h-0610", "cat-a-dining", 60_000, "2026-06-10"),
+    row("tx-h-0710", "cat-a-dining", 70_000, "2026-07-10"),
+    row("tx-h-0512", "cat-a-groceries", 400_000, "2026-05-12"),
+    row("tx-h-0612", "cat-a-groceries", 400_000, "2026-06-12"),
+    row("tx-h-0712", "cat-a-groceries", 400_000, "2026-07-12"),
+  );
+  vi.stubGlobal("fetch", createEmulator(tables, OWNER_A).fetch);
+}
+
+async function investigate(brief: AnalysisBrief): Promise<Answered> {
+  const check = checkBrief(brief, {
+    consent,
+    route: SHARED_ROUTE,
+    authorizedHandles: new Set(),
+  });
+  if (!check.ok) throw new Error(check.reason);
+  const result = await runInvestigation({
+    check,
+    proposer: capabilityProposer(now),
+    invoke: (tool, input) =>
+      invokeAnalystToolV2(tool, input, { consent, route: SHARED_ROUTE }),
+    clock: () => 0,
+  });
+  const evidence = result.selection.selected;
+  return { evidence, derived: autoDerive(evidence, { today: "2026-09-24" }) };
+}
+
+const dining = `category:${fixtureUuid("cat-a-dining")}`;
+const groceries = `category:${fixtureUuid("cat-a-groceries")}`;
+/** The trend fact of the query that read `category`. */
+const trendOf = (answered: Answered, category: string, name: string) => {
+  const scopes = new Set(
+    answered.evidence
+      .filter((item) =>
+        item.provenance.sourceRefs.some((ref) => ref.handle === category),
+      )
+      .map((item) => item.scope.id),
+  );
+  return answered.derived.find(
+    (item) =>
+      item.id.startsWith("derived.trend.") &&
+      item.id.endsWith(`.${name}`) &&
+      scopes.has(item.scopeId),
+  );
+};
+
+describe("category trends", () => {
+  it("Is my dining spending going up?", async () => {
+    withHistory();
+    const answered = await answer(
+      "Is my dining spending going up?",
+      query("Dining by month", {
+        ...none,
+        category: "dining",
+        groupBy: "month",
+        measures: ["total"],
+      }),
+    );
+    // Without a named window, the last six months: April through today.
+    const september = answered.evidence.find(
+      (item) => item.scope.cohort?.member === "month:2026-09",
+    )!;
+    expect(september.time.period).toEqual({
+      from: "2026-04-01",
+      through: "2026-09-24",
+    });
+    // April has no dining and no records are known before it, so the whole
+    // months are May through August: ₱500, ₱600, ₱700, ₱800.
+    expect(trendOf(answered, dining, "streak")?.output).toMatchObject({
+      value: 3,
+    });
+    expect(trendOf(answered, dining, "mean")?.output).toMatchObject({
+      value: 65_000,
+    });
+    expect(trendOf(answered, dining, "latest_vs_mean")?.output).toMatchObject({
+      value: 20_000,
+    });
+    // September so far is ₱1,800 over 24 days: at ₱75 a day, ₱2,250.
+    expect(
+      answered.derived.find((item) => item.operation === "projection")?.output,
+    ).toMatchObject({ value: 225_000 });
+  });
+
+  it("Why did my spending go up?", async () => {
+    withHistory();
+    const answered = await investigate(
+      deterministicBrief({
+        question: "Why did my spending go up?",
+        plan: null,
+        now,
+      }),
+    );
+    // Sep 1–24 against Aug 1–24: ₱11,000 against ₱9,100, with groceries and
+    // dining tied for the largest rise (+₱1,000 each).
+    const contribution = answered.derived.find(
+      (item) =>
+        item.id ===
+        "derived.contribution.whole_domain:expense|expense_centavos",
+    );
+    expect(contribution?.output).toMatchObject({ value: 190_000 });
+    expect([...(contribution?.top ?? [])].sort()).toEqual(
+      [dining, groceries].sort(),
+    );
+    // Each leading category's own months since April.
+    expect(trendOf(answered, dining, "streak")?.output).toMatchObject({
+      value: 3,
+    });
+    // Groceries: ₱4,000 in May through July, then ₱13,999 in August.
+    expect(
+      trendOf(answered, groceries, "latest_vs_mean")?.output,
+    ).toMatchObject({ value: 999_900 });
+    expect(trendOf(answered, groceries, "streak")).toBeUndefined();
   });
 });
 
