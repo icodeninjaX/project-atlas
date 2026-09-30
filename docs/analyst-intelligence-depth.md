@@ -233,6 +233,19 @@ are sorted (`sortLimitations`): notes about the answer itself first, at most
 four shown, repeats of "zero is not proof of no activity" dropped, and notes
 about how records were read go under "How ATLAS read and checked this".
 
+## 4f. The reviewer never removes a checked fact for being shallow
+
+A production answer to "How am I doing this month?" fell back to ATLAS's
+figure list although no statement failed a figure check: the reviewer had
+judged the writer's statements shallow or beside the question, and those
+verdicts removed them. Now a fact or calculation whose only review issues are
+about the answer as a whole (`ANSWER_LEVEL_ISSUES`: misses_question, shallow,
+generic, not_connected_to_objective) stays; those issues still ask for a
+repair. A substantive issue (wrong subject or period, not following from its
+figures, a contradiction, overstated certainty) still withholds it, and
+interpretations are unchanged. The facts-only note also names review reasons
+in words.
+
 ## 5. How much is shown
 
 A lookup used to hide every finding behind its one-line direct answer. When

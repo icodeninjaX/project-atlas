@@ -33,6 +33,14 @@ export const REVIEW_ISSUES = [
   "shallow",
 ] as const;
 
+/** Issues about the answer as a whole rather than one claim's truth. */
+export const ANSWER_LEVEL_ISSUES: ReadonlySet<string> = new Set([
+  "misses_question",
+  "shallow",
+  "generic",
+  "not_connected_to_objective",
+]);
+
 /** The repair target a reviewer uses for the answer as a whole. */
 export const WHOLE_ANSWER_TARGET = "answer";
 export type ReviewIssue = (typeof REVIEW_ISSUES)[number];
@@ -294,11 +302,20 @@ export function applyReview(
         },
       };
     }
+    // A fact whose figures passed ATLAS's checks is judged on substance: a
+    // complaint about the answer as a whole (shallow, beside the question)
+    // asks for a repair, and never removes the checked fact itself.
+    const factOnlyFaultedAsAnswer =
+      !interpretive(claim) &&
+      verdict.verdict !== "supported" &&
+      // A verdict with no issue named is an explicit rejection, kept as is.
+      verdict.issues.length > 0 &&
+      verdict.issues.every((issue) => ANSWER_LEVEL_ISSUES.has(issue));
     return {
       ...claim,
       verification: {
         ...claim.verification,
-        semantic: verdict.verdict,
+        semantic: factOnlyFaultedAsAnswer ? "supported" : verdict.verdict,
         reasons: [
           ...claim.verification.reasons,
           ...verdict.issues.map((issue) => `review:${issue}`),
