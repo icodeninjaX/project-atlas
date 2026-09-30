@@ -137,3 +137,36 @@ describe("facts-only fallback", () => {
     expect(claimCanShip(checkClaim(first!, ctx))).toBe(true);
   });
 });
+
+describe("wording about the analysis itself", () => {
+  it("rejects talk of what the model received or read", () => {
+    for (const text of [
+      "Recorded expenses were ₱51,710.00; the newly read monthly figures were not included in the evidence I received.",
+      "Derived facts show recorded expenses of ₱51,710.00.",
+    ]) {
+      const checked = checkClaim(
+        claim({
+          text,
+          evidenceIds: [expense.id],
+          derivedFactIds: [],
+          scopeId: "whole_domain:expense",
+          comparison: null,
+        }),
+        ctx,
+      );
+      expect(checked.verification.reasons, text).toContain("process_wording");
+    }
+    // Plain statements about the records pass.
+    const plain = checkClaim(
+      claim({
+        text: "Recorded expenses were ₱51,710.00 this month.",
+        evidenceIds: [expense.id],
+        derivedFactIds: [],
+        scopeId: "whole_domain:expense",
+        comparison: null,
+      }),
+      ctx,
+    );
+    expect(plain.verification.reasons).toEqual([]);
+  });
+});

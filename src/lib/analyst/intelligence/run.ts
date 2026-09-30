@@ -21,7 +21,12 @@ import {
   sealContext,
   type ConversationContext,
 } from "./context";
-import type { AnswerV2, ConsentDomain, ResultStatus } from "./contracts";
+import type {
+  AnswerV2,
+  ConsentDomain,
+  EvidenceV2,
+  ResultStatus,
+} from "./contracts";
 import { autoDerive } from "./derive";
 import { suggestFollowUpsV2, type FollowUp } from "./follow-ups";
 import { detectStyle, explicitStyle } from "./language";
@@ -297,6 +302,9 @@ export async function runAnalystV2(
   const history = historyTurns(plan.context);
   let analysisPlan: AnalysisPlan | null = null;
   let plannerLedger: RunLedger | null = null;
+  // What the owner records and since when; the writer may cite it to say
+  // why a baseline is missing.
+  let inventoryEvidence: EvidenceV2[] = [];
   const allowed = new Set(
     capabilities
       .filter(
@@ -312,6 +320,8 @@ export async function runAnalystV2(
       const inventory = await deps
         .invoke("getDataInventory", {})
         .catch(() => null);
+      if (inventory && inventory.status !== "error")
+        inventoryEvidence = inventory.evidence;
       if (inventory && inventory.status !== "error")
         plannerLedger.recordTool(
           inventory.metadata.queries,
@@ -500,7 +510,7 @@ export async function runAnalystV2(
     brief = { ...brief, requirements: [...brief.requirements, ...added] };
     return {
       brief,
-      evidence,
+      evidence: [...evidence, ...inventoryEvidence],
       derived: autoDerive(evidence),
       labels: ownerLabels.map(({ handle, domain, text }) => ({
         handle,
@@ -530,7 +540,7 @@ export async function runAnalystV2(
   };
   const synthesis = await synthesizeAnswer({
     brief,
-    evidence: investigation.selection.selected,
+    evidence: [...investigation.selection.selected, ...inventoryEvidence],
     derived,
     labels: investigation.labels.map(({ handle, domain, text }) => ({
       handle,
@@ -570,8 +580,16 @@ export async function runAnalystV2(
     // lookup no longer hides every finding behind its one-line answer.
     style:
       explicitStyle(plan.question) ??
+      // A planned style shapes the writing but never hides findings; only
+      // a request in words (or the unplanned lookup default) shortens.
       (analysisPlan
-        ? { style: brief.responseStyle, maxSentences: null }
+        ? {
+            style:
+              brief.responseStyle === "concise"
+                ? "standard"
+                : brief.responseStyle,
+            maxSentences: null,
+          }
         : detectStyle(plan.question, brief.intent)),
     requirementText,
     asOf,

@@ -480,10 +480,14 @@ describe("communication helpers", () => {
     expect(detectLanguage("How much did I spend this month?")).toBe("en");
     expect(
       detectStyle("In three sentences, what changed?", "explain_change"),
-    ).toEqual({ style: "concise", maxSentences: 3 });
+    ).toEqual({ style: "concise", maxSentences: 3, requested: true });
     expect(
       detectStyle("Sa tatlong pangungusap, ano ang nagbago?", "explain_change"),
-    ).toEqual({ style: "concise", maxSentences: 3 });
+    ).toEqual({ style: "concise", maxSentences: 3, requested: true });
+    // A default style was never asked for.
+    expect(
+      detectStyle("How much did I spend?", "lookup").requested,
+    ).toBeFalsy();
     expect(detectStyle("Show it as a table", "lookup").style).toBe("table");
     expect(detectStyle("How much did I spend?", "lookup").style).toBe(
       "concise",

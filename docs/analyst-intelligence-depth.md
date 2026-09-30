@@ -146,7 +146,20 @@ cannot loop. Without time, or with nothing valid asked, the answer stands.
 A lookup used to hide every finding behind its one-line direct answer. When
 a plan exists, the planned response style decides; a style the person asked
 for in words ("briefly", "in two sentences", "in detail") still wins
-(`explicitStyle`). Without a plan the old behavior is unchanged.
+(`explicitStyle`). A planned "concise" style is shown as standard, so the
+planner alone never hides findings. "Shortened as you asked" appears only
+when the person asked in words; an automatic shortening says "Shortened to
+the main answer".
+
+## 5a. Speaking about the records, not the analysis
+
+Answers must talk to the person about their records. A claim that talks
+about the analysis itself ("the evidence I received", "newly read",
+"derived facts", requirement IDs, the writer or reviewer) is rejected
+(`process_wording`) and repaired. The writer also receives the data
+inventory, so when a question cannot be answered it can say what the
+records do not cover, e.g. that transactions start in August and there is
+no earlier whole month to compare with yet.
 
 ## 6. Enabling
 
