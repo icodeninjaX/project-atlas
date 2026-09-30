@@ -131,9 +131,15 @@ export async function requestStructuredJson(
     fetch?: typeof globalThis.fetch;
     /** Which feature's reservation this is in the daily pool ledger. */
     feature: PoolFeature;
+    /**
+     * A separate provider project's key. Its traffic is billed to that
+     * project and is outside the complimentary daily pools, so the call is
+     * sent without a pool reservation; the caller's own budgets bound it.
+     */
+    unpooledKey?: string;
   },
 ): Promise<StructuredCallResult> {
-  const key = process.env.OPENAI_API_KEY;
+  const key = options.unpooledKey ?? process.env.OPENAI_API_KEY;
   if (!key) return { status: "error", code: "configuration_error" };
   let request: { model?: unknown; max_completion_tokens?: unknown };
   try {
@@ -150,25 +156,25 @@ export async function requestStructuredJson(
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs);
   try {
     // Bytes bound the prompt's tokens, so this is its largest possible size.
-    const response = await meteredOpenAIFetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        signal: controller.signal,
-        headers: {
-          Authorization: `Bearer ${key}`,
-          "Content-Type": "application/json",
-        },
-        body,
+    const init: RequestInit = {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
       },
-      {
-        model: request.model,
-        feature: options.feature,
-        reserveTokens:
-          Buffer.byteLength(body) + (request.max_completion_tokens as number),
-        fetch: options.fetch,
-      },
-    );
+      body,
+    };
+    const url = "https://api.openai.com/v1/chat/completions";
+    const response = options.unpooledKey
+      ? await (options.fetch ?? globalThis.fetch)(url, init)
+      : await meteredOpenAIFetch(url, init, {
+          model: request.model,
+          feature: options.feature,
+          reserveTokens:
+            Buffer.byteLength(body) + (request.max_completion_tokens as number),
+          fetch: options.fetch,
+        });
     if (!response.ok)
       return { status: "error", code: providerFailure(response.status) };
     const text = await readBoundedText(response, options.responseBytes);

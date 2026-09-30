@@ -8,7 +8,10 @@ import {
   needsContext,
 } from "@/lib/analyst/intelligence/context";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
-import { SHARED_ROUTE, parseConsent } from "@/lib/analyst/intelligence/policy";
+import {
+  parseConsent,
+  preferredRoute,
+} from "@/lib/analyst/intelligence/policy";
 import type { V2StreamEvent } from "@/lib/analyst/intelligence/progress";
 import { runAnalystV2, type V2Response } from "@/lib/analyst/intelligence/run";
 import type { RunLedger } from "@/lib/analyst/intelligence/budgets";
@@ -106,7 +109,7 @@ export async function POST(request: Request) {
     );
   }
   const requestId = allowed.data.request_id;
-  const route = SHARED_ROUTE;
+  const route = preferredRoute();
   const options = { consent, route };
 
   const run = async (

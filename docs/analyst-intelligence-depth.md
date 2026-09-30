@@ -189,6 +189,22 @@ memory also needs `ATLAS_ANALYST_CONTEXT_KEY`. The release gates in
 shared provider route the models see aggregates only, never category or
 record names, which caps how specific an answer can be.
 
+## 6a. Private provider route
+
+On the shared route the models see aggregates only. When an operator sets up
+a separate OpenAI project that does not share data for model training and
+records it with `ATLAS_ANALYST_NON_SHARING_ROUTE_VERIFIED=1` and that
+project's key in `OPENAI_NON_SHARING_API_KEY`, every V2 request uses that
+route (`preferredRoute`). Its calls are billed to that project and sent
+without a complimentary-pool reservation; the run ledger's token and cost
+limits and the per-user Analyst quota still bound them. A missing key is a
+configuration error, never a fallback to the shared key.
+
+On that route the consent screen also offers names (categories, goals,
+tasks, debts) and private notes. Each is sent only if the person ticks it;
+existing consent stays figures-only until they choose again ("Stop sharing",
+then allow again). The policy filter still applies per domain and profile.
+
 ## 7. Not in this phase
 
 - A general owner-scoped aggregate tool (measure × group × filter × period),

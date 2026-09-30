@@ -129,11 +129,18 @@ export const SHARED_ROUTE: ProviderRoute = {
   profiles: ["aggregate"],
 };
 
+/** A provider project verified not to share traffic for model training. */
+export const NON_SHARING_ROUTE: ProviderRoute = {
+  id: "openai_non_sharing",
+  sharing: "non_sharing_verified",
+  profiles: ["aggregate", "basic_context", "sensitive_narrative"],
+};
+
 /**
  * A non-sharing route exists only when an operator has verified the project
  * configuration and approved its spending, recorded by setting
- * `ATLAS_ANALYST_NON_SHARING_ROUTE_VERIFIED=1` with a separate key. Neither
- * exists today; this never enables the route by itself.
+ * `ATLAS_ANALYST_NON_SHARING_ROUTE_VERIFIED=1` together with that project's
+ * key in `OPENAI_NON_SHARING_API_KEY`. Code never enables the route by itself.
  */
 export function availableRoutes(
   env: Record<string, string | undefined> = process.env,
@@ -141,16 +148,22 @@ export function availableRoutes(
   const verified =
     env.ATLAS_ANALYST_NON_SHARING_ROUTE_VERIFIED === "1" &&
     Boolean(env.OPENAI_NON_SHARING_API_KEY);
-  return verified
-    ? [
-        SHARED_ROUTE,
-        {
-          id: "openai_non_sharing",
-          sharing: "non_sharing_verified",
-          profiles: ["aggregate", "basic_context", "sensitive_narrative"],
-        },
-      ]
-    : [SHARED_ROUTE];
+  return verified ? [SHARED_ROUTE, NON_SHARING_ROUTE] : [SHARED_ROUTE];
+}
+
+/**
+ * The route a request uses: the verified non-sharing route when an operator
+ * has configured it, otherwise the shared route. Consent still decides which
+ * profiles reach the provider on either route.
+ */
+export function preferredRoute(
+  env: Record<string, string | undefined> = process.env,
+): ProviderRoute {
+  return (
+    availableRoutes(env).find(
+      (route) => route.sharing === "non_sharing_verified",
+    ) ?? SHARED_ROUTE
+  );
 }
 
 export type ExclusionReason =
