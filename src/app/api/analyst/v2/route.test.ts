@@ -55,6 +55,8 @@ beforeEach(() => {
 });
 afterEach(() => {
   delete process.env.ATLAS_ANALYST_V2;
+  delete process.env.ATLAS_ANALYST_NON_SHARING_ROUTE_VERIFIED;
+  delete process.env.OPENAI_NON_SHARING_API_KEY;
 });
 
 describe("Analyst V2 route guards", () => {
@@ -110,6 +112,21 @@ describe("Analyst V2 route guards", () => {
     ).toBe(400);
     expect((await post({ question: "Why?", consent })).status).toBe(400);
     expect(state.rpc).not.toHaveBeenCalled();
+  });
+
+  it("needs only the key of the route it uses", async () => {
+    delete process.env.OPENAI_API_KEY;
+    const ask = () =>
+      post({ question: "How much did I spend this month?", consent });
+    expect((await ask()).status).toBe(503);
+    expect(state.rpc).not.toHaveBeenCalled();
+    process.env.ATLAS_ANALYST_NON_SHARING_ROUTE_VERIFIED = "1";
+    process.env.OPENAI_NON_SHARING_API_KEY = "sk-private";
+    await ask();
+    expect(state.rpc).toHaveBeenCalledWith(
+      "reserve_ai_analyst_request_result",
+      expect.anything(),
+    );
   });
 
   it("reports a used-up allowance without running the analysis", async () => {
