@@ -653,3 +653,172 @@ export function monthlyTrend(prefix: string, series: EvidenceV2[]) {
   }
   return facts;
 }
+
+/** When the owner's records begin, from the data inventory. */
+export type RecordsStart = { day: string; evidenceId: string };
+
+/**
+ * The part of a period the records can cover: from the later of its start
+ * and the first record. Null when the records start after the period ends.
+ */
+export function coveredPeriod(
+  period: Period,
+  start: RecordsStart | null,
+): Period | null {
+  const from = start && start.day > period.from ? start.day : period.from;
+  return from <= period.through ? { from, through: period.through } : null;
+}
+
+/** Days in a period, both ends included. */
+export const periodDays = days;
+
+/**
+ * Recorded money per day over the days the records cover: a whole-domain
+ * total divided by its covered days, rounded to the centavo. A period that
+ * starts before the first record counts only the days since it, so two
+ * periods with different coverage compare by pace, not by total.
+ */
+export function perDay(
+  id: string,
+  total: EvidenceV2,
+  start: RecordsStart | null,
+) {
+  const item = numeric(total);
+  if (item.unit !== "centavos" || item.scope.type !== "whole_domain")
+    throw new CalculationError("A pace needs a whole-domain money total.");
+  const covered = coveredPeriod(item.time.period, start);
+  if (!covered) throw new CalculationError("No recorded days in the period.");
+  const clipped = covered.from !== item.time.period.from;
+  const raw = item.value / days(covered);
+  return fact(
+    {
+      id,
+      operands: clipped ? [item.id, start!.evidenceId] : [item.id],
+      metricKey: `${item.semantics.metricKey}_per_day`,
+      comparableGroup: `${item.semantics.comparableGroup}_per_day`,
+      scopeId: item.scope.id,
+      periods: [covered],
+    },
+    "per_day",
+    {
+      status: "defined",
+      value: Math.sign(raw) * Math.round(Math.abs(raw)),
+      unit: "centavos",
+    },
+    { rounding: "half_away_from_zero_units", complete: complete([item]) },
+  );
+}
+
+/**
+ * How one pace differs from an earlier one: the difference per day and its
+ * percent change. The operands are the evidence behind both paces.
+ */
+export function paceChange(
+  prefix: string,
+  now: DerivedFact,
+  before: DerivedFact,
+) {
+  if (
+    now.operation !== "per_day" ||
+    before.operation !== "per_day" ||
+    now.metricKey !== before.metricKey ||
+    now.scopeId !== before.scopeId ||
+    now.output.status !== "defined" ||
+    before.output.status !== "defined"
+  )
+    throw new CalculationError("A pace change needs two paces of one measure.");
+  const base: Base = {
+    id: `${prefix}.difference`,
+    operands: [...new Set([...now.operands, ...before.operands])],
+    metricKey: now.metricKey,
+    comparableGroup: now.comparableGroup,
+    scopeId: now.scopeId,
+    periods: [now.periods[0]!, before.periods[0]!],
+  };
+  const change = now.output.value - before.output.value;
+  const done = now.complete && before.complete;
+  return [
+    fact(
+      base,
+      "difference",
+      { status: "defined", value: change, unit: "centavos" },
+      { complete: done },
+    ),
+    fact(
+      { ...base, id: `${prefix}.percent` },
+      "percent_change",
+      before.output.value === 0
+        ? { status: "undefined", reason: "zero_denominator" }
+        : {
+            status: "defined",
+            value: percentTenths(change, before.output.value),
+            unit: "percent",
+          },
+      {
+        rounding: "half_away_from_zero_tenths",
+        denominatorRule: "nonzero_required",
+        complete: done,
+      },
+    ),
+  ];
+}
+
+/** Fewest recorded days a month-end projection is made from. */
+export const PROJECTION_MIN_DAYS = 7;
+
+/**
+ * The month's total if the pace so far continues: the recorded total plus
+ * the pace for each remaining day. Only for a month in progress that the
+ * records cover from its first day, after at least a week, so the estimate
+ * rests on the whole month so far. It is an estimate under that assumption,
+ * never a record.
+ */
+export function monthProjection(
+  id: string,
+  total: EvidenceV2,
+  pace: DerivedFact,
+) {
+  const item = numeric(total);
+  const period = item.time.period;
+  if (
+    pace.operation !== "per_day" ||
+    pace.output.status !== "defined" ||
+    !pace.operands.includes(item.id)
+  )
+    throw new CalculationError("A projection needs the total's own pace.");
+  if (
+    !period.from.endsWith("-01") ||
+    pace.periods[0]!.from !== period.from ||
+    period.from.slice(0, 7) !== period.through.slice(0, 7)
+  )
+    throw new CalculationError(
+      "A projection needs a month covered from day 1.",
+    );
+  const [year, month] = period.from.split("-").map(Number) as [number, number];
+  const last = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const elapsed = days(period);
+  if (elapsed >= last) throw new CalculationError("The month is complete.");
+  if (elapsed < PROJECTION_MIN_DAYS)
+    throw new CalculationError("Too few days to project from.");
+  const monthEnd = `${period.from.slice(0, 8)}${String(last).padStart(2, "0")}`;
+  return fact(
+    {
+      id,
+      operands: pace.operands,
+      metricKey: `${item.semantics.metricKey}_projection`,
+      comparableGroup: item.semantics.comparableGroup,
+      scopeId: item.scope.id,
+      periods: [{ from: period.from, through: monthEnd }],
+    },
+    "projection",
+    {
+      status: "defined",
+      value: checkedSum(
+        [item.value, pace.output.value * (last - elapsed)],
+        true,
+      ),
+      unit: "centavos",
+    },
+    { complete: pace.complete },
+  );
+}

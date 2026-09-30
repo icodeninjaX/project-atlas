@@ -123,6 +123,26 @@ needs the run with that sign. The derived change between two periods now
 uses the latest like-for-like pair (`comparablePeriods`), so the month in
 progress is never set against a whole month.
 
+## 4b-2. Pace and month-end projection
+
+"Am I spending more than usual?" was answered by setting this month so far
+against the same days last month, even when the records began partway
+through those days. ATLAS now derives, for recorded income and expenses in
+each period read:
+
+- `per_day`: the total divided by the days the records cover, starting no
+  earlier than the first transaction (from the data inventory);
+- a pace change (`derived.pace_change.*`): the difference per day and its
+  percent change between the latest two periods;
+- `projection`: for a month in progress covered from its first day, after
+  at least seven days, the month's total if the pace so far continues.
+
+When either period of a pair starts before the first transaction, the change
+in totals is not derived; the pace comparison replaces it. A claim citing a
+projection must read as an estimate ("at this pace … would"), or it is
+rejected (`projection_wording`). A pace claim may state how many days it
+spans.
+
 ## 4c. Reading more after the first draft
 
 With a plan, the first draft may list up to two records it lacked in
@@ -168,6 +188,22 @@ memory also needs `ATLAS_ANALYST_CONTEXT_KEY`. The release gates in
 `analyst-intelligence-release.md` §9 still apply. In particular, on the
 shared provider route the models see aggregates only, never category or
 record names, which caps how specific an answer can be.
+
+## 6a. Private provider route
+
+On the shared route the models see aggregates only. When an operator sets up
+a separate OpenAI project that does not share data for model training and
+records it with `ATLAS_ANALYST_NON_SHARING_ROUTE_VERIFIED=1` and that
+project's key in `OPENAI_NON_SHARING_API_KEY`, every V2 request uses that
+route (`preferredRoute`). Its calls are billed to that project and sent
+without a complimentary-pool reservation; the run ledger's token and cost
+limits and the per-user Analyst quota still bound them. A missing key is a
+configuration error, never a fallback to the shared key.
+
+On that route the consent screen also offers names (categories, goals,
+tasks, debts) and private notes. Each is sent only if the person ticks it;
+existing consent stays figures-only until they choose again ("Stop sharing",
+then allow again). The policy filter still applies per domain and profile.
 
 ## 7. Not in this phase
 

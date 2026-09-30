@@ -187,3 +187,33 @@ describe("reasoning effort override", () => {
     );
   });
 });
+
+describe("a separate provider project's key", () => {
+  it("sends with that key and without a pool reservation", async () => {
+    process.env.OPENAI_API_KEY = "shared-key";
+    const send = completion('{"ok":true}');
+    const result = await requestStructuredJson(body, {
+      ...options,
+      fetch: send,
+      unpooledKey: "private-key",
+    });
+    expect(result).toMatchObject({ status: "ok", content: { ok: true } });
+    expect(meter.fetch).not.toHaveBeenCalled();
+    const init = send.mock.calls[0]![1] as RequestInit;
+    expect((init.headers as Record<string, string>).Authorization).toBe(
+      "Bearer private-key",
+    );
+  });
+
+  it("never falls back to the shared key when the private key is missing", async () => {
+    process.env.OPENAI_API_KEY = "shared-key";
+    const send = completion("{}");
+    const result = await requestStructuredJson(body, {
+      ...options,
+      fetch: send,
+      unpooledKey: "",
+    });
+    expect(result).toEqual({ status: "error", code: "configuration_error" });
+    expect(send).not.toHaveBeenCalled();
+  });
+});

@@ -7,7 +7,7 @@ import type {
   EvidenceV2,
   Period,
 } from "./contracts";
-import { NET_FLOW_MEMBERS, NET_FLOW_SCOPE } from "./calculations";
+import { NET_FLOW_MEMBERS, NET_FLOW_SCOPE, periodDays } from "./calculations";
 import { fixedLabelDomain } from "./legacy-evidence";
 import { mentionedHandles, validMention, withoutMentions } from "./mentions";
 import {
@@ -67,7 +67,8 @@ export type ClaimRejectionV2 =
   | "recommendation_incomplete"
   | "unstated_assumption"
   | "generic_recommendation"
-  | "process_wording";
+  | "process_wording"
+  | "projection_wording";
 
 /**
  * What each rejection means, in words a writer can act on. A repair request
@@ -116,6 +117,8 @@ export const REJECTION_HELP: Record<ClaimRejectionV2, string> = {
     "is a recommendation without its recommendation object",
   unstated_assumption: "is conditional but cites no assumption ID",
   generic_recommendation: "gives advice that would fit anyone",
+  projection_wording:
+    "states a projected month total as if it were recorded; say it is an estimate that holds only if the current pace continues (for example: at this pace, September would end near ₱…)",
   process_wording:
     "talks about the analysis itself (the evidence it received, reads, requirements, derived facts); say what the person's records show or do not show instead",
 };
@@ -133,6 +136,9 @@ const unverifiable =
   /\b(?:significant\w*|statistically|strong(?:ly)?|hundred|thousand|million|billion|dozen|double[ds]?|twice|triple[ds]?|half|halved|centavos|libo|milyon|doble|kalahati)\b/i;
 const superlative =
   /\b(?:largest|highest|biggest|greatest|most|smallest|lowest|least|pinaka\w*)\b/i;
+// A projection is an estimate under a stated pace, never a record.
+const projectionMarker =
+  /\b(?:at (?:this|that|the current|your current) (?:pace|rate)|if (?:this|that|the|your)(?: current)? (?:pace|rate)|(?:this|that|the) pace (?:continues|holds)|on track|projected|estimated?|would|kung magpapatuloy)\b/i;
 const conditional = /\b(?:if|assuming|provided that|kung|basta)\b/i;
 // Advice that fits anyone says nothing about this user's records.
 const generic =
@@ -246,7 +252,9 @@ function metricDomains(metricKey: string, unit: string): MetricDomain[] {
   // A bridged tool's fixed-label measure speaks for that tool's domain.
   const fixed = fixedLabelDomain(metricKey);
   if (fixed) return [fixed];
-  const keys = metricKey.replace(/_contribution$/, "").split("-");
+  const keys = metricKey
+    .replace(/_(?:contribution|per_day|projection)$/, "")
+    .split("-");
   return keys.flatMap((key) => textDomains(semanticsFor(key, unit as never)));
 }
 
@@ -294,6 +302,9 @@ function cite(claim: DraftClaim, ctx: ClaimCheckContext): Cited {
         if (operand?.kind === "metric")
           numbers.push({ value: operand.value, unit: operand.unit });
       }
+    // A pace may state how many recorded days it spans.
+    if (item.operation === "per_day")
+      numbers.push({ value: periodDays(item.periods[0]!), unit: "count" });
     const unit = item.output.status === "defined" ? item.output.unit : "count";
     for (const domain of metricDomains(item.metricKey, unit))
       domains.add(domain);
@@ -597,6 +608,11 @@ export function checkClaim(
   const text = withoutMentions(raw);
   if (causal.test(text)) reasons.push("causal_wording");
   if (processWording.test(text)) reasons.push("process_wording");
+  if (
+    cited.derived.some((item) => item.operation === "projection") &&
+    !projectionMarker.test(text)
+  )
+    reasons.push("projection_wording");
   if (certainty.test(text)) reasons.push("certainty_wording");
   if (unverifiable.test(text)) reasons.push("unverifiable_wording");
 

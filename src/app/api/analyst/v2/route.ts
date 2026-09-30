@@ -8,7 +8,10 @@ import {
   needsContext,
 } from "@/lib/analyst/intelligence/context";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
-import { SHARED_ROUTE, parseConsent } from "@/lib/analyst/intelligence/policy";
+import {
+  parseConsent,
+  preferredRoute,
+} from "@/lib/analyst/intelligence/policy";
 import type { V2StreamEvent } from "@/lib/analyst/intelligence/progress";
 import { runAnalystV2, type V2Response } from "@/lib/analyst/intelligence/run";
 import type { RunLedger } from "@/lib/analyst/intelligence/budgets";
@@ -79,7 +82,14 @@ export async function POST(request: Request) {
   if (!model) return json({ error: "Choose an available Analyst model." }, 400);
   if (needsContext(parsed.request.question) && !parsed.request.context)
     return json({ error: "Ask a complete question." }, 400);
-  if (!process.env.OPENAI_API_KEY)
+  // The key the chosen route sends with must exist; the shared key is not
+  // needed when every call goes through the private route.
+  const route = preferredRoute();
+  if (
+    !(route.id === "openai_non_sharing"
+      ? process.env.OPENAI_NON_SHARING_API_KEY
+      : process.env.OPENAI_API_KEY)
+  )
     return json({ error: "AI analysis is not configured." }, 503);
 
   const { data: reservation, error: reservationError } = await supabase.rpc(
@@ -106,7 +116,6 @@ export async function POST(request: Request) {
     );
   }
   const requestId = allowed.data.request_id;
-  const route = SHARED_ROUTE;
   const options = { consent, route };
 
   const run = async (

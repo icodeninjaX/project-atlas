@@ -13,10 +13,12 @@ import {
 import { UI_TEXT, detectLanguage } from "@/lib/analyst/intelligence/language";
 import {
   CONSENT_VERSION,
+  NON_SHARING_ROUTE,
   SHARED_ROUTE,
   describeConsent,
   parseConsent,
   type AnalystConsent,
+  type FieldProfile,
 } from "@/lib/analyst/intelligence/policy";
 import type { PresentedClaim } from "@/lib/analyst/intelligence/presentation";
 import {
@@ -241,9 +243,38 @@ export function AnswerCard({
   );
 }
 
-export function IntelligenceWorkspace({ userId }: { userId: string }) {
+/** What a person may allow beyond figures, on a route that does not share. */
+const privateProfiles: Array<{
+  profile: Exclude<FieldProfile, "aggregate">;
+  label: string;
+}> = [
+  {
+    profile: "basic_context",
+    label: "Names (categories, goals, tasks, debts)",
+  },
+  {
+    profile: "sensitive_narrative",
+    label: "Private notes, reflections and decision text",
+  },
+];
+
+export function IntelligenceWorkspace({
+  userId,
+  privateRoute = false,
+}: {
+  userId: string;
+  /** Whether the server has a verified provider route that does not share data. */
+  privateRoute?: boolean;
+}) {
+  const route = privateRoute ? NON_SHARING_ROUTE : SHARED_ROUTE;
   const [consent, setConsent] = useState<AnalystConsent | null>(null);
   const [domains, setDomains] = useState<ConsentDomain[]>([...CONSENT_DOMAINS]);
+  const [extra, setExtra] = useState<Exclude<FieldProfile, "aggregate">[]>([]);
+  // Names and notes are offered only where the route can carry them.
+  const profiles: FieldProfile[] = [
+    "aggregate",
+    ...(privateRoute ? extra : []),
+  ];
   const [model, setModel] = useState<AnalystModelId>(AI_MODELS.analyst);
   const [question, setQuestion] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -262,7 +293,7 @@ export function IntelligenceWorkspace({ userId }: { userId: string }) {
       version: CONSENT_VERSION,
       providerProcessing: true,
       domains,
-      profiles: ["aggregate"],
+      profiles,
       grantedAt: new Date().toISOString(),
     };
     setConsent(next);
@@ -377,16 +408,39 @@ export function IntelligenceWorkspace({ userId }: { userId: string }) {
             </label>
           ))}
         </fieldset>
+        {privateRoute && (
+          <fieldset className="flex flex-wrap gap-x-4 gap-y-2">
+            <legend className="text-muted-foreground mb-1 text-xs">
+              Besides figures, Analyst may also read
+            </legend>
+            {privateProfiles.map(({ profile, label }) => (
+              <label key={profile} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={extra.includes(profile)}
+                  onChange={(event) =>
+                    setExtra((current) =>
+                      event.target.checked
+                        ? [...current, profile]
+                        : current.filter((item) => item !== profile),
+                    )
+                  }
+                />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+        )}
         <ul className="text-muted-foreground flex flex-col gap-1 text-xs">
           {describeConsent(
             {
               version: CONSENT_VERSION,
               providerProcessing: true,
               domains,
-              profiles: ["aggregate"],
+              profiles,
               grantedAt: new Date(0).toISOString(),
             },
-            SHARED_ROUTE,
+            route,
           ).map((line) => (
             <li key={line}>{line}</li>
           ))}

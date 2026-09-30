@@ -136,6 +136,30 @@ describe("IntelligenceWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("offers names and notes only on a private provider route", async () => {
+    const user = userEvent.setup();
+    setup();
+    expect(
+      screen.queryByRole("checkbox", { name: /Names/ }),
+    ).not.toBeInTheDocument();
+    cleanup();
+    render(
+      <PrivacyProvider userId={userId}>
+        <IntelligenceWorkspace userId={userId} privateRoute />
+      </PrivacyProvider>,
+    );
+    await user.click(screen.getByRole("checkbox", { name: /Names/ }));
+    expect(
+      screen.getByText(/may send record names and titles/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/shares traffic with OpenAI/)).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Allow these areas" }));
+    const stored = JSON.parse(
+      window.localStorage.getItem(`atlas:analyst-consent-v2:${userId}`)!,
+    );
+    expect(stored.profiles).toEqual(["aggregate", "basic_context"]);
+  });
+
   it("sends consent, model and context, and renders the checked answer", async () => {
     const user = userEvent.setup();
     const requests = setup();

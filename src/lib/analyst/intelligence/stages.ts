@@ -98,6 +98,11 @@ export function createStageCaller(options: {
       responseBytes: 64_000,
       fetch: options.fetch,
       feature: "analyst_answer",
+      // The non-sharing route is its own provider project, outside the
+      // shared project's complimentary pools.
+      ...(options.route.id === "openai_non_sharing" && {
+        unpooledKey: process.env.OPENAI_NON_SHARING_API_KEY ?? "",
+      }),
     });
     const known =
       result.inputTokens !== undefined && result.outputTokens !== undefined;

@@ -14,6 +14,7 @@ import {
   SHARED_ROUTE,
   assertProviderPayload,
   availableRoutes,
+  preferredRoute,
   consentFingerprint,
   contextValidFor,
   describeConsent,
@@ -277,6 +278,16 @@ describe("provider payload policy", () => {
         OPENAI_NON_SHARING_API_KEY: "k",
       }).map((r) => r.id),
     ).toEqual(["openai_shared", "openai_non_sharing"]);
+  });
+
+  it("prefers the verified non-sharing route and falls back to the shared one", () => {
+    expect(preferredRoute({}).id).toBe("openai_shared");
+    expect(
+      preferredRoute({
+        ATLAS_ANALYST_NON_SHARING_ROUTE_VERIFIED: "1",
+        OPENAI_NON_SHARING_API_KEY: "k",
+      }).id,
+    ).toBe("openai_non_sharing");
   });
 });
 

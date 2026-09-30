@@ -340,6 +340,10 @@ export const DERIVED_OPERATIONS = [
   // in a row it rose (positive) or fell (negative) up to the latest one.
   "mean",
   "streak",
+  // Recorded money per day over the days the records cover, and a month's
+  // total if that pace continues (an estimate, never a record).
+  "per_day",
+  "projection",
 ] as const;
 export type DerivedOperation = (typeof DERIVED_OPERATIONS)[number];
 
@@ -354,7 +358,12 @@ export const derivedFactSchema = z
     comparableGroup: handle,
     scopeId: handle,
     periods: z.array(periodSchema).min(1).max(4),
-    rounding: z.enum(["none", "half_away_from_zero_tenths"]),
+    rounding: z.enum([
+      "none",
+      "half_away_from_zero_tenths",
+      // Whole units of the output, such as centavos.
+      "half_away_from_zero_units",
+    ]),
     denominatorRule: z.enum(["not_applicable", "nonzero_required"]),
     output: z.discriminatedUnion("status", [
       z

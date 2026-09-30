@@ -3,6 +3,7 @@ import { IntelligenceWorkspace } from "@/components/analyst/intelligence-workspa
 import { connection } from "next/server";
 import { PageHeading } from "@/components/shared/page-heading";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
+import { preferredRoute } from "@/lib/analyst/intelligence/policy";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "ATLAS Analyst" };
@@ -40,7 +41,10 @@ export default async function AnalystPage() {
       <div className="mt-8">
         {analystIntelligenceV2Enabled() && user?.data.user ? (
           // The versioned Analyst replaces the workspace only behind the server flag.
-          <IntelligenceWorkspace userId={user.data.user.id} />
+          <IntelligenceWorkspace
+            userId={user.data.user.id}
+            privateRoute={preferredRoute().sharing === "non_sharing_verified"}
+          />
         ) : (
           <FreeformWorkspace
             goals={goals?.data ?? []}
