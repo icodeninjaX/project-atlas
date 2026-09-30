@@ -592,10 +592,16 @@ export function checkClaim(
     ]),
     ...cited.derived.flatMap((item) => [
       ...(item.ranking ?? []).map((entry) => entry.member),
-      // A share names the member it divides.
+      // A share names the member it divides, and a query's trend the
+      // categories that query read.
       ...item.operands.flatMap((id) => {
-        const member = ctx.evidence.get(id)?.scope.cohort?.member;
-        return member ? [member] : [];
+        const operand = ctx.evidence.get(id);
+        return [
+          ...(operand?.scope.cohort ? [operand.scope.cohort.member] : []),
+          ...(operand?.provenance.tool === "queryTransactions"
+            ? operand.provenance.sourceRefs.map((ref) => ref.handle)
+            : []),
+        ];
       }),
     ]),
   ]);

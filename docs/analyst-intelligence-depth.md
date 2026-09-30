@@ -173,6 +173,48 @@ derivations) and states the exact figures each answer rests on. Writing it
 found two bugs, now fixed: "since August" was read as August alone, and the
 test database compared numbers as text.
 
+## 4b-4. Category trends and change drivers
+
+"Is my food spending going up?" and "Why did I spend more this month?" need
+a category's own months, not only the totals.
+
+**A query grouped by month is a series.** It is read once over one window:
+the person's named window, or, without one, the last six months through
+today (`monthSpan`). Its months get the same trend facts as a history trend
+(`monthSetTrend`: ranking, average, latest whole month against the average
+of the ones before, and the run of rises or falls), over whole months only:
+a month counts when the query and the records both cover it from its first
+to its last day. When the records' start is unknown (no data inventory),
+empty months before the first month with activity are left out rather than
+read as months of nothing. A month set is never ranked or divided into
+shares as a set, so a partial month is never set against whole ones. The
+month in progress, read from day 1 for at least a week, gets a projection at
+its pace (`memberMonthProjection`), worded as an estimate like any other.
+
+**Change drivers (`money.change_drivers`).** A money change between exactly
+two periods (the rules' reading of "why", or a plan that compares with the
+previous period) gets an optional requirement `r_…_drivers_<kind>`. It reads
+the category breakdown for both periods, picks the categories that moved
+most in the direction of the total's change (at most two, `changeDrivers`;
+uncategorized records cannot be read alone, so never a driver), then reads
+each one's last six months as its own filtered query. The contribution
+(which categories account for the change) comes from the breakdowns as
+before; each driver's months get their own trend. Every figure of a
+filtered query carries the categories it read (`sourceRefs`, shown to the
+writer as `categories`), so a claim may name the category of a trend it
+cites, and two categories' trends are never confused. Contribution and trend
+are separate scopes, so they are stated in separate claims.
+
+The investigation used to stop after one round once the essential
+requirements were answered, which cut such a two-step read short. An
+optional requirement now keeps reading while its previous step succeeded,
+within the run's round and call budget; with nothing more to read, the
+investigation ends as sufficient.
+
+`category-trends.test.ts` covers the calculations, the proposer and the
+brief; `depth-questions.test.ts` runs both questions end to end with three
+earlier months of records.
+
 ## 4c. Reading more after the first draft
 
 With a plan, the first draft may list up to two records it lacked in
@@ -307,6 +349,12 @@ then allow again). The policy filter still applies per domain and profile.
 
 ## 7. Not in this phase
 
-- A general owner-scoped aggregate tool (measure × group × filter × period),
-  category-level trends and run-rate projections.
-- Persistent memory of priorities and preferences across sessions.
+Built since this list was first written: the transaction query (§4b-3),
+pace and month-end projections (§4b-2), category trends and change drivers
+(§4b-4) and remembered priorities (§4d). Still out of scope:
+
+- Grouping by two dimensions at once (category × month in one read); the
+  drivers read each leading category's months separately.
+- Merchant-level analysis; queries read date, amount and category only.
+- Why a category changed; ATLAS reports accounting contributions and
+  trends, never behavioral causes.

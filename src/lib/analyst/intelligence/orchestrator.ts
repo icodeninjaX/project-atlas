@@ -137,6 +137,8 @@ const toolsFor = new Map(
  */
 const answeredBy = new Map<string, ReadonlySet<string>>([
   ["money.query", new Set(["queryTransactions"])],
+  // The breakdowns only find the leading categories; their months answer.
+  ["money.change_drivers", new Set(["queryTransactions"])],
 ]);
 const answers = (capability: string, tool: string) =>
   (answeredBy.get(capability) ?? toolsFor.get(capability)!).has(tool);
@@ -294,10 +296,19 @@ export async function runInvestigation(input: {
     const open = progress.filter(
       (item) => item.state !== "evidenced" && item.state !== "blocked",
     );
-    if (
-      open.filter((item) => item.essential).length === 0 &&
-      (open.length === 0 || round > 1)
-    ) {
+    // Once the essentials are answered, an optional requirement keeps
+    // reading only while its last step succeeded (a breakdown read before the
+    // categories it names), so a dependent read is not cut off after one step.
+    const advancing = open.some((item) =>
+      outcomes.some(
+        (outcome) =>
+          outcome.round === round - 1 &&
+          outcome.result.status !== "error" &&
+          outcome.request.requirementIds.includes(item.requirementId),
+      ),
+    );
+    const essentialOpen = open.some((item) => item.essential);
+    if (!essentialOpen && (open.length === 0 || (round > 1 && !advancing))) {
       stopReason = "sufficient";
       break;
     }
@@ -384,8 +395,14 @@ export async function runInvestigation(input: {
       accepted.push({ ...request, tool });
     }
     if (accepted.length === 0) {
+      // Nothing more for optional requirements after the essentials are
+      // answered is the normal end of the investigation.
       stopReason =
-        proposal.requests.length === 0 ? "no_proposals" : "no_progress";
+        !essentialOpen && round > 1
+          ? "sufficient"
+          : proposal.requests.length === 0
+            ? "no_proposals"
+            : "no_progress";
       break;
     }
     const room = budget.toolCalls - ledger.usage.toolCalls;

@@ -5,7 +5,9 @@ import {
   difference,
   fullMonth,
   coveredPeriod,
+  memberMonthProjection,
   monthProjection,
+  monthSetTrend,
   monthlyTrend,
   netFlow,
   paceChange,
@@ -86,6 +88,30 @@ export function autoDerive(
     sets.set(key, [...(sets.get(key) ?? []), item]);
   }
   for (const [key, members] of sets) {
+    // A query grouped by month is a series: its whole months get a trend,
+    // and the month in progress an estimate at its pace, never a ranking
+    // that sets a partial month against whole ones.
+    if (members[0]!.scope.cohort!.setId.endsWith("_by_month")) {
+      facts.push(
+        ...(attempt(() =>
+          monthSetTrend(`derived.trend.${key}`, members, start),
+        ) ?? []),
+      );
+      for (const member of members) {
+        const projection =
+          options.today &&
+          attempt(() =>
+            memberMonthProjection(
+              `derived.projection.${key}|${member.scope.cohort!.member}`,
+              member,
+              options.today!,
+              start,
+            ),
+          );
+        if (projection) facts.push(projection);
+      }
+      continue;
+    }
     const fact = attempt(() => rank(`derived.rank.${key}`, members));
     if (!fact || fact.output.status !== "defined") continue;
     facts.push(fact);
@@ -152,7 +178,9 @@ export function autoDerive(
         ([setKey, members]) =>
           setKey.endsWith(
             `|${total.semantics.metricKey}|${periodKey(total)}`,
-          ) && setTotalScope(members[0]!) === total.scope.id,
+          ) &&
+          setTotalScope(members[0]!) === total.scope.id &&
+          !members[0]!.scope.cohort!.setId.endsWith("_by_month"),
       )?.[1];
     const now = setFor(current);
     const before = setFor(previous);

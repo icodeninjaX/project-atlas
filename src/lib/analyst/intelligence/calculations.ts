@@ -559,43 +559,103 @@ export function monthlyTrend(prefix: string, series: EvidenceV2[]) {
     throw new CalculationError("A trend reads one whole-domain measure.");
   const months = values
     .filter((item) => fullMonth(item.time.period))
-    .sort((a, b) => a.time.period.from.localeCompare(b.time.period.from));
-  if (
-    new Set(months.map((item) => item.time.period.from)).size !== months.length
-  )
+    .map((item) => ({ item, month: item.time.period }));
+  return trendFacts(prefix, first, months);
+}
+
+/** The calendar month a month-group member names, such as month:2026-08. */
+export function memberMonth(member: string): Period | null {
+  const match = /^month:(\d{4})-(\d{2})$/.exec(member);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  if (month < 1 || month > 12) return null;
+  const last = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return {
+    from: `${match[1]}-${match[2]}-01`,
+    through: `${match[1]}-${match[2]}-${String(last).padStart(2, "0")}`,
+  };
+}
+
+/**
+ * Trend facts over one query grouped by month: the same facts as
+ * `monthlyTrend`, over the months the query read whole. A month counts only
+ * when the query period and the records both cover it from its first day to
+ * its last, so neither the month in progress nor the month the records
+ * start in is set against whole months. When the records' start is
+ * unknown, empty months before the first active one are left out.
+ */
+export function monthSetTrend(
+  prefix: string,
+  members: EvidenceV2[],
+  start: RecordsStart | null,
+) {
+  const { values, whole, first } = setMembers(members);
+  if (!whole) return [];
+  const period = first.time.period;
+  const months = values.flatMap((item) => {
+    const month = memberMonth(item.scope.cohort!.member);
+    if (!month) throw new CalculationError("A month set names months.");
+    const covered =
+      month.from >= period.from &&
+      month.through <= period.through &&
+      (!start || start.day <= month.from);
+    return covered ? [{ item, month }] : [];
+  });
+  months.sort((a, b) => a.month.from.localeCompare(b.month.from));
+  // When the first record's date is unknown, empty months before the first
+  // month with activity may predate the records, so they are left out
+  // rather than read as months of nothing.
+  const firstActive = months.findIndex((entry) => entry.item.value !== 0);
+  return trendFacts(
+    prefix,
+    first,
+    start ? months : firstActive < 0 ? [] : months.slice(firstActive),
+  );
+}
+
+function trendFacts(
+  prefix: string,
+  first: NumericEvidence,
+  series: Array<{ item: NumericEvidence; month: Period }>,
+) {
+  const months = [...series].sort((a, b) =>
+    a.month.from.localeCompare(b.month.from),
+  );
+  if (new Set(months.map((entry) => entry.month.from)).size !== months.length)
     throw new CalculationError("A trend reads each month once.");
   if (months.length < 2) return [];
   const span: Period = {
-    from: months[0]!.time.period.from,
-    through: months.at(-1)!.time.period.through,
+    from: months[0]!.month.from,
+    through: months.at(-1)!.month.through,
   };
   const integers = first.unit === "centavos" || first.unit === "count";
-  const base = (id: string, operands: NumericEvidence[]): Base => ({
+  const base = (id: string, operands: typeof months): Base => ({
     id: `${prefix}.${id}`,
-    operands: operands.map((item) => item.id),
+    operands: operands.map((entry) => entry.item.id),
     metricKey: first.semantics.metricKey,
     comparableGroup: first.semantics.comparableGroup,
     scopeId: first.scope.id,
     periods: [span],
   });
-  const done = complete(months);
-  const mean = (items: NumericEvidence[]) => {
+  const done = complete(months.map((entry) => entry.item));
+  const mean = (items: typeof months) => {
     const total = checkedSum(
-      items.map((item) => item.value),
+      items.map((entry) => entry.item.value),
       first.unit === "centavos",
     );
     const raw = total / items.length;
     return integers ? Math.round(raw) : Math.round(raw * 10) / 10;
   };
-  const ordered = [...months].sort((a, b) => b.value - a.value);
+  const ordered = [...months].sort((a, b) => b.item.value - a.item.value);
   let rankNumber = 0;
-  const ranking = ordered.map((item, index) => {
-    if (index === 0 || item.value !== ordered[index - 1]!.value)
+  const ranking = ordered.map((entry, index) => {
+    if (index === 0 || entry.item.value !== ordered[index - 1]!.item.value)
       rankNumber = index + 1;
     return {
-      member: `month:${item.time.period.from.slice(0, 7)}`,
-      evidenceId: item.id,
-      value: item.value,
+      member: `month:${entry.month.from.slice(0, 7)}`,
+      evidenceId: entry.item.id,
+      value: entry.item.value,
       rank: rankNumber,
     };
   });
@@ -604,7 +664,7 @@ export function monthlyTrend(prefix: string, series: EvidenceV2[]) {
     fact(
       base("rank", months),
       "rank",
-      { status: "defined", value: ordered[0]!.value, unit: first.unit },
+      { status: "defined", value: ordered[0]!.item.value, unit: first.unit },
       {
         ranking,
         top: top.map((entry) => entry.member),
@@ -629,7 +689,7 @@ export function monthlyTrend(prefix: string, series: EvidenceV2[]) {
         "difference",
         {
           status: "defined",
-          value: checkedSum([latest.value, -baseline], integers),
+          value: checkedSum([latest.item.value, -baseline], integers),
           unit: first.unit,
         },
         { complete: done },
@@ -637,7 +697,9 @@ export function monthlyTrend(prefix: string, series: EvidenceV2[]) {
     );
     let run = 0;
     for (let index = months.length - 1; index > 0; index -= 1) {
-      const step = Math.sign(months[index]!.value - months[index - 1]!.value);
+      const step = Math.sign(
+        months[index]!.item.value - months[index - 1]!.item.value,
+      );
       if (step === 0 || (run !== 0 && step !== Math.sign(run))) break;
       run += step;
     }
@@ -820,5 +882,60 @@ export function monthProjection(
       unit: "centavos",
     },
     { complete: pace.complete },
+  );
+}
+
+/**
+ * The month in progress of a query grouped by month, if its pace so far
+ * continues: the same estimate as `monthProjection`, for one month member
+ * of a total. Only when the query reads that month from its first day
+ * through today, the records cover it from day 1, and at least a week has
+ * passed.
+ */
+export function memberMonthProjection(
+  id: string,
+  member: EvidenceV2,
+  today: string,
+  start: RecordsStart | null,
+) {
+  const item = numeric(member);
+  const month = memberMonth(item.scope.cohort?.member ?? "");
+  const period = item.time.period;
+  if (
+    !month ||
+    item.unit !== "centavos" ||
+    item.semantics.aggregation !== "sum"
+  )
+    throw new CalculationError("A projection needs a month's money total.");
+  if (
+    period.through !== today ||
+    today.slice(0, 7) !== month.from.slice(0, 7) ||
+    period.from > month.from ||
+    (start && start.day > month.from)
+  )
+    throw new CalculationError("A projection needs the month in progress.");
+  const elapsed = days({ from: month.from, through: today });
+  const last = days(month);
+  if (elapsed >= last) throw new CalculationError("The month is complete.");
+  if (elapsed < PROJECTION_MIN_DAYS)
+    throw new CalculationError("Too few days to project from.");
+  const raw = item.value / elapsed;
+  const pace = Math.sign(raw) * Math.round(Math.abs(raw));
+  return fact(
+    {
+      id,
+      operands: [item.id],
+      metricKey: `${item.semantics.metricKey}_projection`,
+      comparableGroup: item.semantics.comparableGroup,
+      scopeId: item.scope.id,
+      periods: [month],
+    },
+    "projection",
+    {
+      status: "defined",
+      value: checkedSum([item.value, pace * (last - elapsed)], true),
+      unit: "centavos",
+    },
+    { complete: complete([item]) },
   );
 }
