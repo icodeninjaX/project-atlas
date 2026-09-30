@@ -123,6 +123,26 @@ needs the run with that sign. The derived change between two periods now
 uses the latest like-for-like pair (`comparablePeriods`), so the month in
 progress is never set against a whole month.
 
+## 4b-2. Pace and month-end projection
+
+"Am I spending more than usual?" was answered by setting this month so far
+against the same days last month, even when the records began partway
+through those days. ATLAS now derives, for recorded income and expenses in
+each period read:
+
+- `per_day`: the total divided by the days the records cover, starting no
+  earlier than the first transaction (from the data inventory);
+- a pace change (`derived.pace_change.*`): the difference per day and its
+  percent change between the latest two periods;
+- `projection`: for a month in progress covered from its first day, after
+  at least seven days, the month's total if the pace so far continues.
+
+When either period of a pair starts before the first transaction, the change
+in totals is not derived; the pace comparison replaces it. A claim citing a
+projection must read as an estimate ("at this pace … would"), or it is
+rejected (`projection_wording`). A pace claim may state how many days it
+spans.
+
 ## 4c. Reading more after the first draft
 
 With a plan, the first draft may list up to two records it lacked in

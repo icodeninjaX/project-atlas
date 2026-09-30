@@ -4,11 +4,16 @@ import {
   contribution,
   difference,
   fullMonth,
+  coveredPeriod,
+  monthProjection,
   monthlyTrend,
   netFlow,
+  paceChange,
+  perDay,
   percentChange,
   rank,
   share,
+  type RecordsStart,
 } from "./calculations";
 import type { DerivedFact, EvidenceV2, NumericEvidence } from "./contracts";
 
@@ -37,9 +42,29 @@ const TOP_SHARES = 3;
 const periodKey = (item: EvidenceV2) =>
   `${item.time.period.from}..${item.time.period.through}`;
 
+/** Money totals that get a pace: recorded income and expenses by period. */
+const PACED_SCOPES = new Set(["whole_domain:income", "whole_domain:expense"]);
+
+/** The first recorded transaction, from the data inventory when it was read. */
+function transactionsStart(evidence: EvidenceV2[]): RecordsStart | null {
+  const item = evidence.find(
+    (entry) =>
+      entry.kind === "metric" &&
+      entry.semantics.metricKey === "inventory_transactions" &&
+      entry.value > 0,
+  );
+  return item ? { day: item.time.period.from, evidenceId: item.id } : null;
+}
+
 export function autoDerive(evidence: EvidenceV2[]): DerivedFact[] {
   const facts: DerivedFact[] = [];
   const values = evidence.filter(numeric);
+  const start = transactionsStart(evidence);
+  // A money period that starts before the first transaction is only partly
+  // covered by the records.
+  const partlyCovered = (item: EvidenceV2) =>
+    PACED_SCOPES.has(item.scope.id) &&
+    coveredPeriod(item.time.period, start)?.from !== item.time.period.from;
   // Complete sets (categories in a period) are ranked.
   const sets = new Map<string, EvidenceV2[]>();
   for (const item of values) {
@@ -96,6 +121,8 @@ export function autoDerive(evidence: EvidenceV2[]): DerivedFact[] {
     if (pair < 0) continue;
     const current = sorted[pair]!;
     const previous = sorted[pair + 1]!;
+    // Totals over unequal coverage are compared by pace instead (below).
+    if (partlyCovered(current) || partlyCovered(previous)) continue;
     const change = attempt(() =>
       difference(`derived.change.${key}`, current, previous),
     );
@@ -121,6 +148,37 @@ export function autoDerive(evidence: EvidenceV2[]): DerivedFact[] {
         }),
       );
       if (fact && fact.output.status === "defined") facts.push(fact);
+    }
+  }
+  // Pace: money per recorded day, so a period the records only partly cover
+  // still compares fairly, and the month in progress gets its projection.
+  for (const [key, items] of totals) {
+    const paced = items
+      .filter((item) => PACED_SCOPES.has(item.scope.id))
+      .sort((a, b) => b.time.period.from.localeCompare(a.time.period.from));
+    const paces = paced.flatMap((item) => {
+      const pace = attempt(() =>
+        perDay(`derived.pace.${key}|${periodKey(item)}`, item, start),
+      );
+      return pace ? [{ item, pace }] : [];
+    });
+    for (const { pace } of paces) facts.push(pace);
+    const [latest, earlier] = paces;
+    if (latest && earlier)
+      facts.push(
+        ...(attempt(() =>
+          paceChange(`derived.pace_change.${key}`, latest.pace, earlier.pace),
+        ) ?? []),
+      );
+    if (latest) {
+      const projection = attempt(() =>
+        monthProjection(
+          `derived.projection.${key}|${periodKey(latest.item)}`,
+          latest.item,
+          latest.pace,
+        ),
+      );
+      if (projection) facts.push(projection);
     }
   }
   // Income against expenses in the same period: did income cover spending?

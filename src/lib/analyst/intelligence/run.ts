@@ -454,7 +454,11 @@ export async function runAnalystV2(
     };
   }
 
-  const derived = autoDerive(investigation.selection.selected);
+  // The inventory tells the derivations when the records begin.
+  const derived = autoDerive([
+    ...investigation.selection.selected,
+    ...inventoryEvidence,
+  ]);
   let evidence = investigation.selection.selected;
   let ownerLabels = investigation.labels;
   // With a plan, the first draft may ask for records it lacked. ATLAS reads
@@ -511,7 +515,7 @@ export async function runAnalystV2(
     return {
       brief,
       evidence: [...evidence, ...inventoryEvidence],
-      derived: autoDerive(evidence),
+      derived: autoDerive([...evidence, ...inventoryEvidence]),
       labels: ownerLabels.map(({ handle, domain, text }) => ({
         handle,
         domain,
