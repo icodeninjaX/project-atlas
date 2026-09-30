@@ -67,6 +67,7 @@ export function digestShown(body: DigestBody) {
 export const digestRowSchema = z.object({
   day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   consent_key: z.string(),
+  state: z.enum(["running", "ready"]),
   body: z.record(z.string(), z.unknown()),
 });
 
@@ -83,5 +84,5 @@ export type DigestResponse =
   | { digest: DigestBody; day: string; cached: boolean }
   | {
       digest: null;
-      reason: "too_early" | "no_money" | "nothing_to_show";
+      reason: "too_early" | "no_money" | "nothing_to_show" | "in_progress";
     };

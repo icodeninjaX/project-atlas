@@ -42,23 +42,29 @@ export type Database = {
       analyst_digests: {
         Row: {
           body: Json;
+          claimed_at: string;
           consent_key: string;
           created_at: string;
           day: string;
+          state: string;
           user_id: string;
         };
         Insert: {
           body: Json;
+          claimed_at?: string;
           consent_key: string;
           created_at?: string;
           day: string;
+          state?: string;
           user_id?: string;
         };
         Update: {
           body?: Json;
+          claimed_at?: string;
           consent_key?: string;
           created_at?: string;
           day?: string;
+          state?: string;
           user_id?: string;
         };
         Relationships: [];
@@ -1481,6 +1487,10 @@ export type Database = {
       };
     };
     Functions: {
+      claim_analyst_digest: {
+        Args: { p_consent_key: string; p_day: string };
+        Returns: boolean;
+      };
       adjust_account_balance: {
         Args: {
           p_account_id: string;

@@ -322,9 +322,14 @@ question route), metered as one Analyst request.
   per owner, forced RLS, owner-only), with the Manila day and the consent it
   was made under (`digestConsentKey`: route, areas and field profiles).
   Later views that day read it; a new day or a different consent makes a
-  new one. Every finished run is kept, even one with nothing to show, so a
-  failed summary is not re-run on each view. When the store cannot be read,
-  nothing runs.
+  new one. Every charged run is kept, even one with nothing to show or one
+  that failed, so it is not re-run (and re-charged) on each view. When the
+  store cannot be read, nothing runs.
+- **One run for views that arrive together.** Before reserving quota, a view
+  claims the day's slot (`claim_analyst_digest`, one atomic upsert that
+  succeeds only for another day or consent, or for a run abandoned for over
+  two minutes). The others get `in_progress`, and the page checks back every
+  five seconds. A claim whose reservation is refused is given up.
 - **What is kept** is the checked answer without its conversation token or
   memory offer; quota bookkeeping and diagnostics never leave the server.
 - **When it shows.** Only for an answer with findings (answered, partial or

@@ -10,7 +10,7 @@ import { digestRowSchema, type DigestBody } from "./digest";
 export async function readDigest(client: SupabaseClient, owner: string) {
   const { data, error } = await client
     .from("analyst_digests")
-    .select("day,consent_key,body")
+    .select("day,consent_key,state,body")
     .eq("user_id", owner)
     .maybeSingle();
   if (error) throw new Error("Summary store unavailable.");
@@ -18,7 +18,35 @@ export async function readDigest(client: SupabaseClient, owner: string) {
   return parsed.success ? parsed.data : null;
 }
 
-/** Replaces the owner's summary with today's. */
+/**
+ * Claims today's summary for the owner under this consent, atomically: true
+ * for exactly one of several views arriving at once, false while another
+ * holds today's claim or today's summary is kept. Throws when the store is
+ * unavailable.
+ */
+export async function claimDigest(
+  client: SupabaseClient,
+  row: { day: string; consentKey: string },
+) {
+  const { data, error } = await client.rpc("claim_analyst_digest", {
+    p_day: row.day,
+    p_consent_key: row.consentKey,
+  });
+  if (error || typeof data !== "boolean")
+    throw new Error("Summary store unavailable.");
+  return data;
+}
+
+/** Gives up a claim that did not run, so a later view may try again. */
+export async function releaseDigest(client: SupabaseClient, owner: string) {
+  await client
+    .from("analyst_digests")
+    .delete()
+    .eq("user_id", owner)
+    .eq("state", "running");
+}
+
+/** Saves the claimed run's answer as the owner's summary for the day. */
 export async function saveDigest(
   client: SupabaseClient,
   owner: string,
@@ -30,6 +58,7 @@ export async function saveDigest(
       day: row.day,
       consent_key: row.consentKey,
       body: row.body as unknown as Json,
+      state: "ready",
       created_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },

@@ -90,13 +90,20 @@ function answer(text: string, context: string) {
   };
 }
 
-function setup(digest: unknown = { digest: null, reason: "nothing_to_show" }) {
+function setup(
+  digest: unknown = { digest: null, reason: "nothing_to_show" },
+  waiting = 0,
+) {
+  let waits = waiting;
   const requests: Array<Record<string, unknown>> = [];
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
       if (url === "/api/analyst/pools") return Response.json({ pools: null });
-      if (url === "/api/analyst/digest") return Response.json(digest);
+      if (url === "/api/analyst/digest")
+        return Response.json(
+          waits-- > 0 ? { digest: null, reason: "in_progress" } : digest,
+        );
       const body = JSON.parse(String(init?.body));
       requests.push(body);
       return stream([
@@ -309,6 +316,31 @@ describe("the month's summary", () => {
     expect(
       screen.queryByRole("heading", { name: "This month so far" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("waits for a summary another view is making", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      window.localStorage.setItem(
+        `atlas:analyst-consent-v2:${userId}`,
+        JSON.stringify(consent),
+      );
+      setup(summary, 1);
+      expect(
+        await screen.findByText("Looking at this month so far…"),
+      ).toBeInTheDocument();
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect(
+        await screen.findByText(/above the same days of August/),
+      ).toBeInTheDocument();
+      expect(
+        vi
+          .mocked(fetch)
+          .mock.calls.filter(([url]) => url === "/api/analyst/digest"),
+      ).toHaveLength(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("asks for nothing before consent", async () => {

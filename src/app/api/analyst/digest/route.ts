@@ -13,7 +13,9 @@ import {
   type DigestResponse,
 } from "@/lib/analyst/intelligence/digest";
 import {
+  claimDigest,
   readDigest,
+  releaseDigest,
   saveDigest,
 } from "@/lib/analyst/intelligence/digest-store";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
@@ -33,9 +35,10 @@ import { createClient } from "@/lib/supabase/server";
  * month's spending change through the same checked V2 run as any question,
  * under the person's current consent, and keeps it for the rest of the day:
  * a page view reads the kept summary, and only the first view of a day (or
- * of a new consent) runs, and is metered as, one Analyst request. When the
- * store cannot be read nothing runs, so the summary never costs a request
- * per view.
+ * of a new consent) runs, and is metered as, one Analyst request. That
+ * view first claims the day's slot, so views arriving together run it once.
+ * When the store cannot be read nothing runs, so the summary never costs a
+ * request per view.
  */
 
 export const runtime = "nodejs";
@@ -91,13 +94,18 @@ export async function POST(request: Request) {
         : { digest: null, reason: "nothing_to_show" },
     );
 
+  // Today's kept summary is read; one another view is making is waited for.
   let stored;
   try {
     stored = await readDigest(supabase, user.id);
   } catch {
     return json({ error: "The summary is unavailable." }, 503);
   }
-  if (stored && digestCurrent(stored, day, consentKey))
+  if (
+    stored &&
+    digestCurrent(stored, day, consentKey) &&
+    stored.state === "ready"
+  )
     return shown(stored.body as DigestBody, true);
 
   if (
@@ -106,8 +114,20 @@ export async function POST(request: Request) {
       : process.env.OPENAI_API_KEY)
   )
     return json({ error: "AI analysis is not configured." }, 503);
+  // Only the view that claims today's slot runs, so two at once are never
+  // both charged; the others wait for its summary.
+  let claimed: boolean;
+  try {
+    claimed = await claimDigest(supabase, { day, consentKey });
+  } catch {
+    return json({ error: "The summary is unavailable." }, 503);
+  }
+  if (!claimed) return reply({ digest: null, reason: "in_progress" });
   const reserved = await reserveAnalystRequest(supabase, model);
-  if (!reserved.ok) return json({ error: reserved.error }, reserved.status);
+  if (!reserved.ok) {
+    await releaseDigest(supabase, user.id).catch(() => undefined);
+    return json({ error: reserved.error }, reserved.status);
+  }
   const memories =
     (await listMemories(supabase, user.id, new Date()).catch(() => null)) ?? [];
   const served = await serveAnalystRun({
@@ -121,13 +141,15 @@ export async function POST(request: Request) {
     route,
     memories,
   });
-  if (served.status !== 200 || !served.result)
-    return json(served.body, served.status);
-  // Every finished run is kept, shown or not, so the day's later views
-  // read it instead of running again.
-  const body = digestBody(served.body as DigestBody);
+  // Every run that was charged is kept for the day, answered or not, so
+  // later views read it instead of running (and being charged) again.
+  const body: DigestBody =
+    served.status === 200 && served.result
+      ? digestBody(served.body as DigestBody)
+      : { status: "error" };
   await saveDigest(supabase, user.id, { day, consentKey, body }).catch(
     () => undefined,
   );
+  if (served.status !== 200) return json(served.body, served.status);
   return shown(body, false);
 }

@@ -8,6 +8,8 @@ const state = vi.hoisted(() => ({
   stored: null as unknown,
   readError: null as unknown,
   saved: [] as Array<Record<string, unknown>>,
+  claim: { data: true, error: null } as { data: unknown; error: unknown },
+  released: 0,
   rpc: vi.fn(),
   run: vi.fn(),
 }));
@@ -42,6 +44,14 @@ vi.mock("@/lib/supabase/server", () => ({
           state.saved.push(row);
           return { error: null };
         },
+        delete: () => ({
+          eq: () => ({
+            eq: async () => {
+              state.released += 1;
+              return { error: null };
+            },
+          }),
+        }),
       };
     },
   }),
@@ -112,13 +122,17 @@ beforeEach(() => {
   state.stored = null;
   state.readError = null;
   state.saved = [];
+  state.claim = { data: true, error: null };
+  state.released = 0;
   state.rpc.mockReset();
   state.run.mockReset();
   state.run.mockResolvedValue(result());
   state.rpc.mockImplementation(async (name: string) =>
     name === "reserve_ai_analyst_request_result"
       ? { data: state.reservation, error: null }
-      : { data: null, error: null },
+      : name === "claim_analyst_digest"
+        ? state.claim
+        : { data: null, error: null },
   );
 });
 afterEach(() => {
@@ -162,11 +176,21 @@ describe("the month's summary route", () => {
         ([name]) => name === "finish_ai_analyst_request",
       ),
     ).toHaveLength(1);
+    expect(state.rpc).toHaveBeenCalledWith("claim_analyst_digest", {
+      p_day: "2026-09-24",
+      p_consent_key: key,
+    });
+    // The claim comes before the reservation.
+    expect(state.rpc.mock.calls.map(([name]) => name).slice(0, 2)).toEqual([
+      "claim_analyst_digest",
+      "reserve_ai_analyst_request_result",
+    ]);
     expect(state.saved).toEqual([
       expect.objectContaining({
         user_id: state.user!.id,
         day: "2026-09-24",
         consent_key: key,
+        state: "ready",
         body: body.digest,
       }),
     ]);
@@ -176,6 +200,7 @@ describe("the month's summary route", () => {
     state.stored = {
       day: "2026-09-24",
       consent_key: key,
+      state: "ready",
       body: { ...result(), context: undefined },
     };
     const body = await (await post({ consent })).json();
@@ -185,11 +210,17 @@ describe("the month's summary route", () => {
   });
 
   it("makes a new one on a new day or under a different consent", async () => {
-    state.stored = { day: "2026-09-23", consent_key: key, body: result() };
+    state.stored = {
+      day: "2026-09-23",
+      consent_key: key,
+      state: "ready",
+      body: result(),
+    };
     await post({ consent });
     state.stored = {
       day: "2026-09-24",
       consent_key: "openai_shared:money:aggregate",
+      state: "ready",
       body: result(),
     };
     await post({ consent });
@@ -224,10 +255,45 @@ describe("the month's summary route", () => {
     expect(state.rpc).not.toHaveBeenCalled();
   });
 
-  it("reports a used-up allowance without running", async () => {
+  it("reports a used-up allowance without running, and gives up its claim", async () => {
     state.reservation = { status: "daily_quota" };
     expect((await post({ consent })).status).toBe(429);
     expect(state.run).not.toHaveBeenCalled();
     expect(state.saved).toEqual([]);
+    expect(state.released).toBe(1);
+  });
+
+  it("waits for a summary another view is making, and is never charged for it", async () => {
+    state.stored = {
+      day: "2026-09-24",
+      consent_key: key,
+      state: "running",
+      body: {},
+    };
+    state.claim = { data: false, error: null };
+    expect(await (await post({ consent })).json()).toEqual({
+      digest: null,
+      reason: "in_progress",
+    });
+    expect(
+      state.rpc.mock.calls.some(
+        ([name]) => name === "reserve_ai_analyst_request_result",
+      ),
+    ).toBe(false);
+    expect(state.run).not.toHaveBeenCalled();
+  });
+
+  it("runs nothing when the claim cannot be made", async () => {
+    state.claim = { data: null, error: { message: "unavailable" } };
+    expect((await post({ consent })).status).toBe(503);
+    expect(state.run).not.toHaveBeenCalled();
+  });
+
+  it("keeps a failed run for the day, so it is not charged again", async () => {
+    state.run.mockRejectedValue(new Error("provider down"));
+    expect((await post({ consent })).status).toBe(503);
+    expect(state.saved).toEqual([
+      expect.objectContaining({ state: "ready", body: { status: "error" } }),
+    ]);
   });
 });

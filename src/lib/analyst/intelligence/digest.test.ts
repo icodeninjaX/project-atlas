@@ -48,14 +48,14 @@ describe("the month's summary", () => {
     expect(key.length).toBeLessThanOrEqual(400);
     expect(
       digestCurrent(
-        { day: "2026-09-24", consent_key: key, body: {} },
+        { day: "2026-09-24", consent_key: key, state: "ready", body: {} },
         "2026-09-24",
         key,
       ),
     ).toBe(true);
     expect(
       digestCurrent(
-        { day: "2026-09-23", consent_key: key, body: {} },
+        { day: "2026-09-23", consent_key: key, state: "ready", body: {} },
         "2026-09-24",
         key,
       ),
