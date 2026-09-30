@@ -267,6 +267,22 @@ const FAILED_CHECK: Record<string, string> = {
   process_wording: "it described the analysis instead of the records",
   projection_wording: "it stated an estimate as recorded",
   missing_support: "a statement cited no figures",
+  "review:unsupported_by_evidence":
+    "a statement did not follow from its figures",
+  "review:wrong_subject": "a statement described the wrong thing",
+  "review:wrong_period": "a statement used the wrong period",
+  "review:overstated_certainty":
+    "it sounded more certain than the records allow",
+  "review:association_as_cause": "it treated a coincidence as a cause",
+  "review:ignores_counterevidence":
+    "it left out figures that point the other way",
+  "review:contradiction": "two statements contradicted each other",
+  "review:qualification_not_applied": "a needed caveat was missing",
+  "review:not_confirmed": "the meaning check could not confirm it",
+  "review:unavailable": "the meaning check was unavailable",
+  "review:misses_question": "it did not answer the question",
+  "review:shallow": "it only restated figures",
+  "review:generic": "it was too generic",
 };
 
 export function failedChecksNote(reasons: readonly string[]) {

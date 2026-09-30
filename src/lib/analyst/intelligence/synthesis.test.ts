@@ -15,7 +15,11 @@ import {
 import { SHARED_ROUTE, legacyEquivalentConsent } from "./policy";
 import { reviewerAgreement } from "./review";
 import { createStageCaller } from "./stages";
-import { synthesizeAnswer, type SynthesisInput } from "./synthesis";
+import {
+  failedChecksNote,
+  synthesizeAnswer,
+  type SynthesisInput,
+} from "./synthesis";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/ai/pool-meter", async (importOriginal) => ({
@@ -385,6 +389,58 @@ describe("answer synthesis", () => {
     const answer = await result;
     expect(answer.answer.status).not.toBe("answered");
     expect(shipped(answer)).toEqual([]);
+  });
+
+  it("keeps a checked fact the reviewer only calls shallow, and says why checks failed", async () => {
+    // The production case of 30 September: the reviewer judged every claim
+    // as beside the question, and nothing was left but ATLAS's own list.
+    const { result } = run(
+      {
+        atlas_answer_v2: [draft([total]), draft([total])],
+        atlas_answer_review: [
+          reviewOf(
+            [verdict("c1", "unsupported", [], ["shallow", "misses_question"])],
+            [["total", false, []]],
+          ),
+          reviewOf(
+            [verdict("c1", "unsupported", [], ["shallow"])],
+            [["total", false, []]],
+          ),
+        ],
+      },
+      { path: "deep" },
+    );
+    const answer = await result;
+    // The writer's own checked sentence ships, not ATLAS's figure list.
+    expect(shipped(answer)).toEqual(["c1"]);
+    expect(answer.answer.claims[0]!.text).toBe(total.text);
+    expect(answer.answer.limitations.join(" ")).not.toMatch(
+      /did not pass ATLAS checks/,
+    );
+  });
+
+  it("still withholds a fact the reviewer finds wrong on substance", async () => {
+    const { result } = run(
+      {
+        atlas_answer_v2: [draft([total]), draft([total])],
+        atlas_answer_review: [
+          reviewOf(
+            [verdict("c1", "unsupported", [], ["wrong_period"])],
+            [["total", false, []]],
+          ),
+          reviewOf(
+            [verdict("c1", "unsupported", [], ["wrong_period"])],
+            [["total", false, []]],
+          ),
+        ],
+      },
+      { path: "deep" },
+    );
+    const answer = await result;
+    expect(shipped(answer)).toEqual([]);
+    expect(
+      failedChecksNote(answer.answer.verification.rejectionReasons),
+    ).toContain("a statement used the wrong period");
   });
 
   it("qualifies contradicting claims until a repair resolves them", async () => {
