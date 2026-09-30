@@ -259,7 +259,7 @@ turns anything that is not a short code into `other`, so no question text,
 figure, record name or model text can be stored. Rows are owner-only
 (row-level security; no update), are deleted after 14 days when the owner's
 next record is saved, and a failed write never affects the answer. Migration
-`20260930110000_analyst_run_diagnostics.sql`.
+`20260930121442_analyst_run_diagnostics.sql`.
 
 ## 5. How much is shown
 
