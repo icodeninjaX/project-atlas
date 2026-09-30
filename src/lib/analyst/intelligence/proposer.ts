@@ -50,6 +50,8 @@ const moneyCapabilities = new Set([
   "money.aligned_comparison",
 ]);
 
+const basisOrder = { exact: 0, mentioned: 1, contains: 2, words: 3 } as const;
+
 function resolved(view: InvestigationView, type: V2EntityType) {
   const fromBrief = view.brief.resolvedEntities.find(
     (item) => parseHandle(item.handle)?.type === type,
@@ -270,6 +272,62 @@ export function capabilityProposer(now: Date): Proposer {
               },
               requirement.id,
             );
+            continue;
+          }
+          if (capability === "money.query") {
+            const spec = requirement.transactionQuery;
+            if (!spec) continue;
+            let categories: string[] = [];
+            if (spec.category) {
+              // The category phrase is resolved among the owner's categories
+              // first; the query then reads only those.
+              const phrase = spec.category;
+              const resolution = view.outcomes.find(
+                (item) =>
+                  item.request.tool === "resolveAnalystEntities" &&
+                  (item.request.input as { text: string }).text === phrase,
+              );
+              if (!resolution) {
+                add(
+                  "resolveAnalystEntities",
+                  { text: phrase, types: ["category"] },
+                  requirement.id,
+                );
+                continue;
+              }
+              const found = resolution.result.candidates.filter(
+                (item) => item.type === "category",
+              );
+              // Several equally good matches ("food" and "food delivery")
+              // are all read; the answer names each one.
+              const best = Math.min(
+                ...found.map((item) => basisOrder[item.basis]),
+              );
+              categories = found
+                .filter((item) => basisOrder[item.basis] === best)
+                .slice(0, V2_TOOL_LIMITS.queryCategories)
+                .map((item) => item.handle);
+              // No such category: nothing is read, and the answer says so.
+              if (categories.length === 0) continue;
+            }
+            const periods = view.brief.periods.length
+              ? view.brief.periods
+              : [{ ...period(view.brief, now) }];
+            for (const item of periods)
+              add(
+                "queryTransactions",
+                {
+                  from: item.from,
+                  through: item.through,
+                  kind: spec.kind,
+                  groupBy: spec.groupBy,
+                  measures: spec.measures,
+                  categories,
+                  minAmountPesos: spec.minAmountPesos,
+                  maxAmountPesos: spec.maxAmountPesos,
+                },
+                requirement.id,
+              );
             continue;
           }
           if (moneyCapabilities.has(capability)) {

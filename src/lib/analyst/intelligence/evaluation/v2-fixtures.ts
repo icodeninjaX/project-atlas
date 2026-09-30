@@ -75,7 +75,9 @@ export function metricEvidence(input: MetricInput): EvidenceV2 {
     task_completions: "count",
     knowledge_reviews: "count",
   };
-  const unit = unitByKey[input.metricKey] ?? "count";
+  const unit =
+    unitByKey[input.metricKey] ??
+    (input.metricKey.endsWith("_centavos") ? "centavos" : "count");
   const semantics = semanticsFor(input.metricKey, unit);
   return {
     version: "2",

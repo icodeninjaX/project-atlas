@@ -82,6 +82,18 @@ const searchText = z
   )
   .refine((value) => value.length >= 2, "Use at least two letters.");
 
+/** How a transaction query may group and measure recorded money. */
+export const QUERY_GROUPS = [
+  "none",
+  "category",
+  "weekday",
+  "weekend",
+  "month",
+] as const;
+export const QUERY_MEASURES = ["total", "count", "average"] as const;
+export type QueryGroup = (typeof QUERY_GROUPS)[number];
+export type QueryMeasure = (typeof QUERY_MEASURES)[number];
+
 export const V2_TOOL_LIMITS = Object.freeze({
   queries: 48,
   rows: 4000,
@@ -95,6 +107,10 @@ export const V2_TOOL_LIMITS = Object.freeze({
   // Each one-hop Graph read costs several queries; this bounds a traversal.
   graphExpansions: 5,
   aggregateGroups: 500,
+  // A transaction query reads pages of this many rows, at most this many pages.
+  queryPage: 500,
+  queryPages: 7,
+  queryCategories: 10,
   events: 20,
   observations: 50,
   excerptChars: 600,
@@ -160,6 +176,39 @@ export const v2ToolInputs = {
     .object({ ...period, kind: z.enum(["expense", "income"]) })
     .strict()
     .refine(bounded, "Use an ordered period of at most 366 days."),
+  queryTransactions: z
+    .object({
+      ...period,
+      kind: z.enum(["expense", "income"]),
+      groupBy: z.enum(QUERY_GROUPS).default("none"),
+      measures: z
+        .array(z.enum(QUERY_MEASURES))
+        .min(1)
+        .max(QUERY_MEASURES.length)
+        .default(["total"]),
+      categories: z
+        .array(handleSchema)
+        .max(V2_TOOL_LIMITS.queryCategories)
+        .default([]),
+      minAmountPesos: z.number().min(0).max(1e9).nullable().default(null),
+      maxAmountPesos: z.number().min(0).max(1e9).nullable().default(null),
+    })
+    .strict()
+    .refine(bounded, "Use an ordered period of at most 366 days.")
+    .refine(
+      (value) =>
+        value.categories.every(
+          (item) => parseHandle(item)?.type === "category",
+        ) && new Set(value.measures).size === value.measures.length,
+      "Choose categories and distinct measures.",
+    )
+    .refine(
+      (value) =>
+        value.minAmountPesos === null ||
+        value.maxAmountPesos === null ||
+        value.minAmountPesos <= value.maxAmountPesos,
+      "The smallest amount must not exceed the largest.",
+    ),
   getGoalAnalysisContext: z
     .object({ goal: handleSchema, ...period })
     .strict()
@@ -207,6 +256,8 @@ export const v2ToolDescriptions: Record<V2ToolName, string> = {
     "Current facts for up to ten resolved records. Private text is returned only for the sensitive profile and only when policy allows it.",
   getMoneyBreakdown:
     "Complete per-category totals of recorded income or expenses for an explicit period, from a database aggregate. Withheld when the aggregate is not complete.",
+  queryTransactions:
+    "Recorded income or expense transactions for an explicit period, optionally limited to resolved categories and an amount range, measured as a total, a count or an average per transaction, and grouped by category, weekday, weekend against weekdays, or month. ATLAS reads every matching record and computes every figure; withheld when the records exceed the bounded window.",
   getGoalAnalysisContext:
     "A resolved goal's current state, milestones and currently linked activity in a period. Current links do not prove past links.",
   getDecisionAnalysisContext:

@@ -139,6 +139,7 @@ const toolDomains: Record<V2ToolName, ConsentDomain[]> = {
   getDataInventory: [],
   getAnalystRecordDetails: [],
   getMoneyBreakdown: ["money"],
+  queryTransactions: ["money"],
   getGoalAnalysisContext: ["goals"],
   getDecisionAnalysisContext: ["decisions"],
   getRelationshipPaths: ["graph"],

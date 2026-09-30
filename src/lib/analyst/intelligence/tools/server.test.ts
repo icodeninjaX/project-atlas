@@ -89,6 +89,7 @@ describe("Analyst V2 tool registry", () => {
       "searchAnalystRecords",
       "getAnalystRecordDetails",
       "getMoneyBreakdown",
+      "queryTransactions",
       "getGoalAnalysisContext",
       "getDecisionAnalysisContext",
       "getRelationshipPaths",
@@ -356,7 +357,7 @@ describe("record details (AI-02B)", () => {
       attributedTo: "user",
       text: INJECTION_REFLECTION,
     });
-    expect(listAnalystToolsV2()).toHaveLength(8 + BRIDGED_TOOLS.length);
+    expect(listAnalystToolsV2()).toHaveLength(9 + BRIDGED_TOOLS.length);
     // Even retrieved text never reaches the shared route.
     const filtered = filterProviderPayload(
       {
@@ -449,6 +450,112 @@ describe("money breakdown (AI-02B)", () => {
     expect(result.status).toBe("partial");
     expect(result.error?.code).toBe("partial");
     expect(result.evidence).toEqual([]);
+  });
+});
+
+describe("transaction query", () => {
+  const own = (owner: string, from: string, through: string) =>
+    (emulator.tables.transactions ?? []).filter(
+      (row) =>
+        row.user_id === owner &&
+        row.transaction_type === "expense" &&
+        String(row.transaction_date) >= from &&
+        String(row.transaction_date) <= through,
+    );
+  const sum = (items: Array<Record<string, unknown>>) =>
+    items.reduce((total, row) => total + Number(row.amount_centavos), 0);
+
+  it("groups by weekend and counts every matching record, reading no text", async () => {
+    const result = await invoke("queryTransactions", {
+      from: "2026-09-01",
+      through: "2026-09-24",
+      kind: "expense",
+      groupBy: "weekend",
+      measures: ["total", "count"],
+    });
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe("ready");
+    const records = own(OWNER_A, "2026-09-01", "2026-09-24");
+    const value = (metric: string, member: string | null) =>
+      result.evidence.find(
+        (item) =>
+          item.semantics.metricKey === metric &&
+          (member === null
+            ? item.scope.type === "whole_domain"
+            : item.scope.cohort?.member === member),
+      );
+    expect(value("expense_query_centavos", null)).toMatchObject({
+      value: sum(records),
+    });
+    expect(value("expense_query_count", null)).toMatchObject({
+      value: records.length,
+    });
+    const weekend = records.filter((row) =>
+      [0, 6].includes(
+        new Date(`${String(row.transaction_date)}T00:00:00Z`).getUTCDay(),
+      ),
+    );
+    expect(value("expense_query_centavos", "day_type:weekend")).toMatchObject({
+      value: sum(weekend),
+    });
+    expect(value("expense_query_centavos", "day_type:weekday")).toMatchObject({
+      value: sum(records) - sum(weekend),
+    });
+    // Dates, amounts and categories only: never merchants or descriptions.
+    const selects = emulator.requests
+      .filter((url) => url.pathname === "/rest/v1/transactions")
+      .map((url) => url.searchParams.get("select"));
+    expect(selects).toEqual([
+      "id,transaction_date,amount_centavos,category_id",
+    ]);
+  });
+
+  it("limits to resolved categories and matches the category total", async () => {
+    const dining = handle("category", "cat-a-dining");
+    const [query, breakdown] = await Promise.all([
+      invoke("queryTransactions", {
+        from: "2026-09-01",
+        through: "2026-09-24",
+        kind: "expense",
+        categories: [dining],
+      }),
+      invoke("getMoneyBreakdown", {
+        from: "2026-09-01",
+        through: "2026-09-24",
+        kind: "expense",
+      }),
+    ]);
+    const filtered = query.evidence.find(
+      (item) => item.scope.type === "whole_domain",
+    )!;
+    expect(filtered.scope.id).not.toBe("whole_domain:expense_qall");
+    const member = breakdown.evidence.find(
+      (item) => item.scope.cohort?.member === dining,
+    )!;
+    expect(filtered).toMatchObject({
+      value: "value" in member ? member.value : null,
+    });
+    expect(query.labels.map((item) => item.text)).toEqual(["Dining"]);
+  });
+
+  it("pages through a 1,501-row month and averages exactly", async () => {
+    signIn(OWNER_A, "bulk");
+    const result = await invoke("queryTransactions", {
+      from: "2026-09-01",
+      through: "2026-09-24",
+      kind: "expense",
+      measures: ["total", "count", "average"],
+    });
+    expect(result.status).toBe("ready");
+    const records = own(OWNER_A, "2026-09-01", "2026-09-24");
+    expect(
+      result.evidence.map((item) => ("value" in item ? item.value : null)),
+    ).toEqual([
+      EXPECTED_FACTS["bulk.expense_total"]!.value,
+      records.length,
+      Math.round(sum(records) / records.length),
+    ]);
+    expect(sum(records)).toBe(EXPECTED_FACTS["bulk.expense_total"]!.value);
   });
 });
 

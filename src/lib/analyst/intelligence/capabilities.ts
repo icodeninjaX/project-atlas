@@ -86,6 +86,21 @@ export const CAPABILITY_MANIFEST: readonly CapabilityDescriptor[] = [
     ],
   }),
   entry({
+    id: "money.query",
+    domain: "money",
+    profile: "aggregate",
+    status: "available",
+    description:
+      "A question about recorded income or expenses that the fixed reads cannot answer: limited to named categories or an amount range, measured as a total, a count or an average per transaction, and grouped by category, weekday, weekend against weekdays, or month. ATLAS computes every figure from every matching record.",
+    tools: ["resolveAnalystEntities", "queryTransactions"],
+    supportedHistory: "Any period of up to 366 days.",
+    unsupported: [
+      "Merchants, notes or descriptions",
+      "Times of day",
+      "Why spending happened",
+    ],
+  }),
+  entry({
     id: "money.full_aggregate",
     domain: "money",
     profile: "aggregate",

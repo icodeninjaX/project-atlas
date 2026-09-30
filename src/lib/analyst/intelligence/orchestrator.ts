@@ -130,6 +130,16 @@ export type InvestigationResult = {
 const toolsFor = new Map(
   CAPABILITY_MANIFEST.map((item) => [item.id, new Set(item.tools)]),
 );
+/**
+ * Capabilities whose approved tools include a step that does not answer
+ * them: a transaction query may resolve a category first, but only the
+ * query itself reads the figures.
+ */
+const answeredBy = new Map<string, ReadonlySet<string>>([
+  ["money.query", new Set(["queryTransactions"])],
+]);
+const answers = (capability: string, tool: string) =>
+  (answeredBy.get(capability) ?? toolsFor.get(capability)!).has(tool);
 
 function handlesIn(input: unknown): string[] {
   if (!input || typeof input !== "object") return [];
@@ -138,11 +148,13 @@ function handlesIn(input: unknown): string[] {
     ...["goal", "decision", "start"].flatMap((key) =>
       typeof record[key] === "string" ? [record[key] as string] : [],
     ),
-    ...(Array.isArray(record.handles)
-      ? (record.handles as unknown[]).filter(
-          (item): item is string => typeof item === "string",
-        )
-      : []),
+    ...["handles", "categories"].flatMap((key) =>
+      Array.isArray(record[key])
+        ? (record[key] as unknown[]).filter(
+            (item): item is string => typeof item === "string",
+          )
+        : [],
+    ),
   ];
 }
 
@@ -200,8 +212,7 @@ function assess(
     const satisfied = (capability: string) =>
       mine.some(
         (outcome) =>
-          useful(outcome) &&
-          toolsFor.get(capability)!.has(outcome.request.tool),
+          useful(outcome) && answers(capability, outcome.request.tool),
       );
     // Each capability needs one complete read; a bounded read that was cut
     // short still counts once a complete read covers the same capability.
@@ -210,7 +221,7 @@ function assess(
         (outcome) =>
           useful(outcome) &&
           outcome.result.status === "ready" &&
-          toolsFor.get(capability)!.has(outcome.request.tool),
+          answers(capability, outcome.request.tool),
       );
     const complete =
       capabilities.length > 0

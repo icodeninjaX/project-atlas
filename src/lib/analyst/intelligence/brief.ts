@@ -49,6 +49,8 @@ const deepCapabilities = new Set([
   "decision.text",
   "task.detail",
   "money.category_breakdown",
+  // A query on a named category resolves the category, then reads.
+  "money.query",
   "goal.linked_activity",
 ]);
 const deepIntents = new Set<AnalysisBrief["intent"]>([

@@ -143,6 +143,36 @@ projection must read as an estimate ("at this pace … would"), or it is
 rejected (`projection_wording`). A pace claim may state how many days it
 spans.
 
+## 4b-3. Transaction queries (`queryTransactions`, `money.query`)
+
+The fixed reads answer totals, the category breakdown and monthly history.
+Questions such as "weekends or weekdays?", "how many purchases over
+₱1,000?", "my average purchase" or "dining each month since August" need a
+query. The planner may add a `money.query` sub-question with a query:
+grouping (none, category, weekday, weekend, month), measures (total, count,
+average per transaction), a category phrase from the question and an amount
+range. It becomes its own requirement carrying `transactionQuery`.
+
+The proposer resolves the category phrase among the owner's categories
+first (all equally good matches; none means nothing is read), then calls
+`queryTransactions` for each period. The tool reads date, amount and
+category only, in owner-scoped keyset pages of 500 (at most 3,500 records;
+more is a failure, never a partial figure), and computes every total, count
+and average itself. Its figures use their own metric keys
+(`expense_query_centavos`, `expense_query_count`,
+`expense_query_average_centavos`) and a scope per filter
+(`whole_domain:<kind>_q<hash>`), so they are never netted, paced or compared
+with the fixed reads or with another filter. A set `<name>_by_<group>` is
+divided only by the total `whole_domain:<name>`; averages are ranked but
+never divided into shares. Only the query read answers a query requirement;
+resolving the category is a step. Queries take the multi-round path.
+
+`depth-questions.test.ts` runs such questions end to end on the synthetic
+fixtures (scripted plan, real brief check, resolution, reads and
+derivations) and states the exact figures each answer rests on. Writing it
+found two bugs, now fixed: "since August" was read as August alone, and the
+test database compared numbers as text.
+
 ## 4c. Reading more after the first draft
 
 With a plan, the first draft may list up to two records it lacked in

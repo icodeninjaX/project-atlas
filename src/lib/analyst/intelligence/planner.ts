@@ -35,6 +35,7 @@ export const PLANNABLE_CAPABILITIES = [
   "reviews.scores",
   "signals.current",
   "history.trend",
+  "money.query",
 ] as const;
 type PlannableCapability = (typeof PLANNABLE_CAPABILITIES)[number];
 
@@ -81,6 +82,7 @@ export const PLANNER_SYSTEM = [
   "understanding: in one or two sentences, restate what the person actually wants to know and the concern behind it. 'Am I doing okay with money?' asks whether income covers spending and debts, not for one total. No figures.",
   "subQuestions: at most four concrete sub-questions that, together with the current reading, answer the question. Map each to capability IDs from the catalog that can answer it; never invent an ID, and skip what the current reading already covers. When the question is broad, about connections or about what to focus on ('How am I doing?', 'Why do I feel behind?', 'What should I work on?'), look across areas: money flow, debts, goals, tasks, reviews and career. When the question is narrow, add only what changes the answer, or nothing.",
   "moneyKind: for a money capability, say whether it reads expense or income records; ask two sub-questions when both matter, such as savings or whether income covers spending. Otherwise none.",
+  "query: with money.query, the transaction query that answers a sub-question the fixed money reads cannot: groupBy (none, category, weekday, weekend for weekends against weekdays, or month), measures (total, count, average per transaction), category (a category named in the question, in the person's words, such as 'food'; otherwise null), and minAmountPesos and maxAmountPesos (an amount range the question names, such as over 1000; otherwise null). Use it for questions like 'weekends or weekdays', 'how many purchases over 1,000', 'average transaction', 'how much on food each month'. moneyKind says expense or income. Otherwise query null.",
   "trendMetric and trendMonths: with history.trend, the measure to follow month by month and over how many months (6, or 12 for a year). Use a trend whenever the answer depends on what is normal or how things are moving: 'am I improving', 'is this normal', 'more than usual', 'lately'. Otherwise trendMetric none.",
   "hypotheses: up to four checks a skeptical analyst would make before trusting a conclusion, such as 'one category may account for most of the change' or 'fewer completed tasks may reflect fewer planned tasks'. Phrase them as checks, never as findings, and use no figures.",
   "comparePreviousPeriod: true when judging the answer needs a baseline: a trend, a change, 'am I improving', 'is this normal', 'too much'.",
@@ -123,6 +125,7 @@ export const PLANNER_SCHEMA = {
           "moneyKind",
           "trendMetric",
           "trendMonths",
+          "query",
         ],
         properties: {
           question: { type: "string" },
@@ -133,6 +136,30 @@ export const PLANNER_SCHEMA = {
           moneyKind: { type: "string", enum: ["expense", "income", "none"] },
           trendMetric: { type: "string", enum: [...TREND_METRICS, "none"] },
           trendMonths: { type: "integer", enum: [...TREND_MONTHS] },
+          query: nullable({
+            type: "object",
+            additionalProperties: false,
+            required: [
+              "groupBy",
+              "measures",
+              "category",
+              "minAmountPesos",
+              "maxAmountPesos",
+            ],
+            properties: {
+              groupBy: {
+                type: "string",
+                enum: ["none", "category", "weekday", "weekend", "month"],
+              },
+              measures: {
+                type: "array",
+                items: { type: "string", enum: ["total", "count", "average"] },
+              },
+              category: nullable({ type: "string" }),
+              minAmountPesos: nullable({ type: "number" }),
+              maxAmountPesos: nullable({ type: "number" }),
+            },
+          }),
         },
       },
     },
@@ -155,6 +182,31 @@ const text = (max: number) =>
     .min(1)
     .transform((value) => value.slice(0, max));
 
+/** A planned transaction query; anything malformed is dropped, not guessed. */
+const querySchema = z
+  .object({
+    groupBy: z.enum(["none", "category", "weekday", "weekend", "month"]),
+    measures: z
+      .array(z.enum(["total", "count", "average"]))
+      .min(1)
+      .max(3)
+      .transform((items) => [...new Set(items)]),
+    category: z
+      .string()
+      .trim()
+      .transform((value) => value.slice(0, 80))
+      .nullable()
+      .transform((value) => (value && value.length >= 2 ? value : null)),
+    minAmountPesos: z.number().min(0).max(1e9).nullable(),
+    maxAmountPesos: z.number().min(0).max(1e9).nullable(),
+  })
+  .refine(
+    (value) =>
+      value.minAmountPesos === null ||
+      value.maxAmountPesos === null ||
+      value.minAmountPesos <= value.maxAmountPesos,
+  );
+
 const plannerOutputSchema = z.object({
   understanding: text(400),
   intent: z.enum(PLANNER_INTENTS),
@@ -169,6 +221,7 @@ const plannerOutputSchema = z.object({
           .enum(["none", ...TREND_METRICS] as [string, ...string[]])
           .default("none"),
         trendMonths: z.union([z.literal(6), z.literal(12)]).default(6),
+        query: querySchema.nullable().catch(null).default(null),
       }),
     )
     .max(8),
@@ -382,6 +435,27 @@ export function refineBrief(
       }
       capabilities.splice(capabilities.indexOf("history.trend"), 1);
     }
+    // A transaction query carries its own reading, so it is its own
+    // requirement; without a valid query the capability is dropped.
+    if (capabilities.includes("money.query")) {
+      const kind = sub.moneyKind === "income" ? "income" : "expense";
+      const key = `money.query|${kind}|${JSON.stringify(sub.query)}`;
+      if (
+        sub.query &&
+        !seen.has(key) &&
+        planned.length < PLANNER_LIMITS.subQuestions
+      ) {
+        seen.add(key);
+        planned.push({
+          id: `${prefix}${planned.length + 1}_query_${kind}`,
+          question: sub.question,
+          essential: false,
+          evidenceNeeded: ["money.query"],
+          transactionQuery: { kind, ...sub.query },
+        });
+      }
+      capabilities.splice(capabilities.indexOf("money.query"), 1);
+    }
     if (capabilities.length === 0) continue;
     if (planned.length >= PLANNER_LIMITS.subQuestions) break;
     const money = capabilities.some((id) => MONEY.has(id));
@@ -538,6 +612,7 @@ export const evidenceRequestSchema = z.object({
     .enum(["none", ...TREND_METRICS] as [string, ...string[]])
     .default("none"),
   trendMonths: z.union([z.literal(6), z.literal(12)]).default(6),
+  query: querySchema.nullable().catch(null).default(null),
 });
 export type EvidenceRequest = z.input<typeof evidenceRequestSchema>;
 

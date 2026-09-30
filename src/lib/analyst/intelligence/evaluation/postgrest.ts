@@ -305,19 +305,30 @@ function test(row: Row, column: string, expression: string): boolean {
   const text = value === null || value === undefined ? null : String(value);
   const [op, ...rest] = expression.split(".");
   const operand = rest.join(".");
+  // Postgres orders numbers by value, not as text.
+  const order = (): number =>
+    typeof value === "number" &&
+    operand.trim() !== "" &&
+    !Number.isNaN(Number(operand))
+      ? value - Number(operand)
+      : text! < operand
+        ? -1
+        : text! > operand
+          ? 1
+          : 0;
   switch (op) {
     case "eq":
       return text === operand;
     case "neq":
       return text !== operand;
     case "gt":
-      return text !== null && text > operand;
+      return text !== null && order() > 0;
     case "gte":
-      return text !== null && text >= operand;
+      return text !== null && order() >= 0;
     case "lt":
-      return text !== null && text < operand;
+      return text !== null && order() < 0;
     case "lte":
-      return text !== null && text <= operand;
+      return text !== null && order() <= 0;
     case "in":
       return operand
         .slice(1, -1)
