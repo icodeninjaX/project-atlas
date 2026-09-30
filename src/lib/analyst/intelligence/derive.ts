@@ -56,7 +56,11 @@ function transactionsStart(evidence: EvidenceV2[]): RecordsStart | null {
   return item ? { day: item.time.period.from, evidenceId: item.id } : null;
 }
 
-export function autoDerive(evidence: EvidenceV2[]): DerivedFact[] {
+export function autoDerive(
+  evidence: EvidenceV2[],
+  /** Today in Manila; a projection is made only for the month in progress. */
+  options: { today?: string } = {},
+): DerivedFact[] {
   const facts: DerivedFact[] = [];
   const values = evidence.filter(numeric);
   const start = transactionsStart(evidence);
@@ -170,7 +174,11 @@ export function autoDerive(evidence: EvidenceV2[]): DerivedFact[] {
           paceChange(`derived.pace_change.${key}`, latest.pace, earlier.pace),
         ) ?? []),
       );
-    if (latest) {
+    if (
+      latest &&
+      options.today &&
+      latest.item.time.period.through.slice(0, 7) === options.today.slice(0, 7)
+    ) {
       const projection = attempt(() =>
         monthProjection(
           `derived.projection.${key}|${periodKey(latest.item)}`,

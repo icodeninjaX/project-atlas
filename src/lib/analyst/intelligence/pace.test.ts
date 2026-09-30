@@ -38,7 +38,7 @@ const inventory = metricEvidence({
   },
 });
 const evidence: EvidenceV2[] = [september, august, inventory];
-const derived = autoDerive(evidence);
+const derived = autoDerive(evidence, { today: "2026-09-29" });
 const find = (prefix: string) =>
   derived.find((item) => item.id.startsWith(prefix));
 
@@ -92,6 +92,14 @@ describe("pace per recorded day", () => {
     expect(
       derived.filter((item) => item.operation === "projection"),
     ).toHaveLength(1);
+
+    // A past month, or no known date, is never projected.
+    for (const today of ["2026-10-02", undefined])
+      expect(
+        autoDerive(evidence, { today }).some(
+          (item) => item.operation === "projection",
+        ),
+      ).toBe(false);
   });
 });
 
