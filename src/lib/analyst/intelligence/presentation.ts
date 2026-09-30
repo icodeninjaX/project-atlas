@@ -36,7 +36,10 @@ export type Presentation = {
   direct: PresentedClaim[];
   findings: PresentedClaim[];
   options: PresentedClaim[];
+  /** The few limits that change how to read this answer. */
   limitations: string[];
+  /** How ATLAS read and checked the records; shown folded away. */
+  limitationDetails: string[];
   unresolved: Array<{
     requirementId: string;
     reason: UnresolvedReason;
@@ -83,6 +86,43 @@ const statusKey: Record<ResultStatus, keyof (typeof UI_TEXT)["en"]> = {
   fallback_facts: "facts",
   error: "error",
 };
+
+/** Notes about how ATLAS read and checked records rather than what they show. */
+const TECHNICAL_LIMITATION =
+  /source ids?|one after another|database aggregate|owner-only labels?|request-time aggregation|bounded (?:sample|window)|retrieval time|surviving (?:owner |expense )?(?:records|transactions)|not a historical month-by-month|historical claims/i;
+// Several reads each say that no record is not proof of no activity.
+const ZERO_ACTIVITY = /zero recorded|no records means/i;
+// Why the answer looks as it does comes first.
+const ABOUT_ANSWER = /ATLAS checks|records start|pinaikli|shortened/i;
+const SHOWN_LIMITATIONS = 4;
+
+/**
+ * Splits limitations into the few a person should read with the answer and
+ * the rest, deduplicated: notes about the answer itself first, then what the
+ * records cannot show; technical notes about retrieval go to the details.
+ */
+export function sortLimitations(items: string[]) {
+  const unique = [...new Set(items.map((item) => item.trim()))].filter(Boolean);
+  const shown: string[] = [];
+  const details: string[] = [];
+  let zeroSaid = false;
+  const ordered = [
+    ...unique.filter((item) => ABOUT_ANSWER.test(item)),
+    ...unique.filter((item) => !ABOUT_ANSWER.test(item)),
+  ];
+  for (const item of ordered) {
+    const repeatsZero = ZERO_ACTIVITY.test(item) && zeroSaid;
+    if (ZERO_ACTIVITY.test(item)) zeroSaid = true;
+    if (
+      TECHNICAL_LIMITATION.test(item) ||
+      repeatsZero ||
+      shown.length >= SHOWN_LIMITATIONS
+    )
+      details.push(item);
+    else shown.push(item);
+  }
+  return { limitations: shown, limitationDetails: details };
+}
 
 export function presentAnswer(
   answer: AnswerV2,
@@ -195,11 +235,12 @@ export function presentAnswer(
     direct: direct.map(present),
     findings: findings.map(present),
     options: choices.map(present),
-    // Limits stay visible next to the conclusion they affect.
-    limitations: [
+    // Limits stay visible next to the conclusion they affect; how the
+    // records were read and checked is kept, folded away.
+    ...sortLimitations([
       ...caveats.map((claim) => readableText(claim.text, language)),
       ...answer.limitations.map((item) => readableText(item, language)),
-    ],
+    ]),
     unresolved: answer.unresolved.map((item) => ({
       requirementId: item.requirementId,
       reason: item.reason,

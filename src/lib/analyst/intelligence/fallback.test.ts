@@ -10,9 +10,11 @@ import { deterministicDraft } from "./fallback";
 
 describe("deterministic fallback draft", () => {
   it("leaves a figure past one requirement's limit for a later requirement", () => {
-    const totals = ["a", "b", "c", "d"].map((id) =>
-      wholeExpenseTotal(`total.${id}`, PERIODS.currentMonthToDate),
-    );
+    // Four different figures, so none is a repeat of another.
+    const totals = ["a", "b", "c", "d"].map((id, index) => ({
+      ...wholeExpenseTotal(`total.${id}`, PERIODS.currentMonthToDate),
+      value: 100_000 * (index + 1),
+    }));
     const draft = deterministicDraft(
       brief([
         ["first", true],
@@ -37,6 +39,39 @@ describe("deterministic fallback draft", () => {
     ]);
     // A figure already shown is not repeated for another requirement.
     expect(new Set(draft.claims.map((claim) => claim.id)).size).toBe(4);
+  });
+
+  it("states a figure read twice only once, and hides retrieval counts", () => {
+    const total = wholeExpenseTotal("total.a", PERIODS.currentMonthToDate);
+    const again = { ...total, id: "total.again" };
+    const longer = {
+      ...total,
+      id: "total.longer",
+      time: {
+        ...total.time,
+        period: { ...total.time.period, through: "2026-09-30" },
+      },
+    };
+    const records = {
+      ...total,
+      id: "records",
+      value: 2,
+      unit: "count" as const,
+      semantics: {
+        ...total.semantics,
+        metricKey: "records_count",
+        definition: "Number of stored records a query included",
+        aggregation: "count" as const,
+      },
+    };
+    const draft = deterministicDraft(
+      brief([["r_money", true]]),
+      [total, again, longer, records],
+      { r_money: ["total.a", "total.again", "total.longer", "records"] },
+    );
+    expect(draft.claims.map((claim) => claim.evidenceIds[0])).toEqual([
+      "total.a",
+    ]);
   });
 
   it("answers a ranking requirement with the top of ATLAS's ranking", () => {

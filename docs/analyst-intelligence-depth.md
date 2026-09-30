@@ -218,9 +218,20 @@ frame later answers around them.
   while they still pass `memoryText`). The writer relates findings to a
   priority as a hedged interpretation and never treats one as evidence.
 
-The table comes from migration `20260930060000_analyst_memories.sql`, which
-must be applied to production before the feature works there; until then
-the store reads as unavailable and Analyst answers without priorities.
+The table comes from migration `20260930060419_analyst_memories.sql`
+(applied to production on 30 September 2026). Where it is missing, the store
+reads as unavailable and Analyst answers without priorities.
+
+## 4e. Facts-only answers people can read
+
+When no written claim survives the checks, the facts-only answer now states
+each figure once (a figure read twice, or for a period that differs only in
+its last day, is not repeated), leaves out retrieval counts and inventory
+counts, and says in words why the written explanation failed
+(`failedChecksNote`, e.g. "a figure did not match its source"). Limitations
+are sorted (`sortLimitations`): notes about the answer itself first, at most
+four shown, repeats of "zero is not proof of no activity" dropped, and notes
+about how records were read go under "How ATLAS read and checked this".
 
 ## 5. How much is shown
 

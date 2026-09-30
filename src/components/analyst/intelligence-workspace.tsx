@@ -191,6 +191,18 @@ export function AnswerCard({
           </ul>
         </section>
       )}
+      {p.limitationDetails?.length > 0 && (
+        <details className="text-muted-foreground text-xs">
+          <summary className="cursor-pointer">{text.checkDetails}</summary>
+          <ul className="mt-1 flex flex-col gap-1">
+            {p.limitationDetails.map((item) => (
+              <li key={item} className="break-words">
+                {item}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       {p.unresolved.length > 0 && (
         <section className="rounded-xl bg-amber-500/10 p-3">
           <h3 className="font-semibold">{text.notAnswered}</h3>
