@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   retrieve: vi.fn(),
   rpc: vi.fn(),
   getUser: vi.fn(),
+  assurance: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
@@ -69,6 +70,10 @@ const valid = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.assurance.mockResolvedValue({
+    data: { currentLevel: "aal1", nextLevel: "aal1" },
+    error: null,
+  });
   process.env.OPENAI_API_KEY = "test-key";
   mocks.getUser.mockResolvedValue({
     data: { user: { id: "owner-a" } },
@@ -79,7 +84,14 @@ beforeEach(() => {
     error: null,
   });
   mocks.createClient.mockResolvedValue({
-    auth: { getUser: mocks.getUser },
+    auth: {
+      getUser: mocks.getUser,
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: { access_token: "verified-test-token" } },
+        error: null,
+      }),
+      mfa: { getAuthenticatorAssuranceLevel: mocks.assurance },
+    },
     rpc: mocks.rpc,
   });
   mocks.retrieve.mockResolvedValue(evidence);
@@ -395,4 +407,13 @@ describe("Analyst request", () => {
       expect.objectContaining({ p_outcome: "timeout" }),
     );
   });
+});
+
+it("blocks enrolled MFA AAL1 before private work", async () => {
+  mocks.assurance.mockResolvedValue({
+    data: { currentLevel: "aal1", nextLevel: "aal2" },
+    error: null,
+  });
+  expect((await POST(ask(valid))).status).toBe(403);
+  expect(mocks.rpc).not.toHaveBeenCalled();
 });

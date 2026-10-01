@@ -35,11 +35,11 @@ describe("task reminders", () => {
     expect(taskReminderDeliveryKey(task)).toBe(
       "task:1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb:2026-08-24:09:00:00",
     );
-    expect(buildTaskReminderPayload(task)).toEqual({
+    expect(buildTaskReminderPayload()).toEqual({
       title: "Time to focus",
-      body: "Write proposal · 25 min",
+      body: "Open ATLAS to see your scheduled task.",
       url: "/tasks?view=today",
-      tag: "atlas-task-1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb",
+      tag: "atlas-task-reminder",
     });
   });
 });

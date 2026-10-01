@@ -1,3 +1,4 @@
+import { isTrustedPushEndpoint } from "@/lib/notifications/push-endpoint";
 import { timingSafeEqual } from "node:crypto";
 import webpush from "web-push";
 import { mondayWeekStart } from "@/lib/dates/dates";
@@ -196,6 +197,7 @@ export async function GET(request: Request) {
 
     let deliveredForUser = 0;
     for (const subscription of userSubscriptions) {
+      if (!isTrustedPushEndpoint(subscription.endpoint)) continue;
       try {
         await webpush.sendNotification(
           {
@@ -204,9 +206,10 @@ export async function GET(request: Request) {
           },
           JSON.stringify({
             title: "Your ATLAS dayline",
-            body,
+            body: "Open ATLAS to see your reminders.",
             url: "/dashboard",
           }),
+          { TTL: 900, timeout: 10_000 },
         );
         deliveredForUser += 1;
         sent += 1;

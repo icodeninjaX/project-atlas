@@ -1,5 +1,7 @@
 "use server";
 
+import { hasRequiredAssurance } from "@/lib/auth/assurance";
+import { verifyCurrentPassword } from "@/lib/supabase/password-verification";
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -53,11 +55,13 @@ async function verifiedPasswordClient(currentPassword: string) {
     return { error: "Your session expired. Log in again.", supabase: null };
   }
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password: currentPassword,
-  });
-  if (error) {
+  if (!(await hasRequiredAssurance(supabase))) {
+    return {
+      error: "Complete MFA verification before changing account security.",
+      supabase: null,
+    };
+  }
+  if (!(await verifyCurrentPassword(user.email, currentPassword))) {
     return { error: "Your current password is incorrect.", supabase: null };
   }
 
@@ -170,11 +174,13 @@ export async function deleteAccountAction(
     return { success: false, message: "Your session expired. Log in again." };
   }
 
-  const { error: passwordError } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password: values.data.currentPassword,
-  });
-  if (passwordError) {
+  if (!(await hasRequiredAssurance(supabase))) {
+    return {
+      success: false,
+      message: "Complete MFA verification before deleting your account.",
+    };
+  }
+  if (!(await verifyCurrentPassword(user.email, values.data.currentPassword))) {
     return { success: false, message: "Your current password is incorrect." };
   }
 

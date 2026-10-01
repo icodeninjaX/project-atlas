@@ -1,3 +1,4 @@
+import { hasRequiredAssurance } from "@/lib/auth/assurance";
 import { NextResponse } from "next/server";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
 import { MEMORY_LIMITS, daysLeft } from "@/lib/analyst/intelligence/memory";
@@ -24,12 +25,15 @@ async function owner() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  return user ? { supabase, id: user.id } : null;
+  return user
+    ? { supabase, id: user.id, assured: await hasRequiredAssurance(supabase) }
+    : null;
 }
 
 export async function GET() {
   const signedIn = await owner();
   if (!signedIn) return json({ error: "Sign in to use Analyst." }, 401);
+  if (!signedIn.assured) return json({ error: "MFA required" }, 403);
   const now = new Date();
   const memories = await listMemories(signedIn.supabase, signedIn.id, now);
   if (!memories)
@@ -56,6 +60,7 @@ const errors = {
 export async function POST(request: Request) {
   const signedIn = await owner();
   if (!signedIn) return json({ error: "Sign in to use Analyst." }, 401);
+  if (!signedIn.assured) return json({ error: "MFA required" }, 403);
   const text = await request.text();
   if (text.length > 2_000) return json({ error: errors.invalid }, 400);
   let body: unknown;

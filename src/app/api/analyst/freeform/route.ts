@@ -1,3 +1,4 @@
+import { hasRequiredAssurance } from "@/lib/auth/assurance";
 import { after, NextResponse } from "next/server";
 import { focusTaskLabels } from "@/lib/analyst/freeform/display-labels";
 import {
@@ -88,6 +89,9 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (authError || !user)
     return json({ error: "Sign in to use Analyst." }, 401);
+  if (!(await hasRequiredAssurance(supabase)))
+    return json({ error: "MFA required" }, 403);
+
   let input: unknown;
   try {
     if (Number(request.headers.get("content-length") ?? 0) > MAX_REQUEST_CHARS)

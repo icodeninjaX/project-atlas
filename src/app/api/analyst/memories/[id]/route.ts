@@ -1,3 +1,4 @@
+import { hasRequiredAssurance } from "@/lib/auth/assurance";
 import { NextResponse } from "next/server";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
 import { deleteMemory } from "@/lib/analyst/intelligence/memory-store";
@@ -19,6 +20,11 @@ export async function DELETE(
     return NextResponse.json(
       { error: "Sign in to use Analyst." },
       { status: 401, headers },
+    );
+  if (!(await hasRequiredAssurance(supabase)))
+    return NextResponse.json(
+      { error: "MFA required" },
+      { status: 403, headers },
     );
   const deleted = await deleteMemory(supabase, user.id, id);
   return deleted

@@ -1,3 +1,4 @@
+import { isTrustedPushEndpoint } from "@/lib/notifications/push-endpoint";
 import webpush from "web-push";
 import { isInQuietHours } from "@/lib/notifications/digest";
 import { getPushServerConfig } from "@/lib/notifications/server-config";
@@ -145,14 +146,15 @@ export async function POST(request: Request) {
 
     let deliveredForTask = 0;
     for (const subscription of subscriptions) {
+      if (!isTrustedPushEndpoint(subscription.endpoint)) continue;
       try {
         await webpush.sendNotification(
           {
             endpoint: subscription.endpoint,
             keys: { p256dh: subscription.p256dh, auth: subscription.auth },
           },
-          JSON.stringify(buildTaskReminderPayload(task)),
-          { TTL: 900, urgency: "high" },
+          JSON.stringify(buildTaskReminderPayload()),
+          { TTL: 900, urgency: "high", timeout: 10_000 },
         );
         deliveredForTask += 1;
         sent += 1;

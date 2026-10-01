@@ -4,7 +4,8 @@ const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   createAdminClient: vi.fn(),
   getUser: vi.fn(),
-  signInWithPassword: vi.fn(),
+  verifyPassword: vi.fn(),
+  assurance: vi.fn(),
   updateUser: vi.fn(),
   signOut: vi.fn(),
   deleteUser: vi.fn(),
@@ -15,6 +16,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: mocks.createClient,
+}));
+
+vi.mock("@/lib/supabase/password-verification", () => ({
+  verifyCurrentPassword: mocks.verifyPassword,
 }));
 
 vi.mock("@/lib/supabase/admin", () => ({
@@ -32,14 +37,22 @@ beforeEach(() => {
   mocks.getUser.mockResolvedValue({
     data: { user: { id: "user-1", email: "kai@example.com" } },
   });
-  mocks.signInWithPassword.mockResolvedValue({ error: null });
+  mocks.verifyPassword.mockResolvedValue(true);
+  mocks.assurance.mockResolvedValue({
+    data: { currentLevel: "aal2", nextLevel: "aal2" },
+    error: null,
+  });
   mocks.updateUser.mockResolvedValue({ error: null });
   mocks.signOut.mockResolvedValue({ error: null });
   mocks.deleteUser.mockResolvedValue({ error: null });
   mocks.createClient.mockResolvedValue({
     auth: {
       getUser: mocks.getUser,
-      signInWithPassword: mocks.signInWithPassword,
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: { access_token: "verified-test-token" } },
+        error: null,
+      }),
+      mfa: { getAuthenticatorAssuranceLevel: mocks.assurance },
       updateUser: mocks.updateUser,
       signOut: mocks.signOut,
     },
@@ -62,10 +75,10 @@ describe("security settings actions", () => {
       success: true,
       message: "Password changed successfully.",
     });
-    expect(mocks.signInWithPassword).toHaveBeenCalledWith({
-      email: "kai@example.com",
-      password: "old-password",
-    });
+    expect(mocks.verifyPassword).toHaveBeenCalledWith(
+      "kai@example.com",
+      "old-password",
+    );
     expect(mocks.updateUser).toHaveBeenCalledWith({
       password: "new-password-123",
     });
@@ -94,4 +107,19 @@ describe("security settings actions", () => {
     expect(mocks.signOut).toHaveBeenCalledWith({ scope: "local" });
     expect(mocks.redirect).toHaveBeenCalledWith("/login?account=deleted");
   });
+});
+
+it("does not delete or verify the password for an MFA-incomplete session", async () => {
+  mocks.assurance.mockResolvedValue({
+    data: { currentLevel: "aal1", nextLevel: "aal2" },
+    error: null,
+  });
+  const form = new FormData();
+  form.set("currentPassword", "old-password");
+  form.set("confirmation", "DELETE MY ATLAS");
+  expect(
+    await deleteAccountAction({ success: false, message: "" }, form),
+  ).toMatchObject({ success: false });
+  expect(mocks.deleteUser).not.toHaveBeenCalled();
+  expect(mocks.verifyPassword).not.toHaveBeenCalled();
 });

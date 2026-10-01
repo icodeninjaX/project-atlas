@@ -1,3 +1,4 @@
+import { hasRequiredAssurance } from "@/lib/auth/assurance";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/atlas/app-header";
 import { AppShell } from "@/components/atlas/app-shell";
@@ -20,9 +21,7 @@ export default async function AuthenticatedLayout({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: assurance } =
-    await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (assurance?.nextLevel === "aal2" && assurance.currentLevel !== "aal2") {
+  if (!(await hasRequiredAssurance(supabase))) {
     redirect("/mfa");
   }
 

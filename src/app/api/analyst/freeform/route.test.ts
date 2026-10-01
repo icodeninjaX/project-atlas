@@ -4,6 +4,7 @@ import { POST } from "./route";
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   getUser: vi.fn(),
+  assurance: vi.fn(),
   rpc: vi.fn(),
   plan: vi.fn(),
   answer: vi.fn(),
@@ -79,6 +80,10 @@ const item = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.assurance.mockResolvedValue({
+    data: { currentLevel: "aal1", nextLevel: "aal1" },
+    error: null,
+  });
   process.env.OPENAI_API_KEY = "test-key";
   mocks.getUser.mockResolvedValue({
     data: { user: { id: "owner-a" } },
@@ -89,7 +94,14 @@ beforeEach(() => {
     error: null,
   });
   mocks.createClient.mockResolvedValue({
-    auth: { getUser: mocks.getUser },
+    auth: {
+      getUser: mocks.getUser,
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: { access_token: "verified-test-token" } },
+        error: null,
+      }),
+      mfa: { getAuthenticatorAssuranceLevel: mocks.assurance },
+    },
     rpc: mocks.rpc,
     from: mocks.from,
   });
@@ -832,4 +844,13 @@ describe("freeform Analyst progress stream", () => {
     });
     expect(finishCalls()).toHaveLength(1);
   });
+});
+
+it("blocks enrolled MFA AAL1 before private work", async () => {
+  mocks.assurance.mockResolvedValue({
+    data: { currentLevel: "aal1", nextLevel: "aal2" },
+    error: null,
+  });
+  expect((await POST(request(valid))).status).toBe(403);
+  expect(mocks.rpc).not.toHaveBeenCalled();
 });

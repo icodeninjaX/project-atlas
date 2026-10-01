@@ -1,3 +1,4 @@
+import { hasRequiredAssurance } from "@/lib/auth/assurance";
 import { createClient } from "@/lib/supabase/server";
 import { meteredOpenAIFetch, PoolExhaustedError } from "@/lib/ai/pool-meter";
 import {
@@ -67,6 +68,9 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return reply("Sign in to use Capture.", 401);
+  if (!(await hasRequiredAssurance(supabase)))
+    return reply("MFA required", 403);
+
   const key = process.env.OPENAI_API_KEY;
   if (!key) return reply("AI capture is not configured yet.", 503);
   let file: File;
