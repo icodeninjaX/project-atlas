@@ -90,6 +90,15 @@ describe("a goal's pace", () => {
     expect(output(facts, "margin_days")).toBeUndefined();
   });
 
+  it("derives nothing when no work is recorded", () => {
+    expect(() =>
+      goalPace("p", { ...tasks(0, 0, 0), daysToTarget: daysLeft(30) }),
+    ).toThrow();
+    expect(
+      autoDerive([...Object.values(tasks(0, 0, 0)), daysLeft(30)]),
+    ).toEqual([]);
+  });
+
   it("refuses counts that do not belong together", () => {
     const mixed = {
       ...tasks(4, 2, 1),

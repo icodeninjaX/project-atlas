@@ -414,6 +414,74 @@ describe("goal pace", () => {
     ).toBe(false);
   });
 
+  it("states a goal with no recorded work as zero counts, with no pace", async () => {
+    const fund = `goal:${fixtureUuid("goal-a-fund")}`;
+    const answered = await investigate(
+      deterministicBrief({
+        question: "Am I on track with my goals?",
+        plan: null,
+        now,
+      }),
+    );
+    const counts = answered.evidence
+      .filter(
+        (item) => item.scope.id === fund && item.sourceType === "getGoalPace",
+      )
+      .map((item) => [
+        item.semantics.metricKey,
+        "value" in item ? item.value : null,
+      ]);
+    expect(counts).toEqual(
+      expect.arrayContaining([
+        ["goal_milestones_total", 0],
+        ["goal_tasks_total", 0],
+        ["goal_tasks_done_recent", 0],
+      ]),
+    );
+    expect(answered.derived.some((item) => item.scopeId === fund)).toBe(false);
+  });
+
+  it("gives a goal that is not active its status, never a pace", async () => {
+    const tables = fixtureTables();
+    tables.goals!.push({
+      id: fixtureUuid("goal-a-course"),
+      user_id: OWNER_A,
+      title: "Finish the data course",
+      status: "completed",
+      progress_percent: 100,
+      target_date: "2026-09-01",
+      created_at: "2026-07-01T00:00:00Z",
+      updated_at: "2026-07-01T00:00:00Z",
+      area: "learning",
+      description: null,
+    });
+    vi.stubGlobal("fetch", createEmulator(tables, OWNER_A).fetch);
+    const answered = await investigate(
+      deterministicBrief({
+        question: "Was I on track with my data course goal?",
+        plan: null,
+        now,
+      }),
+    );
+    const course = `goal:${fixtureUuid("goal-a-course")}`;
+    const mine = answered.evidence.filter((item) => item.scope.id === course);
+    // Its status is stated (once, whichever read gave it) and nothing is
+    // counted toward a pace.
+    expect(
+      mine.find((item) => item.semantics.metricKey === "record:goal.status"),
+    ).toMatchObject({ value: "completed" });
+    expect(
+      mine.some(
+        (item) =>
+          item.semantics.metricKey.startsWith("goal_") &&
+          item.semantics.metricKey !== "goal_linked_milestone_completion",
+      ),
+    ).toBe(false);
+    expect(answered.derived.some((item) => item.scopeId === course)).toBe(
+      false,
+    );
+  });
+
   it("Am I on track with my developer job goal?", async () => {
     const answered = await investigate(
       deterministicBrief({

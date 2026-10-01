@@ -946,7 +946,8 @@ export function memberMonthProjection(
  * recent window, the calendar days the remaining work would take at that
  * pace (an estimate), and the days to the target date less those days (the
  * margin; negative means the pace would miss the date). With nothing done
- * recently and work remaining, the days needed are undefined.
+ * recently and work remaining, the days needed are undefined; with no work
+ * recorded, nothing is derived.
  */
 export function goalPace(
   prefix: string,
@@ -971,6 +972,9 @@ export function goalPace(
     [total, done, recent].some((item) => item.unit !== "count")
   )
     throw new CalculationError("A goal pace reads one goal's counts.");
+  // With no work recorded there is nothing to pace.
+  if (total.value === 0)
+    throw new CalculationError("No work is recorded for the goal.");
   const windowDays = days(recent.time.period);
   const remaining = total.value - done.value;
   if (remaining < 0 || recent.value > done.value)

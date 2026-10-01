@@ -230,8 +230,11 @@ the pace is measured in work, not percent or pesos.
 target date (soonest first, at most five), the goal's milestones and its
 currently linked tasks (cancelled ones excluded), counted apart: how many
 there are, how many are done, and how many were done in the last four
-weeks; and the days to the target date. More than 500 of either is a
-failure, never a partial count. Task counts are task evidence, so they
+weeks (zero when none are recorded, so no work is never mistaken for
+missing data); and the days to the target date. Only an active goal gets a
+pace: a named goal that is completed, paused or archived gets its status
+instead, so a goal finished on time never reads as missing its date. More
+than 500 of either is a failure, never a partial count. Task counts are task evidence, so they
 reach a provider only with consent to tasks.
 
 ATLAS derives (`goalPace`), per goal and kind of work: the remaining count,
@@ -240,7 +243,8 @@ pace (`days_needed`), and the days to the target date less those days
 (`margin_days`: negative means the pace would miss the date by that many
 days). Both are estimates, so a claim citing them must read as one ("at
 this pace …"). With nothing done in the four weeks and work remaining, the
-days needed are undefined and the writer says so.
+days needed are undefined and the writer says so; with no work recorded,
+nothing is derived and the writer says the goal has no tasks to track.
 
 The rules add `goal.pace` to a goals question that asks about being on
 track, in time, behind or ahead; the planner may add it to any question. A

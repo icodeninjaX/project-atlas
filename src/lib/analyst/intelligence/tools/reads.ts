@@ -1144,8 +1144,9 @@ const dayOffset = (day: string, days: number) =>
  * How fast a goal's work is getting done. For one resolved goal, or for the
  * active goals with a target date (soonest first), it counts the goal's
  * milestones and the tasks currently linked to it: how many there are, how
- * many are done, and how many were done in the last four weeks; and the
- * days left before the target date. Milestones and tasks are counted apart,
+ * many are done, and how many were done in the last four weeks (zero when
+ * none are recorded); and the days left before the target date. Only an
+ * active goal gets a pace; another gets its status. Milestones and tasks are counted apart,
  * and cancelled tasks are not counted. More linked tasks than the bound is
  * a failure, never a partial count.
  */
@@ -1223,6 +1224,27 @@ export async function goalPace(
     );
     const refs = [{ handle, href: nameSources.goal.href(goal) }];
     payload.labels.push(label("goal", goal));
+    // A pace is for work still under way: a completed, paused or archived
+    // goal gets its status, never a projection that would read as missing
+    // its date.
+    if (goal.status !== "active") {
+      payload.evidence.push(
+        recordFact(ctx, {
+          local: `${handle}.status`,
+          domain: "goals",
+          metricKey: "record:goal.status",
+          period: snapshot(today),
+          scope,
+          refs,
+          value: String(goal.status),
+          unit: "text",
+        }),
+      );
+      payload.limitations.push(
+        "A pace is measured only for active goals; this goal is not active.",
+      );
+      continue;
+    }
     const target = isoDay(goal.target_date);
     if (target)
       payload.evidence.push(
@@ -1254,7 +1276,8 @@ export async function goalPace(
       },
     ];
     for (const { kind, domain, items, done } of kinds) {
-      if (items.length === 0) continue;
+      // No work recorded is stated as zero counts, so it is never mistaken
+      // for missing data; no pace is derived from it.
       const finished = items.filter(done);
       const counts = [
         ["total", items.length, snapshot(today), "snapshot"],
