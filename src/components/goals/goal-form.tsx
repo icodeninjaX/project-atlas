@@ -161,7 +161,7 @@ export function GoalForm({
           className="mt-1.5"
         />
       </label>
-      <div className="flex items-end justify-end gap-2 max-sm:flex-col-reverse max-sm:items-stretch sm:col-span-2 lg:col-span-1">
+      <div className="flex items-end justify-end gap-2 max-sm:flex-col max-sm:items-stretch sm:col-span-2 lg:col-span-1">
         {onCancel ? (
           <Button type="button" variant="ghost" onClick={onCancel}>
             Cancel
