@@ -1,187 +1,111 @@
-import { History } from "lucide-react";
-import Link from "next/link";
-import { BudgetForm } from "@/components/money/budget-form";
-import { PageHeading } from "@/components/shared/page-heading";
+import type { BudgetMonthData } from "@/components/money/budget-editor";
+import { BudgetWorkspace } from "@/components/money/budget-workspace";
 import { MoneyNavigation } from "@/components/money/money-navigation";
-import { SensitiveValue } from "@/components/privacy/privacy-provider";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { PageHeading } from "@/components/shared/page-heading";
+import { fetchExpensesBetween } from "@/lib/budgets/expenses";
+import { shiftMonth } from "@/lib/budgets/plan";
 import { formatCalendarMonth, resolveCalendarMonth } from "@/lib/dates/dates";
-import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Budget" };
 
-function currentMonth() {
+function todayInManila() {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Manila",
     year: "numeric",
     month: "2-digit",
+    day: "2-digit",
   }).format(new Date());
+}
+
+type BudgetRow = {
+  month_start: string;
+  expected_income_centavos: number;
+  notes: string | null;
+  budget_items: Array<{ category_id: string; planned_centavos: number }>;
+};
+
+function monthData(
+  budget: BudgetRow | undefined,
+  spent: Record<string, number>,
+): BudgetMonthData {
+  return {
+    planned: Object.fromEntries(
+      (budget?.budget_items ?? []).map((item) => [
+        item.category_id,
+        Number(item.planned_centavos),
+      ]),
+    ),
+    spent,
+    expectedIncomeCentavos: Number(budget?.expected_income_centavos ?? 0),
+    hasPlan: Boolean(budget && budget.budget_items.length > 0),
+  };
 }
 
 export default async function BudgetPage({
   searchParams,
-}: {
-  searchParams: Promise<{ month?: string }>;
-}) {
-  const requested = (await searchParams).month;
-  const month = resolveCalendarMonth(requested, currentMonth());
+}: PageProps<"/money/budget">) {
+  const today = todayInManila();
+  const month = resolveCalendarMonth(
+    (await searchParams).month,
+    today.slice(0, 7),
+  );
+  const previousMonth = shiftMonth(month, -1);
   const monthStart = `${month}-01`;
-  const nextMonthDate = new Date(`${monthStart}T00:00:00Z`);
-  nextMonthDate.setUTCMonth(nextMonthDate.getUTCMonth() + 1);
-  const nextMonth = nextMonthDate.toISOString().slice(0, 10);
+  const previousStart = `${previousMonth}-01`;
+  const nextStart = `${shiftMonth(month, 1)}-01`;
+
   const supabase = await createClient();
-  const [categoriesResult, budgetResult, transactionsResult] = supabase
+  // This month and last month come together: last month seeds new plans
+  // and gives each category a reference point.
+  const [categoriesResult, budgetsResult, expenses] = supabase
     ? await Promise.all([
         supabase
           .from("transaction_categories")
-          .select("id,name")
+          .select("id,name,icon")
           .eq("category_type", "expense")
           .order("name"),
         supabase
           .from("monthly_budgets")
-          .select("id,expected_income_centavos,notes")
-          .eq("month_start", monthStart)
-          .maybeSingle(),
-        supabase
-          .from("transactions")
-          .select("category_id,amount_centavos")
-          .eq("transaction_type", "expense")
-          .gte("transaction_date", monthStart)
-          .lt("transaction_date", nextMonth),
+          .select(
+            "month_start,expected_income_centavos,notes,budget_items(category_id,planned_centavos)",
+          )
+          .in("month_start", [previousStart, monthStart]),
+        fetchExpensesBetween(supabase, previousStart, nextStart),
       ])
-    : [{ data: [] }, { data: null }, { data: [] }];
-  const budget = budgetResult.data;
-  const { data: itemData } =
-    budget && supabase
-      ? await supabase
-          .from("budget_items")
-          .select("category_id,planned_centavos")
-          .eq("monthly_budget_id", budget.id)
-      : { data: [] };
-  const planned: Record<string, number> = Object.fromEntries(
-    (itemData ?? []).map((item) => [
-      item.category_id,
-      Number(item.planned_centavos),
-    ]),
+    : [{ data: [] }, { data: [] }, []];
+
+  const spentThisMonth: Record<string, number> = {};
+  const spentLastMonth: Record<string, number> = {};
+  for (const row of expenses) {
+    const bucket =
+      row.transaction_date < monthStart ? spentLastMonth : spentThisMonth;
+    bucket[row.category_id] =
+      (bucket[row.category_id] ?? 0) + Number(row.amount_centavos);
+  }
+  const budgets = (budgetsResult.data ?? []) as BudgetRow[];
+  const budget = budgets.find((row) => row.month_start === monthStart);
+  const previousBudget = budgets.find(
+    (row) => row.month_start === previousStart,
   );
-  const actual = (transactionsResult.data ?? []).reduce<Record<string, number>>(
-    (map, row) => {
-      map[row.category_id] =
-        (map[row.category_id] ?? 0) + Number(row.amount_centavos);
-      return map;
-    },
-    {},
-  );
-  const plannedTotal = Object.values(planned).reduce(
-    (sum, value) => sum + value,
-    0,
-  );
-  const actualTotal = Object.values(actual).reduce(
-    (sum, value) => sum + value,
-    0,
-  );
-  const categories = categoriesResult.data ?? [];
 
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
       <PageHeading
         eyebrow={`Money / Budget / ${formatCalendarMonth(month)}`}
         title="Monthly plan"
-        description="Planned and actual pesos remain visible together. Overspending is always named in text."
-        actions={
-          <Button asChild variant="secondary">
-            <Link href="/timeline?module=money">
-              <History className="size-4" />
-              Money timeline
-            </Link>
-          </Button>
-        }
+        description="What you mean to spend in each category, against what you actually record. Overspending is always named in text."
+        compactOnMobile
       />
       <MoneyNavigation currentHref="/money/budget" />
-      <div className="mt-8 grid gap-3 sm:grid-cols-3">
-        <Card>
-          <CardContent>
-            <p className="text-muted-foreground text-xs">Planned expenses</p>
-            <p className="mt-3 font-mono text-2xl font-semibold">
-              <SensitiveValue>{formatCentavos(plannedTotal)}</SensitiveValue>
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent>
-            <p className="text-muted-foreground text-xs">Actual expenses</p>
-            <p className="mt-3 font-mono text-2xl font-semibold">
-              <SensitiveValue>{formatCentavos(actualTotal)}</SensitiveValue>
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent>
-            <p className="text-muted-foreground text-xs">Remaining</p>
-            <p
-              className={`mt-3 font-mono text-2xl font-semibold ${plannedTotal > 0 && plannedTotal - actualTotal < 0 ? "text-destructive" : plannedTotal > 0 ? "text-primary" : ""}`}
-            >
-              <SensitiveValue>
-                {formatCentavos(plannedTotal - actualTotal)}
-              </SensitiveValue>
-            </p>
-            <p className="text-muted-foreground mt-1 text-[10px]">
-              {plannedTotal === 0
-                ? "No plan set for this month"
-                : plannedTotal - actualTotal < 0
-                  ? "Over budget"
-                  : "Available in plan"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-      <Card className="mt-6">
-        <CardContent>
-          <BudgetForm
-            monthStart={monthStart}
-            expectedIncomeCentavos={Number(
-              budget?.expected_income_centavos ?? 0,
-            )}
-            categories={categories}
-            planned={planned}
-          />
-        </CardContent>
-      </Card>
-      {itemData && itemData.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-lg font-semibold">Planned versus actual</h2>
-          <div className="border-border bg-card mt-3 overflow-hidden rounded-2xl border">
-            {categories
-              .filter((category) => planned[category.id] != null)
-              .map((category) => {
-                const plan = planned[category.id] ?? 0;
-                const spent = actual[category.id] ?? 0;
-                const over = spent > plan;
-                return (
-                  <div
-                    key={category.id}
-                    className="border-border grid gap-2 border-b p-4 last:border-0 sm:grid-cols-[1fr_160px_160px]"
-                  >
-                    <p className="text-sm font-semibold">{category.name}</p>
-                    <p className="text-muted-foreground font-mono text-xs">
-                      Plan{" "}
-                      <SensitiveValue>{formatCentavos(plan)}</SensitiveValue>
-                    </p>
-                    <p
-                      className={`font-mono text-xs ${over ? "text-destructive font-semibold" : ""}`}
-                    >
-                      Actual{" "}
-                      <SensitiveValue>{formatCentavos(spent)}</SensitiveValue>
-                      {over ? " · over" : ""}
-                    </p>
-                  </div>
-                );
-              })}
-          </div>
-        </section>
-      )}
+      <BudgetWorkspace
+        month={month}
+        today={today}
+        categories={categoriesResult.data ?? []}
+        current={monthData(budget, spentThisMonth)}
+        previous={monthData(previousBudget, spentLastMonth)}
+        notes={budget?.notes ?? null}
+      />
     </div>
   );
 }

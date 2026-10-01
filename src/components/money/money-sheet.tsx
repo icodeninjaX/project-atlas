@@ -17,6 +17,7 @@ export function MoneySheet({
   title,
   description,
   closeLabel,
+  onOpenAutoFocus,
   children,
 }: {
   open: boolean;
@@ -25,6 +26,8 @@ export function MoneySheet({
   title: ReactNode;
   description?: ReactNode;
   closeLabel: string;
+  /** Lets a sheet send focus somewhere other than its first control. */
+  onOpenAutoFocus?: (event: Event) => void;
   children: ReactNode;
 }) {
   return (
@@ -35,6 +38,7 @@ export function MoneySheet({
           // Radix links the description automatically; without one, an
           // explicit undefined tells it the omission is deliberate.
           {...(description ? {} : { "aria-describedby": undefined })}
+          onOpenAutoFocus={onOpenAutoFocus}
           className="bg-background data-[state=open]:animate-analyst-sheet sm:data-[state=open]:animate-money-sheet-side fixed inset-x-0 bottom-0 z-[60] flex max-h-[92dvh] flex-col rounded-t-[1.75rem] border-t shadow-[0_-24px_60px_rgb(7_10_15/0.35)] outline-none sm:inset-y-3 sm:right-3 sm:left-auto sm:max-h-none sm:w-[min(30rem,calc(100vw-1.5rem))] sm:rounded-[1.75rem] sm:border sm:shadow-[0_24px_70px_rgb(7_10_15/0.4)]"
         >
           <span
