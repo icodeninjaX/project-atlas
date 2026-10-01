@@ -55,6 +55,15 @@ describe("peso amount input", () => {
     expect(parsePesoInput("-5")).toBeNull();
   });
 
+  it("limits whole-peso digits without counting separators", () => {
+    // Editing a formatted large amount must not drop digits.
+    expect(sanitizePesoInput("123,456,789,012.00")).toBe("123,456,789,012.00");
+    expect(sanitizePesoInput("1,234,567,890,123,456")).toBe(
+      "1,234,567,890,123",
+    );
+    expect(sanitizePesoInput("12345678901234567.5")).toBe("1234567890123.5");
+  });
+
   it("keeps typed amounts to digits and two decimals", () => {
     expect(sanitizePesoInput("₱1,2a3.456")).toBe("1,23.45");
     expect(sanitizePesoInput("10.5.6")).toBe("10.56");

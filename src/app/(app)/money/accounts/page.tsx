@@ -26,45 +26,55 @@ function todayInManila() {
 
 export default async function AccountsPage() {
   const supabase = await createClient();
-  const [accountsResult, activityResult] = supabase
-    ? await Promise.all([
-        supabase
-          .from("financial_account_balances")
-          .select(
-            "id,name,account_type,institution,provider_id,current_balance_centavos,is_archived",
-          )
-          .eq("is_archived", false)
-          .order("name"),
-        supabase
-          .from("transactions")
-          .select(
-            "id,account_id,transaction_type,amount_centavos,transaction_date,merchant_or_source,transaction_categories(name,icon)",
-          )
-          .order("transaction_date", { ascending: false })
-          .order("created_at", { ascending: false })
-          .limit(200),
-      ])
-    : [{ data: [] }, { data: [] }];
-  const accounts = (accountsResult.data ?? []) as AccountSummary[];
+  const { data } = supabase
+    ? await supabase
+        .from("financial_account_balances")
+        .select(
+          "id,name,account_type,institution,provider_id,current_balance_centavos,is_archived",
+        )
+        .eq("is_archived", false)
+        .order("name")
+    : { data: [] };
+  const accounts = (data ?? []) as AccountSummary[];
 
-  const activityByAccount: Record<string, AccountActivityItem[]> = {};
-  for (const row of activityResult.data ?? []) {
-    const items = (activityByAccount[row.account_id] ??= []);
-    if (items.length >= ACTIVITY_PER_ACCOUNT) continue;
-    const category = row.transaction_categories as unknown as {
-      name: string;
-      icon: string | null;
-    } | null;
-    items.push({
-      id: row.id,
-      transaction_type: row.transaction_type as "expense" | "income",
-      amount_centavos: Number(row.amount_centavos),
-      transaction_date: row.transaction_date,
-      merchant_or_source: row.merchant_or_source,
-      category_name: category?.name ?? null,
-      category_icon: category?.icon ?? null,
-    });
-  }
+  // One small query per account: a shared row cap would let busy accounts
+  // crowd quieter ones out of their own recent activity.
+  const activityResults = supabase
+    ? await Promise.all(
+        accounts.map((account) =>
+          supabase
+            .from("transactions")
+            .select(
+              "id,transaction_type,amount_centavos,transaction_date,merchant_or_source,transaction_categories(name,icon)",
+            )
+            .eq("account_id", account.id)
+            .order("transaction_date", { ascending: false })
+            .order("created_at", { ascending: false })
+            .limit(ACTIVITY_PER_ACCOUNT),
+        ),
+      )
+    : [];
+  const activityByAccount: Record<string, AccountActivityItem[]> =
+    Object.fromEntries(
+      accounts.map((account, index) => [
+        account.id,
+        (activityResults[index]?.data ?? []).map((row) => {
+          const category = row.transaction_categories as unknown as {
+            name: string;
+            icon: string | null;
+          } | null;
+          return {
+            id: row.id,
+            transaction_type: row.transaction_type as "expense" | "income",
+            amount_centavos: Number(row.amount_centavos),
+            transaction_date: row.transaction_date,
+            merchant_or_source: row.merchant_or_source,
+            category_name: category?.name ?? null,
+            category_icon: category?.icon ?? null,
+          };
+        }),
+      ]),
+    );
 
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">

@@ -9,7 +9,16 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
+import {
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import { CategoryBadge } from "@/components/money/category-icon";
 import { FlowAmount, MoneyAmount } from "@/components/money/money-amount";
 import { MoneySheet } from "@/components/money/money-sheet";
@@ -54,8 +63,11 @@ type TransactionWorkspaceProps = {
   defaultAccountId?: string | null;
   initialView?: TransactionWorkspaceView | null;
   highlightId?: string | null;
-  /** Only the account in `?account=` is listed until the filter changes. */
-  initialAccountFilter?: string | null;
+  /**
+   * The account in `?account=`. The page has already narrowed `transactions`
+   * to it on the server, so the filter changes by navigating.
+   */
+  accountFilter?: string | null;
   /** Shown above History; hidden while recording so the form leads. */
   summary?: ReactNode;
   /** The history query's row cap, to say when older entries are not shown. */
@@ -94,7 +106,7 @@ export function TransactionWorkspace({
   defaultAccountId,
   initialView = "history",
   highlightId = null,
-  initialAccountFilter = null,
+  accountFilter = null,
   summary,
   historyLimit,
 }: TransactionWorkspaceProps) {
@@ -171,7 +183,7 @@ export function TransactionWorkspace({
             today={today}
             defaultAccountId={defaultAccountId}
             highlightId={highlightId}
-            initialAccountFilter={initialAccountFilter}
+            accountFilter={accountFilter}
             merchantMemory={merchantMemory}
             historyLimit={historyLimit}
             onRecord={() => setView("record")}
@@ -247,7 +259,7 @@ function TransactionHistory({
   today,
   defaultAccountId,
   highlightId,
-  initialAccountFilter,
+  accountFilter = null,
   merchantMemory,
   historyLimit,
   onRecord,
@@ -255,13 +267,12 @@ function TransactionHistory({
   merchantMemory: MerchantMemory[];
   onRecord: () => void;
 }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
-  const [accountFilter, setAccountFilter] = useState(
-    initialAccountFilter &&
-      transactions.some((item) => item.account_id === initialAccountFilter)
-      ? initialAccountFilter
-      : "all",
+  const [navigating, startNavigation] = useTransition();
+  const [selectedAccount, setSelectedAccount] = useOptimistic(
+    accountFilter ?? "all",
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const editing = transactions.find((item) => item.id === editingId) ?? null;
@@ -272,9 +283,6 @@ function TransactionHistory({
       if (typeFilter !== "all" && item.transaction_type !== typeFilter) {
         return false;
       }
-      if (accountFilter !== "all" && item.account_id !== accountFilter) {
-        return false;
-      }
       if (!needle) return true;
       return [
         item.merchant_or_source,
@@ -283,22 +291,29 @@ function TransactionHistory({
         item.description,
       ].some((value) => value?.toLowerCase().includes(needle));
     });
-  }, [accountFilter, query, transactions, typeFilter]);
+  }, [query, transactions, typeFilter]);
   const groups = useMemo(
     () => groupByDate(filtered, (item) => item.transaction_date),
     [filtered],
   );
-  const filtering =
-    query.trim() !== "" || typeFilter !== "all" || accountFilter !== "all";
+  const filtering = query.trim() !== "" || typeFilter !== "all";
   const accountOptions = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const item of transactions) {
-      if (!seen.has(item.account_id)) {
-        seen.set(item.account_id, item.account_name ?? "Account");
-      }
+    const options = accounts.map((account) => [account.id, account.name]);
+    // An archived account can still be linked to; name it from its rows.
+    if (
+      accountFilter &&
+      !accounts.some((account) => account.id === accountFilter)
+    ) {
+      options.push([
+        accountFilter,
+        transactions[0]?.account_name ?? "Selected account",
+      ]);
     }
-    return [...seen].sort((left, right) => left[1].localeCompare(right[1]));
-  }, [transactions]);
+    return options as Array<[string, string]>;
+  }, [accountFilter, accounts, transactions]);
+  const accountName = accountFilter
+    ? accountOptions.find(([id]) => id === accountFilter)?.[1]
+    : undefined;
 
   useEffect(() => {
     if (!highlightId) return;
@@ -307,11 +322,29 @@ function TransactionHistory({
       ?.scrollIntoView({ block: "center" });
   }, [highlightId]);
 
+  function changeAccount(accountId: string) {
+    startNavigation(() => {
+      setSelectedAccount(accountId);
+      router.replace(
+        (accountId === "all"
+          ? "/money/transactions"
+          : `/money/transactions?account=${accountId}`) as Route,
+        { scroll: false },
+      );
+    });
+  }
+
   function clearFilters() {
     setQuery("");
     setTypeFilter("all");
-    setAccountFilter("all");
+    if (accountFilter) changeAccount("all");
   }
+
+  const countLabel = filtering
+    ? `${filtered.length} of ${transactions.length} shown`
+    : historyLimit && transactions.length >= historyLimit
+      ? `Latest ${transactions.length} entries`
+      : `${transactions.length} ${transactions.length === 1 ? "entry" : "entries"}`;
 
   return (
     <section
@@ -328,16 +361,13 @@ function TransactionHistory({
         </h2>
         {transactions.length > 0 ? (
           <p className="text-muted-foreground text-xs">
-            {filtering
-              ? `${filtered.length} of ${transactions.length} shown`
-              : historyLimit && transactions.length >= historyLimit
-                ? `Latest ${transactions.length} entries`
-                : `${transactions.length} ${transactions.length === 1 ? "entry" : "entries"}`}
+            {countLabel}
+            {accountName ? ` · ${accountName}` : ""}
           </p>
         ) : null}
       </div>
 
-      {transactions.length === 0 ? (
+      {transactions.length === 0 && !accountFilter ? (
         <div className="border-border bg-card/40 mt-3 grid min-h-56 place-items-center rounded-2xl border border-dashed p-6 text-center">
           <div className="max-w-sm">
             <span className="border-primary/20 bg-primary/10 text-primary mx-auto grid size-11 place-items-center rounded-xl border">
@@ -395,10 +425,10 @@ function TransactionHistory({
                 </button>
               ))}
             </div>
-            {accountOptions.length > 1 ? (
+            {accountOptions.length > 1 || accountFilter ? (
               <select
-                value={accountFilter}
-                onChange={(event) => setAccountFilter(event.target.value)}
+                value={selectedAccount}
+                onChange={(event) => changeAccount(event.target.value)}
                 aria-label="Filter by account"
                 className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/25 min-h-11 w-full min-w-0 rounded-full border px-4 text-base outline-none focus-visible:ring-2 sm:col-span-2 sm:text-sm lg:col-span-1"
               >
@@ -412,7 +442,25 @@ function TransactionHistory({
             ) : null}
           </div>
 
-          {groups.length === 0 ? (
+          {transactions.length === 0 ? (
+            <div className="border-border mt-4 grid place-items-center rounded-2xl border border-dashed px-6 py-10 text-center">
+              <p className="text-sm font-semibold">
+                No transactions in {accountName ?? "this account"} yet
+              </p>
+              <p className="text-muted-foreground mt-1 text-xs">
+                Income and expenses recorded against it will appear here.
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="mt-4"
+                onClick={() => changeAccount("all")}
+              >
+                Show all accounts
+              </Button>
+            </div>
+          ) : groups.length === 0 ? (
             <div className="border-border mt-4 grid place-items-center rounded-2xl border border-dashed px-6 py-10 text-center">
               <p className="text-sm font-semibold">No transactions match</p>
               <p className="text-muted-foreground mt-1 text-xs">
@@ -430,7 +478,13 @@ function TransactionHistory({
               </Button>
             </div>
           ) : (
-            <div className="mt-4 space-y-5">
+            <div
+              aria-busy={navigating}
+              className={cn(
+                "mt-4 space-y-5 transition-opacity",
+                navigating && "opacity-60",
+              )}
+            >
               {groups.map((group) => {
                 const dayNet = group.items.reduce(
                   (sum, item) =>

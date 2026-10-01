@@ -32,6 +32,13 @@ function monthName(today: string) {
 
 const UUID_PATTERN = /^[0-9a-f-]{36}$/i;
 
+function monthBounds(today: string) {
+  const start = `${today.slice(0, 7)}-01`;
+  const next = new Date(`${start}T00:00:00Z`);
+  next.setUTCMonth(next.getUTCMonth() + 1);
+  return { start, next: next.toISOString().slice(0, 10) };
+}
+
 export default async function TransactionsPage({
   searchParams,
 }: PageProps<"/money/transactions">) {
@@ -42,64 +49,80 @@ export default async function TransactionsPage({
     typeof query.account === "string" && UUID_PATTERN.test(query.account)
       ? query.account
       : null;
+  const today = todayInManila();
+  const month = monthBounds(today);
   const supabase = await createClient();
+  // With ?account=, filter before the row cap so that account's history is
+  // complete rather than a slice of everyone's latest entries.
+  const historyQuery = supabase
+    ? accountFilter
+      ? supabase
+          .from("transactions")
+          .select(TRANSACTION_COLUMNS)
+          .eq("account_id", accountFilter)
+      : supabase.from("transactions").select(TRANSACTION_COLUMNS)
+    : null;
   const [
     accountsResult,
     categoriesResult,
     transactionsResult,
     preferencesResult,
     highlightedTransactionResult,
-  ] = supabase
-    ? await Promise.all([
-        supabase
-          .from("financial_account_balances")
-          .select("id,name,account_type,provider_id,current_balance_centavos")
-          .eq("is_archived", false)
-          .order("name"),
-        supabase
-          .from("transaction_categories")
-          .select("id,name,category_type,icon")
-          .order("name"),
-        supabase
-          .from("transactions")
-          .select(TRANSACTION_COLUMNS)
-          .order("transaction_date", { ascending: false })
-          .order("created_at", { ascending: false })
-          .limit(HISTORY_LIMIT),
-        supabase
-          .from("user_preferences")
-          .select("default_account_id")
-          .maybeSingle(),
-        highlightId && UUID_PATTERN.test(highlightId)
-          ? supabase
-              .from("transactions")
-              .select(TRANSACTION_COLUMNS)
-              .eq("id", highlightId)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
-      ])
-    : [
-        { data: [] },
-        { data: [] },
-        { data: [] },
-        { data: null },
-        { data: null },
-      ];
+    monthResult,
+  ] =
+    supabase && historyQuery
+      ? await Promise.all([
+          supabase
+            .from("financial_account_balances")
+            .select("id,name,account_type,provider_id,current_balance_centavos")
+            .eq("is_archived", false)
+            .order("name"),
+          supabase
+            .from("transaction_categories")
+            .select("id,name,category_type,icon")
+            .order("name"),
+          historyQuery
+            .order("transaction_date", { ascending: false })
+            .order("created_at", { ascending: false })
+            .limit(HISTORY_LIMIT),
+          supabase
+            .from("user_preferences")
+            .select("default_account_id")
+            .maybeSingle(),
+          highlightId && UUID_PATTERN.test(highlightId)
+            ? supabase
+                .from("transactions")
+                .select(TRANSACTION_COLUMNS)
+                .eq("id", highlightId)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+          // The month summary covers every account, whatever the history shows.
+          supabase
+            .from("transactions")
+            .select("transaction_type,amount_centavos")
+            .gte("transaction_date", month.start)
+            .lt("transaction_date", month.next),
+        ])
+      : [
+          { data: [] },
+          { data: [] },
+          { data: [] },
+          { data: null },
+          { data: null },
+          { data: [] },
+        ];
   const recentTransactions = transactionsResult.data ?? [];
-  const transactions = highlightedTransactionResult.data
-    ? [
-        highlightedTransactionResult.data,
-        ...recentTransactions.filter(
-          (transaction) =>
-            transaction.id !== highlightedTransactionResult.data?.id,
-        ),
-      ]
-    : recentTransactions;
-  const today = todayInManila();
-  const monthPrefix = today.slice(0, 7);
-  const monthRows = transactions.filter((transaction) =>
-    String(transaction.transaction_date).startsWith(monthPrefix),
-  );
+  const highlighted = highlightedTransactionResult.data;
+  const transactions =
+    highlighted && (!accountFilter || highlighted.account_id === accountFilter)
+      ? [
+          highlighted,
+          ...recentTransactions.filter(
+            (transaction) => transaction.id !== highlighted.id,
+          ),
+        ]
+      : recentTransactions;
+  const monthRows = monthResult.data ?? [];
   const income = monthRows
     .filter((transaction) => transaction.transaction_type === "income")
     .reduce((sum, transaction) => sum + Number(transaction.amount_centavos), 0);
@@ -165,7 +188,7 @@ export default async function TransactionsPage({
         defaultAccountId={preferencesResult.data?.default_account_id}
         initialView={initialView}
         highlightId={highlightId ?? null}
-        initialAccountFilter={accountFilter}
+        accountFilter={accountFilter}
         historyLimit={HISTORY_LIMIT}
         summary={
           <TransactionSummary

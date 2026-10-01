@@ -90,15 +90,33 @@ export function parsePesoInput(value: string): number | null {
   return Number.isSafeInteger(centavos) ? centavos : null;
 }
 
+/** Whole pesos stay well inside safe-integer centavos at 13 digits. */
+const MAX_WHOLE_PESO_DIGITS = 13;
+
+/** Keeps the first `max` digits, leaving the separators between them. */
+function limitDigits(text: string, max: number): string {
+  let digits = 0;
+  let kept = "";
+  for (const character of text) {
+    if (digits === max) break;
+    if (character !== ",") digits += 1;
+    kept += character;
+  }
+  return kept;
+}
+
 /**
  * Keeps a typed amount to digits, separators, and at most two decimals, so
- * the field never holds something the server will reject.
+ * the field never holds something the server will reject. Separators do
+ * not count toward the digit limit, so editing a formatted amount such as
+ * "123,456,789,012.00" never drops digits.
  */
 export function sanitizePesoInput(value: string): string {
   const cleaned = value.replace(/[^\d.,]/g, "");
   const [whole = "", ...rest] = cleaned.split(".");
-  if (rest.length === 0) return whole.slice(0, 13);
-  return `${whole.slice(0, 13)}.${rest.join("").replaceAll(",", "").slice(0, 2)}`;
+  const limitedWhole = limitDigits(whole, MAX_WHOLE_PESO_DIGITS);
+  if (rest.length === 0) return limitedWhole;
+  return `${limitedWhole}.${rest.join("").replaceAll(",", "").slice(0, 2)}`;
 }
 
 /** Formats a valid typed amount as "1,234.50" once the field loses focus. */

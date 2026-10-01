@@ -9,7 +9,13 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TransactionWorkspace } from "./transaction-workspace";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  replace.mockClear();
+});
+
+const replace = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
 
 vi.mock("@/components/ui/tooltip", () => ({
   TooltipHint: ({ children }: { children: ReactNode }) => children,
@@ -100,7 +106,7 @@ describe("TransactionWorkspace", () => {
     expect(within(yesterday).getAllByText("+₱5,000.00")).toHaveLength(2);
   });
 
-  it("filters history by search, type, and account", () => {
+  it("filters history by search and type", () => {
     render(<TransactionWorkspace {...props} />);
 
     fireEvent.change(screen.getByLabelText("Search transactions"), {
@@ -114,20 +120,59 @@ describe("TransactionWorkspace", () => {
     expect(screen.getByText("No transactions match")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
     expect(screen.getByText("Canteen")).toBeVisible();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("filters by account through the URL so the server applies it", () => {
+    render(<TransactionWorkspace {...props} />);
 
     fireEvent.change(screen.getByLabelText("Filter by account"), {
       target: { value: "account-2" },
     });
-    expect(screen.queryByText("Canteen")).not.toBeInTheDocument();
+
+    expect(replace).toHaveBeenCalledWith(
+      "/money/transactions?account=account-2",
+      { scroll: false },
+    );
   });
 
-  it("starts filtered to the account from the URL", () => {
+  it("shows the account from the URL and returns to all accounts", () => {
     render(
-      <TransactionWorkspace {...props} initialAccountFilter="account-2" />,
+      <TransactionWorkspace
+        {...props}
+        transactions={props.transactions.slice(1)}
+        accountFilter="account-2"
+      />,
     );
 
     expect(screen.getByLabelText("Filter by account")).toHaveValue("account-2");
-    expect(screen.queryByText("Canteen")).not.toBeInTheDocument();
+    expect(screen.getByText("1 entry · GCash")).toBeVisible();
+
+    fireEvent.change(screen.getByLabelText("Filter by account"), {
+      target: { value: "all" },
+    });
+    expect(replace).toHaveBeenCalledWith("/money/transactions", {
+      scroll: false,
+    });
+  });
+
+  it("explains an account with no transactions instead of the first-run state", () => {
+    render(
+      <TransactionWorkspace
+        {...props}
+        transactions={[]}
+        accountFilter="account-2"
+      />,
+    );
+
+    expect(screen.getByText("No transactions in GCash yet")).toBeVisible();
+    expect(
+      screen.queryByText("No money movement recorded"),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show all accounts" }));
+    expect(replace).toHaveBeenCalledWith("/money/transactions", {
+      scroll: false,
+    });
   });
 
   it("opens a transaction to edit it and asks before deleting", () => {
