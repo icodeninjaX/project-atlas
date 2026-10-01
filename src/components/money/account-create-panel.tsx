@@ -2,21 +2,27 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { Plus, X } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { AccountForm } from "@/components/money/account-form";
 import { Button } from "@/components/ui/button";
 
-export function AccountCreatePanel() {
+/**
+ * Opens the new-account dialog. `trigger` replaces the default button, for
+ * example with a quick action; it must accept a ref and props.
+ */
+export function AccountCreatePanel({ trigger }: { trigger?: ReactNode }) {
   const [open, setOpen] = useState(false);
   const closeDialog = useCallback(() => setOpen(false), []);
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <Button type="button">
-          <Plus className="size-4" aria-hidden="true" />
-          Add account
-        </Button>
+        {trigger ?? (
+          <Button type="button">
+            <Plus className="size-4" aria-hidden="true" />
+            Add account
+          </Button>
+        )}
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="data-[state=open]:animate-analyst-fade fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm" />

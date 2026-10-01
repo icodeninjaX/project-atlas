@@ -5,6 +5,7 @@ import { type AccountSummary } from "@/components/money/account-card";
 import { AccountLedger } from "@/components/money/account-ledger";
 import type { AccountActivityItem } from "@/components/money/account-sheet";
 import { AccountsOverview } from "@/components/money/accounts-overview";
+import { AccountsQuickActions } from "@/components/money/accounts-quick-actions";
 import { PageHeading } from "@/components/shared/page-heading";
 import { EmptyState } from "@/components/shared/empty-state";
 import { MoneyNavigation } from "@/components/money/money-navigation";
@@ -82,6 +83,9 @@ export default async function AccountsPage() {
         eyebrow="Money / Accounts"
         title="Where your money lives"
         description="Every total is opening balance plus recorded movement, so it can always be explained."
+        // Phones get these actions in the total-balance hero instead; with
+        // no accounts there is no hero, so the heading keeps them.
+        compactOnMobile={accounts.length > 0}
         actions={
           <>
             <AccountCreatePanel />
@@ -105,7 +109,10 @@ export default async function AccountsPage() {
         </div>
       ) : (
         <>
-          <AccountsOverview accounts={accounts} />
+          <AccountsOverview
+            accounts={accounts}
+            mobileActions={<AccountsQuickActions />}
+          />
           <AccountLedger
             accounts={accounts}
             today={todayInManila()}

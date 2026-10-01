@@ -129,8 +129,18 @@ export function TransactionWorkspace({
     [transactions],
   );
 
+  function startRecording() {
+    setView("record");
+    // Bring the form, which replaces History in place, into view.
+    window.requestAnimationFrame(() =>
+      document
+        .getElementById("transaction-workspace")
+        ?.scrollIntoView({ block: "start" }),
+    );
+  }
+
   return (
-    <div className="mt-6">
+    <div id="transaction-workspace" className="mt-6 scroll-mt-20">
       <div
         className="border-border bg-muted/60 grid grid-cols-2 gap-1 rounded-full border p-1 sm:inline-grid sm:min-w-[26rem]"
         role="group"
@@ -188,6 +198,17 @@ export function TransactionWorkspace({
             historyLimit={historyLimit}
             onRecord={() => setView("record")}
           />
+          {/* Phones: a new entry stays one tap away while scrolling history.
+              It rides above the bottom navigation and leaves with it when
+              the keyboard opens. */}
+          <button
+            type="button"
+            onClick={startRecording}
+            className="bg-primary-solid text-primary-solid-foreground focus-visible:ring-ring focus-visible:ring-offset-background fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-30 grid size-14 place-items-center rounded-full shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_14px_30px_-10px_color-mix(in_srgb,var(--primary-solid)_80%,transparent)] transition-transform duration-150 [-webkit-tap-highlight-color:transparent] group-data-[keyboard=open]/shell:hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 motion-reduce:transition-none sm:hidden"
+          >
+            <Plus className="size-6" aria-hidden="true" />
+            <span className="sr-only">New transaction</span>
+          </button>
         </>
       )}
     </div>
@@ -350,7 +371,8 @@ function TransactionHistory({
     <section
       id="transaction-history"
       aria-labelledby="transaction-history-title"
-      className="mt-8"
+      // Room for the last rows to scroll clear of the phone's add button.
+      className="mt-8 max-sm:pb-16"
     >
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <h2
@@ -534,7 +556,7 @@ function TransactionHistory({
                               type="button"
                               aria-haspopup="dialog"
                               onClick={() => setEditingId(transaction.id)}
-                              className="group hover:bg-muted/50 focus-visible:ring-ring flex w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:px-5"
+                              className="group hover:bg-muted/50 active:bg-muted/70 focus-visible:ring-ring flex w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:px-5"
                             >
                               <span className="sr-only">Edit</span>{" "}
                               <CategoryBadge

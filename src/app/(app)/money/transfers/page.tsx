@@ -89,6 +89,7 @@ export default async function TransfersPage({
         eyebrow="Money / Transfers"
         title="Move money between accounts"
         description="Record an internal transfer without counting it as income or an expense."
+        compactOnMobile
       />
       <MoneyNavigation currentHref="/money/transfers" />
 

@@ -125,4 +125,17 @@ describe("AccountLedger", () => {
     await user.click(screen.getByRole("button", { name: "Keep it" }));
     expect(screen.queryByText("Archive GCash?")).not.toBeInTheDocument();
   });
+
+  it("keeps the stacked-strip balance out of the accessible name", () => {
+    const { container } = render(
+      <AccountLedger accounts={accounts} today="2026-09-06" />,
+    );
+
+    const strips = container.querySelectorAll(".atlas-wallet-strip-balance");
+    expect(strips).toHaveLength(accounts.length);
+    strips.forEach((strip) =>
+      expect(strip).toHaveAttribute("aria-hidden", "true"),
+    );
+    expect(container.querySelector(".atlas-wallet-stack")).toBeInTheDocument();
+  });
 });
