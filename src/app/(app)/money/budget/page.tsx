@@ -2,6 +2,7 @@ import type { BudgetMonthData } from "@/components/money/budget-editor";
 import { BudgetWorkspace } from "@/components/money/budget-workspace";
 import { MoneyNavigation } from "@/components/money/money-navigation";
 import { PageHeading } from "@/components/shared/page-heading";
+import { fetchExpensesBetween } from "@/lib/budgets/expenses";
 import { shiftMonth } from "@/lib/budgets/plan";
 import { formatCalendarMonth, resolveCalendarMonth } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
@@ -57,7 +58,7 @@ export default async function BudgetPage({
   const supabase = await createClient();
   // This month and last month come together: last month seeds new plans
   // and gives each category a reference point.
-  const [categoriesResult, budgetsResult, expensesResult] = supabase
+  const [categoriesResult, budgetsResult, expenses] = supabase
     ? await Promise.all([
         supabase
           .from("transaction_categories")
@@ -70,18 +71,13 @@ export default async function BudgetPage({
             "month_start,expected_income_centavos,notes,budget_items(category_id,planned_centavos)",
           )
           .in("month_start", [previousStart, monthStart]),
-        supabase
-          .from("transactions")
-          .select("category_id,amount_centavos,transaction_date")
-          .eq("transaction_type", "expense")
-          .gte("transaction_date", previousStart)
-          .lt("transaction_date", nextStart),
+        fetchExpensesBetween(supabase, previousStart, nextStart),
       ])
-    : [{ data: [] }, { data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, []];
 
   const spentThisMonth: Record<string, number> = {};
   const spentLastMonth: Record<string, number> = {};
-  for (const row of expensesResult.data ?? []) {
+  for (const row of expenses) {
     const bucket =
       row.transaction_date < monthStart ? spentLastMonth : spentThisMonth;
     bucket[row.category_id] =

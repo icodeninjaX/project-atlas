@@ -144,10 +144,21 @@ function Stat({
 }
 
 function PlanMeter({ plan, pace }: { plan: BudgetPlan; pace: MonthPace }) {
-  const ratio =
-    plan.plannedCentavos > 0 ? plan.spentCentavos / plan.plannedCentavos : 1;
+  // A plan saved with only ₱0 amounts has no share to show: any spending is
+  // simply over, and none is simply nothing.
+  const zeroPlan = plan.plannedCentavos === 0;
+  const ratio = zeroPlan
+    ? plan.spentCentavos > 0
+      ? 1
+      : 0
+    : plan.spentCentavos / plan.plannedCentavos;
   const percent = Math.round(ratio * 100);
   const over = plan.leftCentavos < 0;
+  const spentText = zeroPlan
+    ? plan.spentCentavos > 0
+      ? "Spending with nothing planned"
+      : "Nothing planned or spent"
+    : `${percent}% of the plan spent`;
   const monthNote =
     pace.phase === "current"
       ? `Day ${pace.daysElapsed} of ${pace.daysInMonth}`
@@ -166,8 +177,8 @@ function PlanMeter({ plan, pace }: { plan: BudgetPlan; pace: MonthPace }) {
           aria-valuenow={Math.min(percent, 100)}
           aria-valuetext={
             pace.phase === "current"
-              ? `${percent}% of the plan spent, ${Math.round(pace.elapsedRatio * 100)}% of the month gone`
-              : `${percent}% of the plan spent`
+              ? `${spentText}, ${Math.round(pace.elapsedRatio * 100)}% of the month gone`
+              : spentText
           }
           className={cn(
             "h-2.5 overflow-hidden rounded-full",
@@ -192,12 +203,16 @@ function PlanMeter({ plan, pace }: { plan: BudgetPlan; pace: MonthPace }) {
         ) : null}
       </div>
       <div className="text-muted-foreground mt-2.5 flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs">
-        <span>
-          <span className="text-foreground font-mono font-semibold">
-            {percent}%
-          </span>{" "}
-          of plan spent
-        </span>
+        {zeroPlan ? (
+          <span>{spentText}</span>
+        ) : (
+          <span>
+            <span className="text-foreground font-mono font-semibold">
+              {percent}%
+            </span>{" "}
+            of plan spent
+          </span>
+        )}
         <span>{monthNote}</span>
       </div>
     </div>

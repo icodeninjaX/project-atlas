@@ -230,6 +230,30 @@ describe("BudgetWorkspace", () => {
     expect(within(sheet).getByLabelText("Housing")).toHaveValue("");
   });
 
+  it("does not call a ₱0 plan 100% spent", () => {
+    renderWorkspace({
+      current: {
+        planned: { food: 0 },
+        spent: { food: 12_000 },
+        expectedIncomeCentavos: 0,
+        hasPlan: true,
+      },
+    });
+
+    const hero = screen.getByRole("region", { name: "October 2026" });
+    expect(hero).toHaveTextContent("Over plan by");
+    expect(hero).not.toHaveTextContent("100% of plan spent");
+    expect(
+      within(hero).getByRole("meter", { name: "Plan spent" }),
+    ).toHaveAttribute(
+      "aria-valuetext",
+      "Spending with nothing planned, 58% of the month gone",
+    );
+    expect(
+      within(hero).getByText("Spending with nothing planned"),
+    ).toBeVisible();
+  });
+
   it("reads a finished month in the past tense with a way back", () => {
     renderWorkspace({ today: "2026-11-03" });
 
