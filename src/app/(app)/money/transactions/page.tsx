@@ -3,14 +3,16 @@ import {
   type TransactionHistoryItem,
   type TransactionWorkspaceView,
 } from "@/components/money/transaction-workspace";
+import { TransactionSummary } from "@/components/money/transaction-summary";
 import { PageHeading } from "@/components/shared/page-heading";
 import { MoneyNavigation } from "@/components/money/money-navigation";
-import { Card, CardContent } from "@/components/ui/card";
-import { SensitiveValue } from "@/components/privacy/privacy-provider";
-import { formatCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Transactions" };
+
+const HISTORY_LIMIT = 100;
+const TRANSACTION_COLUMNS =
+  "id,account_id,category_id,transaction_type,amount_centavos,transaction_date,merchant_or_source,description,financial_accounts(name),transaction_categories(name,icon)";
 
 function todayInManila() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -21,72 +23,106 @@ function todayInManila() {
   }).format(new Date());
 }
 
+function monthName(today: string) {
+  return new Intl.DateTimeFormat("en-PH", {
+    timeZone: "UTC",
+    month: "long",
+  }).format(new Date(`${today}T00:00:00Z`));
+}
+
+const UUID_PATTERN = /^[0-9a-f-]{36}$/i;
+
+function monthBounds(today: string) {
+  const start = `${today.slice(0, 7)}-01`;
+  const next = new Date(`${start}T00:00:00Z`);
+  next.setUTCMonth(next.getUTCMonth() + 1);
+  return { start, next: next.toISOString().slice(0, 10) };
+}
+
 export default async function TransactionsPage({
   searchParams,
 }: PageProps<"/money/transactions">) {
   const query = await searchParams;
   const highlightId =
     typeof query.highlight === "string" ? query.highlight : undefined;
+  const accountFilter =
+    typeof query.account === "string" && UUID_PATTERN.test(query.account)
+      ? query.account
+      : null;
+  const today = todayInManila();
+  const month = monthBounds(today);
   const supabase = await createClient();
+  // With ?account=, filter before the row cap so that account's history is
+  // complete rather than a slice of everyone's latest entries.
+  const historyQuery = supabase
+    ? accountFilter
+      ? supabase
+          .from("transactions")
+          .select(TRANSACTION_COLUMNS)
+          .eq("account_id", accountFilter)
+      : supabase.from("transactions").select(TRANSACTION_COLUMNS)
+    : null;
   const [
     accountsResult,
     categoriesResult,
     transactionsResult,
     preferencesResult,
     highlightedTransactionResult,
-  ] = supabase
-    ? await Promise.all([
-        supabase
-          .from("financial_accounts")
-          .select("id,name")
-          .eq("is_archived", false)
-          .order("name"),
-        supabase
-          .from("transaction_categories")
-          .select("id,name,category_type")
-          .order("name"),
-        supabase
-          .from("transactions")
-          .select(
-            "id,account_id,category_id,transaction_type,amount_centavos,transaction_date,merchant_or_source,description,financial_accounts(name),transaction_categories(name)",
-          )
-          .order("transaction_date", { ascending: false })
-          .limit(100),
-        supabase
-          .from("user_preferences")
-          .select("default_account_id")
-          .maybeSingle(),
-        highlightId && /^[0-9a-f-]{36}$/i.test(highlightId)
-          ? supabase
-              .from("transactions")
-              .select(
-                "id,account_id,category_id,transaction_type,amount_centavos,transaction_date,merchant_or_source,description,financial_accounts(name),transaction_categories(name)",
-              )
-              .eq("id", highlightId)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
-      ])
-    : [
-        { data: [] },
-        { data: [] },
-        { data: [] },
-        { data: null },
-        { data: null },
-      ];
+    monthResult,
+  ] =
+    supabase && historyQuery
+      ? await Promise.all([
+          supabase
+            .from("financial_account_balances")
+            .select("id,name,account_type,provider_id,current_balance_centavos")
+            .eq("is_archived", false)
+            .order("name"),
+          supabase
+            .from("transaction_categories")
+            .select("id,name,category_type,icon")
+            .order("name"),
+          historyQuery
+            .order("transaction_date", { ascending: false })
+            .order("created_at", { ascending: false })
+            .limit(HISTORY_LIMIT),
+          supabase
+            .from("user_preferences")
+            .select("default_account_id")
+            .maybeSingle(),
+          highlightId && UUID_PATTERN.test(highlightId)
+            ? supabase
+                .from("transactions")
+                .select(TRANSACTION_COLUMNS)
+                .eq("id", highlightId)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+          // The month summary covers every account, whatever the history shows.
+          supabase
+            .from("transactions")
+            .select("transaction_type,amount_centavos")
+            .gte("transaction_date", month.start)
+            .lt("transaction_date", month.next),
+        ])
+      : [
+          { data: [] },
+          { data: [] },
+          { data: [] },
+          { data: null },
+          { data: null },
+          { data: [] },
+        ];
   const recentTransactions = transactionsResult.data ?? [];
-  const transactions = highlightedTransactionResult.data
-    ? [
-        highlightedTransactionResult.data,
-        ...recentTransactions.filter(
-          (transaction) =>
-            transaction.id !== highlightedTransactionResult.data?.id,
-        ),
-      ]
-    : recentTransactions;
-  const monthPrefix = todayInManila().slice(0, 7);
-  const monthRows = transactions.filter((transaction) =>
-    String(transaction.transaction_date).startsWith(monthPrefix),
-  );
+  const highlighted = highlightedTransactionResult.data;
+  const transactions =
+    highlighted && (!accountFilter || highlighted.account_id === accountFilter)
+      ? [
+          highlighted,
+          ...recentTransactions.filter(
+            (transaction) => transaction.id !== highlighted.id,
+          ),
+        ]
+      : recentTransactions;
+  const monthRows = monthResult.data ?? [];
   const income = monthRows
     .filter((transaction) => transaction.transaction_type === "income")
     .reduce((sum, transaction) => sum + Number(transaction.amount_centavos), 0);
@@ -102,6 +138,7 @@ export default async function TransactionsPage({
       } | null;
       const category = transaction.transaction_categories as unknown as {
         name: string;
+        icon: string | null;
       } | null;
 
       return {
@@ -115,8 +152,24 @@ export default async function TransactionsPage({
         description: transaction.description,
         account_name: account?.name ?? null,
         category_name: category?.name ?? null,
+        category_icon: category?.icon ?? null,
       };
     },
+  );
+  const accounts = (accountsResult.data ?? []).flatMap((account) =>
+    account.id && account.name
+      ? [
+          {
+            id: account.id,
+            name: account.name,
+            account_type: account.account_type ?? "other",
+            provider_id: account.provider_id,
+            current_balance_centavos: Number(
+              account.current_balance_centavos ?? 0,
+            ),
+          },
+        ]
+      : [],
   );
 
   return (
@@ -127,32 +180,24 @@ export default async function TransactionsPage({
         description="Income and expenses change balances. Transfers stay separate and never inflate either total."
       />
       <MoneyNavigation currentHref="/money/transactions" />
-      <div className="mt-8 grid gap-3 sm:grid-cols-2">
-        <Card>
-          <CardContent>
-            <p className="text-muted-foreground text-xs">Income this month</p>
-            <p className="text-primary mt-3 font-mono text-2xl font-semibold">
-              <SensitiveValue>{formatCentavos(income)}</SensitiveValue>
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent>
-            <p className="text-muted-foreground text-xs">Expenses this month</p>
-            <p className="mt-3 font-mono text-2xl font-semibold">
-              <SensitiveValue>{formatCentavos(expenses)}</SensitiveValue>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
       <TransactionWorkspace
-        accounts={accountsResult.data ?? []}
+        accounts={accounts}
         categories={categoriesResult.data ?? []}
         transactions={transactionHistory}
-        today={todayInManila()}
+        today={today}
         defaultAccountId={preferencesResult.data?.default_account_id}
         initialView={initialView}
         highlightId={highlightId ?? null}
+        accountFilter={accountFilter}
+        historyLimit={HISTORY_LIMIT}
+        summary={
+          <TransactionSummary
+            monthLabel={monthName(today)}
+            income={income}
+            expenses={expenses}
+            entryCount={monthRows.length}
+          />
+        }
       />
     </div>
   );

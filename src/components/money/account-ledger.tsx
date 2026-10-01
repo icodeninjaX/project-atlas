@@ -1,102 +1,103 @@
 "use client";
 
-import { Archive, Pencil, SlidersHorizontal } from "lucide-react";
-import { useRef, useState } from "react";
+import { Ellipsis } from "lucide-react";
+import { useState } from "react";
 import {
-  AccountCard,
-  type AccountSummary,
-} from "@/components/money/account-card";
-import { OfflineMutationForm } from "@/components/offline/offline-mutation";
-import { Button } from "@/components/ui/button";
-import { FormSubmitButton } from "@/components/ui/form-submit-button";
+  AccountSheet,
+  type AccountActivityItem,
+  type SheetAccount,
+} from "@/components/money/account-sheet";
+import { WalletCard, WalletCardBadge } from "@/components/money/wallet-card";
+import { formatShare } from "@/lib/money/account-types";
 
 export function AccountLedger({
   accounts,
   today,
+  activityByAccount = {},
 }: {
-  accounts: AccountSummary[];
+  accounts: SheetAccount[];
   today: string;
+  activityByAccount?: Record<string, AccountActivityItem[]>;
 }) {
-  const [selectedAccountId, setSelectedAccountId] = useState(
-    accounts[0]?.id ?? "",
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected =
+    accounts.find((account) => account.id === selectedId) ?? null;
+  const positiveTotal = accounts.reduce(
+    (sum, account) =>
+      sum + Math.max(0, Number(account.current_balance_centavos)),
+    0,
   );
-  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
-  const manageMenu = useRef<HTMLDetailsElement>(null);
-
-  function editSelectedAccount() {
-    setEditingAccountId((current) =>
-      current === selectedAccountId ? null : selectedAccountId,
-    );
-    if (manageMenu.current) manageMenu.current.open = false;
-  }
+  const shareOf = (account: SheetAccount) => {
+    const balance = Number(account.current_balance_centavos);
+    return positiveTotal > 0 && balance > 0
+      ? formatShare(balance / positiveTotal)
+      : null;
+  };
 
   return (
-    <section className="mt-5" aria-label="Active accounts">
-      <div className="mb-2 flex justify-end">
-        <details ref={manageMenu} className="relative z-30">
-          <Button asChild variant="secondary" size="sm">
-            <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-              <SlidersHorizontal className="size-4" aria-hidden="true" />
-              Manage accounts
-            </summary>
-          </Button>
-          <div className="border-border bg-background absolute top-full right-0 mt-2 max-h-[calc(100dvh-6rem-env(safe-area-inset-bottom))] w-[min(18rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border p-3 shadow-xl">
-            <label className="text-muted-foreground text-xs font-medium">
-              Choose an account
-              <select
-                value={selectedAccountId}
-                onChange={(event) => setSelectedAccountId(event.target.value)}
-                className="border-border bg-background focus-visible:border-ring focus-visible:ring-ring/25 mt-1.5 min-h-11 w-full rounded-xl border px-3 text-base outline-none focus-visible:ring-2 sm:text-sm"
-                aria-label="Account to manage"
-              >
-                {accounts.map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {account.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="mt-3 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={editSelectedAccount}
-              >
-                <Pencil className="size-4" aria-hidden="true" />
-                {editingAccountId === selectedAccountId ? "Close" : "Edit"}
-              </Button>
-              <OfflineMutationForm mutation="account.archive">
-                <input
-                  type="hidden"
-                  name="accountId"
-                  value={selectedAccountId}
-                />
-                <input type="hidden" name="archived" value="true" />
-                <FormSubmitButton
-                  variant="ghost"
-                  aria-label="Archive selected account"
-                  className="text-destructive hover:text-destructive w-full"
-                >
-                  <Archive className="size-4" aria-hidden="true" />
-                  Archive
-                </FormSubmitButton>
-              </OfflineMutationForm>
-            </div>
-          </div>
-        </details>
+    <section className="mt-10" aria-labelledby="active-accounts-heading">
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+        <div className="min-w-0">
+          <h2
+            id="active-accounts-heading"
+            className="text-lg font-semibold tracking-tight"
+          >
+            Your accounts
+          </h2>
+          <p className="text-muted-foreground mt-0.5 text-sm">
+            Open a card to see its activity, reconcile it, or edit it.
+          </p>
+        </div>
+        <p className="text-muted-foreground font-mono text-xs">
+          {accounts.length} active
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-2.5 min-[400px]:grid-cols-2 sm:grid-cols-3 sm:gap-3">
-        {accounts.map((account) => (
-          <AccountCard
-            key={account.id}
-            account={account}
-            today={today}
-            layout="ledger"
-            editing={editingAccountId === account.id}
-          />
-        ))}
-      </div>
+      <ul className="mt-4 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+        {accounts.map((account) => {
+          const share = shareOf(account);
+          return (
+            <li key={account.id} className="min-w-0">
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                onClick={() => setSelectedId(account.id)}
+                className="group focus-visible:ring-ring focus-visible:ring-offset-background block w-full rounded-[1.25rem] text-left transition-transform duration-200 ease-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              >
+                {/* Spaces sit between elements: names are joined without
+                    them, whatever the visual layout. */}
+                <span className="sr-only">Manage</span>{" "}
+                <WalletCard
+                  account={account}
+                  corner={
+                    <span
+                      aria-hidden="true"
+                      className="grid size-8 shrink-0 place-items-center rounded-full bg-white/12 ring-1 ring-white/20 transition-colors group-hover:bg-white/22"
+                    >
+                      <Ellipsis className="size-4" />
+                    </span>
+                  }
+                  footer={
+                    share ? (
+                      <WalletCardBadge>
+                        {share} <span className="sr-only">of total</span>
+                      </WalletCardBadge>
+                    ) : null
+                  }
+                />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <AccountSheet
+        account={selected}
+        activity={selected ? (activityByAccount[selected.id] ?? []) : []}
+        share={selected ? shareOf(selected) : null}
+        today={today}
+        onClose={() => setSelectedId(null)}
+      />
     </section>
   );
 }

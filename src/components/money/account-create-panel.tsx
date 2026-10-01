@@ -19,18 +19,28 @@ export function AccountCreatePanel() {
         </Button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm" />
-        <Dialog.Content className="bg-background fixed inset-0 z-[60] overflow-y-auto p-4 outline-none sm:inset-y-6 sm:left-1/2 sm:w-[min(calc(100vw-3rem),56rem)] sm:-translate-x-1/2 sm:rounded-3xl sm:border sm:p-6 lg:inset-y-10">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <Dialog.Title className="text-xl font-semibold tracking-[-0.025em]">
-              New account
-            </Dialog.Title>
+        <Dialog.Overlay className="data-[state=open]:animate-analyst-fade fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm" />
+        <Dialog.Content className="bg-background fixed inset-0 z-[60] overflow-y-auto p-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] outline-none sm:inset-y-6 sm:left-1/2 sm:w-[min(calc(100vw-3rem),58rem)] sm:-translate-x-1/2 sm:rounded-[1.75rem] sm:border sm:p-7 sm:shadow-[0_24px_70px_rgb(7_10_15/0.4)] lg:inset-y-10">
+          <div className="mb-7 flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-primary text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
+                Money / Accounts
+              </p>
+              <Dialog.Title className="mt-1 text-2xl font-semibold tracking-[-0.03em]">
+                New account
+              </Dialog.Title>
+              <Dialog.Description className="text-muted-foreground mt-1 text-sm">
+                Start from one truthful balance. Every movement after it is
+                recorded on top.
+              </Dialog.Description>
+            </div>
             <Dialog.Close asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 aria-label="Close new account form"
+                className="-mr-2 shrink-0"
               >
                 <X className="size-4" aria-hidden="true" />
               </Button>
