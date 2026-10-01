@@ -32,6 +32,21 @@
   /* Money detail sheets slide in from the right edge on wider screens. */
   --animate-money-sheet-side: money-sheet-side 0.34s
     cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* Money dropdowns open out of their trigger. */
+  --animate-money-dropdown: money-dropdown 0.18s cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+@keyframes money-dropdown {
+  from {
+    transform: translateY(-0.25rem) scale(0.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes money-sheet-side {

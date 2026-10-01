@@ -51,7 +51,8 @@ test.describe("authenticated ATLAS workflows", () => {
       .and(page.locator("[aria-pressed]"))
       .click();
     await page.getByLabel("Amount in pesos").fill("125.50");
-    await page.getByRole("radio", { name: "Food" }).check();
+    await page.getByRole("combobox", { name: "Category" }).click();
+    await page.getByRole("option", { name: "Food" }).click();
     await page.getByRole("radio", { name: `E2E Cash ${unique}` }).check();
     await page.getByLabel("Merchant or source").fill(`E2E canteen ${unique}`);
     await syncClick(page, page.getByRole("button", { name: /Record expense/ }));

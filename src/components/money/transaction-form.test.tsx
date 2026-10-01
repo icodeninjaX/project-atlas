@@ -54,6 +54,16 @@ function withSubmit(submit = vi.fn()) {
   };
 }
 
+const categoryField = () => screen.getByRole("combobox", { name: "Category" });
+
+async function chooseCategory(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+) {
+  await user.click(categoryField());
+  await user.click(await screen.findByRole("option", { name }));
+}
+
 describe("TransactionForm", () => {
   it("clears the category and shows income categories when the type changes", async () => {
     const user = userEvent.setup();
@@ -65,16 +75,17 @@ describe("TransactionForm", () => {
       />,
     );
 
-    await user.click(screen.getByRole("radio", { name: "Food" }));
-    expect(screen.getByRole("radio", { name: "Food" })).toBeChecked();
+    await chooseCategory(user, "Food");
+    expect(categoryField()).toHaveTextContent("Food");
 
     await user.click(screen.getByRole("radio", { name: "Income" }));
 
+    expect(categoryField()).toHaveTextContent("Choose a category");
+    await user.click(categoryField());
     expect(
-      screen.queryByRole("radio", { name: "Food" }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "Salary" })).not.toBeChecked();
-    expect(screen.getByRole("radio", { name: "Bonus" })).not.toBeChecked();
+      screen.getAllByRole("option").map((option) => option.textContent),
+    ).toEqual(["Salary", "Bonus"]);
+    await user.keyboard("{Escape}");
     expect(screen.getByText("Received into")).toBeInTheDocument();
   });
 
@@ -131,7 +142,7 @@ describe("TransactionForm", () => {
 
     await user.type(screen.getByLabelText("Merchant or source"), "jollibee");
 
-    expect(screen.getByRole("radio", { name: "Food" })).toBeChecked();
+    expect(categoryField()).toHaveTextContent("Food");
   });
 
   it("offers today and yesterday as one-tap dates", async () => {
@@ -170,7 +181,7 @@ describe("TransactionForm", () => {
 
     await user.click(screen.getByRole("radio", { name: "Income" }));
     await user.type(screen.getByLabelText("Amount in pesos"), "1000");
-    await user.click(screen.getByRole("radio", { name: "Salary" }));
+    await chooseCategory(user, "Salary");
     await user.click(screen.getByRole("radio", { name: "Cash" }));
     await user.click(screen.getByRole("button", { name: "Yesterday" }));
     await user.type(screen.getByLabelText("Merchant or source"), "Payroll");
@@ -195,7 +206,7 @@ describe("TransactionForm", () => {
       expect(screen.getByLabelText("Amount in pesos")).toHaveValue(""),
     );
     expect(screen.getByLabelText("Amount in pesos")).toHaveFocus();
-    expect(screen.getByRole("radio", { name: "Salary" })).not.toBeChecked();
+    expect(categoryField()).toHaveTextContent("Choose a category");
     expect(screen.getByLabelText("Merchant or source")).toHaveValue("");
     expect(screen.getByRole("radio", { name: "Income" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Cash" })).toBeChecked();
@@ -241,7 +252,7 @@ describe("TransactionForm", () => {
     );
   });
 
-  it("shows categories as pills on phones that fill when chosen", async () => {
+  it("picks the category from a dropdown that marks the current one", async () => {
     const user = userEvent.setup();
     render(
       <TransactionForm
@@ -251,13 +262,48 @@ describe("TransactionForm", () => {
       />,
     );
 
-    const food = () =>
-      screen.getByRole("radio", { name: "Food" }).parentElement!;
-    expect(food()).toHaveClass("max-sm:rounded-full", "sm:rounded-2xl");
-    expect(food()).not.toHaveClass("max-sm:bg-primary-solid");
+    expect(categoryField()).toHaveTextContent("Choose a category");
+    await chooseCategory(user, "Transportation");
+    expect(categoryField()).toHaveTextContent("Transportation");
 
-    await user.click(screen.getByRole("radio", { name: "Food" }));
-    expect(food()).toHaveClass("max-sm:bg-primary-solid");
+    await user.click(categoryField());
+    expect(
+      screen.getByRole("option", { name: "Transportation" }),
+    ).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("option", { name: "Food" })).toHaveAttribute(
+      "aria-selected",
+      "false",
+    );
+  });
+
+  it("asks for a category on the dropdown itself when one is missing", async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn();
+    render(
+      <TransactionForm
+        accounts={accounts}
+        categories={categories}
+        today="2026-09-04"
+        defaultAccountId="cash"
+      />,
+      { wrapper: withSubmit(submit) },
+    );
+
+    await user.type(screen.getByLabelText("Amount in pesos"), "120");
+    await user.click(screen.getByRole("button", { name: /Record expense/ }));
+
+    expect(submit).not.toHaveBeenCalled();
+    expect(categoryField()).toHaveFocus();
+    expect(categoryField()).toHaveAttribute("aria-invalid", "true");
+    expect(categoryField()).toHaveAccessibleDescription(
+      "Choose a category to record this.",
+    );
+
+    await chooseCategory(user, "Food");
+    expect(categoryField()).not.toHaveAttribute("aria-invalid");
+    expect(
+      screen.queryByText("Choose a category to record this."),
+    ).not.toBeInTheDocument();
   });
 
   it("docks the record bar on phones only once there is an amount", async () => {

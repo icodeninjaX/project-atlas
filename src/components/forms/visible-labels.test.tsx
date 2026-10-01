@@ -109,7 +109,7 @@ describe("primary create forms", () => {
       expect(label).toHaveTextContent(option);
     }
     expectVisibleChoices("Paid from", ["Cash"]);
-    expectVisibleChoices("Category", ["Food"]);
+    expectVisibleLabel("Category");
     expectVisibleLabel("Amount in pesos");
     expectVisibleLabel("Merchant or source");
     expect(screen.getByRole("group", { name: "When" })).toContainElement(

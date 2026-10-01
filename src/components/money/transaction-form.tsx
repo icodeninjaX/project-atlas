@@ -13,7 +13,8 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { AccountLogo } from "@/components/money/account-visuals";
-import { CategoryBadge, CategoryIcon } from "@/components/money/category-icon";
+import { CategoryBadge } from "@/components/money/category-icon";
+import { CategorySelect } from "@/components/money/category-select";
 import { FlowAmount, MoneyAmount } from "@/components/money/money-amount";
 import {
   AmountField,
@@ -121,92 +122,6 @@ function TypeToggle({
           );
         })}
       </div>
-    </fieldset>
-  );
-}
-
-// Phones get wrapping pills: icon and full name on one line, so long names
-// never clamp and the list sits shorter. Tablet and up keep tiles. When large
-// text leaves the list too narrow for the icon disc, the pill drops it so the
-// name keeps the room.
-const CATEGORY_OPTION = {
-  base: "has-[:focus-visible]:ring-ring relative flex min-w-0 cursor-pointer items-center font-medium transition-[color,background-color,border-color,box-shadow,scale] duration-150 [-webkit-tap-highlight-color:transparent] has-[:focus-visible]:ring-2 motion-reduce:active:scale-100",
-  pill: "max-sm:min-h-11 max-sm:max-w-full max-sm:gap-2 max-sm:rounded-full max-sm:py-1.5 max-sm:pr-4 max-sm:pl-1.5 max-sm:text-sm max-sm:active:scale-[0.96] @max-[10.5rem]/categories:px-3",
-  tile: "sm:min-h-[4.75rem] sm:flex-col sm:justify-center sm:gap-1.5 sm:rounded-2xl sm:border sm:px-1 sm:py-2.5 sm:text-center sm:text-xs sm:leading-4 sm:active:scale-[0.97]",
-  selected:
-    "max-sm:bg-primary-solid max-sm:text-primary-solid-foreground max-sm:shadow-[0_6px_16px_-8px_var(--primary-solid)] sm:border-primary sm:bg-primary/10 sm:text-foreground",
-  idle: "max-sm:bg-muted max-sm:text-foreground/85 sm:border-border sm:bg-background/60 sm:text-muted-foreground sm:hover:bg-muted sm:hover:text-foreground",
-};
-
-const CATEGORY_ICON = {
-  base: "pointer-events-none grid shrink-0 place-items-center transition-colors max-sm:size-8 max-sm:rounded-full sm:size-9 sm:rounded-xl @max-[10.5rem]/categories:hidden",
-  selected:
-    "max-sm:bg-primary-solid-foreground/15 sm:bg-primary-solid sm:text-primary-solid-foreground",
-  idle: "max-sm:bg-card max-sm:text-foreground/75 sm:bg-muted sm:text-foreground/80",
-};
-
-function CategoryPicker({
-  categories,
-  value,
-  onChange,
-}: {
-  categories: TransactionFormCategory[];
-  value: string;
-  onChange: (categoryId: string) => void;
-}) {
-  return (
-    <fieldset className="min-w-0">
-      <legend className="text-sm font-semibold">Category</legend>
-      {categories.length === 0 ? (
-        <p className="text-muted-foreground mt-3 text-sm">
-          No categories for this type yet.
-        </p>
-      ) : (
-        // Rem-based tile columns: larger text means fewer, still-legible tiles.
-        <div className="@container/categories mt-3 flex flex-wrap gap-2 sm:grid sm:grid-cols-[repeat(auto-fill,minmax(min(100%,8rem),1fr))]">
-          {categories.map((category) => {
-            const selected = value === category.id;
-            return (
-              <label
-                key={category.id}
-                className={cn(
-                  CATEGORY_OPTION.base,
-                  CATEGORY_OPTION.pill,
-                  CATEGORY_OPTION.tile,
-                  selected ? CATEGORY_OPTION.selected : CATEGORY_OPTION.idle,
-                )}
-              >
-                {/* Covers the option so native validation points at it. */}
-                <input
-                  type="radio"
-                  name="categoryId"
-                  value={category.id}
-                  checked={selected}
-                  onChange={() => onChange(category.id)}
-                  required
-                  className="absolute inset-0 cursor-pointer appearance-none rounded-[inherit] outline-none"
-                />
-                <span
-                  className={cn(
-                    CATEGORY_ICON.base,
-                    selected ? CATEGORY_ICON.selected : CATEGORY_ICON.idle,
-                  )}
-                >
-                  <CategoryIcon
-                    icon={category.icon}
-                    categoryName={category.name}
-                    className="size-4 sm:size-[1.125rem]"
-                    aria-hidden="true"
-                  />
-                </span>
-                <span className="pointer-events-none min-w-0 [overflow-wrap:anywhere] hyphens-auto sm:line-clamp-2 sm:w-full">
-                  {category.name}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      )}
     </fieldset>
   );
 }
@@ -465,7 +380,7 @@ export function TransactionForm({
         ariaLabel="Amount in pesos"
         size={full ? "hero" : "compact"}
       />
-      <CategoryPicker
+      <CategorySelect
         categories={visibleCategories}
         value={categoryId}
         onChange={setCategoryId}
