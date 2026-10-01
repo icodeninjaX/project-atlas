@@ -193,4 +193,20 @@ describe("TransactionWorkspace", () => {
     expect(within(sheet).getByText("Delete this transaction?")).toBeVisible();
     expect(within(sheet).getByRole("button", { name: "Delete" })).toBeVisible();
   });
+
+  it("offers a floating new-transaction button while browsing history", () => {
+    render(<TransactionWorkspace {...props} />);
+
+    const add = screen.getByRole("button", { name: "New transaction" });
+    expect(add).toHaveClass("sm:hidden");
+    fireEvent.click(add);
+
+    expect(screen.getByTestId("record-form")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Record a transaction" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.queryByRole("button", { name: "New transaction" }),
+    ).not.toBeInTheDocument();
+  });
 });

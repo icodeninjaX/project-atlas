@@ -1,6 +1,11 @@
 "use client";
 
-import { ArrowDownUp, ArrowRight, ChevronDown } from "lucide-react";
+import {
+  ArrowDownUp,
+  ArrowRight,
+  ChevronDown,
+  WalletCards,
+} from "lucide-react";
 import {
   startTransition,
   useActionState,
@@ -87,7 +92,9 @@ function AccountEnd({
             size="md"
           />
         ) : (
-          <span className="bg-muted size-9 shrink-0 rounded-full sm:size-10" />
+          <span className="bg-muted text-muted-foreground grid size-9 shrink-0 place-items-center rounded-full sm:size-10">
+            <WalletCards className="size-4" aria-hidden="true" />
+          </span>
         )}
         <span className="min-w-0 flex-1">
           <span

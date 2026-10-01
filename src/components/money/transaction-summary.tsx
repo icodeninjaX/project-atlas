@@ -14,7 +14,8 @@ function FlowTile({
   positive?: boolean;
 }) {
   return (
-    <div className="border-border bg-background/60 min-w-0 rounded-2xl border p-4">
+    // Phones show plain stats; a box inside the card would only add noise.
+    <div className="border-border bg-background/60 min-w-0 rounded-2xl border p-4 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:p-0">
       <p className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
         <span
           className={cn(
@@ -151,7 +152,7 @@ export function TransactionSummary({
           </p>
         </div>
         <div className="grid min-w-0 gap-4">
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,8.5rem),1fr))] gap-3">
+          <div className="max-sm:border-border grid grid-cols-[repeat(auto-fit,minmax(min(100%,8.5rem),1fr))] gap-3 max-sm:gap-x-6 max-sm:gap-y-4 max-sm:border-t max-sm:pt-5">
             <FlowTile
               label="Money in"
               centavos={income}

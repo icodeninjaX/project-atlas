@@ -240,4 +240,25 @@ describe("TransactionForm", () => {
       expect.any(FormData),
     );
   });
+
+  it("docks the record bar on phones only once there is an amount", async () => {
+    const user = userEvent.setup();
+    render(
+      <TransactionForm
+        accounts={accounts}
+        categories={categories}
+        today="2026-09-04"
+      />,
+    );
+
+    const bar = () =>
+      screen.getByRole("button", { name: /Record expense/ }).parentElement!;
+    expect(bar()).not.toHaveClass("sticky");
+
+    await user.type(screen.getByLabelText("Amount in pesos"), "120");
+    expect(bar()).toHaveClass("sticky");
+
+    await user.clear(screen.getByLabelText("Amount in pesos"));
+    expect(bar()).not.toHaveClass("sticky");
+  });
 });

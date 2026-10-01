@@ -84,7 +84,7 @@ function TypeToggle({
   return (
     <fieldset>
       <legend className="sr-only">Transaction type</legend>
-      <div className="border-border bg-muted/70 mx-auto grid max-w-xs grid-cols-2 gap-1 rounded-full border p-1">
+      <div className="border-border bg-muted/70 mx-auto grid max-w-[17rem] grid-cols-2 gap-1 rounded-full border p-1">
         {TYPE_OPTIONS.map((option) => {
           const Icon = option.icon;
           const selected = value === option.value;
@@ -150,7 +150,7 @@ function CategoryPicker({
               <label
                 key={category.id}
                 className={cn(
-                  "has-[:focus-visible]:ring-ring relative flex min-h-[4.75rem] min-w-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border px-1 py-2.5 text-center text-[0.6875rem] leading-4 font-medium transition-colors has-[:focus-visible]:ring-2 sm:text-xs",
+                  "has-[:focus-visible]:ring-ring relative flex min-h-[4.75rem] min-w-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border px-1 py-2.5 text-center text-[0.6875rem] leading-4 font-medium transition-[color,background-color,border-color,scale] duration-150 [-webkit-tap-highlight-color:transparent] active:scale-[0.97] has-[:focus-visible]:ring-2 motion-reduce:active:scale-100 sm:text-xs",
                   selected
                     ? "border-primary bg-primary/10 text-foreground"
                     : "border-border bg-background/60 text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -234,7 +234,7 @@ function AccountPicker({
             <label
               key={account.id}
               className={cn(
-                "has-[:focus-visible]:ring-ring relative flex min-h-14 min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border py-2.5 pr-2 pl-3 transition-colors has-[:focus-visible]:ring-2",
+                "has-[:focus-visible]:ring-ring relative flex min-h-14 min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border py-2.5 pr-2 pl-3 transition-[color,background-color,border-color,scale] duration-150 [-webkit-tap-highlight-color:transparent] active:scale-[0.98] has-[:focus-visible]:ring-2 motion-reduce:active:scale-100",
                 selected
                   ? "border-primary bg-primary/10"
                   : "border-border bg-background/60 hover:bg-muted",
@@ -512,14 +512,23 @@ export function TransactionForm({
     </div>
   );
 
+  // Phones: once there is an amount, the summary docks as an action bar,
+  // so a quick entry is amount, category, record without scrolling past
+  // the details. Before that it waits at the end of the form instead of
+  // covering the category tiles.
+  const docked = !full || isEdit || validAmount;
   const summary = (
     <div
       className={cn(
-        // Phones: the summary docks as an action bar, so a quick entry is
-        // amount, category, record — without scrolling past the details.
-        "sticky z-10 -mx-2 min-w-0 space-y-2 rounded-[1.25rem] border p-2 shadow-[0_12px_32px_-12px_rgb(7_10_15/0.45)] backdrop-blur-md",
+        "z-10 min-w-0 space-y-2",
+        docked &&
+          "sticky -mx-2 rounded-[1.25rem] border p-2 shadow-[0_12px_32px_-12px_rgb(7_10_15/0.45)] backdrop-blur-md",
         full
-          ? "bg-card/90 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] group-data-[keyboard=open]/shell:bottom-2 lg:static lg:m-0 lg:space-y-3 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none"
+          ? cn(
+              docked &&
+                "bg-card/90 max-lg:animate-analyst-rise bottom-[calc(5.25rem+env(safe-area-inset-bottom))] group-data-[keyboard=open]/shell:bottom-2",
+              "lg:static lg:m-0 lg:space-y-3 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none",
+            )
           : "bg-background/90 bottom-0",
       )}
     >

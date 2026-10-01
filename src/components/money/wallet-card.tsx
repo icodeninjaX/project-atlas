@@ -66,13 +66,13 @@ export function WalletCard({
         <span className="min-w-0 flex-1 pt-0.5">
           <span
             className={cn(
-              "block font-semibold tracking-[-0.015em] break-words",
+              "atlas-wallet-line block font-semibold tracking-[-0.015em] break-words",
               large ? "text-base sm:text-lg" : "text-[0.9375rem] leading-5",
             )}
           >
             {account.name}
           </span>{" "}
-          <span className="mt-0.5 block text-xs leading-4 font-medium break-words text-white/85">
+          <span className="atlas-wallet-line mt-0.5 block text-xs leading-4 font-medium break-words text-white/85">
             {typeLabel}
             {account.institution ? ` · ${account.institution}` : ""}
           </span>

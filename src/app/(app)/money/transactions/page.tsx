@@ -178,6 +178,7 @@ export default async function TransactionsPage({
         eyebrow="Money / Transactions"
         title="Money movement"
         description="Income and expenses change balances. Transfers stay separate and never inflate either total."
+        compactOnMobile
       />
       <MoneyNavigation currentHref="/money/transactions" />
       <TransactionWorkspace

@@ -288,6 +288,94 @@ pre {
   filter: grayscale(1);
 }
 
+/* Account cards show the manage affordance; only a stacked strip swaps it
+   for the balance it would otherwise hide. */
+.atlas-wallet-strip-balance {
+  display: none;
+}
+
+.atlas-wallet-stack {
+  container: wallet-stack / inline-size;
+}
+
+/* Phones: account cards overlap like cards in a wallet. Every card has the
+   same height so each one leaves exactly --wallet-peek of itself visible:
+   enough for its logo, name, and balance. Later cards sit on top, and the
+   last is shown whole. Heights are in rem so the stack scales with text. */
+@media (width < 40rem) {
+  .atlas-wallet-stack {
+    --wallet-card-height: 10.75rem;
+    --wallet-peek: 4.5rem;
+  }
+
+  .atlas-wallet-stack .atlas-wallet-card {
+    height: var(--wallet-card-height);
+  }
+
+  .atlas-wallet-stack > li + li {
+    margin-top: calc(var(--wallet-peek) - var(--wallet-card-height));
+  }
+
+  .atlas-wallet-stack > li:not(:last-child) .atlas-wallet-strip-balance {
+    display: block;
+  }
+
+  .atlas-wallet-stack > li:not(:last-child) .atlas-wallet-more {
+    display: none;
+  }
+
+  /* A strip only has room for one line each of name and details. */
+  .atlas-wallet-stack .atlas-wallet-line {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* A soft shadow on each card's top edge separates it from the one it
+     covers. */
+  .atlas-wallet-stack > li + li .atlas-wallet-card {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.22),
+      inset 0 0 0 1px rgb(255 255 255 / 0.07),
+      0 -10px 24px -14px rgb(7 10 15 / 0.7);
+  }
+}
+
+/* A strip needs about 18rem for logo, name, and balance side by side. With
+   large text (rem here follows the root size) the cards are too narrow for
+   that, so they go back to whole cards in a column rather than hide names
+   or clip balances. */
+@container wallet-stack (width < 18rem) {
+  .atlas-wallet-stack .atlas-wallet-card {
+    height: auto;
+  }
+
+  .atlas-wallet-stack > li + li {
+    margin-top: 0.75rem;
+  }
+
+  .atlas-wallet-stack > li:not(:last-child) .atlas-wallet-strip-balance {
+    display: none;
+  }
+
+  .atlas-wallet-stack > li:not(:last-child) .atlas-wallet-more {
+    display: grid;
+  }
+
+  .atlas-wallet-stack .atlas-wallet-line {
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .atlas-wallet-stack > li + li .atlas-wallet-card {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.2),
+      inset 0 0 0 1px rgb(255 255 255 / 0.07),
+      0 1px 2px rgb(7 10 15 / 0.2),
+      0 18px 36px -22px var(--wallet-shadow);
+  }
+}
+
 ::selection {
   background: color-mix(in srgb, var(--primary) 35%, transparent);
 }

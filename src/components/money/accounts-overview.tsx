@@ -1,5 +1,6 @@
 import { ArrowLeftRight, Plus } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { MoneyAmount } from "@/components/money/money-amount";
 import { Button } from "@/components/ui/button";
 import { TooltipHint } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import {
   formatShare,
   type AllocationBucketId,
 } from "@/lib/money/account-types";
+import { cn } from "@/lib/utils";
 
 /** Fixed per bucket so a color always means the same kind of money. */
 const BUCKET_COLORS: Record<AllocationBucketId, string> = {
@@ -103,11 +105,14 @@ function AllocationBar({
 /** The accounts page lead: one total, how it is split, and the next moves. */
 export function AccountsOverview({
   accounts,
+  mobileActions,
 }: {
   accounts: ReadonlyArray<{
     account_type: string;
     current_balance_centavos: number;
   }>;
+  /** Quick actions shown in place of the buttons below `sm`. */
+  mobileActions?: ReactNode;
 }) {
   const total = accounts.reduce(
     (sum, account) => sum + Number(account.current_balance_centavos),
@@ -123,25 +128,47 @@ export function AccountsOverview({
         aria-hidden="true"
         className="from-primary/12 pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b to-transparent"
       />
-      <div className="relative grid gap-8 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center lg:gap-10">
+      <div className="relative grid gap-7 p-5 sm:gap-8 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center lg:gap-10">
         <div className="min-w-0">
-          <h2
-            id="accounts-total"
-            className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
-          >
-            Total balance
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2
+              id="accounts-total"
+              className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+            >
+              Total balance
+            </h2>
+            {mobileActions ? (
+              <span className="border-border bg-background/60 text-muted-foreground rounded-full border px-2.5 py-0.5 text-[0.6875rem] font-medium sm:hidden">
+                {accounts.length === 1
+                  ? "1 account"
+                  : `${accounts.length} accounts`}
+              </span>
+            ) : null}
+          </div>
           <p className="mt-3 min-w-0 font-mono text-[clamp(2.375rem,11vw,3.5rem)] leading-none font-semibold tracking-[-0.045em] [overflow-wrap:anywhere]">
             <MoneyAmount centavos={total} quietCentavos />
           </p>
-          <p className="text-muted-foreground mt-3 text-sm leading-6">
+          <p
+            className={cn(
+              "text-muted-foreground mt-3 text-sm leading-6",
+              mobileActions && "max-sm:hidden",
+            )}
+          >
             Across{" "}
             {accounts.length === 1
               ? "1 active account"
               : `${accounts.length} active accounts`}
             . Opening balances plus every recorded movement.
           </p>
-          <div className="mt-5 flex flex-wrap gap-2 [&>*]:grow [&>*]:whitespace-nowrap sm:[&>*]:grow-0">
+          {mobileActions ? (
+            <div className="mt-6 sm:hidden">{mobileActions}</div>
+          ) : null}
+          <div
+            className={cn(
+              "mt-5 flex flex-wrap gap-2 [&>*]:grow [&>*]:whitespace-nowrap sm:[&>*]:grow-0",
+              mobileActions && "max-sm:hidden",
+            )}
+          >
             <Button asChild>
               <Link href="/money/transactions?create=true">
                 <Plus className="size-4" aria-hidden="true" />

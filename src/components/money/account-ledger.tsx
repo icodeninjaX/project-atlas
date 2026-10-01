@@ -7,6 +7,7 @@ import {
   type AccountActivityItem,
   type SheetAccount,
 } from "@/components/money/account-sheet";
+import { MoneyAmount } from "@/components/money/money-amount";
 import { WalletCard, WalletCardBadge } from "@/components/money/wallet-card";
 import { formatShare } from "@/lib/money/account-types";
 
@@ -45,7 +46,10 @@ export function AccountLedger({
             Your accounts
           </h2>
           <p className="text-muted-foreground mt-0.5 text-sm">
-            Open a card to see its activity, reconcile it, or edit it.
+            <span className="sm:hidden">Tap a card to manage it.</span>
+            <span className="max-sm:hidden">
+              Open a card to see its activity, reconcile it, or edit it.
+            </span>
           </p>
         </div>
         <p className="text-muted-foreground font-mono text-xs">
@@ -53,7 +57,9 @@ export function AccountLedger({
         </p>
       </div>
 
-      <ul className="mt-4 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+      {/* Phones stack the cards like a wallet: each shows a strip with its
+          name and balance, and the last one shows in full (globals.css). */}
+      <ul className="atlas-wallet-stack mt-4 grid grid-cols-1 gap-3 max-sm:gap-0 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
         {accounts.map((account) => {
           const share = shareOf(account);
           return (
@@ -62,20 +68,35 @@ export function AccountLedger({
                 type="button"
                 aria-haspopup="dialog"
                 onClick={() => setSelectedId(account.id)}
-                className="group focus-visible:ring-ring focus-visible:ring-offset-background block w-full rounded-[1.25rem] text-left transition-transform duration-200 ease-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                className="group focus-visible:ring-ring focus-visible:ring-offset-background relative block w-full rounded-[1.25rem] text-left transition-transform duration-200 ease-out [-webkit-tap-highlight-color:transparent] hover:-translate-y-0.5 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100"
               >
                 {/* Spaces sit between elements: names are joined without
                     them, whatever the visual layout. */}
                 <span className="sr-only">Manage</span>{" "}
                 <WalletCard
                   account={account}
+                  // globals.css decides which of these a card shows: a
+                  // stacked strip needs its balance, a whole card the
+                  // manage affordance.
                   corner={
-                    <span
-                      aria-hidden="true"
-                      className="grid size-8 shrink-0 place-items-center rounded-full bg-white/12 ring-1 ring-white/20 transition-colors group-hover:bg-white/22"
-                    >
-                      <Ellipsis className="size-4" />
-                    </span>
+                    <>
+                      {/* Repeats the card's own balance, which assistive
+                          tech already reads. */}
+                      <span
+                        aria-hidden="true"
+                        className="atlas-wallet-strip-balance shrink-0 pt-0.5 font-mono text-[0.9375rem] leading-5 font-semibold tracking-[-0.02em]"
+                      >
+                        <MoneyAmount
+                          centavos={Number(account.current_balance_centavos)}
+                        />
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="atlas-wallet-more grid size-8 shrink-0 place-items-center rounded-full bg-white/12 ring-1 ring-white/20 transition-colors group-hover:bg-white/22"
+                      >
+                        <Ellipsis className="size-4" />
+                      </span>
+                    </>
                   }
                   footer={
                     share ? (

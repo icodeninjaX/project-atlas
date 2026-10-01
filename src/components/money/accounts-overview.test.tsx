@@ -46,4 +46,27 @@ describe("AccountsOverview", () => {
       "Shares leave out −₱250.00 in overdrawn accounts",
     );
   });
+
+  it("swaps the buttons for round quick actions on phones", () => {
+    render(
+      <AccountsOverview
+        accounts={[
+          { account_type: "cash", current_balance_centavos: 30_000 },
+          { account_type: "savings", current_balance_centavos: 70_000 },
+        ]}
+        mobileActions={<a href="/money/transfers">Phone actions</a>}
+      />,
+    );
+
+    expect(screen.getByText("2 accounts")).toHaveClass("sm:hidden");
+    expect(
+      screen.getByRole("link", { name: "Phone actions" }).parentElement,
+    ).toHaveClass("sm:hidden");
+    expect(
+      screen.getByRole("link", { name: "Record transaction" }).parentElement,
+    ).toHaveClass("max-sm:hidden");
+    expect(
+      screen.getByText("Across 2 active accounts", { exact: false }),
+    ).toHaveClass("max-sm:hidden");
+  });
 });
