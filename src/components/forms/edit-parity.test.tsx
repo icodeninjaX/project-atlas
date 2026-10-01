@@ -113,7 +113,9 @@ describe("edit form parity", () => {
     expect(screen.getByRole("radio", { name: "Maya" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Cash" })).not.toBeChecked();
     expect(screen.getByRole("radio", { name: "Expense" })).toBeChecked();
-    expect(screen.getByRole("radio", { name: "Food" })).toBeChecked();
+    expect(
+      screen.getByRole("combobox", { name: "Category" }),
+    ).toHaveTextContent("Food");
     expect(screen.getByLabelText("Amount in pesos")).toHaveValue("125.50");
     expect(screen.getByLabelText("Transaction date")).toHaveValue("2026-08-01");
     expect(screen.getByLabelText("Merchant or source")).toHaveValue("Grocery");

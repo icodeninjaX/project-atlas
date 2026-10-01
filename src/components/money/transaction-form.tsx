@@ -13,7 +13,8 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { AccountLogo } from "@/components/money/account-visuals";
-import { CategoryBadge, CategoryIcon } from "@/components/money/category-icon";
+import { CategoryBadge } from "@/components/money/category-icon";
+import { CategorySelect } from "@/components/money/category-select";
 import { FlowAmount, MoneyAmount } from "@/components/money/money-amount";
 import {
   AmountField,
@@ -121,74 +122,6 @@ function TypeToggle({
           );
         })}
       </div>
-    </fieldset>
-  );
-}
-
-function CategoryPicker({
-  categories,
-  value,
-  onChange,
-}: {
-  categories: TransactionFormCategory[];
-  value: string;
-  onChange: (categoryId: string) => void;
-}) {
-  return (
-    <fieldset className="min-w-0">
-      <legend className="text-sm font-semibold">Category</legend>
-      {categories.length === 0 ? (
-        <p className="text-muted-foreground mt-3 text-sm">
-          No categories for this type yet.
-        </p>
-      ) : (
-        // Rem-based columns: larger text means fewer, still-legible tiles.
-        <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(min(100%,5.5rem),1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(min(100%,8rem),1fr))]">
-          {categories.map((category) => {
-            const selected = value === category.id;
-            return (
-              <label
-                key={category.id}
-                className={cn(
-                  "has-[:focus-visible]:ring-ring relative flex min-h-[4.75rem] min-w-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border px-1 py-2.5 text-center text-[0.6875rem] leading-4 font-medium transition-[color,background-color,border-color,scale] duration-150 [-webkit-tap-highlight-color:transparent] active:scale-[0.97] has-[:focus-visible]:ring-2 motion-reduce:active:scale-100 sm:text-xs",
-                  selected
-                    ? "border-primary bg-primary/10 text-foreground"
-                    : "border-border bg-background/60 text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-              >
-                {/* Covers the tile so native validation points at it. */}
-                <input
-                  type="radio"
-                  name="categoryId"
-                  value={category.id}
-                  checked={selected}
-                  onChange={() => onChange(category.id)}
-                  required
-                  className="absolute inset-0 cursor-pointer appearance-none rounded-2xl outline-none"
-                />
-                <span
-                  className={cn(
-                    "pointer-events-none grid size-9 place-items-center rounded-xl transition-colors",
-                    selected
-                      ? "bg-primary-solid text-primary-solid-foreground"
-                      : "bg-muted text-foreground/80",
-                  )}
-                >
-                  <CategoryIcon
-                    icon={category.icon}
-                    categoryName={category.name}
-                    className="size-[1.125rem]"
-                    aria-hidden="true"
-                  />
-                </span>
-                <span className="pointer-events-none line-clamp-2 w-full [overflow-wrap:anywhere] hyphens-auto">
-                  {category.name}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      )}
     </fieldset>
   );
 }
@@ -447,7 +380,7 @@ export function TransactionForm({
         ariaLabel="Amount in pesos"
         size={full ? "hero" : "compact"}
       />
-      <CategoryPicker
+      <CategorySelect
         categories={visibleCategories}
         value={categoryId}
         onChange={setCategoryId}
@@ -515,7 +448,7 @@ export function TransactionForm({
   // Phones: once there is an amount, the summary docks as an action bar,
   // so a quick entry is amount, category, record without scrolling past
   // the details. Before that it waits at the end of the form instead of
-  // covering the category tiles.
+  // covering the categories.
   const docked = !full || isEdit || validAmount;
   const summary = (
     <div
