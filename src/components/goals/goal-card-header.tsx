@@ -157,7 +157,7 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
               type="button"
               variant="ghost"
               size="icon"
-              className="-mr-1 size-8 min-h-8 rounded-lg sm:size-8"
+              className="-mt-1.5 -mr-2 rounded-lg sm:-mt-0 sm:-mr-1 sm:size-8 sm:min-h-8"
               aria-label={`Open actions for goal ${goal.title}`}
               aria-expanded={menuOpen}
               aria-haspopup="menu"
@@ -173,7 +173,7 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
             aria-label={`Actions for goal ${goal.title}`}
             hidden={!menuOpen}
             onKeyDown={moveMenuFocus}
-            className="absolute top-9 right-0 z-30 w-48 rounded-2xl border border-slate-300 bg-white p-1.5 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/10 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:shadow-[0_20px_55px_rgba(0,0,0,0.75)] dark:ring-white/10"
+            className="absolute top-11 right-0 z-30 w-48 rounded-2xl border border-slate-300 bg-white p-1.5 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/10 sm:top-9 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:shadow-[0_20px_55px_rgba(0,0,0,0.75)] dark:ring-white/10"
           >
             <Button
               type="button"
@@ -205,7 +205,7 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
           </div>
         </div>
       </div>
-      <h2 className="mt-4 text-lg leading-snug font-semibold tracking-[-0.02em]">
+      <h2 className="mt-3 text-[1.0625rem] leading-snug font-semibold tracking-[-0.02em] sm:mt-4 sm:text-lg">
         {goal.title}
       </h2>
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">

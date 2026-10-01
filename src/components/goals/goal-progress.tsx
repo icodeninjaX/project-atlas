@@ -29,12 +29,12 @@ export function GoalProgress({
         : `${completedMilestones} of ${totalMilestones} milestones completed`;
 
   return (
-    <div className="border-border/60 bg-muted/40 mt-5 rounded-xl border p-3.5">
+    <div className="border-border/60 bg-muted/40 mt-4 rounded-xl border p-3 sm:mt-5 sm:p-3.5">
       <div className="flex items-end justify-between gap-3">
         <span className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
           Progress
         </span>
-        <span className="text-foreground font-mono text-2xl leading-none font-semibold tracking-tight tabular-nums">
+        <span className="text-foreground font-mono text-xl leading-none font-semibold tracking-tight tabular-nums sm:text-2xl">
           {progressPercent}%
         </span>
       </div>

@@ -102,24 +102,27 @@ export default async function GoalsPage({
         }
       />
       {goals.length > 0 ? (
-        <dl className="mt-6 grid grid-cols-3 gap-2 sm:gap-4">
+        <dl className="mt-5 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-4">
           {stats.map(({ label, value, icon: Icon }) => (
             <div
               key={label}
-              className="border-border bg-card/80 rounded-2xl border p-3 shadow-sm backdrop-blur sm:p-4"
+              className="border-border bg-card/80 flex flex-col-reverse justify-end gap-1 rounded-2xl border p-3 shadow-sm backdrop-blur sm:block sm:p-4"
             >
-              <dt className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.12em] uppercase sm:text-[11px]">
-                <Icon className="text-primary size-3.5" aria-hidden="true" />
+              <dt className="text-muted-foreground flex items-center gap-1.5 text-[9px] leading-tight font-semibold tracking-[0.1em] uppercase min-[400px]:text-[10px] sm:text-[11px] sm:tracking-[0.12em]">
+                <Icon
+                  className="text-primary hidden size-3.5 shrink-0 sm:block"
+                  aria-hidden="true"
+                />
                 {label}
               </dt>
-              <dd className="mt-1.5 font-mono text-xl font-semibold tracking-tight tabular-nums sm:text-3xl">
+              <dd className="font-mono text-xl leading-none font-semibold tracking-tight tabular-nums sm:mt-1.5 sm:text-3xl">
                 {value}
               </dd>
             </div>
           ))}
         </dl>
       ) : null}
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <div className="mt-5 grid gap-4 sm:mt-6 sm:gap-5 lg:grid-cols-2">
         {goals.length === 0 ? (
           <div className="border-border grid min-h-60 place-items-center rounded-2xl border border-dashed text-center lg:col-span-2">
             <div>
@@ -146,13 +149,13 @@ export default async function GoalsPage({
               <Card
                 key={goal.id}
                 id={`goal-${goal.id}`}
-                className={`group/goal before:from-primary/50 relative overflow-hidden rounded-3xl shadow-sm transition duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:via-cyan-400/60 before:to-transparent hover:-translate-y-0.5 hover:shadow-lg motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${
+                className={`group/goal before:from-primary/50 relative rounded-2xl shadow-sm transition duration-200 before:absolute before:inset-x-6 before:top-0 before:h-px before:bg-gradient-to-r before:via-cyan-400/60 before:to-transparent motion-reduce:transition-none sm:rounded-3xl [@media(hover:hover)]:hover:-translate-y-0.5 [@media(hover:hover)]:hover:shadow-lg motion-reduce:[@media(hover:hover)]:hover:translate-y-0 ${
                   query.highlight === goal.id
                     ? "ring-primary/60 bg-primary/5 ring-2"
                     : ""
                 }`}
               >
-                <CardContent className="p-5 sm:p-6">
+                <CardContent className="p-4 sm:p-6">
                   <GoalCardHeader goal={goal} />
                   <GoalProgress
                     goalTitle={goal.title}
