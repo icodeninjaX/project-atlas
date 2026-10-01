@@ -47,13 +47,11 @@ export function taskReminderDeliveryKey(task: ScheduledTaskReminder) {
   return `task:${task.id}:${task.scheduled_for}:${task.scheduled_time}`;
 }
 
-export function buildTaskReminderPayload(task: ScheduledTaskReminder) {
+export function buildTaskReminderPayload() {
   return {
     title: "Time to focus",
-    body: task.estimated_minutes
-      ? `${task.title} · ${task.estimated_minutes} min`
-      : task.title,
+    body: "Open ATLAS to see your scheduled task.",
     url: "/tasks?view=today",
-    tag: `atlas-task-${task.id}`,
+    tag: "atlas-task-reminder",
   };
 }

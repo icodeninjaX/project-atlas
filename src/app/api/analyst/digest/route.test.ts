@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DIGEST_QUESTION } from "@/lib/analyst/intelligence/digest";
 
 vi.mock("server-only", () => ({}));
+const assurance = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth/assurance", () => ({ hasRequiredAssurance: assurance }));
 const state = vi.hoisted(() => ({
   user: { id: "00000000-0000-4000-8000-00000000000a" } as { id: string } | null,
   reservation: { status: "reserved", request_id: 7 } as Record<string, unknown>,
@@ -114,6 +116,7 @@ const result = (status = "answered", findings = 1) => ({
 });
 
 beforeEach(() => {
+  assurance.mockReset().mockResolvedValue(true);
   vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-09-24T04:00:00Z") });
   process.env.ATLAS_ANALYST_V2 = "1";
   process.env.OPENAI_API_KEY = "sk-synthetic";
@@ -296,4 +299,11 @@ describe("the month's summary route", () => {
       expect.objectContaining({ state: "ready", body: { status: "error" } }),
     ]);
   });
+});
+
+it("rejects incomplete MFA before reading a cached digest or making AI calls", async () => {
+  assurance.mockResolvedValue(false);
+  expect((await post({ consent })).status).toBe(403);
+  expect(state.rpc).not.toHaveBeenCalled();
+  expect(state.run).not.toHaveBeenCalled();
 });

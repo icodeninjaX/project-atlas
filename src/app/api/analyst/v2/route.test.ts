@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+const assurance = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth/assurance", () => ({ hasRequiredAssurance: assurance }));
 const state = vi.hoisted(() => ({
   user: { id: "00000000-0000-4000-8000-00000000000a" } as { id: string } | null,
   reservation: { status: "reserved", request_id: 7 } as Record<string, unknown>,
@@ -45,6 +47,7 @@ const post = (body: unknown) =>
   );
 
 beforeEach(() => {
+  assurance.mockReset().mockResolvedValue(true);
   process.env.ATLAS_ANALYST_V2 = "1";
   process.env.OPENAI_API_KEY = "sk-synthetic";
   state.user = { id: "00000000-0000-4000-8000-00000000000a" };
@@ -309,4 +312,14 @@ describe("Analyst V2 quota settlement (AI-07)", () => {
     await vi.waitFor(() => expect(finishes()).toHaveLength(1));
     expect(finishes()[0]![1]).toMatchObject({ p_outcome: "insufficient" });
   });
+});
+
+it("rejects incomplete MFA before quota or AI work", async () => {
+  assurance.mockResolvedValue(false);
+  expect(
+    (await post({ question: "How much did I spend this month?", consent }))
+      .status,
+  ).toBe(403);
+  expect(state.rpc).not.toHaveBeenCalled();
+  expect(state.run).not.toHaveBeenCalled();
 });

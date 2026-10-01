@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+const assurance = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth/assurance", () => ({ hasRequiredAssurance: assurance }));
 const state = vi.hoisted(() => ({
   user: { id: "00000000-0000-4000-8000-00000000000a" } as { id: string } | null,
   list: vi.fn(),
@@ -30,6 +32,7 @@ const post = (body: string) =>
   );
 
 beforeEach(() => {
+  assurance.mockReset().mockResolvedValue(true);
   process.env.ATLAS_ANALYST_V2 = "1";
   state.user = { id: "00000000-0000-4000-8000-00000000000a" };
   state.list.mockReset();
@@ -95,4 +98,22 @@ describe("Analyst memory endpoints", () => {
       "m1",
     ]);
   });
+});
+
+it("rejects incomplete MFA for every memory operation", async () => {
+  assurance.mockResolvedValue(false);
+  expect((await GET()).status).toBe(403);
+  expect(
+    (await post(JSON.stringify({ text: "Saving for a laptop" }))).status,
+  ).toBe(403);
+  expect(
+    (
+      await DELETE(new Request("http://localhost"), {
+        params: Promise.resolve({ id: "m1" }),
+      })
+    ).status,
+  ).toBe(403);
+  expect(state.list).not.toHaveBeenCalled();
+  expect(state.save).not.toHaveBeenCalled();
+  expect(state.remove).not.toHaveBeenCalled();
 });

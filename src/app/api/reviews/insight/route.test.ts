@@ -18,6 +18,8 @@ const rows: {
   preference: Record<string, unknown> | null;
 } = { stored: [], preference: null };
 vi.mock("server-only", () => ({}));
+const assurance = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth/assurance", () => ({ hasRequiredAssurance: assurance }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 vi.mock("@/lib/reviews/insight", () => ({
   WEEKLY_INSIGHT_QUESTIONS: {
@@ -45,6 +47,7 @@ const valid = { dataSharingAcknowledged: true };
 const item = { id: "expense_centavos.2026-09-21", metric: "Recorded expenses" };
 
 beforeEach(() => {
+  assurance.mockReset().mockResolvedValue(true);
   vi.clearAllMocks();
   process.env.OPENAI_API_KEY = "test-key";
   mocks.getUser.mockResolvedValue({
@@ -319,4 +322,12 @@ describe("weekly insight route", () => {
     });
     expect(mocks.insert).not.toHaveBeenCalled();
   });
+});
+
+it("rejects incomplete MFA before private reads or AI work", async () => {
+  assurance.mockResolvedValue(false);
+  expect((await POST(request(valid))).status).toBe(403);
+  expect(mocks.from).not.toHaveBeenCalled();
+  expect(mocks.rpc).not.toHaveBeenCalled();
+  expect(mocks.answer).not.toHaveBeenCalled();
 });

@@ -1,4 +1,5 @@
 import "server-only";
+import { hasRequiredAssurance } from "@/lib/auth/assurance";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { freePoolFor, type FreePool } from "./pools";
@@ -95,6 +96,8 @@ export async function meteredOpenAIFetch(
     data: { user },
   } = await session.auth.getUser();
   if (!user) throw new PoolMeterError("unauthenticated");
+  if (!(await hasRequiredAssurance(session)))
+    throw new PoolMeterError("mfa_required");
   type Reservation = {
     status?: string;
     reservation_id?: number;

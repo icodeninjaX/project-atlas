@@ -1,3 +1,4 @@
+import { hasRequiredAssurance } from "@/lib/auth/assurance";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { resolveAnalystModel } from "@/lib/ai/models";
@@ -62,6 +63,8 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (authError || !user)
     return json({ error: "Sign in to use Analyst." }, 401);
+  if (!(await hasRequiredAssurance(supabase)))
+    return json({ error: "MFA required" }, 403);
   const text = await request.text();
   if (text.length > 4_000) return json({ error: "Request is too large." }, 413);
   let raw: unknown;

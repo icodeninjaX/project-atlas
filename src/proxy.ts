@@ -1,9 +1,19 @@
+import { hasRequiredAssurance } from "@/lib/auth/assurance";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getPublicSupabaseConfig } from "@/lib/env";
 
 const protectedPagePrefixes = [
   "/dashboard",
+  "/timeline",
+  "/history",
+  "/capture",
+  "/analyst",
+  "/knowledge",
+  "/decisions",
+  "/graph",
+  "/runway",
+  "/signals",
   "/onboarding",
   "/career",
   "/reviews",
@@ -15,7 +25,14 @@ const protectedPagePrefixes = [
   "/tasks",
 ];
 
-const protectedApiPrefixes = ["/api/export", "/api/offline-sync"];
+const protectedApiPrefixes = [
+  "/api/export",
+  "/api/offline-sync",
+  "/api/timeline",
+  "/api/analyst",
+  "/api/capture",
+  "/api/reviews",
+];
 
 function matchesRoutePrefix(pathname: string, prefixes: string[]) {
   return prefixes.some(
@@ -77,9 +94,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && (isProtectedPage || isProtectedApi)) {
-    const { data: assurance } =
-      await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (assurance?.nextLevel === "aal2" && assurance.currentLevel !== "aal2") {
+    if (!(await hasRequiredAssurance(supabase))) {
       if (isProtectedApi) {
         return NextResponse.json({ error: "MFA required" }, { status: 403 });
       }

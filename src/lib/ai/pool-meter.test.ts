@@ -7,6 +7,8 @@ import {
 } from "./pool-meter";
 
 vi.mock("server-only", () => ({}));
+const assurance = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth/assurance", () => ({ hasRequiredAssurance: assurance }));
 const supabase = vi.hoisted(() => ({
   rpc: vi.fn(),
   statusRpc: vi.fn(),
@@ -42,6 +44,7 @@ const settleCalls = () =>
   supabase.rpc.mock.calls.filter(([name]) => name === "settle_ai_pool_tokens");
 
 beforeEach(() => {
+  assurance.mockReset().mockResolvedValue(true);
   delete process.env.OPENAI_ADMIN_KEY;
   usage.sync.mockReset();
   usage.sync.mockResolvedValue("fresh");
@@ -399,4 +402,15 @@ describe("free daily pool meter", () => {
       ),
     ).toHaveLength(1);
   });
+});
+
+it("blocks incomplete MFA before privileged quota, usage refresh and provider send", async () => {
+  assurance.mockResolvedValue(false);
+  const fetch = vi.fn();
+  await expect(
+    meteredOpenAIFetch(url, init, options(fetch)),
+  ).rejects.toMatchObject({ reason: "mfa_required" });
+  expect(supabase.rpc).not.toHaveBeenCalled();
+  expect(usage.sync).not.toHaveBeenCalled();
+  expect(fetch).not.toHaveBeenCalled();
 });

@@ -10,13 +10,23 @@ Session controls use explicit Supabase scopes: `local` for this device,
 `others` for every other session, and `global` only for the confirmed
 everywhere action. Accounts with a verified TOTP factor must reach AAL2 before
 private pages and protected APIs open; the authenticated layout repeats this
-check as defense in depth.
+check as defense in depth. Server assurance checks pass the session JWT to
+Supabase Auth so enrollment is verified remotely rather than taken from mutable
+cookie user data. Password reconfirmation uses an isolated client and preserves
+the original session's AAL2 cookies.
 
 ## Authorization and RLS
 
 Every exposed table has RLS enabled and forced. Separate SELECT, INSERT, UPDATE, and DELETE policies compare the owner column with `(select auth.uid())`; update policies use both `USING` and `WITH CHECK`. Profiles compare `id` with the authenticated user.
 
 Owner columns, foreign keys, common status/date filters, and search text have supporting indexes. Composite ownership foreign keys prevent cross-user relationships even when an attacker guesses a UUID.
+
+Migration `20261001094000_enforce_mfa_data_access.sql` adds restrictive MFA
+policies to every existing private table and explicit checks to all nine
+authenticated security-definer RPCs. A current verified factor requires AAL2;
+accounts without verified factors retain normal access. New private tables and
+privileged RPCs must retain this enforcement. Apply this migration with the
+application release; application checks alone do not protect direct data access.
 
 Views and ordinary callable functions use `security_invoker`. Privileged trigger
 functions and the Universal Capture quota function use a fixed empty search
@@ -55,14 +65,19 @@ code.
 Push subscriptions are owner-scoped with forced RLS. Delivery receipts have no
 browser grants and prevent duplicate daily sends. The cron route requires
 `CRON_SECRET`, only sends when actionable items exist, honors quiet hours, and
-removes expired endpoints. Notification payloads contain counts and route
-links, not private record contents or monetary values.
+removes expired endpoints. Both delivery routes validate stored destinations
+against browser push providers and use a 10-second request timeout. Validation
+also rejects URL authority forms interpreted differently by the delivery library.
+Notification payloads contain generic text and fixed route links, without task
+titles, record identifiers, counts, or monetary values. Push subscriptions can
+outlive an Auth session, so private details are available only after sign-in.
+Provider messages already queued before this release cannot be recalled.
 
 ## Threat assumptions and rate limiting
 
 RLS is the final data boundary even if a route or client query is incorrect. UUIDs are not treated as secrets. The application assumes Supabase Auth and PostgreSQL are available and correctly configured.
 
-Vercel Firewall or an equivalent edge limiter should restrict repeated login, recovery, export, and future deletion requests by IP and account signal. Supabase Auth’s configured rate limits remain enabled. Rate limiting is deployment infrastructure, not an in-memory application map.
+Vercel Firewall or an equivalent edge limiter should restrict repeated login, recovery, export, and future deletion requests by IP and account signal. Hosted Supabase Auth rate-limit values have not been independently verified. Rate limiting is deployment infrastructure, not an in-memory application map.
 
 ## Verification
 
@@ -73,9 +88,16 @@ Implemented checks:
 - pgTAP debt mutation behavior
 - server-derived ownership on mutations
 
-Not yet verified locally: migration execution and pgTAP, because Docker Desktop
-was unavailable and no linked disposable project was supplied. The Supabase
-CLI schema-lint command was checked but needs a running local database or a
-linked branch.
+On 2026-10-01, all 26 pgTAP suites (316 assertions) passed against an isolated
+local database with synthetic users. The live local Auth and browser test
+verified password-only MFA rejection, successful TOTP verification, no-factor
+compatibility, and cross-user isolation. The application also passed 1,203
+enabled unit tests, lint, type checking, and a production build. The dependency
+audit reported zero known vulnerabilities. All ten authenticated Chromium workflows passed against the production build with disposable local users.
 
-Before the release is marked production-verified, also confirm leaked-password protection and Auth rate limits in Supabase, apply edge limits to sensitive endpoints, run the authenticated Playwright suite with a disposable user, and repeat cross-user RLS checks against the deployed migration chain. See [MVP status](mvp-status.md).
+The hosted migration was applied on 2026-10-01 and catalog checks confirmed
+restrictive MFA policies on all 40 RLS tables and guards on all nine authenticated
+security-definer RPCs. Supabase leaked-password protection remains unavailable
+on the project's Free plan (requires Pro or above).
+
+A Vercel Firewall draft logs requests above 120 per minute per IP for non-cron POST requests and GET exports. It is not published and does not block traffic. Review and publish the log-only draft before evaluating enforcement. Hosted Auth rate-limit configuration still needs a dashboard check; managed Auth access was unavailable. Authenticated browser and cross-user tests use disposable local users against the complete deployed migration chain, not production user data. See [MVP status](mvp-status.md).
