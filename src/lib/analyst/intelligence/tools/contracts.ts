@@ -115,6 +115,9 @@ export const V2_TOOL_LIMITS = Object.freeze({
   observations: 50,
   excerptChars: 600,
   outputBytes: 96_000,
+  // Goals a pace read covers without a named goal, and linked tasks per goal.
+  paceGoals: 5,
+  paceTasks: 500,
   timeoutMs: 12_000,
 });
 
@@ -217,6 +220,13 @@ export const v2ToolInputs = {
       (value) => parseHandle(value.goal)?.type === "goal",
       "Choose a goal.",
     ),
+  getGoalPace: z
+    .object({ goal: handleSchema.optional() })
+    .strict()
+    .refine(
+      (value) => !value.goal || parseHandle(value.goal)?.type === "goal",
+      "Choose a goal.",
+    ),
   getDecisionAnalysisContext: z
     .object({ decision: handleSchema, includeText: z.boolean().default(false) })
     .strict()
@@ -260,6 +270,8 @@ export const v2ToolDescriptions: Record<V2ToolName, string> = {
     "Recorded income or expense transactions for an explicit period, optionally limited to resolved categories and an amount range, measured as a total, a count or an average per transaction, and grouped by category, weekday, weekend against weekdays, or month. ATLAS reads every matching record and computes every figure; withheld when the records exceed the bounded window.",
   getGoalAnalysisContext:
     "A resolved goal's current state, milestones and currently linked activity in a period. Current links do not prove past links.",
+  getGoalPace:
+    "How fast a goal's work is getting done: for one resolved goal, or for the active goals with a target date (soonest first), the number of milestones and currently linked tasks, how many are done, how many were done in the last four weeks, and the days left before the target date. ATLAS derives the pace from these.",
   getDecisionAnalysisContext:
     "A resolved decision's dates, review window, revisions, observations and the existing before/after comparison. Plan text and notes only with includeText and policy approval.",
   getRelationshipPaths:

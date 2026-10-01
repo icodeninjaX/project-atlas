@@ -1132,6 +1132,166 @@ export async function goalContext(
   return payload;
 }
 
+/** The recent window a goal's pace is read over, in days (four weeks). */
+export const PACE_WINDOW_DAYS = 28;
+
+const dayOffset = (day: string, days: number) =>
+  new Date(Date.parse(`${day}T00:00:00Z`) + days * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+
+/**
+ * How fast a goal's work is getting done. For one resolved goal, or for the
+ * active goals with a target date (soonest first), it counts the goal's
+ * milestones and the tasks currently linked to it: how many there are, how
+ * many are done, and how many were done in the last four weeks; and the
+ * days left before the target date. Milestones and tasks are counted apart,
+ * and cancelled tasks are not counted. More linked tasks than the bound is
+ * a failure, never a partial count.
+ */
+export async function goalPace(
+  input: V2ToolInput<"getGoalPace">,
+  { client, owner, now }: ReadContext,
+): Promise<V2ToolPayload> {
+  const ctx: BuildContext = {
+    tool: "getGoalPace",
+    retrievedAt: now.toISOString(),
+  };
+  const today = manilaToday(now);
+  const window = {
+    from: dayOffset(today, -(PACE_WINDOW_DAYS - 1)),
+    through: today,
+  };
+  const named = input.goal ? parseHandle(input.goal)!.id : null;
+  let goalQuery = client
+    .from("goals")
+    .select(detailColumns.goal)
+    .eq("user_id", owner);
+  goalQuery = named
+    ? goalQuery.eq("id", named)
+    : goalQuery
+        .eq("status", "active")
+        .not("target_date", "is", null)
+        .order("target_date", { ascending: true })
+        .order("id");
+  const found = rows(await goalQuery.limit(V2_TOOL_LIMITS.paceGoals + 1));
+  if (named && found.length === 0) throw new ToolFailure("unavailable_source");
+  const goals = found.slice(0, V2_TOOL_LIMITS.paceGoals);
+  const payload = emptyPayload();
+  if (goals.length === 0) {
+    payload.status = "insufficient";
+    payload.limitations.push(
+      "No active goal has a target date, so there is no deadline to measure a pace against.",
+    );
+    return payload;
+  }
+  const ids = goals.map((goal) => goal.id);
+  const [milestoneRows, taskRows] = await Promise.all([
+    client
+      .from("goal_milestones")
+      .select("id,goal_id,completed_at")
+      .eq("user_id", owner)
+      .in("goal_id", ids)
+      .order("id")
+      .limit(V2_TOOL_LIMITS.paceTasks + 1),
+    client
+      .from("tasks")
+      .select("id,related_goal_id,status,completed_at")
+      .eq("user_id", owner)
+      .in("related_goal_id", ids)
+      .neq("status", "cancelled")
+      .order("id")
+      .limit(V2_TOOL_LIMITS.paceTasks + 1),
+  ]);
+  const milestones = rows(milestoneRows);
+  const tasks = rows(taskRows);
+  if (
+    milestones.length > V2_TOOL_LIMITS.paceTasks ||
+    tasks.length > V2_TOOL_LIMITS.paceTasks
+  )
+    throw new ToolFailure("partial");
+  const recent = (value: unknown) => {
+    const day = manilaDay(value);
+    return day !== null && day >= window.from && day <= window.through;
+  };
+  for (const goal of goals) {
+    const handle = toHandle("goal", goal.id);
+    const scope = entityScope(
+      handle,
+      "goal",
+      "The goal, its milestones and its currently linked tasks",
+    );
+    const refs = [{ handle, href: nameSources.goal.href(goal) }];
+    payload.labels.push(label("goal", goal));
+    const target = isoDay(goal.target_date);
+    if (target)
+      payload.evidence.push(
+        metric(ctx, {
+          local: `${handle}.days_to_target`,
+          domain: "goals",
+          metricKey: "goal_days_to_target",
+          period: snapshot(today),
+          scope,
+          refs,
+          value: Math.round(
+            (Date.parse(target) - Date.parse(today)) / 86_400_000,
+          ),
+          unit: "days",
+        }),
+      );
+    const kinds = [
+      {
+        kind: "milestones" as const,
+        domain: "goals" as const,
+        items: milestones.filter((item) => item.goal_id === goal.id),
+        done: (item: Record<string, unknown>) => Boolean(item.completed_at),
+      },
+      {
+        kind: "tasks" as const,
+        domain: "tasks" as const,
+        items: tasks.filter((item) => item.related_goal_id === goal.id),
+        done: (item: Record<string, unknown>) => item.status === "completed",
+      },
+    ];
+    for (const { kind, domain, items, done } of kinds) {
+      if (items.length === 0) continue;
+      const finished = items.filter(done);
+      const counts = [
+        ["total", items.length, snapshot(today), "snapshot"],
+        ["done", finished.length, snapshot(today), "snapshot"],
+        [
+          "done_recent",
+          finished.filter((item) => recent(item.completed_at)).length,
+          window,
+          "event_date",
+        ],
+      ] as const;
+      for (const [measure, value, period, basis] of counts)
+        payload.evidence.push(
+          metric(ctx, {
+            local: `${handle}.${kind}.${measure}`,
+            domain,
+            metricKey: `goal_${kind}_${measure}`,
+            period,
+            basis,
+            scope,
+            refs,
+            value,
+            unit: "count",
+          }),
+        );
+    }
+  }
+  if (found.length > goals.length)
+    payload.limitations.push(
+      `Only the ${goals.length} active goals with the soonest target dates are covered.`,
+    );
+  payload.limitations.push(
+    "Tasks count when they are linked to the goal now; past links and effort are not known. Progress percent is not used, since its history is not stored.",
+  );
+  return payload;
+}
+
 const decisionRow = z
   .object({
     id: z.uuid(),

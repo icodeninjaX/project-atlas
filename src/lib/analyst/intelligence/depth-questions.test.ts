@@ -364,6 +364,77 @@ describe("category trends", () => {
   });
 });
 
+describe("goal pace", () => {
+  const career = `goal:${fixtureUuid("goal-a-career")}`;
+  const fact = (answered: Answered, kind: string, name: string) =>
+    answered.derived.find(
+      (item) => item.id === `derived.goal_pace.${career}|${kind}.${name}`,
+    )?.output;
+
+  it("Am I on track with my goals?", async () => {
+    const brief = deterministicBrief({
+      question: "Am I on track with my goals?",
+      plan: null,
+      now,
+    });
+    expect(
+      brief.requirements.some((item) =>
+        item.evidenceNeeded.includes("goal.pace"),
+      ),
+    ).toBe(true);
+    const answered = await investigate(brief);
+    const daysLeft = answered.evidence.find(
+      (item) =>
+        item.semantics.metricKey === "goal_days_to_target" &&
+        item.scope.id === career,
+    );
+    // 24 September to 31 December.
+    expect(daysLeft && "value" in daysLeft ? daysLeft.value : null).toBe(98);
+    // Linked tasks: 4, 3 done, 2 of them since 28 August (the cover letter
+    // on 19 August is older): 0.5 a week, so the last one takes about 14
+    // days, 84 days before the target date.
+    expect(fact(answered, "tasks", "remaining")).toMatchObject({ value: 1 });
+    expect(fact(answered, "tasks", "per_week")).toMatchObject({ value: 0.5 });
+    expect(fact(answered, "tasks", "days_needed")).toMatchObject({
+      value: 14,
+      unit: "days",
+    });
+    expect(fact(answered, "tasks", "margin_days")).toMatchObject({
+      value: 84,
+    });
+    // Milestones are counted apart: 1 of 2 done, on 10 September.
+    expect(fact(answered, "milestones", "days_needed")).toMatchObject({
+      value: 28,
+    });
+    // The goal with no target date is not read without being named.
+    expect(
+      answered.evidence.some((item) =>
+        item.scope.id.includes(fixtureUuid("goal-a-trip")),
+      ),
+    ).toBe(false);
+  });
+
+  it("Am I on track with my developer job goal?", async () => {
+    const answered = await investigate(
+      deterministicBrief({
+        question: "Am I on track with my developer job goal?",
+        plan: null,
+        now,
+      }),
+    );
+    const scopes = new Set(
+      answered.evidence
+        .filter((item) => item.sourceType === "getGoalPace")
+        .map((item) => item.scope.id),
+    );
+    // The named goal alone, once resolved.
+    expect([...scopes]).toEqual([career]);
+    expect(fact(answered, "tasks", "margin_days")).toMatchObject({
+      value: 84,
+    });
+  });
+});
+
 describe("reading the period", () => {
   it("reads 'since August' as August 1 through today, not August alone", () => {
     expect(resolvePeriod("How much since August?", now)).toMatchObject({

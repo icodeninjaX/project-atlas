@@ -5,6 +5,7 @@ import {
   difference,
   fullMonth,
   coveredPeriod,
+  goalPace,
   memberMonthProjection,
   monthProjection,
   monthSetTrend,
@@ -230,6 +231,32 @@ export function autoDerive(
       );
       if (projection) facts.push(projection);
     }
+  }
+  // A goal's pace: each kind of work (milestones, linked tasks) read for one
+  // goal gets its remaining count, weekly pace, days needed and margin.
+  const byKey = (scope: string, key: string) =>
+    values.find(
+      (item) => item.scope.id === scope && item.semantics.metricKey === key,
+    );
+  for (const total of values) {
+    const kind = /^goal_(milestones|tasks)_total$/.exec(
+      total.semantics.metricKey,
+    )?.[1];
+    if (!kind) continue;
+    const scope = total.scope.id;
+    const done = byKey(scope, `goal_${kind}_done`);
+    const recent = byKey(scope, `goal_${kind}_done_recent`);
+    if (!done || !recent) continue;
+    facts.push(
+      ...(attempt(() =>
+        goalPace(`derived.goal_pace.${scope}|${kind}`, {
+          total,
+          done,
+          recent,
+          daysToTarget: byKey(scope, "goal_days_to_target") ?? null,
+        }),
+      ) ?? []),
+    );
   }
   // Income against expenses in the same period: did income cover spending?
   const wholeTotal = (key: string, period: string) =>

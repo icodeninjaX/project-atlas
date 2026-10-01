@@ -39,6 +39,7 @@ export const PLANNABLE_CAPABILITIES = [
   "history.trend",
   "money.query",
   "money.change_drivers",
+  "goal.pace",
 ] as const;
 type PlannableCapability = (typeof PLANNABLE_CAPABILITIES)[number];
 
@@ -87,6 +88,7 @@ export const PLANNER_SYSTEM = [
   "moneyKind: for a money capability, say whether it reads expense or income records; ask two sub-questions when both matter, such as savings or whether income covers spending. Otherwise none.",
   "query: with money.query, the transaction query that answers a sub-question the fixed money reads cannot: groupBy (none, category, weekday, weekend for weekends against weekdays, or month), measures (total, count, average per transaction), category (a category named in the question, in the person's words, such as 'food'; otherwise null), and minAmountPesos and maxAmountPesos (an amount range the question names, such as over 1000; otherwise null). Use it for questions like 'weekends or weekdays', 'how many purchases over 1,000', 'average transaction', 'how much on food each month'. moneyKind says expense or income. Otherwise query null.",
   "money.change_drivers: for why recorded spending or income changed between two periods ('why did I spend more this month?', 'what changed?'), it finds the categories that account for most of the change and how each has moved over recent months. Set comparePreviousPeriod true with it, and moneyKind to the kind that changed. For whether one named category is rising or normal ('is my food spending going up?'), use money.query with groupBy month and that category instead.",
+  "goal.pace: for whether a goal is on track for its target date, or will be done in time ('am I on track with my goals?', 'will I finish my portfolio goal in time?'). It reads the goal's milestones and linked tasks and the recent pace of finishing them. Goals store no money amount, so a savings target cannot be checked against spending.",
   "trendMetric and trendMonths: with history.trend, the measure to follow month by month and over how many months (6, or 12 for a year). Use a trend whenever the answer depends on what is normal or how things are moving: 'am I improving', 'is this normal', 'more than usual', 'lately'. Otherwise trendMetric none.",
   "hypotheses: up to four checks a skeptical analyst would make before trusting a conclusion, such as 'one category may account for most of the change' or 'fewer completed tasks may reflect fewer planned tasks'. Phrase them as checks, never as findings, and use no figures.",
   "comparePreviousPeriod: true when judging the answer needs a baseline: a trend, a change, 'am I improving', 'is this normal', 'too much'.",

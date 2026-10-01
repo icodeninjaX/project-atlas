@@ -215,6 +215,7 @@ export const METRIC_SEMANTICS: Record<string, MetricSemantics> = {
     "goal",
     "value",
   ),
+  ...goalPaceSemantics(),
   relationship: own(
     "relationship",
     "A current Graph relationship",
@@ -230,6 +231,91 @@ export const METRIC_SEMANTICS: Record<string, MetricSemantics> = {
     "coefficient",
   ),
 };
+
+/**
+ * A goal's pace: its milestones and currently linked tasks (total, done,
+ * done in the last four weeks), the days left before its target date, and
+ * what ATLAS derives from them. Milestones and tasks are separate
+ * populations; days are calendar days.
+ */
+function goalPaceSemantics(): Record<string, MetricSemantics> {
+  const entries: MetricSemantics[] = [
+    own(
+      "goal_days_to_target",
+      "Calendar days from today to the goal's target date",
+      "days",
+      "goal",
+      "value",
+      "goal_days",
+    ),
+  ];
+  for (const kind of ["milestones", "tasks"] as const) {
+    const what =
+      kind === "tasks"
+        ? "tasks currently linked to the goal"
+        : "the goal's milestones";
+    const group = `goal_${kind}`;
+    entries.push(
+      own(
+        `goal_${kind}_total`,
+        `Number of ${what}`,
+        "count",
+        "goal",
+        "count",
+        group,
+      ),
+      own(
+        `goal_${kind}_done`,
+        `Number of ${what} that are done`,
+        "count",
+        "goal",
+        "count",
+        group,
+      ),
+      own(
+        `goal_${kind}_done_recent`,
+        `Number of ${what} done in the period`,
+        "count",
+        "goal",
+        "count",
+        group,
+      ),
+      own(
+        `goal_${kind}_remaining`,
+        `Number of ${what} not yet done`,
+        "count",
+        "goal",
+        "difference",
+        group,
+      ),
+      own(
+        `goal_${kind}_per_week`,
+        `Average number of ${what} done per week over the last four weeks`,
+        "count",
+        "goal",
+        "mean",
+        `${group}_per_week`,
+      ),
+      own(
+        `goal_${kind}_days_needed`,
+        `Estimated calendar days to finish the remaining ${what} at the recent pace`,
+        "days",
+        "goal",
+        "estimate",
+        "goal_days",
+      ),
+      own(
+        `goal_${kind}_margin_days`,
+        `Days to the target date less the estimated days needed for the remaining ${what}`,
+        "days",
+        "goal",
+        "estimate",
+        "goal_days",
+      ),
+    );
+  }
+  return Object.fromEntries(entries.map((item) => [item.key, item]));
+}
 
 /** Semantics for a key, or an isolated group for values with no registry entry. */
 /**
@@ -281,6 +367,7 @@ export const DOMAIN_TERMS: Partial<Record<MetricDomain, RegExp>> = {
 export function textDomains(semantics: MetricSemantics): MetricDomain[] {
   // Goal-linked activity is still a task, milestone or transaction.
   if (semantics.key === "goal_linked_task_completion") return ["goal", "task"];
+  if (semantics.key.startsWith("goal_tasks_")) return ["goal", "task"];
   if (semantics.key === "goal_linked_transaction")
     return ["goal", "income", "expense"];
   // Debt payments are recorded payments toward a debt.

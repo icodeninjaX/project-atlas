@@ -939,3 +939,105 @@ export function memberMonthProjection(
     { complete: complete([item]) },
   );
 }
+
+/**
+ * A goal's pace for one kind of work (its milestones, or its currently
+ * linked tasks): how many remain, how many were done per week over the
+ * recent window, the calendar days the remaining work would take at that
+ * pace (an estimate), and the days to the target date less those days (the
+ * margin; negative means the pace would miss the date). With nothing done
+ * recently and work remaining, the days needed are undefined.
+ */
+export function goalPace(
+  prefix: string,
+  input: {
+    total: EvidenceV2;
+    done: EvidenceV2;
+    recent: EvidenceV2;
+    daysToTarget: EvidenceV2 | null;
+  },
+) {
+  const total = numeric(input.total);
+  const done = numeric(input.done);
+  const recent = numeric(input.recent);
+  const kind = /^goal_(milestones|tasks)_total$/.exec(
+    total.semantics.metricKey,
+  )?.[1];
+  if (
+    !kind ||
+    done.semantics.metricKey !== `goal_${kind}_done` ||
+    recent.semantics.metricKey !== `goal_${kind}_done_recent` ||
+    [done, recent].some((item) => item.scope.id !== total.scope.id) ||
+    [total, done, recent].some((item) => item.unit !== "count")
+  )
+    throw new CalculationError("A goal pace reads one goal's counts.");
+  const windowDays = days(recent.time.period);
+  const remaining = total.value - done.value;
+  if (remaining < 0 || recent.value > done.value)
+    throw new CalculationError("Inconsistent goal counts.");
+  const done_ = complete([total, done, recent]);
+  const key = (name: string) => `goal_${kind}_${name}`;
+  const base = (name: string, operands: NumericEvidence[], period: Period) => ({
+    id: `${prefix}.${name}`,
+    operands: operands.map((item) => item.id),
+    metricKey: key(name),
+    comparableGroup: key(name),
+    scopeId: total.scope.id,
+    periods: [period],
+  });
+  const today = total.time.period;
+  const facts: DerivedFact[] = [
+    fact(
+      base("remaining", [total, done], today),
+      "difference",
+      { status: "defined", value: remaining, unit: "count" },
+      { complete: done_ },
+    ),
+    fact(
+      base("per_week", [recent], recent.time.period),
+      "ratio",
+      {
+        status: "defined",
+        value: Math.round((recent.value * 70) / windowDays) / 10,
+        unit: "count",
+      },
+      { rounding: "half_away_from_zero_tenths", complete: done_ },
+    ),
+  ];
+  const needed =
+    remaining === 0
+      ? 0
+      : recent.value === 0
+        ? null
+        : Math.ceil((remaining * windowDays) / recent.value);
+  facts.push(
+    fact(
+      base("days_needed", [total, done, recent], today),
+      "projection",
+      needed === null
+        ? { status: "undefined", reason: "zero_denominator" }
+        : { status: "defined", value: needed, unit: "days" },
+      {
+        denominatorRule: "nonzero_required",
+        complete: done_,
+      },
+    ),
+  );
+  const target = input.daysToTarget && numeric(input.daysToTarget);
+  if (
+    target &&
+    needed !== null &&
+    target.unit === "days" &&
+    target.scope.id === total.scope.id
+  )
+    facts.push(
+      fact(
+        base("margin_days", [target, total, done, recent], today),
+        // An estimate under the recent pace, worded like any projection.
+        "projection",
+        { status: "defined", value: target.value - needed, unit: "days" },
+        { complete: done_ && complete([target]) },
+      ),
+    );
+  return facts;
+}

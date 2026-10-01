@@ -141,6 +141,8 @@ const answeredBy = new Map<string, ReadonlySet<string>>([
   ["money.query", new Set(["queryTransactions"])],
   // The breakdowns only find the leading categories; their months answer.
   ["money.change_drivers", new Set(["queryTransactions"])],
+  // Resolving a named goal is a step; the pace read answers.
+  ["goal.pace", new Set(["getGoalPace"])],
 ]);
 /**
  * Capabilities answered only when every read made for them succeeded: each

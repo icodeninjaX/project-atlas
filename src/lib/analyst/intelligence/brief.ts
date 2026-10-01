@@ -53,6 +53,8 @@ const deepCapabilities = new Set([
   "money.query",
   // Change drivers read the breakdowns, then each leading category's months.
   "money.change_drivers",
+  // A named goal is resolved, then its pace read.
+  "goal.pace",
   "goal.linked_activity",
 ]);
 const deepIntents = new Set<AnalysisBrief["intent"]>([
