@@ -307,6 +307,36 @@ figure, record name or model text can be stored. Rows are owner-only
 next record is saved, and a failed write never affects the answer. Migration
 `20260930121442_analyst_run_diagnostics.sql`.
 
+## 4h. This month so far (`digest.ts`, `analyst_digests`)
+
+With consent that includes money, the Analyst page opens with a summary of
+the month so far, before any question. It is the answer to one fixed
+question (`DIGEST_QUESTION`, "What changed in my spending, and which
+categories account for it?"), which names no period: the brief reads this
+month so far against the same days of last month, as "why", so the change
+drivers (§4b-4) run. The route `/api/analyst/digest` answers it through the
+same checked V2 run as any question (`serveAnalystRun`, shared with the
+question route), metered as one Analyst request.
+
+- **Once a day.** The finished answer is kept in `analyst_digests` (one row
+  per owner, forced RLS, owner-only), with the Manila day and the consent it
+  was made under (`digestConsentKey`: route, areas and field profiles).
+  Later views that day read it; a new day or a different consent makes a
+  new one. Every charged run is kept, even one with nothing to show or one
+  that failed, so it is not re-run (and re-charged) on each view. When the
+  store cannot be read, nothing runs.
+- **One run for views that arrive together.** Before reserving quota, a view
+  claims the day's slot (`claim_analyst_digest`, one atomic upsert that
+  succeeds only for another day or consent, or for a run abandoned for over
+  two minutes). The others get `in_progress`, and the page checks back every
+  five seconds. A claim whose reservation is refused is given up.
+- **What is kept** is the checked answer without its conversation token or
+  memory offer; quota bookkeeping and diagnostics never leave the server.
+- **When it shows.** Only for an answer with findings (answered, partial or
+  checked facts); not before the 3rd of the month, and not without money in
+  the consent. It is replaced by the conversation once one starts; "Ask
+  about this" starts one with "Why did my spending change this month?".
+
 ## 5. How much is shown
 
 A lookup used to hide every finding behind its one-line direct answer. When
