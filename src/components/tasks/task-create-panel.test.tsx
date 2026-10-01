@@ -81,3 +81,48 @@ describe("TaskCreatePanel", () => {
     expect(screen.getByLabelText("Estimated minutes")).toBeVisible();
   });
 });
+
+describe("TaskCreatePanel on phones", () => {
+  it("offers a floating New task button that opens and focuses capture", () => {
+    renderPanel();
+
+    fireEvent.click(screen.getByRole("button", { name: "New task" }));
+
+    expect(screen.getByLabelText("Task title")).toHaveFocus();
+    expect(
+      screen.queryByRole("button", { name: "New task" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("closes the form with Escape", () => {
+    renderPanel({ initiallyOpen: true });
+
+    fireEvent.keyDown(screen.getByLabelText("Task title"), { key: "Escape" });
+
+    expect(screen.queryByLabelText("Task title")).not.toBeInTheDocument();
+  });
+
+  it("fills and clears the date from the Today and Tomorrow shortcuts", () => {
+    render(
+      <TaskCreatePanel
+        heading={<h1>Tasks</h1>}
+        description={<p>Capture quickly.</p>}
+        today="2026-10-01"
+        initiallyOpen
+      />,
+    );
+
+    const date = screen.getByLabelText("Scheduled date");
+    const tomorrow = screen.getByRole("button", { name: "Tomorrow" });
+    fireEvent.click(tomorrow);
+    expect(date).toHaveValue("2026-10-02");
+    expect(tomorrow).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: "Today" }));
+    expect(date).toHaveValue("2026-10-01");
+    expect(tomorrow).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(screen.getByRole("button", { name: "Today" }));
+    expect(date).toHaveValue("");
+  });
+});

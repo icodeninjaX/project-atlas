@@ -173,17 +173,11 @@ test.describe("authenticated ATLAS workflows", () => {
 
     await page.goto("/tasks?view=overdue");
     await expect(page.getByText(title)).toBeVisible();
-    const overdueDate = new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      timeZone: "Asia/Manila",
-    }).format(new Date(yesterday + "T00:00:00+08:00"));
     await expect(
       page
         .getByText(title, { exact: true })
-        .locator("xpath=ancestor::section[1]")
-        .getByText(`Overdue · ${overdueDate}`),
+        .locator("xpath=ancestor::li[1]")
+        .getByText("1 day overdue"),
     ).toBeVisible();
   });
 
@@ -214,8 +208,8 @@ test.describe("authenticated ATLAS workflows", () => {
     await expect(
       page
         .getByText(title, { exact: true })
-        .locator("xpath=ancestor::section[1]")
-        .getByText(/at 9:30 AM/),
+        .locator("xpath=ancestor::li[1]")
+        .getByText("9:30 AM"),
     ).toBeVisible();
 
     await page
