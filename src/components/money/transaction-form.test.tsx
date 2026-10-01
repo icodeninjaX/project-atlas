@@ -306,6 +306,43 @@ describe("TransactionForm", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("drops the missing-category message once a remembered merchant fills it", async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn(async () => ({
+      success: true,
+      message: "Transaction recorded.",
+    }));
+    render(
+      <TransactionForm
+        accounts={accounts}
+        categories={categories}
+        today="2026-09-04"
+        defaultAccountId="cash"
+        merchantMemory={[
+          { merchant: "Jollibee", type: "expense", categoryId: "food" },
+        ]}
+      />,
+      { wrapper: withSubmit(submit) },
+    );
+
+    await user.type(screen.getByLabelText("Amount in pesos"), "120");
+    await user.click(screen.getByRole("button", { name: /Record expense/ }));
+    expect(categoryField()).toHaveAttribute("aria-invalid", "true");
+
+    await user.type(screen.getByLabelText("Merchant or source"), "Jollibee");
+    expect(categoryField()).toHaveTextContent("Food");
+    await user.click(screen.getByRole("button", { name: /Record expense/ }));
+
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(categoryField()).toHaveTextContent("Choose a category"),
+    );
+    expect(categoryField()).not.toHaveAttribute("aria-invalid");
+    expect(
+      screen.queryByText("Choose a category to record this."),
+    ).not.toBeInTheDocument();
+  });
+
   it("docks the record bar on phones only once there is an amount", async () => {
     const user = userEvent.setup();
     render(

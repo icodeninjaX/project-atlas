@@ -39,6 +39,9 @@ export function CategorySelect({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [missing, setMissing] = useState(false);
   const selected = categories.find((category) => category.id === value);
+  // Any valid category clears the message, including one set by the form
+  // itself (a remembered merchant), so a later reset starts clean.
+  if (missing && selected) setMissing(false);
   const showMissing = missing && !selected;
 
   return (
@@ -63,10 +66,7 @@ export function CategorySelect({
           name={name}
           required
           value={value}
-          onValueChange={(next) => {
-            setMissing(false);
-            onChange(next);
-          }}
+          onValueChange={onChange}
         >
           <Select.Trigger
             ref={triggerRef}
