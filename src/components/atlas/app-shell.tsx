@@ -201,7 +201,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="bg-background text-foreground min-h-dvh w-full max-w-full min-w-0">
+    <div
+      // Lets content that docks above the bottom navigation follow it
+      // away while the on-screen keyboard is open.
+      data-keyboard={keyboardOpen ? "open" : "closed"}
+      className="group/shell bg-background text-foreground min-h-dvh w-full max-w-full min-w-0"
+    >
       <a
         href="#main-content"
         className="bg-primary-solid text-primary-solid-foreground sr-only z-50 rounded-lg px-4 py-2 focus:not-sr-only focus:fixed focus:top-4 focus:left-4"

@@ -1,5 +1,11 @@
 import type { ReactNode } from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TransactionWorkspace } from "./transaction-workspace";
 
@@ -15,35 +21,48 @@ vi.mock("@/components/money/transaction-form", () => ({
   ),
 }));
 
+const transaction = {
+  id: "transaction-1",
+  account_id: "account-1",
+  category_id: "category-1",
+  transaction_type: "expense" as const,
+  amount_centavos: 12550,
+  transaction_date: "2026-08-24",
+  merchant_or_source: "Canteen",
+  description: null,
+  account_name: "Cash",
+  category_name: "Food",
+  category_icon: "utensils",
+};
+
 const props = {
-  accounts: [{ id: "account-1", name: "Cash" }],
+  accounts: [
+    { id: "account-1", name: "Cash" },
+    { id: "account-2", name: "GCash" },
+  ],
   categories: [{ id: "category-1", name: "Food", category_type: "expense" }],
   today: "2026-08-24",
   defaultAccountId: "account-1",
   transactions: [
+    transaction,
     {
-      id: "transaction-1",
-      account_id: "account-1",
-      category_id: "category-1",
-      transaction_type: "expense" as const,
-      amount_centavos: 12550,
-      transaction_date: "2026-08-24",
-      merchant_or_source: "Canteen",
-      description: null,
-      account_name: "Cash",
-      category_name: "Food",
+      ...transaction,
+      id: "transaction-2",
+      account_id: "account-2",
+      transaction_type: "income" as const,
+      amount_centavos: 500000,
+      transaction_date: "2026-08-23",
+      merchant_or_source: "Payroll",
+      account_name: "GCash",
+      category_name: "Salary",
     },
   ],
 };
 
 describe("TransactionWorkspace", () => {
   it("shows history by default and opens transaction capture on demand", () => {
-    render(<TransactionWorkspace {...props} />);
+    render(<TransactionWorkspace {...props} summary={<p>Month summary</p>} />);
 
-    expect(
-      screen.getByRole("button", { name: "Record a transaction" }),
-    ).toBeVisible();
-    expect(screen.getByRole("button", { name: "History" })).toBeVisible();
     expect(screen.getByRole("button", { name: "History" })).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -53,52 +72,80 @@ describe("TransactionWorkspace", () => {
     ).toHaveAttribute("aria-pressed", "false");
     expect(screen.queryByTestId("record-form")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "History" })).toBeVisible();
+    expect(screen.getByText("Month summary")).toBeVisible();
     expect(screen.getByText("Canteen")).toBeVisible();
   });
 
-  it("opens the selected transaction view", () => {
-    render(<TransactionWorkspace {...props} />);
+  it("puts the record form first and the summary away while recording", () => {
+    render(<TransactionWorkspace {...props} summary={<p>Month summary</p>} />);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Record a transaction" }),
     );
     expect(screen.getByTestId("record-form")).toBeVisible();
+    expect(screen.queryByText("Month summary")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "History" }));
     expect(screen.queryByTestId("record-form")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "History" })).toBeVisible();
     expect(screen.getByText("Canteen")).toBeVisible();
   });
 
-  it("reveals row edit and delete controls only in History edit mode", () => {
-    render(<TransactionWorkspace {...props} initialView="history" />);
+  it("groups history by day with each day's net", () => {
+    render(<TransactionWorkspace {...props} />);
 
-    expect(
-      screen.queryByRole("button", { name: "Delete transaction" }),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByText("Edit transaction")).not.toBeInTheDocument();
+    const today = screen.getByRole("region", { name: /^Today/ });
+    expect(within(today).getByText("Canteen")).toBeVisible();
+    expect(within(today).getAllByText("−₱125.50")).toHaveLength(2);
+    const yesterday = screen.getByRole("region", { name: /^Yesterday/ });
+    expect(within(yesterday).getAllByText("+₱5,000.00")).toHaveLength(2);
+  });
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Edit transaction history" }),
+  it("filters history by search, type, and account", () => {
+    render(<TransactionWorkspace {...props} />);
+
+    fireEvent.change(screen.getByLabelText("Search transactions"), {
+      target: { value: "pay" },
+    });
+    expect(screen.queryByText("Canteen")).not.toBeInTheDocument();
+    expect(screen.getByText("Payroll")).toBeVisible();
+    expect(screen.getByText("1 of 2 shown")).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: "Expenses" }));
+    expect(screen.getByText("No transactions match")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    expect(screen.getByText("Canteen")).toBeVisible();
+
+    fireEvent.change(screen.getByLabelText("Filter by account"), {
+      target: { value: "account-2" },
+    });
+    expect(screen.queryByText("Canteen")).not.toBeInTheDocument();
+  });
+
+  it("starts filtered to the account from the URL", () => {
+    render(
+      <TransactionWorkspace {...props} initialAccountFilter="account-2" />,
     );
 
+    expect(screen.getByLabelText("Filter by account")).toHaveValue("account-2");
+    expect(screen.queryByText("Canteen")).not.toBeInTheDocument();
+  });
+
+  it("opens a transaction to edit it and asks before deleting", () => {
+    render(<TransactionWorkspace {...props} />);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Edit Canteen/ }));
+
+    const sheet = screen.getByRole("dialog", { name: "Canteen" });
+    expect(within(sheet).getByTestId("edit-transaction-1")).toBeVisible();
     expect(
-      screen.getByRole("button", { name: "Delete transaction" }),
-    ).toBeVisible();
-    expect(screen.getByText("Edit transaction")).toBeVisible();
-    expect(
-      screen.getByRole("button", {
-        name: "Finish editing transaction history",
-      }),
-    ).toHaveAttribute("aria-pressed", "true");
+      within(sheet).queryByRole("button", { name: "Delete" }),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(
-      screen.getByRole("button", {
-        name: "Finish editing transaction history",
-      }),
+      within(sheet).getByRole("button", { name: "Delete transaction" }),
     );
-    expect(
-      screen.queryByRole("button", { name: "Delete transaction" }),
-    ).not.toBeInTheDocument();
+    expect(within(sheet).getByText("Delete this transaction?")).toBeVisible();
+    expect(within(sheet).getByRole("button", { name: "Delete" })).toBeVisible();
   });
 });

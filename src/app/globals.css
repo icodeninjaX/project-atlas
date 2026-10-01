@@ -18,6 +18,7 @@
   --color-border: var(--border);
   --color-ring: var(--ring);
   --color-destructive: var(--destructive);
+  --color-positive: var(--positive);
   --color-sidebar: var(--sidebar);
   --font-sans: var(--font-app);
   /* Figures use the UI face with tabular numerals: aligned like a ledger,
@@ -28,6 +29,19 @@
   --animate-analyst-sheet: analyst-sheet 0.42s cubic-bezier(0.22, 1, 0.36, 1)
     both;
   --animate-analyst-fade: analyst-fade 0.24s ease-out both;
+  /* Money detail sheets slide in from the right edge on wider screens. */
+  --animate-money-sheet-side: money-sheet-side 0.34s
+    cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes money-sheet-side {
+  from {
+    transform: translateX(calc(100% + 1rem));
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
 
 @keyframes analyst-sheet {
@@ -81,7 +95,14 @@
   --border: #dce3ed;
   --ring: #3977f6;
   --destructive: #c83a4a;
+  /* Money coming in. Text-safe (4.5:1+) on card and background. */
+  --positive: #047857;
   --sidebar: #f9fbfe;
+  /* Part-to-whole money charts; validated categorical slots 1–3. */
+  --money-series-1: #2a78d6;
+  --money-series-2: #eb6834;
+  --money-series-3: #1baf7a;
+  --money-series-other: #a3acb9;
 }
 
 :root[data-font="inter"] {
@@ -191,7 +212,12 @@
   --border: #202a39;
   --ring: #84afff;
   --destructive: #e04f5f;
+  --positive: #34d399;
   --sidebar: #0a0e15;
+  --money-series-1: #3987e5;
+  --money-series-2: #d95926;
+  --money-series-3: #199e70;
+  --money-series-other: #3d4859;
 }
 
 * {
@@ -218,6 +244,48 @@ kbd,
 code,
 pre {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* Account cards. The page sets --wallet-highlight/base/shadow from the
+   provider's brand color (see walletSurface), already deepened so white
+   text stays at AA contrast. */
+.atlas-wallet-card {
+  background:
+    radial-gradient(
+      130% 95% at 100% -15%,
+      rgb(255 255 255 / 0.13),
+      transparent 52%
+    ),
+    radial-gradient(95% 75% at 100% 110%, rgb(0 0 0 / 0.24), transparent 62%),
+    linear-gradient(
+      140deg,
+      var(--wallet-highlight) 0%,
+      var(--wallet-base) 46%,
+      var(--wallet-shadow) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.2),
+    inset 0 0 0 1px rgb(255 255 255 / 0.07),
+    0 1px 2px rgb(7 10 15 / 0.2),
+    0 18px 36px -22px var(--wallet-shadow);
+}
+
+.atlas-wallet-card::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: repeating-linear-gradient(
+    118deg,
+    rgb(255 255 255 / 0.04) 0 1px,
+    transparent 1px 9px
+  );
+  content: "";
+  mask-image: linear-gradient(to bottom left, #000, transparent 65%);
+  pointer-events: none;
+}
+
+.atlas-wallet-card[data-muted="true"] {
+  filter: grayscale(1);
 }
 
 ::selection {

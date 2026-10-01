@@ -82,7 +82,7 @@ describe("edit form parity", () => {
     expect(screen.getByLabelText("Notes")).toHaveValue(debt.notes);
   });
 
-  it("preselects the saved account when editing a transaction", () => {
+  it("preselects every saved field when editing a transaction", () => {
     render(
       <TransactionForm
         accounts={[
@@ -110,8 +110,13 @@ describe("edit form parity", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Account")).toHaveValue(
-      "5d334d84-4e32-46fa-bbdb-05ce7dc0dfbb",
-    );
+    expect(screen.getByRole("radio", { name: "Maya" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Cash" })).not.toBeChecked();
+    expect(screen.getByRole("radio", { name: "Expense" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Food" })).toBeChecked();
+    expect(screen.getByLabelText("Amount in pesos")).toHaveValue("125.50");
+    expect(screen.getByLabelText("Transaction date")).toHaveValue("2026-08-01");
+    expect(screen.getByLabelText("Merchant or source")).toHaveValue("Grocery");
+    expect(screen.getByLabelText("Description")).toHaveValue("Weekly supplies");
   });
 });

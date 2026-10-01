@@ -11,6 +11,19 @@ import { QuickTaskForm } from "@/components/tasks/quick-task-form";
 
 afterEach(cleanup);
 
+/** A choice group: a visible legend, and options named by visible text. */
+function expectVisibleChoices(group: string, options: string[]) {
+  const fieldset = screen.getByRole("group", { name: group });
+  const legend = fieldset.querySelector("legend");
+  expect(legend).not.toHaveClass("sr-only");
+  for (const option of options) {
+    const label = screen.getByRole("radio", { name: option }).closest("label");
+    expect(label).not.toBeNull();
+    expect(label).not.toHaveClass("sr-only");
+    expect(label).toHaveTextContent(option);
+  }
+}
+
 function expectVisibleLabel(name: string) {
   const control = screen.getByLabelText(name);
   const label =
@@ -87,11 +100,21 @@ describe("primary create forms", () => {
       />,
     );
 
-    expectVisibleLabel("Transaction type");
-    expectVisibleLabel("Account");
-    expectVisibleLabel("Category");
+    // The type toggle's options are its labels; its group name is for
+    // assistive tech, so only the options must be visible.
+    for (const option of ["Expense", "Income"]) {
+      const label = screen
+        .getByRole("radio", { name: option })
+        .closest("label");
+      expect(label).toHaveTextContent(option);
+    }
+    expectVisibleChoices("Paid from", ["Cash"]);
+    expectVisibleChoices("Category", ["Food"]);
     expectVisibleLabel("Amount in pesos");
-    expectVisibleLabel("Transaction date");
+    expectVisibleLabel("Merchant or source");
+    expect(screen.getByRole("group", { name: "When" })).toContainElement(
+      screen.getByLabelText("Transaction date"),
+    );
   });
 
   it("uses visible labels for transfer details", () => {

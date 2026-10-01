@@ -1,14 +1,15 @@
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, Scale } from "lucide-react";
+import type { AccountIdentity } from "@/components/money/account-visuals";
 import { TransferForm } from "@/components/money/transfer-form";
-import { SensitiveValue } from "@/components/privacy/privacy-provider";
+import { TransferHistory } from "@/components/money/transfer-history";
 import { PageHeading } from "@/components/shared/page-heading";
 import { MoneyNavigation } from "@/components/money/money-navigation";
-import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
-import { formatCentavos } from "@/lib/money/money";
-import { formatCalendarDate } from "@/lib/dates/dates";
 
 export const metadata = { title: "Record transfer" };
+
+const TRANSFER_COLUMNS =
+  "id,source_account_id,destination_account_id,amount_centavos,transfer_date,description";
 
 function todayInManila() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -28,31 +29,48 @@ export default async function TransfersPage({
   const supabase = await createClient();
   const [accountsResult, transfersResult, highlightedResult] = supabase
     ? await Promise.all([
+        // Archived accounts are still named in history, but only active
+        // ones can send or receive a new transfer.
         supabase
-          .from("financial_accounts")
-          .select("id,name")
-          .eq("is_archived", false)
+          .from("financial_account_balances")
+          .select(
+            "id,name,account_type,provider_id,current_balance_centavos,is_archived",
+          )
           .order("name"),
         supabase
           .from("account_transfers")
-          .select(
-            "id,source_account_id,destination_account_id,amount_centavos,transfer_date,description",
-          )
+          .select(TRANSFER_COLUMNS)
           .order("transfer_date", { ascending: false })
+          .order("created_at", { ascending: false })
           .limit(100),
         query.highlight && /^[0-9a-f-]{36}$/i.test(query.highlight)
           ? supabase
               .from("account_transfers")
-              .select(
-                "id,source_account_id,destination_account_id,amount_centavos,transfer_date,description",
-              )
+              .select(TRANSFER_COLUMNS)
               .eq("id", query.highlight)
               .maybeSingle()
           : Promise.resolve({ data: null }),
       ])
     : [{ data: [] }, { data: [] }, { data: null }];
-  const accountName = new Map(
-    (accountsResult.data ?? []).map((account) => [account.id, account.name]),
+  const allAccounts = (accountsResult.data ?? []).flatMap((account) =>
+    account.id && account.name
+      ? [
+          {
+            id: account.id,
+            name: account.name,
+            account_type: account.account_type ?? "other",
+            provider_id: account.provider_id,
+            current_balance_centavos: Number(
+              account.current_balance_centavos ?? 0,
+            ),
+            is_archived: Boolean(account.is_archived),
+          },
+        ]
+      : [],
+  );
+  const activeAccounts = allAccounts.filter((account) => !account.is_archived);
+  const accountsById = new Map<string, AccountIdentity>(
+    allAccounts.map((account) => [account.id, account]),
   );
   const recentTransfers = transfersResult.data ?? [];
   const transfers = highlightedResult.data
@@ -63,6 +81,7 @@ export default async function TransfersPage({
         ),
       ]
     : recentTransfers;
+  const today = todayInManila();
 
   return (
     <div className="mx-auto max-w-[1100px] p-4 sm:p-6 lg:p-8">
@@ -73,68 +92,45 @@ export default async function TransfersPage({
       />
       <MoneyNavigation currentHref="/money/transfers" />
 
-      <div className="mt-8 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <TransferForm
-          accounts={accountsResult.data ?? []}
-          today={todayInManila()}
-        />
+      <div className="mt-8 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <TransferForm accounts={activeAccounts} today={today} />
 
-        <Card>
-          <CardContent>
-            <div className="bg-primary/10 text-primary grid size-10 place-items-center rounded-xl">
-              <ArrowLeftRight className="size-5" aria-hidden="true" />
-            </div>
-            <h2 className="mt-4 text-base font-semibold">
-              Transfers stay balance-neutral
-            </h2>
-            <p className="text-muted-foreground mt-2 text-sm leading-6">
-              The amount leaves the source account and enters the destination
-              account. Your combined balance does not change.
-            </p>
-            <p className="text-muted-foreground border-border mt-4 border-t pt-4 text-xs leading-5">
-              Both accounts must be active, and the source and destination must
-              be different.
-            </p>
-          </CardContent>
-        </Card>
+        <aside className="border-border bg-card/60 rounded-[1.5rem] border p-5">
+          <span className="bg-primary/10 text-primary grid size-10 place-items-center rounded-xl">
+            <Scale className="size-5" aria-hidden="true" />
+          </span>
+          <h2 className="mt-4 text-base font-semibold">
+            Transfers stay balance-neutral
+          </h2>
+          <p className="text-muted-foreground mt-2 text-sm leading-6">
+            The amount leaves the source account and enters the destination
+            account. Your combined balance does not change, and neither income
+            nor expenses move.
+          </p>
+          <p className="text-muted-foreground border-border mt-4 flex gap-2 border-t pt-4 text-xs leading-5">
+            <ArrowLeftRight
+              className="mt-0.5 size-3.5 shrink-0"
+              aria-hidden="true"
+            />
+            Both accounts must be active, and the source and destination must be
+            different.
+          </p>
+        </aside>
       </div>
 
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold">Transfer history</h2>
-        <div className="border-border bg-card mt-3 overflow-hidden rounded-2xl border">
-          {transfers.length === 0 ? (
-            <p className="text-muted-foreground p-6 text-center text-sm">
-              No transfers recorded yet.
-            </p>
-          ) : (
-            transfers.map((transfer) => (
-              <article
-                key={transfer.id}
-                id={`transfer-${transfer.id}`}
-                className={`border-border flex min-w-0 flex-col gap-2 border-b p-4 last:border-0 sm:flex-row sm:items-center sm:justify-between ${
-                  query.highlight === transfer.id ? "bg-primary/[0.08]" : ""
-                }`}
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold break-words">
-                    {accountName.get(transfer.source_account_id) ?? "Account"} →{" "}
-                    {accountName.get(transfer.destination_account_id) ??
-                      "Account"}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {formatCalendarDate(transfer.transfer_date)}
-                    {transfer.description ? ` · ${transfer.description}` : ""}
-                  </p>
-                </div>
-                <p className="font-mono text-sm font-semibold">
-                  <SensitiveValue>
-                    {formatCentavos(Number(transfer.amount_centavos))}
-                  </SensitiveValue>
-                </p>
-              </article>
-            ))
-          )}
-        </div>
+      <section className="mt-10" aria-labelledby="transfer-history-title">
+        <h2
+          id="transfer-history-title"
+          className="text-lg font-semibold tracking-tight"
+        >
+          Transfer history
+        </h2>
+        <TransferHistory
+          transfers={transfers}
+          accounts={accountsById}
+          today={today}
+          highlightId={query.highlight}
+        />
       </section>
     </div>
   );

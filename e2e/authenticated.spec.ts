@@ -32,13 +32,11 @@ test.describe("authenticated ATLAS workflows", () => {
 
     await page.goto("/money/transactions");
     await page.getByRole("button", { name: "Record a transaction" }).click();
-    await page
-      .getByLabel("Account")
-      .selectOption({ label: `E2E Cash ${unique}` });
-    await page.getByLabel("Category").selectOption({ label: "Food" });
     await page.getByLabel("Amount in pesos").fill("125.50");
+    await page.getByRole("radio", { name: "Food" }).check();
+    await page.getByRole("radio", { name: `E2E Cash ${unique}` }).check();
     await page.getByLabel("Merchant or source").fill(`E2E canteen ${unique}`);
-    await page.getByRole("button", { name: "Record transaction" }).click();
+    await page.getByRole("button", { name: /Record expense/ }).click();
     await page.getByRole("button", { name: "History", exact: true }).click();
     await expect(page.getByText(`E2E canteen ${unique}`)).toBeVisible();
   });
