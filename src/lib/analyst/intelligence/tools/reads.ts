@@ -1132,6 +1132,303 @@ export async function goalContext(
   return payload;
 }
 
+/** Whole months a recent monthly surplus is averaged over, at most. */
+export const SURPLUS_MONTHS = 3;
+
+/**
+ * The owner's average monthly surplus (recorded income less expenses) over
+ * the last whole months before this one that have records, from the
+ * owner-scoped monthly aggregate. Null when no such month exists.
+ */
+async function recentSurplus(client: SupabaseClient, today: string) {
+  const year = Number(today.slice(0, 4));
+  const month = Number(today.slice(5, 7));
+  const monthStart = (offset: number) =>
+    new Date(Date.UTC(year, month - 1 - offset, 1)).toISOString().slice(0, 10);
+  const result = await client.rpc("runway_monthly_totals", {
+    p_start_date: monthStart(SURPLUS_MONTHS),
+    p_end_date: monthStart(0),
+  });
+  if (result.error) throw new ToolFailure("unavailable_source");
+  const parsed = z
+    .array(aggregateRow)
+    .max(V2_TOOL_LIMITS.aggregateGroups)
+    .safeParse(result.data ?? []);
+  if (!parsed.success) throw new ToolFailure("invalid_output");
+  const net = new Map<string, number>();
+  for (const row of parsed.data) {
+    const sign =
+      row.transaction_type === "income"
+        ? 1
+        : row.transaction_type === "expense"
+          ? -1
+          : 0;
+    if (!sign) continue;
+    const key = row.month_start.slice(0, 7);
+    const next = (net.get(key) ?? 0) + sign * Number(row.amount_centavos);
+    if (!Number.isSafeInteger(next)) throw new ToolFailure("invalid_output");
+    net.set(key, next);
+  }
+  const months = [...net.keys()].sort();
+  if (months.length === 0) return null;
+  const total = months.reduce((sum, key) => sum + net.get(key)!, 0);
+  const last = months.at(-1)!;
+  const lastDay = new Date(
+    Date.UTC(Number(last.slice(0, 4)), Number(last.slice(5, 7)), 0),
+  )
+    .toISOString()
+    .slice(0, 10);
+  return {
+    value: Math.round(total / months.length),
+    months: months.length,
+    period: { from: `${months[0]}-01`, through: lastDay },
+  };
+}
+
+/** The recent window a goal's pace is read over, in days (four weeks). */
+export const PACE_WINDOW_DAYS = 28;
+
+const dayOffset = (day: string, days: number) =>
+  new Date(Date.parse(`${day}T00:00:00Z`) + days * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+
+/**
+ * How fast a goal's work is getting done. For one resolved goal, or for the
+ * active goals with a target date (soonest first), it counts the goal's
+ * milestones and the tasks currently linked to it: how many there are, how
+ * many are done, and how many were done in the last four weeks (zero when
+ * none are recorded); and the days left before the target date. Only an
+ * active goal gets a pace; another gets its status. Milestones and tasks are counted apart,
+ * and cancelled tasks are not counted. More linked tasks than the bound is
+ * a failure, never a partial count.
+ */
+export async function goalPace(
+  input: V2ToolInput<"getGoalPace">,
+  { client, owner, now }: ReadContext,
+): Promise<V2ToolPayload> {
+  const ctx: BuildContext = {
+    tool: "getGoalPace",
+    retrievedAt: now.toISOString(),
+  };
+  const today = manilaToday(now);
+  const window = {
+    from: dayOffset(today, -(PACE_WINDOW_DAYS - 1)),
+    through: today,
+  };
+  const named = input.goal ? parseHandle(input.goal)!.id : null;
+  let goalQuery = client
+    .from("goals")
+    .select(
+      `${detailColumns.goal},target_amount_centavos,saved_amount_centavos`,
+    )
+    .eq("user_id", owner);
+  goalQuery = named
+    ? goalQuery.eq("id", named)
+    : goalQuery
+        .eq("status", "active")
+        .not("target_date", "is", null)
+        .order("target_date", { ascending: true })
+        .order("id");
+  const found = rows(await goalQuery.limit(V2_TOOL_LIMITS.paceGoals + 1));
+  if (named && found.length === 0) throw new ToolFailure("unavailable_source");
+  const goals = found.slice(0, V2_TOOL_LIMITS.paceGoals);
+  const payload = emptyPayload();
+  if (goals.length === 0) {
+    payload.status = "insufficient";
+    payload.limitations.push(
+      "No active goal has a target date, so there is no deadline to measure a pace against.",
+    );
+    return payload;
+  }
+  const ids = goals.map((goal) => goal.id);
+  const [milestoneRows, taskRows] = await Promise.all([
+    client
+      .from("goal_milestones")
+      .select("id,goal_id,completed_at")
+      .eq("user_id", owner)
+      .in("goal_id", ids)
+      .order("id")
+      .limit(V2_TOOL_LIMITS.paceTasks + 1),
+    client
+      .from("tasks")
+      .select("id,related_goal_id,status,completed_at")
+      .eq("user_id", owner)
+      .in("related_goal_id", ids)
+      .neq("status", "cancelled")
+      .order("id")
+      .limit(V2_TOOL_LIMITS.paceTasks + 1),
+  ]);
+  const milestones = rows(milestoneRows);
+  const tasks = rows(taskRows);
+  if (
+    milestones.length > V2_TOOL_LIMITS.paceTasks ||
+    tasks.length > V2_TOOL_LIMITS.paceTasks
+  )
+    throw new ToolFailure("partial");
+  // A goal with a money target is set against the owner's recent monthly
+  // surplus: recorded income less expenses, averaged over the last whole
+  // months that have records.
+  const saving = goals.some(
+    (goal) =>
+      goal.status === "active" && Number(goal.target_amount_centavos) > 0,
+  );
+  const surplus = saving ? await recentSurplus(client, today) : null;
+  if (surplus)
+    payload.evidence.push(
+      metric(ctx, {
+        local: `surplus.${surplus.period.from}.${surplus.period.through}`,
+        domain: "money",
+        metricKey: "goal_recent_surplus_centavos",
+        definition: `Recorded income less recorded expenses, averaged over the last ${surplus.months} whole month${surplus.months === 1 ? "" : "s"} with records`,
+        period: surplus.period,
+        basis: "event_date",
+        scope: {
+          id: "whole_domain:money_surplus",
+          type: "whole_domain",
+          description: "All of the owner's recorded income less expenses",
+        },
+        coverage: { period: "complete" },
+        value: surplus.value,
+        unit: "centavos",
+        limitations: [
+          "Transfers are excluded, and a month the records began partway through counts as a whole month. Money set aside for a goal is not tracked; the saved amount is the owner's own figure.",
+        ],
+      }),
+    );
+  else if (saving)
+    payload.limitations.push(
+      "There is no whole month of recorded income and expenses yet, so a monthly surplus cannot be measured.",
+    );
+  const recent = (value: unknown) => {
+    const day = manilaDay(value);
+    return day !== null && day >= window.from && day <= window.through;
+  };
+  for (const goal of goals) {
+    const handle = toHandle("goal", goal.id);
+    const scope = entityScope(
+      handle,
+      "goal",
+      "The goal, its milestones and its currently linked tasks",
+    );
+    const refs = [{ handle, href: nameSources.goal.href(goal) }];
+    payload.labels.push(label("goal", goal));
+    // A pace is for work still under way: a completed, paused or archived
+    // goal gets its status, never a projection that would read as missing
+    // its date.
+    if (goal.status !== "active") {
+      payload.evidence.push(
+        recordFact(ctx, {
+          local: `${handle}.status`,
+          domain: "goals",
+          metricKey: "record:goal.status",
+          period: snapshot(today),
+          scope,
+          refs,
+          value: String(goal.status),
+          unit: "text",
+        }),
+      );
+      payload.limitations.push(
+        "A pace is measured only for active goals; this goal is not active.",
+      );
+      continue;
+    }
+    const targetAmount = Number(goal.target_amount_centavos);
+    if (Number.isSafeInteger(targetAmount) && targetAmount > 0)
+      payload.evidence.push(
+        metric(ctx, {
+          local: `${handle}.target_amount`,
+          domain: "goals",
+          metricKey: "goal_target_centavos",
+          period: snapshot(today),
+          scope,
+          refs,
+          value: targetAmount,
+          unit: "centavos",
+        }),
+        metric(ctx, {
+          local: `${handle}.saved_amount`,
+          domain: "goals",
+          metricKey: "goal_saved_centavos",
+          period: snapshot(today),
+          scope,
+          refs,
+          value: Number(goal.saved_amount_centavos ?? 0),
+          unit: "centavos",
+          limitations: ["The amount saved is the owner's own figure."],
+        }),
+      );
+    const target = isoDay(goal.target_date);
+    if (target)
+      payload.evidence.push(
+        metric(ctx, {
+          local: `${handle}.days_to_target`,
+          domain: "goals",
+          metricKey: "goal_days_to_target",
+          period: snapshot(today),
+          scope,
+          refs,
+          value: Math.round(
+            (Date.parse(target) - Date.parse(today)) / 86_400_000,
+          ),
+          unit: "days",
+        }),
+      );
+    const kinds = [
+      {
+        kind: "milestones" as const,
+        domain: "goals" as const,
+        items: milestones.filter((item) => item.goal_id === goal.id),
+        done: (item: Record<string, unknown>) => Boolean(item.completed_at),
+      },
+      {
+        kind: "tasks" as const,
+        domain: "tasks" as const,
+        items: tasks.filter((item) => item.related_goal_id === goal.id),
+        done: (item: Record<string, unknown>) => item.status === "completed",
+      },
+    ];
+    for (const { kind, domain, items, done } of kinds) {
+      // No work recorded is stated as zero counts, so it is never mistaken
+      // for missing data; no pace is derived from it.
+      const finished = items.filter(done);
+      const counts = [
+        ["total", items.length, snapshot(today), "snapshot"],
+        ["done", finished.length, snapshot(today), "snapshot"],
+        [
+          "done_recent",
+          finished.filter((item) => recent(item.completed_at)).length,
+          window,
+          "event_date",
+        ],
+      ] as const;
+      for (const [measure, value, period, basis] of counts)
+        payload.evidence.push(
+          metric(ctx, {
+            local: `${handle}.${kind}.${measure}`,
+            domain,
+            metricKey: `goal_${kind}_${measure}`,
+            period,
+            basis,
+            scope,
+            refs,
+            value,
+            unit: "count",
+          }),
+        );
+    }
+  }
+  if (found.length > goals.length)
+    payload.limitations.push(
+      `Only the ${goals.length} active goals with the soonest target dates are covered.`,
+    );
+  payload.limitations.push(
+    "Tasks count when they are linked to the goal now; past links and effort are not known. Progress percent is not used, since its history is not stored.",
+  );
+  return payload;
+}
+
 const decisionRow = z
   .object({
     id: z.uuid(),

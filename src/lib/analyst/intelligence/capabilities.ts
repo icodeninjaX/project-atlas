@@ -192,6 +192,21 @@ export const CAPABILITY_MANIFEST: readonly CapabilityDescriptor[] = [
     ],
   }),
   entry({
+    id: "goal.pace",
+    domain: "goals",
+    profile: "aggregate",
+    status: "available",
+    description:
+      "Whether a goal is on track for its target date: its milestones and currently linked tasks, how many are done and how many were done in the last four weeks, and at that pace how many days the rest would take against the days left. For a goal with a money target, the amount left to save, the amount to save each month, and how long the rest would take at the owner's recent monthly surplus. Without a named goal, the active goals with the soonest target dates.",
+    tools: ["resolveAnalystEntities", "getGoalPace"],
+    supportedHistory: "Completions in the last four weeks.",
+    unsupported: [
+      "Money set aside for a goal (the saved amount is the owner's own figure)",
+      "Effort or size of tasks",
+      "Past progress percent",
+    ],
+  }),
+  entry({
     id: "goal.overview",
     domain: "goals",
     profile: "aggregate",

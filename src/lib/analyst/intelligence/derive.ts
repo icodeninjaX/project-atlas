@@ -5,6 +5,8 @@ import {
   difference,
   fullMonth,
   coveredPeriod,
+  goalPace,
+  goalSavings,
   memberMonthProjection,
   monthProjection,
   monthSetTrend,
@@ -230,6 +232,52 @@ export function autoDerive(
       );
       if (projection) facts.push(projection);
     }
+  }
+  // A goal's pace: each kind of work (milestones, linked tasks) read for one
+  // goal gets its remaining count, weekly pace, days needed and margin.
+  const byKey = (scope: string, key: string) =>
+    values.find(
+      (item) => item.scope.id === scope && item.semantics.metricKey === key,
+    );
+  for (const total of values) {
+    const kind = /^goal_(milestones|tasks)_total$/.exec(
+      total.semantics.metricKey,
+    )?.[1];
+    if (!kind) continue;
+    const scope = total.scope.id;
+    const done = byKey(scope, `goal_${kind}_done`);
+    const recent = byKey(scope, `goal_${kind}_done_recent`);
+    if (!done || !recent) continue;
+    facts.push(
+      ...(attempt(() =>
+        goalPace(`derived.goal_pace.${scope}|${kind}`, {
+          total,
+          done,
+          recent,
+          daysToTarget: byKey(scope, "goal_days_to_target") ?? null,
+        }),
+      ) ?? []),
+    );
+  }
+  // A goal's money target against what is saved and the recent surplus.
+  const surplus = values.find(
+    (item) => item.semantics.metricKey === "goal_recent_surplus_centavos",
+  );
+  for (const target of values) {
+    if (target.semantics.metricKey !== "goal_target_centavos") continue;
+    const scope = target.scope.id;
+    const saved = byKey(scope, "goal_saved_centavos");
+    if (!saved) continue;
+    facts.push(
+      ...(attempt(() =>
+        goalSavings(`derived.goal_savings.${scope}`, {
+          target,
+          saved,
+          surplus: surplus ?? null,
+          daysToTarget: byKey(scope, "goal_days_to_target") ?? null,
+        }),
+      ) ?? []),
+    );
   }
   // Income against expenses in the same period: did income cover spending?
   const wholeTotal = (key: string, period: string) =>

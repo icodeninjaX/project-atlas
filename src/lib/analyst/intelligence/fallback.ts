@@ -11,7 +11,7 @@ import { formatMoney } from "./language";
  */
 
 const MAX_PER_REQUIREMENT = 3;
-const SHOWN_UNITS = new Set(["centavos", "count", "months"]);
+const SHOWN_UNITS = new Set(["centavos", "count", "months", "days"]);
 // Changes and percentages need their two periods stated together; those
 // come from a writer or a derived fact, not a one-figure sentence.
 const SHOWN_AGGREGATIONS = new Set(["sum", "count", "latest", "value"]);
@@ -39,6 +39,7 @@ const statedKey = (item: Numeric) =>
 function valueText(item: Numeric) {
   if (item.unit === "centavos") return formatMoney(item.value);
   if (item.unit === "months") return `${item.value} months`;
+  if (item.unit === "days") return `${item.value} days`;
   return String(item.value);
 }
 

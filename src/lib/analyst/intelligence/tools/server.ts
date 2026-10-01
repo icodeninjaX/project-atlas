@@ -32,6 +32,7 @@ import {
   dataInventory,
   decisionContext,
   goalContext,
+  goalPace,
   moneyBreakdown,
   transactionQuery,
   recordDetails,
@@ -277,6 +278,8 @@ export async function invokeAnalystToolV2(
             v2ToolInputs.getGoalAnalysisContext.parse(rawInput),
             context,
           );
+        case "getGoalPace":
+          return goalPace(v2ToolInputs.getGoalPace.parse(rawInput), context);
         case "getDecisionAnalysisContext":
           return decisionContext(
             v2ToolInputs.getDecisionAnalysisContext.parse(rawInput),

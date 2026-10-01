@@ -21,7 +21,9 @@ export default async function GoalsPage({
 
   const goalResult = await supabase
     .from("goals")
-    .select("id,title,description,area,status,target_date,success_definition")
+    .select(
+      "id,title,description,area,status,target_date,success_definition,target_amount_centavos,saved_amount_centavos",
+    )
     .order("target_date", { nullsFirst: false });
   if (goalResult.error) {
     throw new Error(`Could not load goals: ${goalResult.error.message}`);

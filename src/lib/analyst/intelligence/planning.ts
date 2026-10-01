@@ -263,6 +263,14 @@ export function deterministicBrief(input: {
       capabilities.push("task.detail");
     if (domain === "goals" && /\bdecision|desisyon\b/i.test(question))
       capabilities.push("decision.context");
+    // "Am I on track?" asks for the pace against the target date.
+    if (
+      domain === "goals" &&
+      /\b(?:on track|in time|on schedule|deadline|behind|ahead|matatapos|aabot)\b/i.test(
+        question,
+      )
+    )
+      capabilities.push("goal.pace");
     requirements.push({
       id: `r_${domain}`,
       question: base.question,

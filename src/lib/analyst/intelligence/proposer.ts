@@ -358,6 +358,41 @@ export function capabilityProposer(now: Date): Proposer {
             );
             continue;
           }
+          // A named goal's pace, once it resolves; otherwise the active
+          // goals with the soonest target dates.
+          if (capability === "goal.pace") {
+            const named =
+              referencePhrase(view.brief.question, "goal") ??
+              (view.brief.resolvedEntities.some(
+                (item) => parseHandle(item.handle)?.type === "goal",
+              )
+                ? "named"
+                : null);
+            if (!named) {
+              add("getGoalPace", {}, requirement.id);
+              continue;
+            }
+            const { handle, ambiguous } = resolved(view, "goal");
+            if (ambiguous)
+              return { requests: [], clarification: { candidates: ambiguous } };
+            if (handle) {
+              add("getGoalPace", { goal: handle }, requirement.id);
+              continue;
+            }
+            const tried = view.outcomes.some(
+              (item) =>
+                item.request.tool === "resolveAnalystEntities" &&
+                (item.request.input as { types: string[] }).types.includes(
+                  "goal",
+                ),
+            );
+            add(
+              tried ? "getGoalPace" : "resolveAnalystEntities",
+              tried ? {} : { text: named, types: ["goal"] },
+              requirement.id,
+            );
+            continue;
+          }
           if (capability === "money.change_drivers") {
             const kind = requirementMoneyKind(requirement);
             const [current, previous] = view.brief.periods

@@ -91,6 +91,7 @@ describe("Analyst V2 tool registry", () => {
       "getMoneyBreakdown",
       "queryTransactions",
       "getGoalAnalysisContext",
+      "getGoalPace",
       "getDecisionAnalysisContext",
       "getRelationshipPaths",
       "getDataInventory",
@@ -357,7 +358,7 @@ describe("record details (AI-02B)", () => {
       attributedTo: "user",
       text: INJECTION_REFLECTION,
     });
-    expect(listAnalystToolsV2()).toHaveLength(9 + BRIDGED_TOOLS.length);
+    expect(listAnalystToolsV2()).toHaveLength(10 + BRIDGED_TOOLS.length);
     // Even retrieved text never reaches the shared route.
     const filtered = filterProviderPayload(
       {

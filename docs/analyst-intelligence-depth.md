@@ -219,6 +219,56 @@ investigation ends as sufficient.
 brief; `depth-questions.test.ts` runs both questions end to end with three
 earlier months of records.
 
+## 4b-5. Goal pace (`getGoalPace`, `goal.pace`)
+
+"Am I on track with my goals?" asks whether the work is getting done fast
+enough for the target date. Goals store a target date, milestones and
+currently linked tasks, but no money amount and no progress history, so
+the pace is measured in work, not percent or pesos.
+
+`getGoalPace` reads, for one resolved goal or for the active goals with a
+target date (soonest first, at most five), the goal's milestones and its
+currently linked tasks (cancelled ones excluded), counted apart: how many
+there are, how many are done, and how many were done in the last four
+weeks (zero when none are recorded, so no work is never mistaken for
+missing data); and the days to the target date. Only an active goal gets a
+pace: a named goal that is completed, paused or archived gets its status
+instead, so a goal finished on time never reads as missing its date. More
+than 500 of either is a failure, never a partial count. Task counts are task evidence, so they
+reach a provider only with consent to tasks.
+
+ATLAS derives (`goalPace`), per goal and kind of work: the remaining count,
+the weekly pace over those four weeks, the days the rest would take at that
+pace (`days_needed`), and the days to the target date less those days
+(`margin_days`: negative means the pace would miss the date by that many
+days). Both are estimates, so a claim citing them must read as one ("at
+this pace …"). With nothing done in the four weeks and work remaining, the
+days needed are undefined and the writer says so; with no work recorded,
+nothing is derived and the writer says the goal has no tasks to track.
+
+**Saving toward a goal's money target.** A goal may carry a target amount
+and the amount saved so far (`target_amount_centavos`,
+`saved_amount_centavos`, set on the goal form; the saved amount is the
+owner's own figure, updated by hand). For an active goal with a target,
+`getGoalPace` also returns both amounts, and once for the read the owner's
+recent monthly surplus: recorded income less expenses, averaged over the
+last three whole months before this one that have records (from the
+owner-scoped monthly aggregate; money evidence, so it needs consent to
+money). ATLAS derives (`goalSavings`) the amount left, the amount to save
+each month to reach it by the target date, the months the rest would take
+at that surplus, and the days to spare or late (`margin_days`, using 30.44
+days a month). The months and margin are estimates and must be worded as
+such; with no surplus or a deficit they are undefined. The surplus is all
+recorded income less spending, not money set aside.
+
+A goal form update that does not send the amount fields (an older client's
+queued change) leaves them as they are; an emptied field clears them.
+
+The rules add `goal.pace` to a goals question that asks about being on
+track, in time, behind or ahead; the planner may add it to any question. A
+named goal is resolved first; a name that matches nothing reads the active
+goals instead. `depth-questions.test.ts` runs both forms end to end.
+
 ## 4c. Reading more after the first draft
 
 With a plan, the first draft may list up to two records it lacked in
@@ -385,10 +435,13 @@ then allow again). The policy filter still applies per domain and profile.
 
 Built since this list was first written: the transaction query (§4b-3),
 pace and month-end projections (§4b-2), category trends and change drivers
-(§4b-4) and remembered priorities (§4d). Still out of scope:
+(§4b-4), goal pace (§4b-5) and remembered priorities (§4d). Still out of scope:
 
 - Grouping by two dimensions at once (category × month in one read); the
   drivers read each leading category's months separately.
 - Merchant-level analysis; queries read date, amount and category only.
 - Why a category changed; ATLAS reports accounting contributions and
   trends, never behavioral causes.
+- Money set aside for a goal: ATLAS does not track it; the saved amount is
+  the owner's own figure, and the surplus is all recorded income less
+  spending.

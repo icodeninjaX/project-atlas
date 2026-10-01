@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { GoalActionState } from "@/lib/goals/actions";
+import { centavosToPesoInput } from "@/lib/money/money";
 import { useOfflineActionState } from "@/components/offline/offline-mutation";
 
 const initial: GoalActionState = { success: false, message: "" };
@@ -23,6 +24,8 @@ export function GoalForm({
     status: string;
     target_date: string | null;
     success_definition: string | null;
+    target_amount_centavos?: number | null;
+    saved_amount_centavos?: number | null;
   };
   autoFocus?: boolean;
   onCancel?: () => void;
@@ -92,6 +95,34 @@ export function GoalForm({
           name="targetDate"
           type="date"
           defaultValue={goal?.target_date ?? ""}
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Target amount (₱, optional)
+        <Input
+          name="targetAmount"
+          inputMode="decimal"
+          defaultValue={
+            goal?.target_amount_centavos
+              ? centavosToPesoInput(goal.target_amount_centavos)
+              : ""
+          }
+          placeholder="e.g. 60000"
+          className="mt-1.5"
+        />
+      </label>
+      <label className="text-muted-foreground text-xs">
+        Saved so far (₱, optional)
+        <Input
+          name="savedAmount"
+          inputMode="decimal"
+          defaultValue={
+            goal?.saved_amount_centavos != null
+              ? centavosToPesoInput(goal.saved_amount_centavos)
+              : ""
+          }
+          placeholder="Update it as you save"
           className="mt-1.5"
         />
       </label>

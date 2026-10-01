@@ -364,6 +364,184 @@ describe("category trends", () => {
   });
 });
 
+describe("goal pace", () => {
+  const career = `goal:${fixtureUuid("goal-a-career")}`;
+  const fact = (answered: Answered, kind: string, name: string) =>
+    answered.derived.find(
+      (item) => item.id === `derived.goal_pace.${career}|${kind}.${name}`,
+    )?.output;
+
+  it("Am I on track with my goals?", async () => {
+    const brief = deterministicBrief({
+      question: "Am I on track with my goals?",
+      plan: null,
+      now,
+    });
+    expect(
+      brief.requirements.some((item) =>
+        item.evidenceNeeded.includes("goal.pace"),
+      ),
+    ).toBe(true);
+    const answered = await investigate(brief);
+    const daysLeft = answered.evidence.find(
+      (item) =>
+        item.semantics.metricKey === "goal_days_to_target" &&
+        item.scope.id === career,
+    );
+    // 24 September to 31 December.
+    expect(daysLeft && "value" in daysLeft ? daysLeft.value : null).toBe(98);
+    // Linked tasks: 4, 3 done, 2 of them since 28 August (the cover letter
+    // on 19 August is older): 0.5 a week, so the last one takes about 14
+    // days, 84 days before the target date.
+    expect(fact(answered, "tasks", "remaining")).toMatchObject({ value: 1 });
+    expect(fact(answered, "tasks", "per_week")).toMatchObject({ value: 0.5 });
+    expect(fact(answered, "tasks", "days_needed")).toMatchObject({
+      value: 14,
+      unit: "days",
+    });
+    expect(fact(answered, "tasks", "margin_days")).toMatchObject({
+      value: 84,
+    });
+    // Milestones are counted apart: 1 of 2 done, on 10 September.
+    expect(fact(answered, "milestones", "days_needed")).toMatchObject({
+      value: 28,
+    });
+    // The goal with no target date is not read without being named.
+    expect(
+      answered.evidence.some((item) =>
+        item.scope.id.includes(fixtureUuid("goal-a-trip")),
+      ),
+    ).toBe(false);
+  });
+
+  it("states a goal with no recorded work as zero counts, with no pace", async () => {
+    const fund = `goal:${fixtureUuid("goal-a-fund")}`;
+    const answered = await investigate(
+      deterministicBrief({
+        question: "Am I on track with my goals?",
+        plan: null,
+        now,
+      }),
+    );
+    const counts = answered.evidence
+      .filter(
+        (item) => item.scope.id === fund && item.sourceType === "getGoalPace",
+      )
+      .map((item) => [
+        item.semantics.metricKey,
+        "value" in item ? item.value : null,
+      ]);
+    expect(counts).toEqual(
+      expect.arrayContaining([
+        ["goal_milestones_total", 0],
+        ["goal_tasks_total", 0],
+        ["goal_tasks_done_recent", 0],
+      ]),
+    );
+    expect(answered.derived.some((item) => item.scopeId === fund)).toBe(false);
+  });
+
+  it("gives a goal that is not active its status, never a pace", async () => {
+    const tables = fixtureTables();
+    tables.goals!.push({
+      id: fixtureUuid("goal-a-course"),
+      user_id: OWNER_A,
+      title: "Finish the data course",
+      status: "completed",
+      progress_percent: 100,
+      target_date: "2026-09-01",
+      created_at: "2026-07-01T00:00:00Z",
+      updated_at: "2026-07-01T00:00:00Z",
+      area: "learning",
+      description: null,
+    });
+    vi.stubGlobal("fetch", createEmulator(tables, OWNER_A).fetch);
+    const answered = await investigate(
+      deterministicBrief({
+        question: "Was I on track with my data course goal?",
+        plan: null,
+        now,
+      }),
+    );
+    const course = `goal:${fixtureUuid("goal-a-course")}`;
+    const mine = answered.evidence.filter((item) => item.scope.id === course);
+    // Its status is stated (once, whichever read gave it) and nothing is
+    // counted toward a pace.
+    expect(
+      mine.find((item) => item.semantics.metricKey === "record:goal.status"),
+    ).toMatchObject({ value: "completed" });
+    expect(
+      mine.some(
+        (item) =>
+          item.semantics.metricKey.startsWith("goal_") &&
+          item.semantics.metricKey !== "goal_linked_milestone_completion",
+      ),
+    ).toBe(false);
+    expect(answered.derived.some((item) => item.scopeId === course)).toBe(
+      false,
+    );
+  });
+
+  it("Am I on track to save for my emergency fund goal?", async () => {
+    const tables = fixtureTables();
+    const fundId = fixtureUuid("goal-a-fund");
+    const fund = tables.goals!.find((row) => row.id === fundId)!;
+    // ₱100,000 target, ₱40,000 saved, due 30 June 2027.
+    fund.target_amount_centavos = 10_000_000;
+    fund.saved_amount_centavos = 4_000_000;
+    vi.stubGlobal("fetch", createEmulator(tables, OWNER_A).fetch);
+    const answered = await investigate(
+      deterministicBrief({
+        question: "Am I on track to save for my emergency fund goal?",
+        plan: null,
+        now,
+      }),
+    );
+    const handle = `goal:${fundId}`;
+    const saving = (name: string) =>
+      answered.derived.find(
+        (item) => item.id === `derived.goal_savings.${handle}.${name}`,
+      )?.output;
+    // June and July have no records; August alone: ₱50,000 income less
+    // ₱19,099 of expenses is a ₱30,901 surplus.
+    const surplus = answered.evidence.find(
+      (item) => item.semantics.metricKey === "goal_recent_surplus_centavos",
+    );
+    expect(surplus && "value" in surplus ? surplus.value : null).toBe(
+      3_090_100,
+    );
+    expect(saving("remaining_centavos")).toMatchObject({ value: 6_000_000 });
+    // ₱60,000 at ₱30,901 a month: 1.95, so about 2 months (60 days).
+    expect(saving("months_needed")).toMatchObject({ value: 2, unit: "months" });
+    // 279 days to 30 June 2027, 60 of them needed.
+    expect(saving("margin_days")).toMatchObject({ value: 219 });
+    // ₱60,000 over 279 days is ₱6,545.70 a month.
+    expect(saving("monthly_needed_centavos")).toMatchObject({
+      value: 654_570,
+    });
+  });
+
+  it("Am I on track with my developer job goal?", async () => {
+    const answered = await investigate(
+      deterministicBrief({
+        question: "Am I on track with my developer job goal?",
+        plan: null,
+        now,
+      }),
+    );
+    const scopes = new Set(
+      answered.evidence
+        .filter((item) => item.sourceType === "getGoalPace")
+        .map((item) => item.scope.id),
+    );
+    // The named goal alone, once resolved.
+    expect([...scopes]).toEqual([career]);
+    expect(fact(answered, "tasks", "margin_days")).toMatchObject({
+      value: 84,
+    });
+  });
+});
+
 describe("reading the period", () => {
   it("reads 'since August' as August 1 through today, not August alone", () => {
     expect(resolvePeriod("How much since August?", now)).toMatchObject({

@@ -160,6 +160,8 @@ export const evidenceUnitSchema = z.enum([
   "percent",
   "score",
   "months",
+  // Calendar days, such as the days left before a goal's target date.
+  "days",
   "correlation",
   "stage",
   "severity",
