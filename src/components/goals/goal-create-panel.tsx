@@ -34,7 +34,7 @@ export function GoalCreatePanel({
       </div>
       {description}
       {isOpen ? (
-        <div className="mt-8">
+        <div className="mt-5 sm:mt-8">
           <GoalForm autoFocus onCancel={closeForm} onCreated={closeForm} />
         </div>
       ) : null}
