@@ -482,6 +482,45 @@ describe("goal pace", () => {
     );
   });
 
+  it("Am I on track to save for my emergency fund goal?", async () => {
+    const tables = fixtureTables();
+    const fundId = fixtureUuid("goal-a-fund");
+    const fund = tables.goals!.find((row) => row.id === fundId)!;
+    // ₱100,000 target, ₱40,000 saved, due 30 June 2027.
+    fund.target_amount_centavos = 10_000_000;
+    fund.saved_amount_centavos = 4_000_000;
+    vi.stubGlobal("fetch", createEmulator(tables, OWNER_A).fetch);
+    const answered = await investigate(
+      deterministicBrief({
+        question: "Am I on track to save for my emergency fund goal?",
+        plan: null,
+        now,
+      }),
+    );
+    const handle = `goal:${fundId}`;
+    const saving = (name: string) =>
+      answered.derived.find(
+        (item) => item.id === `derived.goal_savings.${handle}.${name}`,
+      )?.output;
+    // June and July have no records; August alone: ₱50,000 income less
+    // ₱19,099 of expenses is a ₱30,901 surplus.
+    const surplus = answered.evidence.find(
+      (item) => item.semantics.metricKey === "goal_recent_surplus_centavos",
+    );
+    expect(surplus && "value" in surplus ? surplus.value : null).toBe(
+      3_090_100,
+    );
+    expect(saving("remaining_centavos")).toMatchObject({ value: 6_000_000 });
+    // ₱60,000 at ₱30,901 a month: 1.95, so about 2 months (60 days).
+    expect(saving("months_needed")).toMatchObject({ value: 2, unit: "months" });
+    // 279 days to 30 June 2027, 60 of them needed.
+    expect(saving("margin_days")).toMatchObject({ value: 219 });
+    // ₱60,000 over 279 days is ₱6,545.70 a month.
+    expect(saving("monthly_needed_centavos")).toMatchObject({
+      value: 654_570,
+    });
+  });
+
   it("Am I on track with my developer job goal?", async () => {
     const answered = await investigate(
       deterministicBrief({

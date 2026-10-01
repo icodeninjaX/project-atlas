@@ -1132,6 +1132,59 @@ export async function goalContext(
   return payload;
 }
 
+/** Whole months a recent monthly surplus is averaged over, at most. */
+export const SURPLUS_MONTHS = 3;
+
+/**
+ * The owner's average monthly surplus (recorded income less expenses) over
+ * the last whole months before this one that have records, from the
+ * owner-scoped monthly aggregate. Null when no such month exists.
+ */
+async function recentSurplus(client: SupabaseClient, today: string) {
+  const year = Number(today.slice(0, 4));
+  const month = Number(today.slice(5, 7));
+  const monthStart = (offset: number) =>
+    new Date(Date.UTC(year, month - 1 - offset, 1)).toISOString().slice(0, 10);
+  const result = await client.rpc("runway_monthly_totals", {
+    p_start_date: monthStart(SURPLUS_MONTHS),
+    p_end_date: monthStart(0),
+  });
+  if (result.error) throw new ToolFailure("unavailable_source");
+  const parsed = z
+    .array(aggregateRow)
+    .max(V2_TOOL_LIMITS.aggregateGroups)
+    .safeParse(result.data ?? []);
+  if (!parsed.success) throw new ToolFailure("invalid_output");
+  const net = new Map<string, number>();
+  for (const row of parsed.data) {
+    const sign =
+      row.transaction_type === "income"
+        ? 1
+        : row.transaction_type === "expense"
+          ? -1
+          : 0;
+    if (!sign) continue;
+    const key = row.month_start.slice(0, 7);
+    const next = (net.get(key) ?? 0) + sign * Number(row.amount_centavos);
+    if (!Number.isSafeInteger(next)) throw new ToolFailure("invalid_output");
+    net.set(key, next);
+  }
+  const months = [...net.keys()].sort();
+  if (months.length === 0) return null;
+  const total = months.reduce((sum, key) => sum + net.get(key)!, 0);
+  const last = months.at(-1)!;
+  const lastDay = new Date(
+    Date.UTC(Number(last.slice(0, 4)), Number(last.slice(5, 7)), 0),
+  )
+    .toISOString()
+    .slice(0, 10);
+  return {
+    value: Math.round(total / months.length),
+    months: months.length,
+    period: { from: `${months[0]}-01`, through: lastDay },
+  };
+}
+
 /** The recent window a goal's pace is read over, in days (four weeks). */
 export const PACE_WINDOW_DAYS = 28;
 
@@ -1166,7 +1219,9 @@ export async function goalPace(
   const named = input.goal ? parseHandle(input.goal)!.id : null;
   let goalQuery = client
     .from("goals")
-    .select(detailColumns.goal)
+    .select(
+      `${detailColumns.goal},target_amount_centavos,saved_amount_centavos`,
+    )
     .eq("user_id", owner);
   goalQuery = named
     ? goalQuery.eq("id", named)
@@ -1211,6 +1266,40 @@ export async function goalPace(
     tasks.length > V2_TOOL_LIMITS.paceTasks
   )
     throw new ToolFailure("partial");
+  // A goal with a money target is set against the owner's recent monthly
+  // surplus: recorded income less expenses, averaged over the last whole
+  // months that have records.
+  const saving = goals.some(
+    (goal) =>
+      goal.status === "active" && Number(goal.target_amount_centavos) > 0,
+  );
+  const surplus = saving ? await recentSurplus(client, today) : null;
+  if (surplus)
+    payload.evidence.push(
+      metric(ctx, {
+        local: `surplus.${surplus.period.from}.${surplus.period.through}`,
+        domain: "money",
+        metricKey: "goal_recent_surplus_centavos",
+        definition: `Recorded income less recorded expenses, averaged over the last ${surplus.months} whole month${surplus.months === 1 ? "" : "s"} with records`,
+        period: surplus.period,
+        basis: "event_date",
+        scope: {
+          id: "whole_domain:money_surplus",
+          type: "whole_domain",
+          description: "All of the owner's recorded income less expenses",
+        },
+        coverage: { period: "complete" },
+        value: surplus.value,
+        unit: "centavos",
+        limitations: [
+          "Transfers are excluded, and a month the records began partway through counts as a whole month. Money set aside for a goal is not tracked; the saved amount is the owner's own figure.",
+        ],
+      }),
+    );
+  else if (saving)
+    payload.limitations.push(
+      "There is no whole month of recorded income and expenses yet, so a monthly surplus cannot be measured.",
+    );
   const recent = (value: unknown) => {
     const day = manilaDay(value);
     return day !== null && day >= window.from && day <= window.through;
@@ -1245,6 +1334,31 @@ export async function goalPace(
       );
       continue;
     }
+    const targetAmount = Number(goal.target_amount_centavos);
+    if (Number.isSafeInteger(targetAmount) && targetAmount > 0)
+      payload.evidence.push(
+        metric(ctx, {
+          local: `${handle}.target_amount`,
+          domain: "goals",
+          metricKey: "goal_target_centavos",
+          period: snapshot(today),
+          scope,
+          refs,
+          value: targetAmount,
+          unit: "centavos",
+        }),
+        metric(ctx, {
+          local: `${handle}.saved_amount`,
+          domain: "goals",
+          metricKey: "goal_saved_centavos",
+          period: snapshot(today),
+          scope,
+          refs,
+          value: Number(goal.saved_amount_centavos ?? 0),
+          unit: "centavos",
+          limitations: ["The amount saved is the owner's own figure."],
+        }),
+      );
     const target = isoDay(goal.target_date);
     if (target)
       payload.evidence.push(

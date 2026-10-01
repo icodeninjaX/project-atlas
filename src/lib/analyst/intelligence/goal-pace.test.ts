@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { goalPace } from "./calculations";
+import { goalPace, goalSavings } from "./calculations";
 import { checkClaim } from "./claims";
 import type { DerivedFact, EvidenceV2, Period } from "./contracts";
 import { autoDerive } from "./derive";
@@ -142,6 +142,132 @@ describe("a goal's pace", () => {
     expect(
       check(
         "At this pace, the remaining tasks would take about 224 days, 194 days past the target date.",
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("saving toward a goal's money target", () => {
+  const money = (metricKey: string, value: number, period: Period = today) =>
+    ({
+      ...metricEvidence({ id: metricKey, metricKey, value, period, scope }),
+      domain: "goals",
+    }) as EvidenceV2;
+  const surplus = (value: number) =>
+    ({
+      ...metricEvidence({
+        id: "goal_recent_surplus_centavos",
+        metricKey: "goal_recent_surplus_centavos",
+        value,
+        period: { from: "2026-06-01", through: "2026-08-31" },
+        scope: {
+          id: "whole_domain:money_surplus",
+          type: "whole_domain",
+          description: "All of the owner's recorded income less expenses",
+        },
+      }),
+      domain: "money",
+    }) as EvidenceV2;
+  const savings = (
+    target: number,
+    saved: number,
+    monthly: number | null,
+    days: number | null,
+  ) =>
+    goalSavings("s", {
+      target: money("goal_target_centavos", target),
+      saved: money("goal_saved_centavos", saved),
+      surplus: monthly === null ? null : surplus(monthly),
+      daysToTarget: days === null ? null : daysLeft(days),
+    });
+
+  it("says how long the rest would take at the recent surplus, and how late", () => {
+    // ₱45,000 left at ₱4,500 a month: 10 months, about 305 days; 90 days left.
+    const facts = savings(6_000_000, 1_500_000, 450_000, 90);
+    expect(output(facts, "remaining_centavos")).toMatchObject({
+      value: 4_500_000,
+    });
+    expect(output(facts, "months_needed")).toEqual({
+      status: "defined",
+      value: 10,
+      unit: "months",
+    });
+    expect(output(facts, "margin_days")).toMatchObject({ value: 90 - 305 });
+    // ₱45,000 over 90 days is ₱15,218.75 a month, rounded up to the centavo.
+    expect(output(facts, "monthly_needed_centavos")).toMatchObject({
+      value: 1_521_875,
+    });
+  });
+
+  it("finishes early when the surplus is enough", () => {
+    const facts = savings(6_000_000, 4_000_000, 1_000_000, 120);
+    expect(output(facts, "months_needed")).toMatchObject({ value: 2 });
+    expect(output(facts, "margin_days")).toMatchObject({ value: 120 - 61 });
+  });
+
+  it("never invents a pace from no surplus or a deficit", () => {
+    for (const monthly of [0, -250_000]) {
+      const facts = savings(6_000_000, 0, monthly, 90);
+      expect(output(facts, "months_needed")).toEqual({
+        status: "undefined",
+        reason: "zero_denominator",
+      });
+      expect(output(facts, "margin_days")).toBeUndefined();
+      // What would be needed is still stated.
+      expect(output(facts, "monthly_needed_centavos")).toBeDefined();
+    }
+  });
+
+  it("needs nothing more once the target is reached", () => {
+    const facts = savings(6_000_000, 7_000_000, 450_000, 30);
+    expect(output(facts, "remaining_centavos")).toMatchObject({ value: 0 });
+    expect(output(facts, "months_needed")).toMatchObject({ value: 0 });
+    expect(output(facts, "margin_days")).toMatchObject({ value: 30 });
+    expect(output(facts, "monthly_needed_centavos")).toBeUndefined();
+  });
+
+  it("states only what is left without a surplus or a target date", () => {
+    const facts = savings(6_000_000, 1_000_000, null, null);
+    expect(facts.map((item) => item.id)).toEqual(["s.remaining_centavos"]);
+  });
+
+  it("is derived from a goal's amounts and worded as an estimate", () => {
+    const evidence = [
+      money("goal_target_centavos", 6_000_000),
+      money("goal_saved_centavos", 1_500_000),
+      surplus(450_000),
+      daysLeft(90),
+    ];
+    const derived = autoDerive(evidence);
+    const months = derived.find((item) => item.id.endsWith(".months_needed"))!;
+    expect(months.scopeId).toBe(goal);
+    const reasons = (text: string) =>
+      checkClaim(
+        {
+          id: "c1",
+          kind: "calculation",
+          text,
+          answersRequirementIds: ["r_goals"],
+          evidenceIds: [],
+          derivedFactIds: [months.id],
+          assumptionIds: [],
+          scopeId: goal,
+          comparison: null,
+          recommendation: null,
+        },
+        {
+          brief: brief([["r_goals", true]]),
+          evidence: new Map(evidence.map((item) => [item.id, item])),
+          derived: new Map(derived.map((item) => [item.id, item])),
+          now: V2_NOW,
+        },
+      ).verification.reasons;
+    expect(reasons("Saving the rest will take 10 months.")).toContain(
+      "projection_wording",
+    );
+    expect(
+      reasons(
+        "At your recent surplus, saving the rest would take about 10 months.",
       ),
     ).toEqual([]);
   });

@@ -246,6 +246,24 @@ this pace …"). With nothing done in the four weeks and work remaining, the
 days needed are undefined and the writer says so; with no work recorded,
 nothing is derived and the writer says the goal has no tasks to track.
 
+**Saving toward a goal's money target.** A goal may carry a target amount
+and the amount saved so far (`target_amount_centavos`,
+`saved_amount_centavos`, set on the goal form; the saved amount is the
+owner's own figure, updated by hand). For an active goal with a target,
+`getGoalPace` also returns both amounts, and once for the read the owner's
+recent monthly surplus: recorded income less expenses, averaged over the
+last three whole months before this one that have records (from the
+owner-scoped monthly aggregate; money evidence, so it needs consent to
+money). ATLAS derives (`goalSavings`) the amount left, the amount to save
+each month to reach it by the target date, the months the rest would take
+at that surplus, and the days to spare or late (`margin_days`, using 30.44
+days a month). The months and margin are estimates and must be worded as
+such; with no surplus or a deficit they are undefined. The surplus is all
+recorded income less spending, not money set aside.
+
+A goal form update that does not send the amount fields (an older client's
+queued change) leaves them as they are; an emptied field clears them.
+
 The rules add `goal.pace` to a goals question that asks about being on
 track, in time, behind or ahead; the planner may add it to any question. A
 named goal is resolved first; a name that matches nothing reads the active
@@ -424,6 +442,6 @@ pace and month-end projections (§4b-2), category trends and change drivers
 - Merchant-level analysis; queries read date, amount and category only.
 - Why a category changed; ATLAS reports accounting contributions and
   trends, never behavioral causes.
-- Saving toward an amount: goals store no money target, so "am I on track
-  to save for a laptop?" can be answered by the goal's work and date, not
-  by its money. That needs a target amount on goals first.
+- Money set aside for a goal: ATLAS does not track it; the saved amount is
+  the owner's own figure, and the surplus is all recorded income less
+  spending.

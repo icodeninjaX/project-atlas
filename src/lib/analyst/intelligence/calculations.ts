@@ -1045,3 +1045,125 @@ export function goalPace(
     );
   return facts;
 }
+
+/** Average calendar days per month, for turning months of saving into days. */
+export const DAYS_PER_MONTH = 365.25 / 12;
+
+/**
+ * Saving toward a goal's money target: how much is left, how much would
+ * need to be saved each month to reach it by the target date, and, at the
+ * owner's recent monthly surplus, how many months the rest would take and
+ * the days to the target date less those days (the margin). The months and
+ * margin are estimates; with no surplus (or a deficit) and money left to
+ * save, they are undefined.
+ */
+export function goalSavings(
+  prefix: string,
+  input: {
+    target: EvidenceV2;
+    saved: EvidenceV2;
+    surplus: EvidenceV2 | null;
+    daysToTarget: EvidenceV2 | null;
+  },
+) {
+  const target = numeric(input.target);
+  const saved = numeric(input.saved);
+  if (
+    target.semantics.metricKey !== "goal_target_centavos" ||
+    saved.semantics.metricKey !== "goal_saved_centavos" ||
+    saved.scope.id !== target.scope.id ||
+    target.unit !== "centavos" ||
+    saved.unit !== "centavos" ||
+    target.value <= 0
+  )
+    throw new CalculationError(
+      "Savings read one goal's target and saved amount.",
+    );
+  const surplus = input.surplus && numeric(input.surplus);
+  if (
+    surplus &&
+    (surplus.semantics.metricKey !== "goal_recent_surplus_centavos" ||
+      surplus.unit !== "centavos")
+  )
+    throw new CalculationError("A savings pace needs the recent surplus.");
+  const days = input.daysToTarget && numeric(input.daysToTarget);
+  if (days && (days.unit !== "days" || days.scope.id !== target.scope.id))
+    throw new CalculationError("Days to target belong to the goal.");
+  const today = target.time.period;
+  const remaining = Math.max(0, target.value - saved.value);
+  const base = (
+    name: string,
+    operands: NumericEvidence[],
+    periods: Period[] = [today],
+  ): Base => ({
+    id: `${prefix}.${name}`,
+    operands: operands.map((item) => item.id),
+    metricKey: `goal_savings_${name}`,
+    comparableGroup: `goal_savings_${name}`,
+    scopeId: target.scope.id,
+    periods,
+  });
+  const done = complete([target, saved]);
+  const facts: DerivedFact[] = [
+    fact(
+      base("remaining_centavos", [target, saved]),
+      "difference",
+      { status: "defined", value: remaining, unit: "centavos" },
+      { complete: done },
+    ),
+  ];
+  if (days && days.value > 0 && remaining > 0)
+    facts.push(
+      fact(
+        base("monthly_needed_centavos", [target, saved, days]),
+        "ratio",
+        {
+          status: "defined",
+          value: Math.ceil((remaining * DAYS_PER_MONTH) / days.value),
+          unit: "centavos",
+        },
+        { rounding: "half_away_from_zero_units", complete: done },
+      ),
+    );
+  if (!surplus) return facts;
+  const periods = [today, surplus.time.period];
+  const operands = [target, saved, surplus];
+  const months =
+    remaining === 0
+      ? 0
+      : surplus.value <= 0
+        ? null
+        : Math.ceil((remaining / surplus.value) * 10) / 10;
+  facts.push(
+    fact(
+      base("months_needed", operands, periods),
+      "projection",
+      months === null
+        ? { status: "undefined", reason: "zero_denominator" }
+        : { status: "defined", value: months, unit: "months" },
+      {
+        rounding: "half_away_from_zero_tenths",
+        denominatorRule: "nonzero_required",
+        complete: done && complete([surplus]),
+      },
+    ),
+  );
+  if (days && months !== null)
+    facts.push(
+      fact(
+        base("margin_days", [...operands, days], periods),
+        "projection",
+        {
+          status: "defined",
+          value:
+            days.value -
+            (remaining === 0
+              ? 0
+              : Math.ceil((remaining * DAYS_PER_MONTH) / surplus.value)),
+          unit: "days",
+        },
+        { complete: done && complete([surplus, days]) },
+      ),
+    );
+  return facts;
+}

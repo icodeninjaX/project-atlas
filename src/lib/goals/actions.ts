@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { goalAmounts } from "@/lib/goals/amounts";
 import { parseMilestoneDescriptionInput } from "@/lib/goals/milestone-rich-text";
 import { offlineEntityId } from "@/lib/offline/server";
 import { createClient } from "@/lib/supabase/server";
@@ -32,7 +33,10 @@ export async function createGoalAction(
       success: false,
       message: result.error.issues[0]?.message ?? "Check the goal.",
     };
+  const money = goalAmounts(formData);
+  if (!money.ok) return { success: false, message: money.message };
   const { error } = await supabase.from("goals").insert({
+    ...money.amounts,
     ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
     user_id: user.id,
     title: result.data.title,
@@ -75,9 +79,12 @@ export async function updateGoalAction(
       success: false,
       message: result.error.issues[0]?.message ?? "Check the goal.",
     };
+  const money = goalAmounts(formData);
+  if (!money.ok) return { success: false, message: money.message };
   const { error } = await supabase
     .from("goals")
     .update({
+      ...money.amounts,
       title: result.data.title,
       description: result.data.description ?? null,
       area: result.data.area,

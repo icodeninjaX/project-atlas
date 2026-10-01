@@ -249,6 +249,64 @@ function goalPaceSemantics(): Record<string, MetricSemantics> {
       "goal_days",
     ),
   ];
+  entries.push(
+    own(
+      "goal_target_centavos",
+      "The goal's money target",
+      "centavos",
+      "goal",
+      "latest",
+      "goal_money",
+    ),
+    own(
+      "goal_saved_centavos",
+      "The amount the owner says is saved toward the goal",
+      "centavos",
+      "goal",
+      "latest",
+      "goal_money",
+    ),
+    own(
+      "goal_recent_surplus_centavos",
+      "Recorded income less recorded expenses, averaged per whole month",
+      "centavos",
+      "income",
+      "mean",
+      "money_surplus",
+    ),
+    own(
+      "goal_savings_remaining_centavos",
+      "The goal's money target less the amount saved",
+      "centavos",
+      "goal",
+      "difference",
+      "goal_money",
+    ),
+    own(
+      "goal_savings_monthly_needed_centavos",
+      "The amount to save each month to reach the target by the target date",
+      "centavos",
+      "goal",
+      "estimate",
+      "goal_money_per_month",
+    ),
+    own(
+      "goal_savings_months_needed",
+      "Estimated months to save the rest at the recent monthly surplus",
+      "months",
+      "goal",
+      "estimate",
+      "goal_months",
+    ),
+    own(
+      "goal_savings_margin_days",
+      "Days to the target date less the estimated days to save the rest",
+      "days",
+      "goal",
+      "estimate",
+      "goal_days",
+    ),
+  );
   for (const kind of ["milestones", "tasks"] as const) {
     const what =
       kind === "tasks"
@@ -368,6 +426,11 @@ export function textDomains(semantics: MetricSemantics): MetricDomain[] {
   // Goal-linked activity is still a task, milestone or transaction.
   if (semantics.key === "goal_linked_task_completion") return ["goal", "task"];
   if (semantics.key.startsWith("goal_tasks_")) return ["goal", "task"];
+  // Saving toward a goal is spoken of in terms of income and spending.
+  if (semantics.key === "goal_recent_surplus_centavos")
+    return ["income", "expense"];
+  if (semantics.key.startsWith("goal_savings_"))
+    return ["goal", "income", "expense"];
   if (semantics.key === "goal_linked_transaction")
     return ["goal", "income", "expense"];
   // Debt payments are recorded payments toward a debt.

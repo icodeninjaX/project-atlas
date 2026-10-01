@@ -9,7 +9,9 @@ import { GoalForm } from "@/components/goals/goal-form";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { TooltipHint } from "@/components/ui/tooltip";
+import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { formatCalendarDate } from "@/lib/dates/dates";
+import { formatCentavos } from "@/lib/money/money";
 
 type Goal = {
   id: string;
@@ -19,6 +21,8 @@ type Goal = {
   status: string;
   target_date: string | null;
   success_definition: string | null;
+  target_amount_centavos?: number | null;
+  saved_amount_centavos?: number | null;
 };
 
 const goalAreaBadgeStyles: Record<string, string> = {
@@ -207,6 +211,18 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
           <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px]">
             <CalendarDays className="size-3.5" aria-hidden="true" />
             Target {formatCalendarDate(goal.target_date)}
+          </span>
+        ) : null}
+        {goal.target_amount_centavos ? (
+          <span className="text-muted-foreground text-[11px]">
+            <SensitiveValue>
+              {formatCentavos(goal.saved_amount_centavos ?? 0)}
+            </SensitiveValue>{" "}
+            of{" "}
+            <SensitiveValue>
+              {formatCentavos(goal.target_amount_centavos)}
+            </SensitiveValue>{" "}
+            saved
           </span>
         ) : null}
       </div>

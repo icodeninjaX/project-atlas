@@ -641,8 +641,10 @@ export type Database = {
           description: string | null;
           id: string;
           progress_percent: number;
+          saved_amount_centavos: number | null;
           status: string;
           success_definition: string | null;
+          target_amount_centavos: number | null;
           target_date: string | null;
           title: string;
           updated_at: string;
@@ -654,8 +656,10 @@ export type Database = {
           description?: string | null;
           id?: string;
           progress_percent?: number;
+          saved_amount_centavos?: number | null;
           status?: string;
           success_definition?: string | null;
+          target_amount_centavos?: number | null;
           target_date?: string | null;
           title: string;
           updated_at?: string;
@@ -667,8 +671,10 @@ export type Database = {
           description?: string | null;
           id?: string;
           progress_percent?: number;
+          saved_amount_centavos?: number | null;
           status?: string;
           success_definition?: string | null;
+          target_amount_centavos?: number | null;
           target_date?: string | null;
           title?: string;
           updated_at?: string;

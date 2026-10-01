@@ -6,6 +6,7 @@ import {
   fullMonth,
   coveredPeriod,
   goalPace,
+  goalSavings,
   memberMonthProjection,
   monthProjection,
   monthSetTrend,
@@ -253,6 +254,26 @@ export function autoDerive(
           total,
           done,
           recent,
+          daysToTarget: byKey(scope, "goal_days_to_target") ?? null,
+        }),
+      ) ?? []),
+    );
+  }
+  // A goal's money target against what is saved and the recent surplus.
+  const surplus = values.find(
+    (item) => item.semantics.metricKey === "goal_recent_surplus_centavos",
+  );
+  for (const target of values) {
+    if (target.semantics.metricKey !== "goal_target_centavos") continue;
+    const scope = target.scope.id;
+    const saved = byKey(scope, "goal_saved_centavos");
+    if (!saved) continue;
+    facts.push(
+      ...(attempt(() =>
+        goalSavings(`derived.goal_savings.${scope}`, {
+          target,
+          saved,
+          surplus: surplus ?? null,
           daysToTarget: byKey(scope, "goal_days_to_target") ?? null,
         }),
       ) ?? []),
