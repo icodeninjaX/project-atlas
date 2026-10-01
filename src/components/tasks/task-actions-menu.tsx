@@ -125,7 +125,7 @@ export function TaskActionsMenu({
           aria-haspopup="menu"
           aria-controls={menuId}
           onClick={() => setMenuOpen((open) => !open)}
-          className="-mt-1 -mr-1 size-10"
+          className="size-10 rounded-full"
         >
           <MoreHorizontal className="size-5" aria-hidden="true" />
         </Button>

@@ -1,74 +1,84 @@
-import { Clock3, Inbox } from "lucide-react";
+import {
+  AlarmClock,
+  CalendarDays,
+  CircleCheck,
+  Inbox,
+  Sun,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { TaskCreatePanel } from "@/components/tasks/task-create-panel";
 import { TaskCreateTrigger } from "@/components/tasks/task-create-trigger";
-import { TaskActionsMenu } from "@/components/tasks/task-actions-menu";
-import { TaskStatusForm } from "@/components/tasks/task-status-form";
-import { Card, CardContent } from "@/components/ui/card";
+import { TaskList } from "@/components/tasks/task-list";
+import { TaskOverview } from "@/components/tasks/task-overview";
+import { TaskViewNav } from "@/components/tasks/task-view-nav";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
-import { formatCalendarDate, manilaDateLabel } from "@/lib/dates/dates";
+import { manilaDateLabel } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
-import { getTaskPriorityBadgeClass } from "@/lib/tasks/priority";
-import { formatTaskTime, type ScheduledTaskSlot } from "@/lib/tasks/task-time";
-import { ScrollStrip } from "@/components/shared/scroll-strip";
+import type { ScheduledTaskSlot } from "@/lib/tasks/task-time";
+import {
+  groupTasksForView,
+  manilaClock,
+  manilaIsoDate,
+  parseTaskView,
+  summarizeTodayPlan,
+  type TaskGroup,
+  type TaskListItem,
+  type TaskView,
+  type TodayPlanSummary,
+} from "@/lib/tasks/task-view";
 
 export const metadata = { title: "Tasks" };
 
-const views = [
-  { value: "today", label: "Today" },
-  { value: "overdue", label: "Overdue" },
-  { value: "upcoming", label: "Upcoming" },
-  { value: "inbox", label: "Inbox" },
-  { value: "completed", label: "Completed" },
-] as const;
+const TASK_COLUMNS =
+  "id,title,description,status,priority,scheduled_for,scheduled_time,due_at,estimated_minutes,energy_required,completed_at";
+
+const UUID_PATTERN = /^[0-9a-f-]{36}$/i;
 
 const emptyViews: Record<
-  string,
+  TaskView,
   {
+    icon: LucideIcon;
     title: string;
     description: string;
     action: { label: string; href: string };
   }
 > = {
   today: {
+    icon: Sun,
     title: "Nothing is due today.",
     description:
       "Capture a task now, or keep the day open for what matters most.",
     action: { label: "Add task", href: "/tasks?create=true" },
   },
   overdue: {
+    icon: AlarmClock,
     title: "Nothing is overdue.",
     description: "You are clear to focus on today’s work.",
     action: { label: "Open Today", href: "/tasks?view=today" },
   },
   upcoming: {
+    icon: CalendarDays,
     title: "Nothing is planned ahead.",
     description:
       "Add a task with a date when you are ready to protect the time.",
     action: { label: "Add task", href: "/tasks?create=true" },
   },
   inbox: {
+    icon: Inbox,
     title: "Your inbox is clear.",
     description:
       "Capture loose thoughts here before they compete with today’s plan.",
     action: { label: "Add task", href: "/tasks?create=true" },
   },
   completed: {
+    icon: CircleCheck,
     title: "No completed tasks yet.",
     description: "Finish a task and ATLAS will keep the record here.",
     action: { label: "Open Today", href: "/tasks?view=today" },
   },
 };
-
-function localDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Manila",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-}
 
 export default async function TasksPage({
   searchParams,
@@ -76,38 +86,31 @@ export default async function TasksPage({
   searchParams: Promise<{ view?: string; create?: string; highlight?: string }>;
 }) {
   const params = await searchParams;
-  const selected = params.view ?? "today";
-  const emptyView = emptyViews[selected] ?? emptyViews.today!;
+  const selected = parseTaskView(params.view);
+  const emptyView = emptyViews[selected];
+  const highlightId =
+    params.highlight && UUID_PATTERN.test(params.highlight)
+      ? params.highlight
+      : undefined;
   const supabase = await createClient();
-  const today = localDate();
-  let tasks: Array<{
-    id: string;
-    title: string;
-    description: string | null;
-    status: string;
-    priority: string;
-    scheduled_for: string | null;
-    scheduled_time: string | null;
-    due_at: string | null;
-    estimated_minutes: number | null;
-    energy_required: string;
-  }> = [];
+  const now = new Date();
+  const today = manilaIsoDate(now) ?? now.toISOString().slice(0, 10);
+  let tasks: TaskListItem[] = [];
+  let selectedTask: TaskListItem | null = null;
   let taskDefaults: {
     default_task_priority: string;
     default_task_estimated_minutes: number | null;
   } | null = null;
   let scheduledTasks: ScheduledTaskSlot[] = [];
+  let todayPlan: TodayPlanSummary = summarizeTodayPlan([], "00:00");
+  let counts: Partial<Record<TaskView, number>> = {};
 
   if (supabase) {
     const preferencesQuery = supabase
       .from("user_preferences")
       .select("default_task_priority,default_task_estimated_minutes")
       .maybeSingle();
-    let query = supabase
-      .from("tasks")
-      .select(
-        "id,title,description,status,priority,scheduled_for,scheduled_time,due_at,estimated_minutes,energy_required",
-      );
+    let query = supabase.from("tasks").select(TASK_COLUMNS);
 
     if (selected === "today")
       query = query
@@ -134,6 +137,11 @@ export default async function TasksPage({
         })
         .order("scheduled_time", { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: false });
+    } else if (selected === "completed") {
+      // Most recently finished first, so the list reads as a log.
+      query = query
+        .order("completed_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false });
     } else {
       query = query.order("created_at", { ascending: false });
     }
@@ -145,33 +153,82 @@ export default async function TasksPage({
       .not("scheduled_time", "is", null)
       .neq("status", "completed")
       .neq("status", "cancelled");
-    const [preferencesResult, taskResult, scheduledTaskResult] =
-      await Promise.all([preferencesQuery, query, scheduledTasksQuery]);
+    // Today's plan includes what is already finished, so progress can show.
+    const todayPlanQuery = supabase
+      .from("tasks")
+      .select("status,scheduled_time,estimated_minutes")
+      .eq("scheduled_for", today)
+      .neq("status", "cancelled");
+    const openCount = () =>
+      supabase
+        .from("tasks")
+        .select("id", { count: "exact", head: true })
+        .neq("status", "completed")
+        .neq("status", "cancelled");
+    const [
+      preferencesResult,
+      taskResult,
+      scheduledTaskResult,
+      todayPlanResult,
+      overdueResult,
+      upcomingResult,
+      inboxResult,
+    ] = await Promise.all([
+      preferencesQuery,
+      query,
+      scheduledTasksQuery,
+      todayPlanQuery,
+      openCount().lt("scheduled_for", today),
+      openCount().gt("scheduled_for", today),
+      supabase
+        .from("tasks")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "inbox"),
+    ]);
     taskDefaults = preferencesResult.data;
-    const { data } = taskResult;
-    tasks = data ?? [];
+    tasks = taskResult.data ?? [];
     scheduledTasks = scheduledTaskResult.data ?? [];
-    if (params.highlight) {
+    todayPlan = summarizeTodayPlan(
+      todayPlanResult.data ?? [],
+      manilaClock(now) ?? "00:00",
+    );
+    counts = {
+      today: todayPlan.remaining,
+      overdue: overdueResult.count ?? 0,
+      upcoming: upcomingResult.count ?? 0,
+      inbox: inboxResult.count ?? 0,
+    };
+    if (highlightId && !tasks.some((task) => task.id === highlightId)) {
       const { data: highlightedTask } = await supabase
         .from("tasks")
-        .select(
-          "id,title,description,status,priority,scheduled_for,scheduled_time,due_at,estimated_minutes,energy_required",
-        )
-        .eq("id", params.highlight)
+        .select(TASK_COLUMNS)
+        .eq("id", highlightId)
         .maybeSingle();
-      if (
-        highlightedTask &&
-        !tasks.some((task) => task.id === highlightedTask.id)
-      ) {
-        tasks = [highlightedTask, ...tasks];
-      }
+      selectedTask = highlightedTask;
     }
   }
+
+  // A task opened from a link that this view would not list leads the page
+  // in its own section, so it is never lost among the others.
+  const groups: TaskGroup<TaskListItem>[] = [
+    ...(selectedTask
+      ? [
+          {
+            id: "selected",
+            label: "Selected task",
+            detail: null,
+            dayInHeading: false,
+            tasks: [selectedTask],
+          },
+        ]
+      : []),
+    ...groupTasksForView(selected, tasks, today),
+  ];
 
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
       <p className="text-primary text-xs font-semibold tracking-[0.1em] uppercase">
-        {manilaDateLabel(new Date())}
+        {manilaDateLabel(now)}
       </p>
       <TaskCreatePanel
         heading={
@@ -180,7 +237,7 @@ export default async function TasksPage({
           </h1>
         }
         description={
-          <p className="text-muted-foreground mt-2 text-sm">
+          <p className="text-muted-foreground mt-2 text-sm max-sm:hidden">
             Capture quickly. Keep today small enough to finish.
           </p>
         }
@@ -189,138 +246,43 @@ export default async function TasksPage({
           taskDefaults?.default_task_estimated_minutes ?? null
         }
         scheduledTasks={scheduledTasks}
+        today={today}
         initiallyOpen={params.create === "true"}
       />
 
-      <ScrollStrip
-        aria-label="Task views"
-        activeKey={selected}
-        className="border-border bg-muted/60 mt-5 flex [scrollbar-width:none] gap-1 overflow-x-auto rounded-2xl border p-1 sm:mt-6 [&::-webkit-scrollbar]:hidden"
-      >
-        {views.map((view) => (
-          <Link
-            key={view.value}
-            href={`/tasks?view=${view.value}`}
-            aria-current={selected === view.value ? "page" : undefined}
-            className={`min-h-11 shrink-0 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
-              selected === view.value
-                ? "border-border bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-card/60 hover:text-foreground border-transparent"
-            }`}
-          >
-            {view.label}
-          </Link>
-        ))}
-      </ScrollStrip>
+      <TaskOverview summary={todayPlan} overdueCount={counts.overdue ?? 0} />
 
-      <div className="mt-5 space-y-2">
-        {tasks.length === 0 ? (
-          <EmptyState
-            icon={Inbox}
-            title={emptyView.title}
-            description={emptyView.description}
-            action={
-              emptyView.action.label === "Add task" ? (
-                <TaskCreateTrigger />
-              ) : (
-                <Button asChild size="sm">
-                  <Link href={emptyView.action.href as `/tasks?view=${string}`}>
-                    {emptyView.action.label}
-                  </Link>
-                </Button>
-              )
-            }
-          />
+      <TaskViewNav selected={selected} counts={counts} />
+
+      <div className="max-sm:pb-16">
+        {groups.length === 0 ? (
+          <div className="mt-5 sm:mt-6">
+            <EmptyState
+              icon={emptyView.icon}
+              title={emptyView.title}
+              description={emptyView.description}
+              action={
+                emptyView.action.label === "Add task" ? (
+                  <TaskCreateTrigger />
+                ) : (
+                  <Button asChild size="sm">
+                    <Link
+                      href={emptyView.action.href as `/tasks?view=${string}`}
+                    >
+                      {emptyView.action.label}
+                    </Link>
+                  </Button>
+                )
+              }
+            />
+          </div>
         ) : (
-          tasks.map((task) => {
-            const overdue =
-              selected === "overdue" &&
-              task.scheduled_for !== null &&
-              task.scheduled_for < today;
-            const scheduledLabel = task.scheduled_for
-              ? `${task.scheduled_for}${
-                  task.scheduled_time
-                    ? ` at ${formatTaskTime(task.scheduled_time)}`
-                    : ""
-                }`
-              : null;
-            const mobileScheduleLabel = task.scheduled_for
-              ? `${overdue ? "Overdue · " : ""}${formatCalendarDate(task.scheduled_for)}${
-                  task.scheduled_time
-                    ? ` at ${formatTaskTime(task.scheduled_time)}`
-                    : ""
-                }`
-              : task.estimated_minutes
-                ? `${task.estimated_minutes} min`
-                : null;
-
-            return (
-              <Card
-                key={task.id}
-                id={`task-${task.id}`}
-                className={
-                  task.id === params.highlight
-                    ? "ring-primary/60 bg-primary/5 ring-2"
-                    : undefined
-                }
-              >
-                <CardContent className="flex items-start gap-3 p-3.5 sm:p-4">
-                  <TaskStatusForm
-                    taskId={task.id}
-                    title={task.title}
-                    completed={task.status === "completed"}
-                    buttonClassName="size-10"
-                  />
-                  <div className="min-w-0 flex-1 pt-1">
-                    <div className="flex items-start gap-2">
-                      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                        <p
-                          className={`min-w-0 text-sm font-semibold break-words ${task.status === "completed" ? "text-muted-foreground line-through" : ""}`}
-                        >
-                          {task.title}
-                        </p>
-                        <span
-                          className={`${getTaskPriorityBadgeClass(task.priority)} hidden shrink-0 rounded-full border px-2 py-0.5 text-[10px] capitalize sm:inline-flex`}
-                        >
-                          {task.priority}
-                        </span>
-                        <span className="border-border text-muted-foreground hidden shrink-0 rounded-full border px-2 py-0.5 text-[10px] capitalize sm:inline-flex">
-                          {task.energy_required} energy
-                        </span>
-                      </div>
-                      <TaskActionsMenu
-                        task={task}
-                        scheduledLabel={scheduledLabel}
-                        scheduledTasks={scheduledTasks}
-                      />
-                    </div>
-                    <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                      <span
-                        className={`${getTaskPriorityBadgeClass(task.priority)} rounded-full border px-2 py-0.5 text-[10px] capitalize`}
-                      >
-                        {task.priority}
-                      </span>
-                      {mobileScheduleLabel && (
-                        <p
-                          className={`flex min-w-0 items-center gap-1 font-mono text-[10px] ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}
-                        >
-                          <Clock3 className="size-3 shrink-0" />
-                          <span className="truncate">
-                            {mobileScheduleLabel}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                    {task.description && (
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        {task.description}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
+          <TaskList
+            groups={groups}
+            today={today}
+            highlightId={highlightId}
+            scheduledTasks={scheduledTasks}
+          />
         )}
       </div>
     </div>

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { getTaskPriorityBadgeClass } from "@/lib/tasks/priority";
+import {
+  getTaskPriorityBadgeClass,
+  getTaskPriorityTone,
+} from "@/lib/tasks/priority";
 
 describe("task priority badge colors", () => {
   it.each([
@@ -16,5 +19,24 @@ describe("task priority badge colors", () => {
     expect(getTaskPriorityBadgeClass("unknown")).toContain(
       "text-muted-foreground",
     );
+  });
+});
+
+describe("task priority tones", () => {
+  it.each([
+    ["medium", "amber"],
+    ["high", "orange"],
+    ["critical", "red"],
+  ])("rings %s priority in the %s family", (priority, color) => {
+    const tone = getTaskPriorityTone(priority);
+    expect(tone.ring).toContain(color);
+    expect(tone.text).toContain(color);
+  });
+
+  it("keeps low and unknown priorities neutral rather than green", () => {
+    expect(getTaskPriorityTone("low").ring).toContain("slate");
+    expect(getTaskPriorityTone("low").ring).not.toContain("emerald");
+    expect(getTaskPriorityTone("unknown")).toEqual(getTaskPriorityTone("low"));
+    expect(getTaskPriorityTone("HIGH")).toEqual(getTaskPriorityTone("high"));
   });
 });

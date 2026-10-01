@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { AtlasMark } from "@/components/atlas/atlas-mark";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
+import { getTaskPriorityTone } from "@/lib/tasks/priority";
+import { cn } from "@/lib/utils";
 
 const successAnimationMs = 900;
 
@@ -22,15 +24,66 @@ function TaskCompletionSuccessMark() {
   );
 }
 
+/**
+ * A round checkbox: the ring takes the task's priority color, a check
+ * appears on hover or focus, and a finished task shows a filled circle that
+ * turns into a reopen arrow on hover.
+ */
+function TaskCheckCircle({
+  completed,
+  priority,
+}: {
+  completed: boolean;
+  priority?: string;
+}) {
+  if (completed) {
+    return (
+      <span
+        aria-hidden="true"
+        className="grid size-[1.375rem] place-items-center rounded-full bg-green-600 text-white shadow-[0_4px_10px_-4px_rgb(22_163_74/0.8)] transition-colors group-hover/check:bg-green-700"
+      >
+        <Check
+          className="size-3.5 group-hover/check:hidden group-focus-visible/check:hidden"
+          strokeWidth={3}
+        />
+        <RotateCcw
+          className="hidden size-3 group-hover/check:block group-focus-visible/check:block"
+          strokeWidth={2.75}
+        />
+      </span>
+    );
+  }
+
+  const tone = getTaskPriorityTone(priority ?? "low");
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "grid size-[1.375rem] place-items-center rounded-full ring-2 transition-colors ring-inset",
+        tone.ring,
+        tone.wash,
+        tone.text,
+      )}
+    >
+      <Check
+        className="size-3 opacity-0 transition-opacity group-hover/check:opacity-100 group-focus-visible/check:opacity-100"
+        strokeWidth={3.25}
+      />
+    </span>
+  );
+}
+
 function TaskStatusButton({
   title,
   completed,
   completionSucceeded,
+  priority,
   className,
 }: {
   title: string;
   completed: boolean;
   completionSucceeded: boolean;
+  priority?: string;
   className?: string;
 }) {
   const { pending } = useFormStatus();
@@ -55,16 +108,17 @@ function TaskStatusButton({
             ? `${pendingAction} task…`
             : `${action} task`
       }
-      className={className}
+      className={cn(
+        "group/check rounded-full hover:bg-transparent disabled:opacity-100",
+        className,
+      )}
     >
       {completionSucceeded ? (
         <TaskCompletionSuccessMark />
       ) : pending ? (
         <AtlasMark className="size-4 animate-spin [animation-duration:1.1s] motion-reduce:animate-none" />
-      ) : completed ? (
-        <RotateCcw className="size-4" />
       ) : (
-        <Check className="size-4" />
+        <TaskCheckCircle completed={completed} priority={priority} />
       )}
     </Button>
   );
@@ -74,12 +128,15 @@ export function TaskStatusForm({
   taskId,
   title,
   completed,
+  priority,
   className,
   buttonClassName,
 }: {
   taskId: string;
   title: string;
   completed: boolean;
+  /** Colors the open circle's ring; finished tasks are always green. */
+  priority?: string;
   className?: string;
   buttonClassName?: string;
 }) {
@@ -136,6 +193,7 @@ export function TaskStatusForm({
         title={title}
         completed={completed}
         completionSucceeded={completionSucceeded}
+        priority={priority}
         className={buttonClassName}
       />
     </form>
