@@ -46,6 +46,43 @@ describe("GoalCardHeader", () => {
     expect(learning.className).not.toBe(personal.className);
   });
 
+  it("counts down to the target date and flags overdue goals", () => {
+    render(
+      <>
+        <GoalCardHeader
+          goal={{ ...goal, id: "a", target_date: "2026-10-15" }}
+          today="2026-10-01"
+        />
+        <GoalCardHeader
+          goal={{ ...goal, id: "b", target_date: "2026-09-20" }}
+          today="2026-10-01"
+        />
+        <GoalCardHeader
+          goal={{ ...goal, id: "c", status: "completed" }}
+          today="2026-10-01"
+        />
+      </>,
+    );
+
+    expect(screen.getByText("14 days left")).toBeVisible();
+    expect(screen.getByText("11 days overdue")).toBeVisible();
+    expect(screen.getAllByText(/days? (left|overdue)/)).toHaveLength(2);
+  });
+
+  it("shows a status pill only for goals that are not active", () => {
+    render(
+      <>
+        <GoalCardHeader goal={goal} />
+        <GoalCardHeader goal={{ ...goal, id: "p", status: "paused" }} />
+        <GoalCardHeader goal={{ ...goal, id: "c", status: "completed" }} />
+      </>,
+    );
+
+    expect(screen.getByText("Paused")).toBeVisible();
+    expect(screen.getByText("Completed")).toBeVisible();
+    expect(screen.queryByText("Active")).not.toBeInTheDocument();
+  });
+
   it("groups edit and delete behind an accessible goal action menu", () => {
     render(<GoalCardHeader goal={goal} />);
 

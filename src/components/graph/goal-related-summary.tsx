@@ -22,11 +22,13 @@ export function GoalRelatedSummary({
   const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
   return (
     <section
-      className="border-border mt-5 border-t pt-4"
+      className="border-border/70 mt-4 border-t pt-3"
       aria-label="Related items"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">Related</h3>
+        <h3 className="text-muted-foreground text-[11px] font-semibold tracking-[0.12em] uppercase">
+          Related
+        </h3>
         <Link
           href={`/goals/${goalId}`}
           className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs font-semibold hover:underline focus-visible:ring-2 sm:min-h-9"
@@ -36,17 +38,17 @@ export function GoalRelatedSummary({
         </Link>
       </div>
       {total === 0 ? (
-        <p className="text-muted-foreground mt-1 text-xs">
+        <p className="text-muted-foreground text-xs">
           No related items yet. Connect a record to see it here.
         </p>
       ) : (
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-1 flex flex-wrap gap-1.5">
           {summaryTypes
             .filter((type) => counts[type])
             .map((type) => (
               <span
                 key={type}
-                className="border-border bg-muted/40 rounded-full border px-2.5 py-1 text-xs"
+                className="border-border/70 bg-muted/50 text-foreground/85 rounded-full border px-2.5 py-1 text-[11px] font-medium"
               >
                 {graphRegistry[type].label} · {counts[type]}
               </span>

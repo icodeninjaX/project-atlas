@@ -169,9 +169,14 @@ function MilestoneToggleButton({ milestone }: { milestone: Milestone }) {
         {pending ? (
           <PendingAtlasMark />
         ) : completed ? (
-          <Check className="text-primary size-4" />
+          <span className="bg-primary text-primary-foreground grid size-5 place-items-center rounded-full shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_18%,transparent)]">
+            <Check className="size-3" strokeWidth={3} />
+          </span>
         ) : (
-          <Circle className="size-4" />
+          <Circle
+            className="text-muted-foreground/70 size-5"
+            strokeWidth={1.75}
+          />
         )}
       </Button>
     </TooltipHint>
@@ -569,10 +574,10 @@ export function MilestoneList({
   };
 
   return (
-    <div className="border-border mt-5 border-t pt-4">
+    <div className="border-border/70 mt-5 border-t pt-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+          <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.12em] uppercase">
             Milestones
           </p>
           <span
@@ -618,14 +623,14 @@ export function MilestoneList({
         </div>
       </div>
       {milestonesOpen && (
-        <div id={milestonesId} className="mt-3">
+        <div id={milestonesId} className="mt-2">
           {milestones.length ? (
-            <div className="space-y-2">
+            <div className="space-y-0.5">
               {milestones.map((milestone) => (
                 <div
                   key={milestone.id}
                   id={`milestone-${milestone.id}`}
-                  className={`flex items-center gap-2 rounded-lg ${highlightMilestoneId === milestone.id ? "bg-primary/10 ring-primary/50 ring-1" : ""}`}
+                  className={`flex items-center gap-1 rounded-xl pr-1 transition-colors ${highlightMilestoneId === milestone.id ? "bg-primary/10 ring-primary/50 ring-1" : "[@media(hover:hover)]:hover:bg-muted/50"}`}
                 >
                   <OfflineMutationForm mutation="milestone.toggle">
                     <input
@@ -648,11 +653,22 @@ export function MilestoneList({
                         actionButtonRef.current = event.currentTarget;
                         setDialogState({ mode: "view", milestone });
                       }}
-                      className={`hover:text-foreground focus-visible:ring-ring block max-w-full text-left text-xs outline-none hover:underline focus-visible:ring-2 ${milestone.completed_at ? "text-muted-foreground line-through" : ""}`}
+                      className={`hover:text-foreground focus-visible:ring-ring block max-w-full rounded text-left text-[13px] leading-5 outline-none hover:underline focus-visible:ring-2 sm:text-xs ${milestone.completed_at ? "text-muted-foreground decoration-muted-foreground/60 line-through" : ""}`}
                     >
                       {milestone.title}
                     </button>
                   </div>
+                  {milestone.target_date && !milestone.completed_at ? (
+                    <time
+                      dateTime={milestone.target_date}
+                      className="text-muted-foreground shrink-0 font-mono text-[10px] tabular-nums"
+                    >
+                      {formatCalendarDate(milestone.target_date).replace(
+                        /, \d{4}$/,
+                        "",
+                      )}
+                    </time>
+                  ) : null}
                   {actionMode === "edit" && (
                     <TooltipHint label={`Edit ${milestone.title}`}>
                       <Button
