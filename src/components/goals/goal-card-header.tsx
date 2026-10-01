@@ -53,7 +53,7 @@ function GoalAreaBadge({ area }: { area: string }) {
   return (
     <span
       aria-label={`Goal category: ${areaLabel}`}
-      className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${goalAreaBadgeStyles[area] ?? fallbackGoalAreaBadgeStyle}`}
+      className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-[0.08em] uppercase ${goalAreaBadgeStyles[area] ?? fallbackGoalAreaBadgeStyle}`}
     >
       {areaLabel}
     </span>
@@ -205,16 +205,18 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
           </div>
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-        <h2 className="text-base font-semibold">{goal.title}</h2>
+      <h2 className="mt-4 text-lg leading-snug font-semibold tracking-[-0.02em]">
+        {goal.title}
+      </h2>
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
         {goal.target_date ? (
-          <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px]">
+          <span className="bg-muted/70 text-muted-foreground inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px]">
             <CalendarDays className="size-3.5" aria-hidden="true" />
             Target {formatCalendarDate(goal.target_date)}
           </span>
         ) : null}
         {goal.target_amount_centavos ? (
-          <span className="text-muted-foreground text-[11px]">
+          <span className="bg-muted/70 text-muted-foreground rounded-full px-2 py-0.5 text-[11px]">
             <SensitiveValue>
               {formatCentavos(goal.saved_amount_centavos ?? 0)}
             </SensitiveValue>{" "}
@@ -227,7 +229,7 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
         ) : null}
       </div>
       {goal.success_definition ? (
-        <p className="text-muted-foreground mt-2 text-xs leading-5">
+        <p className="text-muted-foreground mt-3 text-[13px] leading-6">
           {goal.success_definition}
         </p>
       ) : null}
