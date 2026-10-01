@@ -241,6 +241,25 @@ describe("TransactionForm", () => {
     );
   });
 
+  it("shows categories as pills on phones that fill when chosen", async () => {
+    const user = userEvent.setup();
+    render(
+      <TransactionForm
+        accounts={accounts}
+        categories={categories}
+        today="2026-09-04"
+      />,
+    );
+
+    const food = () =>
+      screen.getByRole("radio", { name: "Food" }).parentElement!;
+    expect(food()).toHaveClass("max-sm:rounded-full", "sm:rounded-2xl");
+    expect(food()).not.toHaveClass("max-sm:bg-primary-solid");
+
+    await user.click(screen.getByRole("radio", { name: "Food" }));
+    expect(food()).toHaveClass("max-sm:bg-primary-solid");
+  });
+
   it("docks the record bar on phones only once there is an amount", async () => {
     const user = userEvent.setup();
     render(

@@ -125,6 +125,26 @@ function TypeToggle({
   );
 }
 
+// Phones get wrapping pills: icon and full name on one line, so long names
+// never clamp and the list sits shorter. Tablet and up keep tiles. When large
+// text leaves the list too narrow for the icon disc, the pill drops it so the
+// name keeps the room.
+const CATEGORY_OPTION = {
+  base: "has-[:focus-visible]:ring-ring relative flex min-w-0 cursor-pointer items-center font-medium transition-[color,background-color,border-color,box-shadow,scale] duration-150 [-webkit-tap-highlight-color:transparent] has-[:focus-visible]:ring-2 motion-reduce:active:scale-100",
+  pill: "max-sm:min-h-11 max-sm:max-w-full max-sm:gap-2 max-sm:rounded-full max-sm:py-1.5 max-sm:pr-4 max-sm:pl-1.5 max-sm:text-sm max-sm:active:scale-[0.96] @max-[10.5rem]/categories:px-3",
+  tile: "sm:min-h-[4.75rem] sm:flex-col sm:justify-center sm:gap-1.5 sm:rounded-2xl sm:border sm:px-1 sm:py-2.5 sm:text-center sm:text-xs sm:leading-4 sm:active:scale-[0.97]",
+  selected:
+    "max-sm:bg-primary-solid max-sm:text-primary-solid-foreground max-sm:shadow-[0_6px_16px_-8px_var(--primary-solid)] sm:border-primary sm:bg-primary/10 sm:text-foreground",
+  idle: "max-sm:bg-muted max-sm:text-foreground/85 sm:border-border sm:bg-background/60 sm:text-muted-foreground sm:hover:bg-muted sm:hover:text-foreground",
+};
+
+const CATEGORY_ICON = {
+  base: "pointer-events-none grid shrink-0 place-items-center transition-colors max-sm:size-8 max-sm:rounded-full sm:size-9 sm:rounded-xl @max-[10.5rem]/categories:hidden",
+  selected:
+    "max-sm:bg-primary-solid-foreground/15 sm:bg-primary-solid sm:text-primary-solid-foreground",
+  idle: "max-sm:bg-card max-sm:text-foreground/75 sm:bg-muted sm:text-foreground/80",
+};
+
 function CategoryPicker({
   categories,
   value,
@@ -142,21 +162,21 @@ function CategoryPicker({
           No categories for this type yet.
         </p>
       ) : (
-        // Rem-based columns: larger text means fewer, still-legible tiles.
-        <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(min(100%,5.5rem),1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(min(100%,8rem),1fr))]">
+        // Rem-based tile columns: larger text means fewer, still-legible tiles.
+        <div className="@container/categories mt-3 flex flex-wrap gap-2 sm:grid sm:grid-cols-[repeat(auto-fill,minmax(min(100%,8rem),1fr))]">
           {categories.map((category) => {
             const selected = value === category.id;
             return (
               <label
                 key={category.id}
                 className={cn(
-                  "has-[:focus-visible]:ring-ring relative flex min-h-[4.75rem] min-w-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border px-1 py-2.5 text-center text-[0.6875rem] leading-4 font-medium transition-[color,background-color,border-color,scale] duration-150 [-webkit-tap-highlight-color:transparent] active:scale-[0.97] has-[:focus-visible]:ring-2 motion-reduce:active:scale-100 sm:text-xs",
-                  selected
-                    ? "border-primary bg-primary/10 text-foreground"
-                    : "border-border bg-background/60 text-muted-foreground hover:bg-muted hover:text-foreground",
+                  CATEGORY_OPTION.base,
+                  CATEGORY_OPTION.pill,
+                  CATEGORY_OPTION.tile,
+                  selected ? CATEGORY_OPTION.selected : CATEGORY_OPTION.idle,
                 )}
               >
-                {/* Covers the tile so native validation points at it. */}
+                {/* Covers the option so native validation points at it. */}
                 <input
                   type="radio"
                   name="categoryId"
@@ -164,24 +184,22 @@ function CategoryPicker({
                   checked={selected}
                   onChange={() => onChange(category.id)}
                   required
-                  className="absolute inset-0 cursor-pointer appearance-none rounded-2xl outline-none"
+                  className="absolute inset-0 cursor-pointer appearance-none rounded-[inherit] outline-none"
                 />
                 <span
                   className={cn(
-                    "pointer-events-none grid size-9 place-items-center rounded-xl transition-colors",
-                    selected
-                      ? "bg-primary-solid text-primary-solid-foreground"
-                      : "bg-muted text-foreground/80",
+                    CATEGORY_ICON.base,
+                    selected ? CATEGORY_ICON.selected : CATEGORY_ICON.idle,
                   )}
                 >
                   <CategoryIcon
                     icon={category.icon}
                     categoryName={category.name}
-                    className="size-[1.125rem]"
+                    className="size-4 sm:size-[1.125rem]"
                     aria-hidden="true"
                   />
                 </span>
-                <span className="pointer-events-none line-clamp-2 w-full [overflow-wrap:anywhere] hyphens-auto">
+                <span className="pointer-events-none min-w-0 [overflow-wrap:anywhere] hyphens-auto sm:line-clamp-2 sm:w-full">
                   {category.name}
                 </span>
               </label>
@@ -515,7 +533,7 @@ export function TransactionForm({
   // Phones: once there is an amount, the summary docks as an action bar,
   // so a quick entry is amount, category, record without scrolling past
   // the details. Before that it waits at the end of the form instead of
-  // covering the category tiles.
+  // covering the categories.
   const docked = !full || isEdit || validAmount;
   const summary = (
     <div
