@@ -1,51 +1,31 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { FinancialOverview } from "./financial-overview";
+import {
+  FinancialOverview,
+  type FinancialSnapshot,
+} from "./financial-overview";
 
 afterEach(cleanup);
 
+const financial: FinancialSnapshot = {
+  total_balance_centavos: 1_304_350,
+  income_month_centavos: 5_050_000,
+  expense_month_centavos: 4_097_500,
+  remaining_budget_centavos: 952_500,
+  debt_remaining_centavos: 14_491_900,
+  next_financial_deadline: "2026-10-16",
+  days_until_payday: 14,
+};
+
 describe("FinancialOverview", () => {
-  it("prioritizes available balance and keeps supporting finance links quiet", () => {
-    render(
-      <FinancialOverview
-        metrics={[
-          {
-            label: "Available",
-            value: "₱13,043.00",
-            note: "Across active accounts",
-          },
-          {
-            label: "Income",
-            value: "₱50,500.00",
-            note: "Transfers excluded",
-          },
-          {
-            label: "Expenses",
-            value: "₱40,975.00",
-            note: "₱9,525.00 budget left",
-            sensitiveNote: true,
-          },
-          {
-            label: "Debt remaining",
-            value: "₱144,919.00",
-            note: "Next due Oct 16",
-          },
-        ]}
-      />,
-    );
+  it("leads with the available balance and keeps money links reachable", () => {
+    render(<FinancialOverview financial={financial} monthName="October" />);
 
     expect(screen.getByText("Available balance")).toBeInTheDocument();
-    expect(screen.getByText("₱13,043").closest("dd")).toHaveClass(
-      "text-[clamp(1.75rem,9vw,2.25rem)]",
-      "[overflow-wrap:anywhere]",
-    );
-    expect(screen.queryByText("₱13,043.00")).not.toBeInTheDocument();
-    expect(screen.getByText("₱40,975").closest("dd")).toHaveClass("text-sm");
-    expect(screen.getByText("₱9,525 budget left")).toBeInTheDocument();
-    expect(screen.getByText("Next due Oct 16")).toBeInTheDocument();
-    expect(screen.getByText("Next due Oct 16").closest("dd")).not.toHaveClass(
-      "truncate",
-    );
+    const balance = screen.getByText("Available balance").nextElementSibling;
+    expect(balance).toHaveTextContent("₱13,043.50");
+    expect(balance).toHaveClass("[overflow-wrap:anywhere]");
+    expect(screen.getByText("Payday in 14 days")).toBeInTheDocument();
 
     expect(screen.getByRole("link", { name: "Money" })).toHaveAttribute(
       "href",
@@ -55,29 +35,87 @@ describe("FinancialOverview", () => {
       "href",
       "/money/runway",
     );
-    expect(screen.queryByText("Money timeline")).not.toBeInTheDocument();
   });
 
-  it("keeps large balances and long metadata visible", () => {
-    render(
+  it("shows the month's cash flow, budget use, and next debt deadline", () => {
+    render(<FinancialOverview financial={financial} monthName="October" />);
+
+    expect(screen.getByText("October so far")).toBeInTheDocument();
+    expect(screen.getByText("Money in").nextElementSibling).toHaveTextContent(
+      "₱50,500.00",
+    );
+    expect(screen.getByText("Money out").nextElementSibling).toHaveTextContent(
+      "₱40,975.00",
+    );
+    expect(screen.getByText(/kept so far/)).toHaveTextContent(
+      "+₱9,525.00 kept so far",
+    );
+
+    const budget = screen.getByRole("link", { name: /Budget left/ });
+    expect(budget).toHaveAttribute("href", "/money/budget");
+    expect(budget).toHaveTextContent("₱9,525.00");
+    expect(budget).toHaveTextContent("81% of ₱50,500.00 used");
+
+    const debt = screen.getByRole("link", { name: /Debt remaining/ });
+    expect(debt).toHaveAttribute("href", "/debts");
+    expect(debt).toHaveTextContent("₱144,919.00");
+    expect(debt).toHaveTextContent("Next due Oct 16, 2026");
+  });
+
+  it("names overspending and an unplanned month plainly", () => {
+    const { rerender } = render(
       <FinancialOverview
-        metrics={[
-          {
-            label: "Available",
-            value: "₱12,345,678.50",
-            note: "Across active accounts",
-          },
-          {
-            label: "Debt remaining",
-            value: "₱12,345,678.50",
-            note: "Next due 2026-10-16",
-          },
-        ]}
+        financial={{ ...financial, remaining_budget_centavos: -50_000 }}
+        monthName="October"
       />,
     );
 
-    expect(screen.getAllByText("₱12,345,678.50")).toHaveLength(2);
-    expect(screen.getByText("Next due 2026-10-16")).toBeInTheDocument();
-    expect(screen.getByText("Next due 2026-10-16")).not.toHaveClass("truncate");
+    expect(
+      screen.getByRole("link", { name: /Over budget by\s*₱500\.00/ }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Budget left")).not.toBeInTheDocument();
+
+    rerender(
+      <FinancialOverview
+        financial={{
+          ...financial,
+          remaining_budget_centavos: null,
+          income_month_centavos: 0,
+          expense_month_centavos: 0,
+          next_financial_deadline: null,
+          days_until_payday: null,
+        }}
+        monthName="October"
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: /No budget set.*Plan October/ }),
+    ).toHaveAttribute("href", "/money/budget");
+    expect(
+      screen.getByText("No income or expenses recorded yet this month."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("No active deadline")).toBeInTheDocument();
+    expect(screen.queryByText(/Payday/)).not.toBeInTheDocument();
+  });
+
+  it("keeps large balances visible", () => {
+    render(
+      <FinancialOverview
+        financial={{
+          ...financial,
+          total_balance_centavos: 1_234_567_850,
+          debt_remaining_centavos: 1_234_567_850,
+        }}
+        monthName="October"
+      />,
+    );
+
+    expect(
+      screen.getByText("Available balance").nextElementSibling,
+    ).toHaveTextContent("₱12,345,678.50");
+    expect(
+      screen.getByRole("link", { name: /Debt remaining/ }),
+    ).toHaveTextContent("₱12,345,678.50");
   });
 });
