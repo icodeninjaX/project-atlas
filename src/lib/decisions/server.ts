@@ -12,8 +12,11 @@ import type {
   DecisionRevision,
   ObservationSourceType,
 } from "./decision";
+import type { JournalDecision, NoteStamp } from "./view";
 
 const decisionsPageSize = 20;
+// PostgREST returns at most this many rows per request.
+const journalCap = 1000;
 
 export async function loadDecisionList(page = 1): Promise<{
   decisions: Decision[];
@@ -39,6 +42,69 @@ export async function loadDecisionList(page = 1): Promise<{
     decisions: rows.slice(0, decisionsPageSize),
     hasMore: rows.length > decisionsPageSize,
   };
+}
+
+/**
+ * The journal at a glance: the most recent decisions (titles and dates
+ * only) and the most recent notes' dates, each up to the row cap, with
+ * exact totals.
+ */
+export async function loadDecisionJournal(): Promise<{
+  decisions: JournalDecision[];
+  total: number;
+  notes: NoteStamp[];
+  noteTotal: number;
+}> {
+  const empty = { decisions: [], total: 0, notes: [], noteTotal: 0 };
+  const db = await createClient();
+  if (!db) return empty;
+  const { data: auth } = await db.auth.getUser();
+  if (!auth.user) return empty;
+  const [decisions, notes] = await Promise.all([
+    db
+      .from("decisions")
+      .select("id,title,decision_on,review_on,metric_key", { count: "exact" })
+      .eq("user_id", auth.user.id)
+      .order("decision_on", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(journalCap),
+    db
+      .from("decision_observations")
+      .select("decision_id,observed_on", { count: "exact" })
+      .eq("user_id", auth.user.id)
+      .order("observed_on", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(journalCap),
+  ]);
+  if (decisions.error || notes.error)
+    throw new Error("Decision journal could not be loaded.");
+  const decisionRows = (decisions.data ?? []) as JournalDecision[];
+  const noteRows = (notes.data ?? []) as NoteStamp[];
+  return {
+    decisions: decisionRows,
+    total: decisions.count ?? decisionRows.length,
+    notes: noteRows,
+    noteTotal: notes.count ?? noteRows.length,
+  };
+}
+
+/** Every note date for the given decisions (a page of the journal). */
+export async function loadDecisionNoteStamps(
+  decisionIds: string[],
+): Promise<NoteStamp[]> {
+  if (decisionIds.length === 0) return [];
+  const db = await createClient();
+  if (!db) return [];
+  const { data: auth } = await db.auth.getUser();
+  if (!auth.user) return [];
+  const { data, error } = await db
+    .from("decision_observations")
+    .select("decision_id,observed_on")
+    .eq("user_id", auth.user.id)
+    .in("decision_id", decisionIds)
+    .limit(journalCap);
+  if (error) throw new Error("Decision notes could not be loaded.");
+  return (data ?? []) as NoteStamp[];
 }
 
 export async function loadDecision(id: string): Promise<{

@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DecisionForm } from "./decision-form";
 
@@ -30,5 +31,18 @@ describe("DecisionForm", () => {
     expect(
       screen.getByText(/does not prove the decision caused the change/i),
     ).toBeInTheDocument();
+  });
+
+  it("sets the review date from the decision date in one tap", async () => {
+    const user = userEvent.setup();
+    render(<DecisionForm today="2026-09-26" goals={[]} />);
+    const review = screen.getByLabelText("Review on");
+    expect(review).toHaveAttribute("min", "2026-09-27");
+    await user.click(screen.getByRole("button", { name: "In 1 month" }));
+    expect(review).toHaveValue("2026-10-26");
+    expect(screen.getByRole("button", { name: "In 1 month" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 });
