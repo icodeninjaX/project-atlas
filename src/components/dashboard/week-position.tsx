@@ -24,6 +24,7 @@ export function WeekPosition({
   return (
     <section
       aria-labelledby="week-position"
+      data-spotlight
       className={cn(dashboardCardClass, "flex flex-col", className)}
     >
       <DashboardCardHeading

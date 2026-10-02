@@ -1,3 +1,5 @@
+import { formatTaskTime } from "@/lib/tasks/task-time";
+
 const MANILA_TIMEZONE = "Asia/Manila";
 
 const manilaHour = new Intl.DateTimeFormat("en-US", {
@@ -19,6 +21,18 @@ const manilaMonth = new Intl.DateTimeFormat("en-PH", {
   timeZone: MANILA_TIMEZONE,
   month: "long",
 });
+const manilaClock = new Intl.DateTimeFormat("en-US", {
+  timeZone: MANILA_TIMEZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+const manilaDate = new Intl.DateTimeFormat("en-CA", {
+  timeZone: MANILA_TIMEZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
@@ -30,6 +44,16 @@ export function manilaDayPart(now: Date): DayPart {
   if (hour >= 5 && hour < 12) return "morning";
   if (hour >= 12 && hour < 18) return "afternoon";
   return "evening";
+}
+
+/** "2026-10-01" in Manila. */
+export function manilaIsoDate(now: Date): string {
+  return manilaDate.format(now);
+}
+
+/** "9:05 AM" in Manila, in the app's task-time style. */
+export function formatManilaTime(date: Date): string {
+  return formatTaskTime(manilaClock.format(date));
 }
 
 /** "Thursday, October 1" in Manila. */
@@ -96,4 +120,55 @@ export function paydayLabel(daysUntil: number | null): string | null {
   if (daysUntil <= 0) return "Payday today";
   if (daysUntil === 1) return "Payday tomorrow";
   return `Payday in ${daysUntil} days`;
+}
+
+export type ScheduledStop<T> = {
+  item: T;
+  startsAt: Date;
+  endsAt: Date;
+};
+
+export type RouteSchedule<T> = {
+  stops: ScheduledStop<T>[];
+  totalMinutes: number;
+  /** The larger of the route and the day's capacity. */
+  spanMinutes: number;
+  endsAt: Date;
+};
+
+/**
+ * Lays the route end to end from `now` using each stop's estimate, against
+ * the larger of the day's capacity and the route itself. Null when any stop
+ * has no estimate, since the times would be guesses.
+ */
+export function scheduleRoute<T extends { durationMinutes: number | null }>(
+  items: T[],
+  now: Date,
+  capacityMinutes?: number,
+): RouteSchedule<T> | null {
+  if (!items.length || items.some((item) => !item.durationMinutes)) {
+    return null;
+  }
+  const totalMinutes = items.reduce(
+    (sum, item) => sum + (item.durationMinutes ?? 0),
+    0,
+  );
+  const spanMinutes = Math.max(totalMinutes, capacityMinutes ?? 0);
+  let elapsed = 0;
+  const stops = items.map((item) => {
+    const minutes = item.durationMinutes ?? 0;
+    const stop = {
+      item,
+      startsAt: new Date(now.getTime() + elapsed * 60_000),
+      endsAt: new Date(now.getTime() + (elapsed + minutes) * 60_000),
+    };
+    elapsed += minutes;
+    return stop;
+  });
+  return {
+    stops,
+    totalMinutes,
+    spanMinutes,
+    endsAt: new Date(now.getTime() + totalMinutes * 60_000),
+  };
 }

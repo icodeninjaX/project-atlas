@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   budgetUsage,
   cashFlow,
+  formatManilaTime,
   manilaDayLabel,
   manilaDayPart,
+  manilaIsoDate,
   manilaMonthName,
   manilaWeekdayIndex,
   paydayLabel,
+  scheduleRoute,
 } from "./today";
 
 describe("Manila day helpers", () => {
@@ -30,10 +33,18 @@ describe("Manila day helpers", () => {
     expect(manilaDayPart(new Date("2026-09-30T23:30:00Z"))).toBe("morning");
   });
 
-  it("labels the Manila date and month", () => {
+  it("labels the Manila date, month, and time", () => {
     const now = new Date("2026-09-30T23:30:00Z");
     expect(manilaDayLabel(now)).toBe("Thursday, October 1");
     expect(manilaMonthName(now)).toBe("October");
+    expect(manilaIsoDate(now)).toBe("2026-10-01");
+    expect(formatManilaTime(now)).toBe("7:30 AM");
+    expect(formatManilaTime(new Date("2026-10-01T00:05:00+08:00"))).toBe(
+      "12:05 AM",
+    );
+    expect(formatManilaTime(new Date("2026-10-01T13:45:00+08:00"))).toBe(
+      "1:45 PM",
+    );
   });
 
   it("counts the review week from Monday", () => {
@@ -106,5 +117,42 @@ describe("paydayLabel", () => {
     expect(paydayLabel(0)).toBe("Payday today");
     expect(paydayLabel(1)).toBe("Payday tomorrow");
     expect(paydayLabel(14)).toBe("Payday in 14 days");
+  });
+});
+
+describe("scheduleRoute", () => {
+  const now = new Date("2026-10-14T09:12:00+08:00");
+  const stop = (id: string, durationMinutes: number | null) => ({
+    id,
+    durationMinutes,
+  });
+
+  it("lays stops end to end from now against the day's capacity", () => {
+    const schedule = scheduleRoute(
+      [stop("a", 45), stop("b", 10), stop("c", 20)],
+      now,
+      180,
+    );
+
+    expect(schedule).not.toBeNull();
+    expect(schedule!.totalMinutes).toBe(75);
+    expect(schedule!.spanMinutes).toBe(180);
+    expect(
+      schedule!.stops.map(({ startsAt }) => formatManilaTime(startsAt)),
+    ).toEqual(["9:12 AM", "9:57 AM", "10:07 AM"]);
+    expect(formatManilaTime(schedule!.endsAt)).toBe("10:27 AM");
+  });
+
+  it("spans the route itself when it runs past capacity", () => {
+    expect(
+      scheduleRoute([stop("a", 120), stop("b", 90)], now, 180),
+    ).toMatchObject({ totalMinutes: 210, spanMinutes: 210 });
+  });
+
+  it("gives no times when any stop lacks an estimate", () => {
+    expect(
+      scheduleRoute([stop("a", 45), stop("b", null)], now, 180),
+    ).toBeNull();
+    expect(scheduleRoute([], now, 180)).toBeNull();
   });
 });

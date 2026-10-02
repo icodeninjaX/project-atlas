@@ -3,18 +3,25 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import styles from "./today.module.css";
 
 /**
- * The Today page's secondary surfaces. Outlines use `ring-*` because the
- * unlayered `* { border-color }` rule in globals.css overrides `border-*`
- * colors.
+ * A light-catching hairline edge and, with `data-spotlight` inside a
+ * SpotlightArea, a light that follows the mouse. Hosts must be positioned.
+ * Outlines elsewhere use `ring-*` because the unlayered
+ * `* { border-color }` rule in globals.css overrides `border-*` colors.
  */
-export const dashboardCardClass =
-  "bg-card ring-border @container relative min-w-0 rounded-[1.5rem] p-5 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_18px_40px_-28px_rgb(7_10_15/0.35)] ring-1 sm:p-6";
+export const surfaceClass = cn(styles.edge, styles.spotlight);
+
+/** The Today page's secondary surfaces. */
+export const dashboardCardClass = cn(
+  surfaceClass,
+  "bg-card/90 @container relative min-w-0 rounded-[1.5rem] p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] min-[360px]:p-5 sm:p-6",
+);
 
 /** An inset tile inside a dashboard card. */
 export const dashboardTileClass =
-  "bg-background/55 ring-border min-w-0 rounded-2xl p-4 ring-1";
+  "bg-background/55 ring-border/80 min-w-0 rounded-2xl p-3.5 ring-1 min-[360px]:p-4";
 
 export function DashboardCardHeading({
   id,

@@ -15,11 +15,14 @@ import {
   type SituationItem,
 } from "@/components/dashboard/situation-strip";
 import { WeekPosition } from "@/components/dashboard/week-position";
+import { SpotlightArea } from "@/components/dashboard/spotlight-area";
 import { SignalsPanel } from "@/components/signals/signals-panel";
 import { Button } from "@/components/ui/button";
+import { monthPace } from "@/lib/budgets/plan";
 import {
   manilaDayLabel,
   manilaDayPart,
+  manilaIsoDate,
   manilaMonthName,
   manilaWeekdayIndex,
   paydayLabel,
@@ -29,6 +32,8 @@ import { formatCentavos } from "@/lib/money/money";
 import type { NextBestAction } from "@/lib/next-best-action/engine";
 import type { Signal } from "@/lib/signals/engine";
 import { formatTaskMinutes } from "@/lib/tasks/task-view";
+import { cn } from "@/lib/utils";
+import styles from "./today.module.css";
 
 export type DashboardData = {
   financial: FinancialSnapshot;
@@ -146,52 +151,62 @@ export function TodayDashboard({
   const daylineItems = dayline.items;
   const greeting = greetings[manilaDayPart(now)];
   const GreetingIcon = greeting.icon;
+  const today = manilaIsoDate(now);
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+    <SpotlightArea className="relative isolate mx-auto w-full max-w-[1240px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <div aria-hidden="true" className={cn(styles.aurora, styles.grain)} />
+
       <header className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
         <div className="max-w-2xl min-w-0">
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold tracking-[0.1em] uppercase">
-            <span className="text-primary inline-flex items-center gap-1.5">
+          <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs font-medium">
+            <span className="bg-card/60 text-primary ring-border/70 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.1em] uppercase ring-1 backdrop-blur">
               <GreetingIcon aria-hidden="true" className="size-3.5" />
               {greeting.text}
             </span>
-            <span aria-hidden="true" className="text-muted-foreground/60">
-              ·
-            </span>
             <span className="text-muted-foreground">{manilaDayLabel(now)}</span>
           </p>
-          <h1 className="mt-3 text-[2rem] leading-none font-semibold tracking-[-0.05em] sm:text-[2.5rem] lg:text-[2.875rem]">
+          <h1 className="from-foreground via-foreground to-foreground/60 mt-4 bg-gradient-to-br bg-clip-text pb-[0.08em] text-[1.875rem] leading-[1.04] font-semibold tracking-[-0.05em] text-transparent min-[360px]:text-[2.125rem] sm:text-[2.75rem] lg:text-[3.25rem]">
             {daylineItems.length ? "Your Day, Mapped." : "Your route is clear."}
           </h1>
-          <p className="text-muted-foreground mt-3 text-sm leading-6 sm:text-[0.9375rem]">
+          {/* The smallest phones skip the tagline so NOW starts higher. */}
+          <p className="text-muted-foreground mt-2.5 max-w-xl text-sm leading-6 max-[359px]:hidden sm:text-[0.9375rem]">
             {daylineItems.length
               ? "One clear move now. The rest of your system stays within reach."
               : "Add what matters and ATLAS will surface the next useful move."}
           </p>
         </div>
-        <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:flex">
-          <Button asChild variant="secondary" size="sm">
+        <div className="grid grid-cols-2 gap-2 sm:flex">
+          <Button
+            asChild
+            variant="secondary"
+            size="sm"
+            className="backdrop-blur"
+          >
             <Link href="/money/transactions?create=true">
-              <CircleDollarSign aria-hidden="true" className="size-4" />
+              <CircleDollarSign
+                aria-hidden="true"
+                className="size-4 max-[359px]:hidden"
+              />
               Record expense
             </Link>
           </Button>
           <Button asChild size="sm">
             <Link href="/tasks?create=true">
-              <Plus aria-hidden="true" className="size-4" />
+              <Plus aria-hidden="true" className="size-4 max-[359px]:hidden" />
               Add task
             </Link>
           </Button>
         </div>
       </header>
 
-      <div className="mt-7 sm:mt-8">
+      <div className="mt-6 sm:mt-8">
         <DaylineCommand
           items={daylineItems}
           plannedMinutes={dayline.plannedMinutes}
           capacityMinutes={dayline.capacityMinutes}
           energyLevel={dayline.energyLevel}
+          now={now}
         />
       </div>
 
@@ -199,15 +214,16 @@ export function TodayDashboard({
 
       <SituationStrip items={situationItems(dashboard)} />
 
-      <div className="mt-8 grid gap-5 sm:mt-10 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.85fr)] xl:gap-6">
+      <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.85fr)] xl:gap-6">
         <FinancialOverview
           financial={dashboard.financial}
           monthName={manilaMonthName(now)}
+          pace={monthPace(today.slice(0, 7), today)}
         />
         <SignalsPanel signals={signals} />
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] lg:items-stretch xl:gap-6">
+      <div className="mt-4 grid gap-4 sm:mt-5 sm:gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] lg:items-stretch xl:gap-6">
         <GratitudeCard
           initialQuote={wisdomQuote}
           compact
@@ -218,6 +234,6 @@ export function TodayDashboard({
           reviewComplete={dashboard.review_complete}
         />
       </div>
-    </div>
+    </SpotlightArea>
   );
 }

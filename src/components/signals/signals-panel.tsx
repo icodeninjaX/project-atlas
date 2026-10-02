@@ -27,6 +27,7 @@ export function SignalsPanel({
   return (
     <section
       aria-labelledby="dashboard-signals"
+      data-spotlight
       className={cn(dashboardCardClass, "flex flex-col", className)}
     >
       <DashboardCardHeading

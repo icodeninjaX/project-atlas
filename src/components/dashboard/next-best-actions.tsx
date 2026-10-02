@@ -44,6 +44,7 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
   return (
     <section
       aria-labelledby="next-best-action-title"
+      data-spotlight
       className={cn(dashboardCardClass, "mt-5 sm:p-7")}
     >
       <div className="flex min-w-0 items-start gap-3">
