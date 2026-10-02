@@ -146,6 +146,8 @@ describe("primary create forms", () => {
       <PaymentForm
         debtId="3d334d84-4e32-46fa-bbdb-05ce7dc0dfbb"
         today="2026-08-02"
+        balanceCentavos={100_000}
+        minimumCentavos={10_000}
       />,
     );
 
@@ -158,7 +160,14 @@ describe("primary create forms", () => {
     render(<DebtForm />);
 
     expectVisibleLabel("Creditor name");
-    expectVisibleLabel("Debt type");
+    expectVisibleChoices("Debt type", [
+      "Credit card",
+      "Online lending",
+      "Personal loan",
+      "Installment",
+      "Family",
+      "Other",
+    ]);
     expectVisibleLabel("Original balance in pesos");
     expectVisibleLabel("Minimum payment in pesos");
     expectVisibleLabel("Annual interest rate percent");
