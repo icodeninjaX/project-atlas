@@ -7,6 +7,7 @@ export type RunwayAccount = {
   currentBalanceCentavos: number;
   includeInRunway: boolean;
   isArchived: boolean;
+  providerId?: string | null;
 };
 
 export type RunwayCategory = {
@@ -14,6 +15,7 @@ export type RunwayCategory = {
   name: string;
   isEssential: boolean;
   isSystem: boolean;
+  icon?: string | null;
 };
 
 export type RunwayMonthlyTotal = {
@@ -134,7 +136,8 @@ function sum(values: number[]): number {
   return values.reduce((total, value) => total + value, 0);
 }
 
-function isDebtPayment(category: RunwayCategory): boolean {
+/** Debt Payment never counts as essential: debt minimums are added apart. */
+export function isDebtPayment(category: Pick<RunwayCategory, "name">): boolean {
   return category.name.trim().toLowerCase() === "debt payment";
 }
 
@@ -372,4 +375,146 @@ export function calculateScenario(
     targetGapCentavos: targetReserveCentavos - availableLiquidCentavos,
     debtProjection,
   };
+}
+
+/**
+ * The budget a runway falls back on: the latest one that plans anything in
+ * a selected essential category. `budgets` run newest first.
+ */
+export function pickRunwayBudget(
+  budgets: readonly RunwayBudget[],
+  categories: readonly RunwayCategory[],
+): RunwayBudget | null {
+  const selected = new Set(
+    categories
+      .filter((category) => category.isEssential && !isDebtPayment(category))
+      .map((category) => category.id),
+  );
+  return (
+    budgets.find((budget) =>
+      budget.items.some(
+        (item) => selected.has(item.categoryId) && item.plannedCentavos > 0,
+      ),
+    ) ?? null
+  );
+}
+
+export type RunwayChoices = {
+  accountIds: readonly string[];
+  categoryIds: readonly string[];
+  targetMonths: number;
+};
+
+/**
+ * The source as it would be with different saved choices, so an estimate
+ * can be previewed before the choices are saved. The fallback budget is
+ * picked again because it depends on which categories are essential.
+ */
+export function applyRunwayChoices(
+  source: RunwaySource,
+  budgets: readonly RunwayBudget[],
+  choices: RunwayChoices,
+): RunwaySource {
+  const accountIds = new Set(choices.accountIds);
+  const categoryIds = new Set(choices.categoryIds);
+  const categories = source.categories.map((category) => ({
+    ...category,
+    isEssential: categoryIds.has(category.id),
+  }));
+  return {
+    ...source,
+    accounts: source.accounts.map((account) => ({
+      ...account,
+      includeInRunway: accountIds.has(account.id),
+    })),
+    categories,
+    budget: pickRunwayBudget(budgets, categories),
+    targetMonths: choices.targetMonths,
+  };
+}
+
+/** Each category's total in the baseline, and what divides it into a month. */
+function baselineTotals(
+  source: RunwaySource,
+  analysis: RunwayAnalysis,
+): { totals: Map<string, number>; months: number } {
+  const totals = new Map<string, number>();
+  if (analysis.baselineSource === "historical") {
+    for (const total of source.monthlyTotals) {
+      if (
+        total.transactionType !== "expense" ||
+        !analysis.includedMonths.includes(total.monthStart)
+      ) {
+        continue;
+      }
+      totals.set(
+        total.categoryId,
+        (totals.get(total.categoryId) ?? 0) + total.amountCentavos,
+      );
+    }
+    return { totals, months: analysis.includedMonths.length };
+  }
+  if (analysis.baselineSource === "budget" && source.budget) {
+    for (const item of source.budget.items) {
+      totals.set(
+        item.categoryId,
+        (totals.get(item.categoryId) ?? 0) + item.plannedCentavos,
+      );
+    }
+  }
+  return { totals, months: 1 };
+}
+
+/**
+ * What each expense category costs in a month under the analysis's
+ * baseline, whether or not it is essential. Empty without a baseline.
+ */
+export function monthlyCategoryAmounts(
+  source: RunwaySource,
+  analysis: RunwayAnalysis,
+): Map<string, number> {
+  const { totals, months } = baselineTotals(source, analysis);
+  return new Map(
+    [...totals].map(([categoryId, total]) => [
+      categoryId,
+      safeAverage(total, months),
+    ]),
+  );
+}
+
+export type EssentialShare = {
+  category: RunwayCategory;
+  monthlyCentavos: number;
+};
+
+/**
+ * The monthly essential spending split by category, largest first. Rounded
+ * so the parts add up to `monthlyEssentialCentavos` exactly.
+ */
+export function essentialBreakdown(
+  source: RunwaySource,
+  analysis: RunwayAnalysis,
+): EssentialShare[] {
+  const { totals, months } = baselineTotals(source, analysis);
+  const parts = analysis.selectedCategories.map((category) => {
+    const exact = (totals.get(category.id) ?? 0) / months;
+    return { category, floor: Math.floor(exact), rest: exact % 1 };
+  });
+  // Largest remainder: the centavos lost to rounding down go to the parts
+  // that lost the most.
+  let missing =
+    analysis.monthlyEssentialCentavos - sum(parts.map((part) => part.floor));
+  const order = [...parts].sort((a, b) => b.rest - a.rest);
+  for (const part of order) {
+    if (missing <= 0) break;
+    part.floor += 1;
+    missing -= 1;
+  }
+  return parts
+    .map(({ category, floor }) => ({ category, monthlyCentavos: floor }))
+    .sort(
+      (a, b) =>
+        b.monthlyCentavos - a.monthlyCentavos ||
+        a.category.name.localeCompare(b.category.name),
+    );
 }
