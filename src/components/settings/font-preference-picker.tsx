@@ -2,6 +2,11 @@
 
 import { RotateCcw, Type } from "lucide-react";
 import { useSyncExternalStore } from "react";
+import {
+  fieldHelpClass,
+  fieldLabelClass,
+  selectClass,
+} from "@/components/settings/settings-chrome";
 import { Button } from "@/components/ui/button";
 import {
   DEFAULT_FONT_PREFERENCE,
@@ -74,8 +79,8 @@ export function FontPreferencePicker() {
 
   return (
     <div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
             <Type className="text-primary size-4" aria-hidden="true" />
             <h3 className="text-sm font-semibold">App font</h3>
@@ -90,56 +95,71 @@ export function FontPreferencePicker() {
           size="sm"
           disabled={selectedFont === DEFAULT_FONT_PREFERENCE}
           onClick={() => applyFont(DEFAULT_FONT_PREFERENCE)}
-          className="self-start"
+          className="shrink-0"
         >
           <RotateCcw className="size-3.5" aria-hidden="true" />
           Reset font
         </Button>
       </div>
 
-      <label
-        htmlFor="app-font-preference"
-        className="mt-4 block text-xs font-semibold"
-      >
-        Font family
-      </label>
-      <select
-        id="app-font-preference"
-        value={selectedFont}
-        onChange={(event) => {
-          if (isFontPreference(event.target.value)) {
-            applyFont(event.target.value);
-          }
-        }}
-        className="border-border bg-background focus-visible:ring-ring mt-2 min-h-11 w-full rounded-xl border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none"
-      >
-        {FONT_GROUPS.map((group) => (
-          <optgroup key={group.label} label={group.label}>
-            {group.fonts.map((font) => (
-              <option key={font.value} value={font.value}>
-                {font.label}
-              </option>
+      <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:items-stretch">
+        <div className="space-y-1.5">
+          <label htmlFor="app-font-preference" className={fieldLabelClass}>
+            Font family
+          </label>
+          <select
+            id="app-font-preference"
+            value={selectedFont}
+            onChange={(event) => {
+              if (isFontPreference(event.target.value)) {
+                applyFont(event.target.value);
+              }
+            }}
+            className={selectClass}
+          >
+            {FONT_GROUPS.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.fonts.map((font) => (
+                  <option key={font.value} value={font.value}>
+                    {font.label}
+                  </option>
+                ))}
+              </optgroup>
             ))}
-          </optgroup>
-        ))}
-      </select>
+          </select>
+          <p className={fieldHelpClass}>
+            {FONT_PREFERENCES.length} typefaces in {FONT_CATEGORIES.length}{" "}
+            families.
+          </p>
+        </div>
 
-      <div
-        aria-live="polite"
-        className="border-border bg-muted/40 mt-3 flex items-center gap-3 rounded-xl border p-3"
-        style={{ fontFamily: `var(${selected.cssVariable})` }}
-      >
-        <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-lg text-base font-semibold">
-          Aa
-        </span>
-        <span className="min-w-0">
-          <span className="block text-sm font-semibold">
+        <div
+          aria-live="polite"
+          className="bg-background/55 ring-border/80 relative overflow-hidden rounded-2xl p-4 ring-1 sm:p-5"
+          style={{ fontFamily: `var(${selected.cssVariable})` }}
+        >
+          <span
+            aria-hidden="true"
+            className="text-primary/[0.09] pointer-events-none absolute -top-6 -right-1 text-[7.5rem] leading-none font-semibold tracking-[-0.06em] select-none"
+          >
+            Aa
+          </span>
+          <p className="text-primary text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
+            {selected.category}
+          </p>
+          <p className="relative mt-2 text-xl leading-7 font-semibold tracking-[-0.02em] text-balance">
             {selected.label} · Plan clearly, move intentionally.
-          </span>
-          <span className="text-muted-foreground mt-0.5 block text-xs leading-5">
+          </p>
+          <p className="text-muted-foreground relative mt-1.5 text-xs leading-5">
             {selected.description}
-          </span>
-        </span>
+          </p>
+          <p
+            aria-hidden="true"
+            className="text-muted-foreground/80 relative mt-3 truncate text-sm tracking-wide"
+          >
+            ABCDEFGHIJ abcdefghij 0123456789
+          </p>
+        </div>
       </div>
 
       <p className="text-muted-foreground mt-3 text-xs leading-5">

@@ -1,9 +1,25 @@
 "use client";
 
-import { Bell, BellOff, Clock3 } from "lucide-react";
+import {
+  Bell,
+  BellOff,
+  CalendarCheck,
+  Clock3,
+  HandCoins,
+  ListChecks,
+  Moon,
+  Smartphone,
+  Sunrise,
+  WalletCards,
+} from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
+import {
+  FormFeedback,
+  SettingsGroup,
+  StatusChip,
+  SwitchField,
+} from "@/components/settings/settings-chrome";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   removePushSubscriptionAction,
   savePushSubscriptionAction,
@@ -106,128 +122,167 @@ export function ReminderSettings({
 
   const [state, formAction, pending] = useActionState(action, initialState);
 
+  const kinds = [
+    {
+      name: "taskReminders",
+      label: "Tasks at their scheduled time",
+      icon: ListChecks,
+      checked: preferences.taskReminders,
+    },
+    {
+      name: "debtReminders",
+      label: "Debt payments due soon",
+      icon: HandCoins,
+      checked: preferences.debtReminders,
+    },
+    {
+      name: "paydayReminders",
+      label: "Payday",
+      icon: WalletCards,
+      checked: preferences.paydayReminders,
+    },
+    {
+      name: "reviewReminders",
+      label: "Weekly review",
+      icon: CalendarCheck,
+      checked: preferences.reviewReminders,
+    },
+  ];
+
   return (
-    <form action={formAction} className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="flex items-center gap-2 text-sm font-semibold">
-            {preferences.remindersEnabled ? (
-              <Bell className="text-primary size-4" />
-            ) : (
-              <BellOff className="text-muted-foreground size-4" />
-            )}
-            ATLAS phone notifications
-          </p>
-          <p className="text-muted-foreground mt-1 max-w-lg text-xs leading-5">
-            Scheduled tasks arrive at their exact time, plus one concise daily
-            digest at 8:00 AM Asia/Manila. ATLAS stays quiet during your quiet
-            hours.
-          </p>
-        </div>
-        <label className="border-border bg-background flex min-h-11 items-center gap-2 rounded-xl border px-3 text-sm font-medium">
-          <input
-            type="checkbox"
+    <form action={formAction} className="space-y-7">
+      <div className="bg-background/55 ring-border/80 relative overflow-hidden rounded-2xl p-4 ring-1 sm:p-5">
+        <div
+          aria-hidden="true"
+          className="bg-primary/15 pointer-events-none absolute -top-16 -right-10 size-44 rounded-full blur-3xl"
+        />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span
+              aria-hidden="true"
+              className={
+                preferences.remindersEnabled
+                  ? "bg-primary-solid text-primary-solid-foreground grid size-10 shrink-0 place-items-center rounded-2xl shadow-[0_6px_18px_-8px_color-mix(in_srgb,var(--primary-solid)_80%,transparent)]"
+                  : "bg-muted text-muted-foreground grid size-10 shrink-0 place-items-center rounded-2xl"
+              }
+            >
+              {preferences.remindersEnabled ? (
+                <Bell className="size-4" />
+              ) : (
+                <BellOff className="size-4" />
+              )}
+            </span>
+            <div className="min-w-0">
+              <p className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+                ATLAS phone notifications
+                <StatusChip
+                  tone={preferences.remindersEnabled ? "positive" : "neutral"}
+                >
+                  {preferences.remindersEnabled ? "On" : "Off"}
+                </StatusChip>
+              </p>
+              <p className="text-muted-foreground mt-1 max-w-lg text-xs leading-5">
+                Scheduled tasks arrive at their exact time, plus one concise
+                daily digest at 8:00 AM Asia/Manila. ATLAS stays quiet during
+                your quiet hours.
+              </p>
+            </div>
+          </div>
+          <SwitchField
             name="remindersEnabled"
+            label="Enable reminders"
             defaultChecked={preferences.remindersEnabled}
             disabled={!configured}
-            className="accent-primary size-4"
+            className="bg-card/70 sm:min-w-52"
           />
-          Enable reminders
-        </label>
+        </div>
+        <p className="text-muted-foreground relative mt-4 flex items-center gap-2 text-[11px]">
+          <Smartphone aria-hidden="true" className="size-3.5" />
+          This device: {deviceSubscribed ? "subscribed" : "not subscribed"}
+        </p>
       </div>
 
       {!configured && (
-        <p className="border-border bg-muted text-muted-foreground rounded-xl border px-3 py-2.5 text-xs leading-5">
+        <p className="bg-muted/60 ring-border/80 text-muted-foreground rounded-xl px-3 py-2.5 text-xs leading-5 ring-1">
           Not configured. Add VAPID and cron secrets to this deployment to
           enable browser delivery.
         </p>
       )}
 
-      <fieldset>
-        <legend className="text-xs font-semibold tracking-wide uppercase">
-          Include
-        </legend>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {[
-            [
-              "taskReminders",
-              "Tasks at their scheduled time",
-              preferences.taskReminders,
-            ],
-            [
-              "debtReminders",
-              "Debt payments due soon",
-              preferences.debtReminders,
-            ],
-            ["paydayReminders", "Payday", preferences.paydayReminders],
-            ["reviewReminders", "Weekly review", preferences.reviewReminders],
-          ].map(([name, label, checked]) => (
-            <label
-              key={String(name)}
-              className="border-border bg-background flex min-h-11 items-center gap-2 rounded-xl border px-3 text-sm"
-            >
-              <input
-                type="checkbox"
-                name={String(name)}
-                defaultChecked={Boolean(checked)}
-                className="accent-primary size-4"
+      <fieldset className="min-w-0">
+        <legend className="sr-only">Include</legend>
+        <SettingsGroup title="Include" titleIsLegend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {kinds.map(({ name, label, icon: Icon, checked }) => (
+              <SwitchField
+                key={name}
+                name={name}
+                defaultChecked={checked}
+                label={
+                  <span className="flex items-center gap-2">
+                    <Icon
+                      aria-hidden="true"
+                      className="text-muted-foreground size-4 shrink-0"
+                    />
+                    {label}
+                  </span>
+                }
               />
-              {label}
+            ))}
+          </div>
+        </SettingsGroup>
+      </fieldset>
+
+      <fieldset className="min-w-0">
+        <legend className="sr-only">Quiet hours</legend>
+        <SettingsGroup title="Quiet hours" icon={Clock3} titleIsLegend>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <label className="bg-background/55 ring-border/80 focus-within:ring-ring block rounded-2xl p-3 ring-1 focus-within:ring-2 sm:p-3.5">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase">
+                <Moon aria-hidden="true" className="size-3.5" />
+                Starts
+              </span>
+              <input
+                type="time"
+                name="quietHoursStart"
+                defaultValue={preferences.quietHoursStart.slice(0, 5)}
+                required
+                className="mt-1 w-full bg-transparent font-mono text-xl font-semibold tabular-nums outline-none sm:text-2xl"
+              />
             </label>
-          ))}
-        </div>
+            <label className="bg-background/55 ring-border/80 focus-within:ring-ring block rounded-2xl p-3 ring-1 focus-within:ring-2 sm:p-3.5">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase">
+                <Sunrise aria-hidden="true" className="size-3.5" />
+                Ends
+              </span>
+              <input
+                type="time"
+                name="quietHoursEnd"
+                defaultValue={preferences.quietHoursEnd.slice(0, 5)}
+                required
+                className="mt-1 w-full bg-transparent font-mono text-xl font-semibold tabular-nums outline-none sm:text-2xl"
+              />
+            </label>
+          </div>
+        </SettingsGroup>
       </fieldset>
 
-      <fieldset className="border-border border-t pt-5">
-        <legend className="flex items-center gap-2 text-sm font-medium">
-          <Clock3 className="text-muted-foreground size-4" />
-          Quiet hours
-        </legend>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="text-muted-foreground text-xs">
-            Starts
-            <Input
-              type="time"
-              name="quietHoursStart"
-              defaultValue={preferences.quietHoursStart.slice(0, 5)}
-              required
-              className="mt-1.5"
-            />
-          </label>
-          <label className="text-muted-foreground text-xs">
-            Ends
-            <Input
-              type="time"
-              name="quietHoursEnd"
-              defaultValue={preferences.quietHoursEnd.slice(0, 5)}
-              required
-              className="mt-1.5"
-            />
-          </label>
+      <div className="border-border/70 -mx-4 -mb-4 flex flex-col gap-3 border-t px-4 pt-4 pb-4 min-[360px]:-mx-5 min-[360px]:-mb-5 min-[360px]:px-5 min-[360px]:pb-5 sm:-mx-6 sm:-mb-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:pb-6">
+        <div className="min-w-0 flex-1">
+          {state.message || browserError ? (
+            <FormFeedback success={state.success && !browserError}>
+              {browserError || state.message}
+            </FormFeedback>
+          ) : (
+            <p className="text-muted-foreground text-xs leading-5">
+              Reminders follow your quiet hours on every device.
+            </p>
+          )}
         </div>
-      </fieldset>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-muted-foreground text-xs">
-          This device: {deviceSubscribed ? "subscribed" : "not subscribed"}
-        </p>
         <Button type="submit" pending={pending} pendingLabel="Saving…">
           Save reminder settings
         </Button>
       </div>
-
-      {(state.message || browserError) && (
-        <p
-          role="status"
-          className={`rounded-xl border px-3 py-2.5 text-sm ${
-            state.success && !browserError
-              ? "border-primary/25 bg-primary/10 text-primary"
-              : "border-destructive/25 bg-destructive/10 text-destructive"
-          }`}
-        >
-          {browserError || state.message}
-        </p>
-      )}
     </form>
   );
 }

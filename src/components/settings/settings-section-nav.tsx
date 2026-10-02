@@ -1,17 +1,26 @@
 "use client";
 
+import {
+  BellRing,
+  Database,
+  Fingerprint,
+  HardDrive,
+  Palette,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useScrollStrip } from "@/components/shared/scroll-strip";
 import { cn } from "@/lib/utils";
 
 export const settingsSections = [
-  { id: "profile", label: "Profile" },
-  { id: "appearance", label: "Appearance" },
-  { id: "security", label: "Security" },
-  { id: "offline", label: "Offline" },
-  { id: "reminders", label: "Reminders" },
-  { id: "data", label: "Data" },
-  { id: "account", label: "Account" },
+  { id: "profile", label: "Profile", icon: UserRound },
+  { id: "appearance", label: "Appearance", icon: Palette },
+  { id: "security", label: "Security", icon: Fingerprint },
+  { id: "offline", label: "Offline", icon: HardDrive },
+  { id: "reminders", label: "Reminders", icon: BellRing },
+  { id: "data", label: "Data", icon: Database },
+  { id: "account", label: "Account", icon: ShieldCheck },
 ] as const;
 
 export type SettingsSectionId = (typeof settingsSections)[number]["id"];
@@ -82,27 +91,63 @@ export function SettingsSectionNav({
     centerActive: variant === "strip",
   });
 
-  const links = settingsSections.map(({ id, label }) => (
-    <a
-      key={id}
-      href={`#${id}`}
-      aria-current={active === id ? "true" : undefined}
-      onClick={() => setActive(id)}
-      className={cn(
-        "focus-visible:ring-ring inline-flex min-h-10 shrink-0 items-center rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none",
-        variant === "sidebar" && "min-h-9 w-full",
-        active === id
-          ? "bg-primary/12 text-primary"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground",
-      )}
-    >
-      {label}
-    </a>
-  ));
+  const links = settingsSections.map(({ id, label, icon: Icon }, index) => {
+    const current = active === id;
+    return (
+      <a
+        key={id}
+        href={`#${id}`}
+        aria-current={current ? "true" : undefined}
+        onClick={() => setActive(id)}
+        className={cn(
+          "focus-visible:ring-ring group relative inline-flex shrink-0 items-center gap-2 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none",
+          variant === "strip" && "min-h-10 rounded-full px-3.5 ring-1",
+          variant === "strip" &&
+            (current
+              ? "bg-primary-solid text-primary-solid-foreground ring-primary-solid shadow-[0_4px_14px_-6px_color-mix(in_srgb,var(--primary-solid)_70%,transparent)]"
+              : "bg-card/70 text-muted-foreground ring-border/80 hover:text-foreground hover:bg-card"),
+          variant === "sidebar" && "min-h-10 w-full rounded-xl px-2.5",
+          variant === "sidebar" &&
+            (current
+              ? "bg-primary/10 text-foreground"
+              : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"),
+        )}
+      >
+        {variant === "sidebar" ? (
+          <span
+            aria-hidden="true"
+            className={cn(
+              "bg-primary absolute top-2 bottom-2 -left-3 w-[3px] rounded-full transition-opacity",
+              current ? "opacity-100" : "opacity-0",
+            )}
+          />
+        ) : null}
+        <Icon
+          aria-hidden="true"
+          className={cn(
+            "size-3.5 shrink-0",
+            variant === "sidebar" && (current ? "text-primary" : ""),
+          )}
+        />
+        <span className="flex-1">{label}</span>
+        {variant === "sidebar" ? (
+          <span
+            aria-hidden="true"
+            className={cn(
+              "font-mono text-[10px] tabular-nums",
+              current ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            {String(index + 1).padStart(2, "0")}
+          </span>
+        ) : null}
+      </a>
+    );
+  });
 
   if (variant === "sidebar") {
     return (
-      <nav aria-label="Settings sections" className="space-y-0.5">
+      <nav aria-label="Settings sections" className="relative space-y-0.5">
         {links}
       </nav>
     );
@@ -112,7 +157,7 @@ export function SettingsSectionNav({
     <nav
       ref={stripRef}
       aria-label="Settings sections"
-      className="border-border bg-background/95 sticky top-[calc(4rem+env(safe-area-inset-top))] z-20 -mx-4 mt-6 flex [scrollbar-width:none] gap-1 overflow-x-auto border-b px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden"
+      className="bg-background/80 sticky top-[calc(4rem+env(safe-area-inset-top))] z-20 -mx-4 mt-6 flex [scrollbar-width:none] gap-1.5 overflow-x-auto [mask-image:linear-gradient(to_right,transparent,black_1rem,black_calc(100%-1rem),transparent)] px-4 py-2.5 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden"
     >
       {links}
     </nav>
