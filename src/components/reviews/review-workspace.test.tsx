@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { CompassLink } from "./compass-link";
 import { ReviewWorkspace, type ReviewArchiveItem } from "./review-workspace";
 
 vi.mock("./review-trend", () => ({
@@ -73,8 +74,15 @@ describe("ReviewWorkspace", () => {
     expect(
       screen.getByRole("tabpanel", { name: /Past reviews/ }),
     ).toBeVisible();
+    const hero = screen.getByRole("region", {
+      name: "Your weeks, remembered",
+    });
+    expect(within(hero).getByText("2")).toBeVisible();
+    expect(within(hero).getByText("weeks reflected")).toBeVisible();
     expect(
-      screen.getByText(/made space to reflect across 2 weeks/i),
+      within(hero).getByText(
+        "Weeks have felt 7.5 out of 10 on average, and energy peaked at 8 in the week of Aug 10–16.",
+      ),
     ).toBeVisible();
   });
 
@@ -111,6 +119,64 @@ describe("ReviewWorkspace", () => {
     expect(
       screen.getByRole("button", { name: /Keep the momentum simple/ }),
     ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("names the prompts a week left blank instead of repeating them", async () => {
+    const user = userEvent.setup();
+    render(
+      <ReviewWorkspace
+        reviews={reviews}
+        initialView="archive"
+        highlightReviewId={reviews[1]!.id}
+        currentContent={<p>Current review form</p>}
+      />,
+    );
+
+    const selectedReview = screen.getByRole("article", {
+      name: "Review for August 3–9, 2026",
+    });
+    expect(
+      within(selectedReview).getByText("Where time went · Money reflection"),
+    ).toBeVisible();
+
+    await user.click(
+      within(selectedReview).getByRole("button", { name: /Newer/ }),
+    );
+    expect(
+      screen.getByRole("article", { name: "Review for August 10–16, 2026" }),
+    ).toBeVisible();
+  });
+
+  it("opens the review behind this week's compass and keeps unsaved writing", async () => {
+    const user = userEvent.setup();
+    render(
+      <ReviewWorkspace
+        reviews={reviews}
+        currentContent={
+          <>
+            <label htmlFor="draft">Draft</label>
+            <textarea id="draft" />
+            <CompassLink reviewId={reviews[1]!.id}>
+              Read that review
+            </CompassLink>
+          </>
+        }
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Draft"), "Half a thought");
+    await user.click(screen.getByRole("link", { name: "Read that review" }));
+
+    expect(screen.getByRole("tab", { name: /Past reviews/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      screen.getByRole("article", { name: "Review for August 3–9, 2026" }),
+    ).toBeVisible();
+
+    await user.click(screen.getByRole("tab", { name: "This week" }));
+    expect(screen.getByLabelText("Draft")).toHaveValue("Half a thought");
   });
 
   it("supports arrow-key tab navigation", () => {

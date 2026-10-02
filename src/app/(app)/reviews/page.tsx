@@ -1,19 +1,15 @@
-import { ReviewForm } from "@/components/reviews/review-form";
 import {
-  ReviewWorkspace,
-  type ReviewArchiveItem,
-} from "@/components/reviews/review-workspace";
-import {
-  WeeklyInsightCard,
-  type InsightResult,
-} from "@/components/reviews/weekly-insight-card";
+  ReviewsScreen,
+  type CurrentReview,
+} from "@/components/reviews/reviews-screen";
+import type { InsightResult } from "@/components/reviews/weekly-insight-card";
+import { mondayWeekStart } from "@/lib/dates/dates";
 import { previousWeekWindows } from "@/lib/reviews/insight";
 import { storedResponse } from "@/lib/reviews/insight-storage";
-import { PageHeading } from "@/components/shared/page-heading";
-import { SensitiveValue } from "@/components/privacy/privacy-provider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mondayWeekStart, reviewWeekLabel } from "@/lib/dates/dates";
-import { formatCentavos } from "@/lib/money/money";
+import {
+  REVIEW_HISTORY_LIMIT,
+  type ReviewArchiveItem,
+} from "@/lib/reviews/view";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Weekly reviews" };
@@ -45,7 +41,7 @@ export default async function ReviewsPage({
             "id,week_start,wins,challenges,lessons,time_wasters,money_reflection,career_reflection,next_week_focus,energy_score,stress_score,overall_score,completed_at,created_at,updated_at",
           )
           .order("week_start", { ascending: false })
-          .limit(12),
+          .limit(REVIEW_HISTORY_LIMIT),
         supabase
           .from("tasks")
           .select("id", { count: "exact", head: true })
@@ -125,21 +121,10 @@ export default async function ReviewsPage({
     : null;
   const current = currentResult.data;
   const history = historyResult.data ?? [];
-  const spending = (spendingResult.data ?? []).reduce(
-    (sum, row) => sum + Number(row.amount_centavos),
-    0,
-  );
-  const payments = (paymentsResult.data ?? []).reduce(
-    (sum, row) => sum + Number(row.amount_centavos),
-    0,
-  );
-  const metrics = [
-    ["Tasks completed", String(tasksResult.count ?? 0)],
-    ["Spending", formatCentavos(spending)],
-    ["Debt payments", formatCentavos(payments)],
-    ["Applications sent", String(applicationsResult.count ?? 0)],
-    ["Goals progressed", String(goalsResult.count ?? 0)],
-  ];
+  const sum = (
+    rows: Array<{ amount_centavos: number | string }> | null | undefined,
+  ) =>
+    (rows ?? []).reduce((total, row) => total + Number(row.amount_centavos), 0);
   const reviewHistory = highlightedReviewResult.data
     ? [
         highlightedReviewResult.data,
@@ -170,110 +155,49 @@ export default async function ReviewsPage({
       reflectedAt:
         review.completed_at ?? review.updated_at ?? review.created_at ?? null,
     }));
+  const currentReview: CurrentReview | null = current
+    ? {
+        wins: current.wins ?? "",
+        challenges: current.challenges ?? "",
+        lessons: current.lessons ?? "",
+        timeWasters: current.time_wasters ?? "",
+        moneyReflection: current.money_reflection ?? "",
+        careerReflection: current.career_reflection ?? "",
+        nextWeekFocus: current.next_week_focus ?? "",
+        energyScore: current.energy_score ? String(current.energy_score) : "",
+        stressScore: current.stress_score ? String(current.stress_score) : "",
+        overallScore: current.overall_score
+          ? String(current.overall_score)
+          : "",
+        submitted: Boolean(current.completed_at),
+        savedAt: current.updated_at ?? current.created_at ?? undefined,
+      }
+    : null;
 
   return (
-    <div className="mx-auto max-w-[1180px] px-4 pt-4 sm:p-6 lg:p-8">
-      <PageHeading
-        eyebrow="Monday–Sunday"
-        title="Weekly reviews"
-        description="A quiet place to notice your patterns, remember your progress, and choose what matters next."
-      />
-      <ReviewWorkspace
-        reviews={pastReviews}
-        initialView={query.view === "archive" ? "archive" : "current"}
-        highlightReviewId={query.highlight}
-        currentContent={
-          <div>
-            <section>
-              <h2 id="week-facts-heading" className="text-sm font-semibold">
-                This week in facts
-              </h2>
-              <div
-                tabIndex={0}
-                role="region"
-                aria-labelledby="week-facts-heading"
-                className="focus-visible:ring-ring -mx-4 mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-2.5 overflow-x-auto px-4 pb-2 focus-visible:ring-2 focus-visible:outline-none sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5 [&::-webkit-scrollbar]:hidden"
-              >
-                {metrics.map(([label, value]) => (
-                  <Card
-                    key={label}
-                    className="w-[8rem] min-w-[8rem] snap-start sm:w-auto sm:min-w-0"
-                  >
-                    <CardContent className="p-3.5 sm:p-5">
-                      <p className="text-muted-foreground text-xs leading-4">
-                        {label}
-                      </p>
-                      <p className="mt-3 font-mono text-xl font-semibold tabular-nums">
-                        {label === "Spending" || label === "Debt payments" ? (
-                          <SensitiveValue>{value}</SensitiveValue>
-                        ) : (
-                          value
-                        )}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              <p className="text-muted-foreground mt-1 text-center text-[11px] sm:hidden">
-                Swipe to see all weekly facts
-              </p>
-            </section>
-
-            <div className="mt-4 sm:mt-5">
-              <WeeklyInsightCard
-                autoEnabled={
-                  insightPreference.data?.weekly_insight_auto === true
-                }
-                lastWeek={storedLastWeek}
-              />
-            </div>
-
-            <Card className="sm:bg-card mt-4 border-0 bg-transparent sm:mt-5 sm:border">
-              <CardHeader className="px-0 pt-0 pb-0 sm:p-5 sm:pb-0">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <CardTitle>Week of {reviewWeekLabel(weekStart)}</CardTitle>
-                  {current ? (
-                    <span className="border-border bg-secondary text-muted-foreground rounded-full border px-2 py-1 text-[10px] font-medium">
-                      {current.completed_at ? "Submitted" : "Draft"}
-                    </span>
-                  ) : null}
-                </div>
-              </CardHeader>
-              <CardContent className="px-0 pt-4 pb-0 sm:p-5">
-                <ReviewForm
-                  weekStart={weekStart}
-                  entryTimestamp={entryTimestamp}
-                  lastSavedAt={
-                    current?.updated_at ?? current?.created_at ?? undefined
-                  }
-                  initial={
-                    current
-                      ? {
-                          wins: current.wins ?? "",
-                          challenges: current.challenges ?? "",
-                          lessons: current.lessons ?? "",
-                          timeWasters: current.time_wasters ?? "",
-                          moneyReflection: current.money_reflection ?? "",
-                          careerReflection: current.career_reflection ?? "",
-                          nextWeekFocus: current.next_week_focus ?? "",
-                          energyScore: current.energy_score
-                            ? String(current.energy_score)
-                            : "",
-                          stressScore: current.stress_score
-                            ? String(current.stress_score)
-                            : "",
-                          overallScore: current.overall_score
-                            ? String(current.overall_score)
-                            : "",
-                        }
-                      : undefined
-                  }
-                />
-              </CardContent>
-            </Card>
-          </div>
-        }
-      />
-    </div>
+    <ReviewsScreen
+      nowIso={entryTimestamp}
+      weekStart={weekStart}
+      current={currentReview}
+      facts={{
+        tasks: tasksResult.count ?? 0,
+        spendingCentavos: sum(spendingResult.data),
+        debtPaymentsCentavos: sum(paymentsResult.data),
+        applications: applicationsResult.count ?? 0,
+        goals: goalsResult.count ?? 0,
+      }}
+      reviews={pastReviews}
+      streakHistory={history.map((review) => ({
+        weekStart: review.week_start,
+        completedAt: review.completed_at,
+      }))}
+      historyLimitReached={history.length === REVIEW_HISTORY_LIMIT}
+      insight={{
+        autoEnabled: insightPreference.data?.weekly_insight_auto === true,
+        lastWeek: storedLastWeek,
+      }}
+      initialView={query.view === "archive" ? "archive" : "current"}
+      highlightReviewId={query.highlight}
+    />
   );
 }
