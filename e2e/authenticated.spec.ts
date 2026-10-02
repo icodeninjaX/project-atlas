@@ -233,11 +233,12 @@ test.describe("authenticated ATLAS workflows", () => {
     await page.getByLabel("Company name").fill(company);
     await page.getByLabel("Role title").fill("Full-stack Developer");
     await page.getByRole("button", { name: "Add application" }).click();
-    const applicationCard = page.getByRole("row").filter({ hasText: company });
+    const applicationCard = page
+      .getByRole("listitem")
+      .filter({ hasText: company });
     await expect(applicationCard).toBeVisible();
     await applicationCard
-      .locator("xpath=following-sibling::tr[1]")
-      .getByRole("button", { name: "Edit application" })
+      .getByRole("button", { name: `Edit ${company}` })
       .click();
     await page
       .getByLabel(`Edit ${company} role title`)

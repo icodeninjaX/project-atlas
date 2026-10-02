@@ -29,9 +29,11 @@ afterEach(cleanup);
 describe("ApplicationEditForm", () => {
   it("opens a labelled full-screen editor and closes without submitting", async () => {
     const user = userEvent.setup();
-    render(<ApplicationEditForm application={application} compact />);
+    render(<ApplicationEditForm application={application} />);
 
-    await user.click(screen.getByRole("button", { name: "Edit details" }));
+    await user.click(
+      screen.getByRole("button", { name: "Edit Northstar Labs" }),
+    );
 
     const dialog = screen.getByRole("dialog", {
       name: "Edit Northstar Labs",
@@ -59,8 +61,8 @@ describe("ApplicationEditForm", () => {
 
   it("closes with Escape and returns focus to the edit trigger", async () => {
     const user = userEvent.setup();
-    render(<ApplicationEditForm application={application} compact />);
-    const trigger = screen.getByRole("button", { name: "Edit details" });
+    render(<ApplicationEditForm application={application} />);
+    const trigger = screen.getByRole("button", { name: "Edit Northstar Labs" });
 
     await user.click(trigger);
     await user.keyboard("{Escape}");
@@ -91,11 +93,13 @@ describe("ApplicationEditForm", () => {
           clearPrivateCache: vi.fn(),
         }}
       >
-        <ApplicationEditForm application={application} compact />
+        <ApplicationEditForm application={application} />
       </OfflineContext.Provider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "Edit details" }));
+    await user.click(
+      screen.getByRole("button", { name: "Edit Northstar Labs" }),
+    );
     await user.clear(screen.getByLabelText("Edit Northstar Labs role title"));
     await user.type(
       screen.getByLabelText("Edit Northstar Labs role title"),

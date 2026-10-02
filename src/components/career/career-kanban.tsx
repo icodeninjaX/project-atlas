@@ -1,16 +1,15 @@
 "use client";
 
 import {
-  AlertCircle,
-  BriefcaseBusiness,
-  Building2,
+  AlarmClock,
+  ArrowUpDown,
   CalendarDays,
   Check,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
   GripVertical,
-  LayoutGrid,
+  Inbox,
   MapPin,
   RotateCcw,
   Search,
@@ -27,32 +26,30 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { ApplicationEditForm } from "@/components/career/application-edit-form";
+import { CompanyMark } from "@/components/career/company-mark";
+import { DueChip } from "@/components/career/due-chip";
 import { StageSelect } from "@/components/career/stage-select";
+import { stageTone, stageTones } from "@/components/career/stage-tone";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { updateApplicationStageAction } from "@/lib/career/actions";
+import {
+  careerStages,
+  dueChip,
+  formatCareerDate,
+  isCareerStage,
+  pipelineStages,
+  placeLabel,
+  stageLabel,
+  stageLabels,
+  type CareerApplication,
+  type CareerStage,
+} from "@/lib/career/view";
 import { cn } from "@/lib/utils";
 import { useScrollStrip } from "@/components/shared/scroll-strip";
 
-const pipelineStages = [
-  "interested",
-  "preparing",
-  "applied",
-  "assessment",
-  "interview",
-  "final_interview",
-  "offer",
-] as const;
+export type { CareerApplication } from "@/lib/career/view";
 
-const careerStages = [
-  ...pipelineStages,
-  "accepted",
-  "rejected",
-  "withdrawn",
-] as const;
-
-type CareerStage = (typeof careerStages)[number];
 type SortMode = "attention" | "newest" | "oldest";
 type BoardDensity = "comfortable" | "compact";
 
@@ -61,75 +58,6 @@ type BoardPreferences = {
   showAppliedDate: boolean;
   showLocation: boolean;
   visibleStages: CareerStage[];
-};
-
-const stageLabels: Record<CareerStage, string> = {
-  interested: "Interested",
-  preparing: "Preparing",
-  applied: "Applied",
-  assessment: "Assessment",
-  interview: "Interview",
-  final_interview: "Final interview",
-  offer: "Offer",
-  accepted: "Accepted",
-  rejected: "Rejected",
-  withdrawn: "Withdrawn",
-};
-
-const stageTones: Record<
-  CareerStage,
-  { dot: string; soft: string; text: string }
-> = {
-  interested: {
-    dot: "bg-slate-400",
-    soft: "bg-slate-500/10",
-    text: "text-slate-600 dark:text-slate-300",
-  },
-  preparing: {
-    dot: "bg-violet-500",
-    soft: "bg-violet-500/10",
-    text: "text-violet-700 dark:text-violet-300",
-  },
-  applied: {
-    dot: "bg-blue-500",
-    soft: "bg-blue-500/10",
-    text: "text-blue-700 dark:text-blue-300",
-  },
-  assessment: {
-    dot: "bg-amber-500",
-    soft: "bg-amber-500/10",
-    text: "text-amber-700 dark:text-amber-300",
-  },
-  interview: {
-    dot: "bg-cyan-500",
-    soft: "bg-cyan-500/10",
-    text: "text-cyan-700 dark:text-cyan-300",
-  },
-  final_interview: {
-    dot: "bg-indigo-500",
-    soft: "bg-indigo-500/10",
-    text: "text-indigo-700 dark:text-indigo-300",
-  },
-  offer: {
-    dot: "bg-emerald-500",
-    soft: "bg-emerald-500/10",
-    text: "text-emerald-700 dark:text-emerald-300",
-  },
-  accepted: {
-    dot: "bg-green-500",
-    soft: "bg-green-500/10",
-    text: "text-green-700 dark:text-green-300",
-  },
-  rejected: {
-    dot: "bg-rose-500",
-    soft: "bg-rose-500/10",
-    text: "text-rose-700 dark:text-rose-300",
-  },
-  withdrawn: {
-    dot: "bg-zinc-400",
-    soft: "bg-zinc-500/10",
-    text: "text-zinc-600 dark:text-zinc-300",
-  },
 };
 
 const storageKey = "atlas-career-board-preferences-v1";
@@ -159,70 +87,6 @@ function getPreferencesSnapshot() {
 
 function getServerPreferencesSnapshot() {
   return "";
-}
-
-export type CareerApplication = {
-  id: string;
-  company_name: string;
-  role_title: string;
-  job_url: string | null;
-  location: string | null;
-  work_setup: string;
-  employment_type: string;
-  stage: string;
-  salary_min_centavos: number | null;
-  salary_max_centavos: number | null;
-  next_action: string | null;
-  next_action_at: string | null;
-  applied_at: string | null;
-  contact_name: string | null;
-  contact_email: string | null;
-  resume_version: string | null;
-  notes: string | null;
-  is_follow_up_overdue: boolean;
-};
-
-const manilaDateKey = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Asia/Manila",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-});
-
-const friendlyDate = new Intl.DateTimeFormat("en-PH", {
-  timeZone: "Asia/Manila",
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-});
-
-function isCareerStage(stage: string): stage is CareerStage {
-  return careerStages.includes(stage as CareerStage);
-}
-
-function label(value: string) {
-  return value
-    .replaceAll("_", " ")
-    .replace(/^./, (letter) => letter.toUpperCase());
-}
-
-function dateDistance(from: string, to: string) {
-  const fromDate = Date.parse(
-    `${manilaDateKey.format(new Date(from))}T00:00:00Z`,
-  );
-  const toDate = Date.parse(`${manilaDateKey.format(new Date(to))}T00:00:00Z`);
-  return Math.round((toDate - fromDate) / 86_400_000);
-}
-
-function dueLabel(application: CareerApplication, nowIso: string) {
-  if (!application.next_action_at) return null;
-  if (application.is_follow_up_overdue) return "Overdue";
-
-  const days = dateDistance(nowIso, application.next_action_at);
-  if (days <= 0) return "Today";
-  if (days === 1) return "Tomorrow";
-  if (days <= 7) return `In ${days} days`;
-  return friendlyDate.format(new Date(application.next_action_at));
 }
 
 function initialStage(applications: CareerApplication[]): CareerStage {
@@ -281,6 +145,12 @@ function sortApplications(
   });
 }
 
+const toolbarControlClass =
+  "bg-background/70 ring-border/80 hover:bg-background focus-visible:ring-ring min-h-11 rounded-full text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-10";
+
+const legendClass =
+  "text-muted-foreground text-[10px] font-semibold tracking-[0.12em] uppercase";
+
 function ApplicationCard({
   application,
   density,
@@ -303,16 +173,17 @@ function ApplicationCard({
   showLocation: boolean;
 }) {
   const overdue = application.is_follow_up_overdue;
-  const due = dueLabel(application, nowIso);
-  const applicationStageLabel = isCareerStage(application.stage)
-    ? stageLabels[application.stage]
-    : label(application.stage);
-  const applicationStageTone = isCareerStage(application.stage)
-    ? stageTones[application.stage]
-    : stageTones.interested;
+  const due = dueChip(application, nowIso);
+  const place = showLocation ? placeLabel(application) : "";
+  const applied =
+    showAppliedDate && application.applied_at ? application.applied_at : null;
+  const compact = density === "compact";
+  const closed = !pipelineStages.includes(
+    application.stage as (typeof pipelineStages)[number],
+  );
 
   return (
-    <Card
+    <article
       draggable
       onDragStart={(event) => {
         event.dataTransfer.effectAllowed = "move";
@@ -321,151 +192,126 @@ function ApplicationCard({
       }}
       onDragEnd={onDragEnd}
       data-testid={`kanban-card-${application.id}`}
+      aria-label={`${application.company_name}, ${application.role_title}`}
       className={cn(
-        "group hover:border-primary/45 bg-card/95 lg:bg-card overflow-hidden rounded-2xl shadow-md shadow-black/20 transition-[border-color,box-shadow,opacity,transform] lg:cursor-grab lg:shadow-sm lg:active:cursor-grabbing",
+        "group bg-card relative overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.06),0_14px_30px_-22px_rgb(7_10_15/0.55)] ring-1 transition-[box-shadow,opacity,transform] duration-200 lg:cursor-grab lg:active:cursor-grabbing",
+        overdue
+          ? "ring-destructive/30 dark:bg-[color-mix(in_srgb,var(--destructive)_5%,var(--card))]"
+          : "ring-border/80 hover:ring-primary/35",
+        "lg:hover:-translate-y-px motion-reduce:lg:hover:translate-y-0",
         moving && "opacity-55",
       )}
     >
-      <CardContent
-        className={cn(
-          "p-4 sm:p-4",
-          density === "compact" ? "lg:p-3" : "lg:p-4",
-        )}
-      >
+      {overdue ? (
+        <span
+          aria-hidden="true"
+          className="bg-destructive absolute inset-y-3 left-0 w-[3px] rounded-r-full"
+        />
+      ) : null}
+      <div className={cn("@container p-4", compact ? "lg:p-3" : "lg:p-4")}>
+        {/* Phones show one column at a time; this keeps each card's stage
+            and date in view as it is read. */}
         <div
           data-testid={`kanban-card-mobile-status-${application.id}`}
-          className="border-border/80 flex items-center justify-between gap-3 border-b pb-3 lg:hidden"
+          className="text-muted-foreground mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs lg:hidden"
         >
-          <div className="flex min-w-0 items-center gap-2.5">
+          <span className="flex min-w-0 items-center gap-2 font-semibold">
             <span
-              className={cn(
-                "size-2.5 shrink-0 rounded-full",
-                applicationStageTone.dot,
-              )}
               aria-hidden="true"
+              className={cn(
+                "size-2 shrink-0 rounded-full",
+                stageTone(application.stage).dot,
+              )}
             />
-            <span className="truncate text-sm font-semibold">
-              {applicationStageLabel}
+            <span className="text-foreground truncate">
+              {stageLabel(application.stage)}
             </span>
-          </div>
-          {showAppliedDate && application.applied_at ? (
-            <span className="text-muted-foreground inline-flex shrink-0 items-center gap-1.5 text-xs font-medium">
-              <CalendarDays className="size-4" aria-hidden="true" />
-              <time dateTime={application.applied_at}>
-                {friendlyDate.format(new Date(application.applied_at))}
-              </time>
+          </span>
+          {applied ? (
+            <span className="inline-flex shrink-0 items-center gap-1.5 font-medium">
+              <CalendarDays className="size-3.5" aria-hidden="true" />
+              <time dateTime={applied}>{formatCareerDate(applied)}</time>
             </span>
           ) : null}
         </div>
 
-        <div className="mt-3 flex items-start gap-3 lg:mt-0">
-          <div className="border-primary/20 bg-primary/8 text-primary grid size-12 shrink-0 place-items-center rounded-xl border lg:size-10">
-            <Building2 className="size-5 lg:size-[18px]" aria-hidden="true" />
-          </div>
+        <div className="flex items-start gap-3">
+          <CompanyMark
+            name={application.company_name}
+            size="sm"
+            muted={closed}
+            className="@max-[15rem]:hidden"
+          />
           <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h3 className="truncate text-xl font-semibold tracking-[-0.025em] lg:text-sm lg:tracking-[-0.01em]">
-                  {application.company_name}
-                </h3>
-                <p className="text-muted-foreground mt-1 line-clamp-2 text-sm leading-5 lg:mt-0.5 lg:text-xs">
-                  {application.role_title}
-                </p>
-                {showLocation &&
-                (application.location ||
-                  application.work_setup !== "unspecified") ? (
-                  <span className="text-muted-foreground mt-1.5 inline-flex min-w-0 items-center gap-1.5 text-xs lg:hidden">
-                    <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
-                    <span className="truncate">
-                      {[
-                        application.location,
-                        application.work_setup !== "unspecified"
-                          ? label(application.work_setup)
-                          : null,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </span>
-                ) : null}
-              </div>
-              <GripVertical
-                className="text-muted-foreground/45 mt-0.5 hidden size-4 shrink-0 lg:block"
-                aria-hidden="true"
-              />
-            </div>
+            <h3 className="truncate text-base leading-6 font-semibold tracking-[-0.015em] lg:text-sm lg:leading-5">
+              {application.company_name}
+            </h3>
+            <p className="text-muted-foreground line-clamp-2 text-[0.8125rem] leading-5 lg:text-xs lg:leading-4">
+              {application.role_title}
+            </p>
           </div>
+          <GripVertical
+            className="text-muted-foreground/40 group-hover:text-muted-foreground mt-0.5 hidden size-4 shrink-0 transition-colors lg:block"
+            aria-hidden="true"
+          />
         </div>
 
-        {(showLocation || showAppliedDate) && (
-          <div className="text-muted-foreground mt-3 hidden flex-wrap items-center gap-x-3 gap-y-1.5 lg:flex lg:text-[11px]">
-            {showLocation &&
-            (application.location ||
-              application.work_setup !== "unspecified") ? (
+        {place || applied ? (
+          <p
+            className={cn(
+              "text-muted-foreground mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs lg:text-[11px]",
+              !place && "max-lg:hidden",
+            )}
+          >
+            {place ? (
               <span className="inline-flex min-w-0 items-center gap-1.5">
                 <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
-                <span className="truncate">
-                  {[
-                    application.location,
-                    application.work_setup !== "unspecified"
-                      ? label(application.work_setup)
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </span>
+                <span className="truncate">{place}</span>
               </span>
             ) : null}
-            {showAppliedDate && application.applied_at ? (
+            {applied ? (
               <span className="hidden items-center gap-1.5 lg:inline-flex">
                 <CalendarDays className="size-3.5" aria-hidden="true" />
-                <time dateTime={application.applied_at}>
-                  {friendlyDate.format(new Date(application.applied_at))}
-                </time>
+                <time dateTime={applied}>{formatCareerDate(applied)}</time>
               </span>
             ) : null}
-          </div>
-        )}
+          </p>
+        ) : null}
 
         <div
           className={cn(
-            "border-primary lg:border-border mt-3 border-t pt-3",
-            density === "compact" ? "lg:mt-3 lg:pt-3" : "lg:mt-4 lg:pt-4",
+            "mt-3 rounded-xl px-3 py-2.5 ring-1",
+            overdue
+              ? "bg-destructive/[0.06] ring-destructive/20"
+              : "bg-background/60 ring-border/70",
+            compact && "lg:mt-2.5 lg:py-2",
           )}
         >
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p
-                className={cn(
-                  "font-mono text-[10px] font-semibold tracking-[0.16em] uppercase lg:text-[9px] lg:tracking-[0.14em]",
-                  overdue ? "text-destructive" : "text-primary",
-                )}
-              >
-                Next action
-              </p>
-              <p className="mt-1.5 line-clamp-2 text-xl leading-7 font-semibold tracking-[-0.02em] lg:text-xs lg:leading-5 lg:font-medium lg:tracking-normal">
-                {application.next_action ?? "Add a next action"}
-              </p>
-            </div>
-            {due ? (
-              <span
-                className={cn(
-                  "shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold lg:border lg:px-2 lg:py-1 lg:text-[10px]",
-                  overdue
-                    ? "bg-destructive lg:border-destructive/35 lg:bg-destructive/10 lg:text-destructive text-white"
-                    : "bg-primary-solid text-primary-solid-foreground lg:border-primary/25 lg:bg-primary/8 lg:text-primary",
-                )}
-              >
-                {due}
-              </span>
-            ) : null}
-          </div>
+          <p
+            className={cn(
+              "text-[10px] font-semibold tracking-[0.14em] uppercase",
+              overdue
+                ? "text-red-700 dark:text-red-300"
+                : "text-muted-foreground",
+            )}
+          >
+            Next action
+          </p>
+          <p
+            className={cn(
+              "mt-1 line-clamp-2 text-sm leading-5 font-medium break-words lg:text-[0.8125rem]",
+              !application.next_action && "text-muted-foreground font-normal",
+            )}
+          >
+            {application.next_action ?? "Add a next action"}
+          </p>
+          {due ? <DueChip due={due} className="mt-2" /> : null}
         </div>
 
         <div
           className={cn(
-            "mt-3 grid grid-cols-2 gap-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-2",
-            density === "compact" ? "lg:mt-3" : "lg:mt-4",
+            "mt-3 flex flex-wrap items-center justify-end gap-1",
+            compact && "lg:mt-2.5",
           )}
         >
           <StageSelect
@@ -473,32 +319,24 @@ function ApplicationCard({
             companyName={application.company_name}
             stage={application.stage}
             onStageChange={onStageChange}
-            className="col-span-2 min-h-11 w-full rounded-xl px-4 text-sm font-semibold lg:col-span-1 lg:min-h-10 lg:px-3 lg:text-xs"
+            className="grow basis-40"
           />
-          <ApplicationEditForm
-            application={application}
-            compact
-            triggerClassName={cn(
-              "border-border/80 text-primary col-span-1 mt-2.5 min-h-11 rounded-none border-0 border-t bg-transparent px-3 hover:bg-primary/5 lg:mt-0 lg:min-h-10 lg:rounded-xl lg:border lg:border-border lg:bg-secondary lg:text-secondary-foreground lg:hover:bg-muted",
-              !application.job_url && "col-span-2 lg:col-span-1",
-            )}
-          />
-
           {application.job_url ? (
             <a
               href={application.job_url}
               target="_blank"
               rel="noreferrer"
               aria-label={`Open job post for ${application.company_name}`}
-              className="border-border/80 text-primary hover:bg-primary/5 focus-visible:ring-ring col-span-1 mt-2.5 inline-flex min-h-11 items-center justify-center gap-2 border-t border-l px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none lg:col-span-2 lg:mt-1 lg:min-h-8 lg:justify-start lg:rounded-lg lg:border-0 lg:px-0 lg:text-[11px]"
+              title="Open job post"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-11 shrink-0 place-items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none sm:size-9"
             >
-              View job post
-              <ExternalLink className="size-4 lg:size-3" aria-hidden="true" />
+              <ExternalLink className="size-4" aria-hidden="true" />
             </a>
           ) : null}
+          <ApplicationEditForm application={application} />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </article>
   );
 }
 
@@ -608,18 +446,17 @@ export function CareerKanban({
   const activeStage = visibleStages.includes(selectedStage)
     ? selectedStage
     : visibleStages[0]!;
-  const activeCount = resolvedApplications.filter((application) =>
-    pipelineStages.includes(
-      application.stage as (typeof pipelineStages)[number],
-    ),
-  ).length;
   const overdueCount = resolvedApplications.filter(
     (application) => application.is_follow_up_overdue,
   ).length;
-  const hiddenOutcomeCount = careerStages
+  const hiddenCount = careerStages
     .filter((stage) => !visibleStages.includes(stage))
     .reduce((total, stage) => total + stageTotals[stage], 0);
   const filtersActive = Boolean(query.trim()) || attentionOnly;
+  const stageCount = (stage: CareerStage) =>
+    filtersActive
+      ? `${filteredCounts[stage]}/${stageTotals[stage]}`
+      : String(stageTotals[stage]);
 
   useEffect(() => {
     const tab = stageTabs.current[activeStage];
@@ -727,94 +564,148 @@ export function CareerKanban({
     });
   };
 
-  return (
-    <section className="mt-5 sm:mt-6" aria-label="Career application Kanban">
-      <div className="border-border bg-card rounded-2xl border p-3 shadow-sm sm:p-4">
-        <div className="flex flex-col gap-3 sm:gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-xl">
-              <LayoutGrid className="size-[18px]" aria-hidden="true" />
-            </span>
-            <div>
-              <h2 className="text-sm font-semibold tracking-[-0.01em]">
-                Pipeline board
-              </h2>
-              <p className="text-muted-foreground mt-0.5 text-xs">
-                {activeCount} active · {overdueCount} need attention
-                {hiddenOutcomeCount > 0
-                  ? ` · ${hiddenOutcomeCount} in hidden columns`
-                  : ""}
-              </p>
-            </div>
-          </div>
+  const scrollBoard = (direction: -1 | 1) =>
+    boardScroll.current?.scrollBy({
+      left: direction * 624,
+      behavior: "smooth",
+    });
 
-          <div className="flex min-w-0 items-center gap-2">
-            <label className="border-border bg-background focus-within:border-primary focus-within:ring-primary/20 relative flex min-h-11 min-w-0 flex-1 items-center rounded-xl border pl-10 transition-shadow focus-within:ring-2 sm:min-h-10 sm:w-64 sm:flex-none">
-              <Search
-                className="text-muted-foreground absolute left-3 size-4"
+  return (
+    <section className="mt-8 sm:mt-10" aria-labelledby="career-board-heading">
+      <h2 id="career-board-heading" className="sr-only">
+        Pipeline board
+      </h2>
+      <div className="bg-card/70 ring-border/80 rounded-[1.5rem] p-2 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_18px_40px_-30px_rgb(7_10_15/0.45)] ring-1 backdrop-blur-xl">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center">
+          <label className="bg-background/70 ring-border/80 focus-within:ring-ring/60 relative flex min-h-11 min-w-0 flex-1 items-center rounded-full pl-10 ring-1 transition-shadow focus-within:ring-2 sm:min-h-10">
+            <Search
+              className="text-muted-foreground absolute left-3.5 size-4"
+              aria-hidden="true"
+            />
+            <span className="sr-only">Search applications</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.currentTarget.value)}
+              placeholder="Search company, role, or next action"
+              className="placeholder:text-muted-foreground h-full min-w-0 flex-1 bg-transparent pr-2 text-base outline-none sm:text-sm [&::-webkit-search-cancel-button]:hidden"
+            />
+            {query ? (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Clear application search"
+                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mr-0.5 grid size-10 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none sm:size-9"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            ) : null}
+          </label>
+
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <button
+              type="button"
+              aria-pressed={attentionOnly}
+              title="Show only overdue follow-ups"
+              onClick={() => setAttentionOnly((current) => !current)}
+              className={cn(
+                toolbarControlClass,
+                "inline-flex shrink-0 items-center gap-2 px-3.5",
+                attentionOnly &&
+                  "bg-destructive/10 text-destructive ring-destructive/35 hover:bg-destructive/15",
+              )}
+            >
+              <AlarmClock
+                className={cn(
+                  "size-4 max-[379px]:hidden",
+                  !attentionOnly && overdueCount > 0 && "text-destructive",
+                )}
                 aria-hidden="true"
               />
-              <span className="sr-only">Search applications</span>
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.currentTarget.value)}
-                placeholder="Search applications"
-                className="placeholder:text-muted-foreground h-full min-w-0 flex-1 bg-transparent pr-2 text-sm outline-none"
-              />
-              {query ? (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  aria-label="Clear application search"
-                  className="text-muted-foreground hover:text-foreground grid size-10 place-items-center"
-                >
-                  <X className="size-4" aria-hidden="true" />
-                </button>
-              ) : null}
-            </label>
-
-            <Button
-              type="button"
-              variant={attentionOnly ? "default" : "secondary"}
-              size="sm"
-              aria-pressed={attentionOnly}
-              aria-label="Needs attention"
-              title="Needs attention"
-              onClick={() => setAttentionOnly((current) => !current)}
-              className="relative size-11 shrink-0 justify-center px-0 sm:size-auto sm:px-3"
-            >
-              <AlertCircle className="size-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only">Needs attention</span>
+              Overdue
               {overdueCount > 0 ? (
                 <span
+                  aria-hidden="true"
                   className={cn(
-                    "absolute -top-1 -right-1 rounded-md px-1.5 py-0.5 font-mono text-[10px] sm:static",
+                    "grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-mono text-[0.6875rem] leading-none",
                     attentionOnly
-                      ? "bg-primary-foreground/20"
-                      : "bg-destructive/10 text-destructive",
+                      ? "bg-destructive text-white"
+                      : "bg-destructive text-white dark:bg-red-500/20 dark:text-red-300",
                   )}
                 >
                   {overdueCount}
                 </span>
               ) : null}
-            </Button>
+            </button>
 
-            <Button
+            <label
+              className={cn(
+                toolbarControlClass,
+                "relative inline-flex min-w-0 grow basis-36 items-center overflow-hidden max-sm:order-last md:flex-none md:basis-auto",
+              )}
+            >
+              <ArrowUpDown
+                className="text-muted-foreground pointer-events-none absolute left-3 size-3.5"
+                aria-hidden="true"
+              />
+              <span className="sr-only">Sort applications</span>
+              <select
+                value={sortMode}
+                onChange={(event) =>
+                  setSortMode(event.currentTarget.value as SortMode)
+                }
+                aria-label="Sort applications"
+                className="h-full min-h-[inherit] w-full min-w-0 cursor-pointer appearance-none truncate rounded-full bg-transparent pr-3 pl-8 text-xs font-semibold outline-none"
+              >
+                <option value="attention" className="bg-card">
+                  Urgent first
+                </option>
+                <option value="newest" className="bg-card">
+                  Newest first
+                </option>
+                <option value="oldest" className="bg-card">
+                  Oldest first
+                </option>
+              </select>
+            </label>
+
+            <button
               type="button"
               ref={customizationTrigger}
-              variant="secondary"
-              size="sm"
               aria-label="Customize"
               aria-expanded={customizationOpen}
               aria-controls="career-board-customization"
               onClick={() => setCustomizationOpen((open) => !open)}
               title="Customize board"
-              className="size-11 shrink-0 justify-center px-0 sm:size-auto sm:px-3"
+              className={cn(
+                toolbarControlClass,
+                "inline-flex shrink-0 items-center justify-center gap-2 max-sm:size-11 max-sm:px-0 sm:px-3.5",
+                customizationOpen &&
+                  "bg-primary/10 text-primary ring-primary/30",
+              )}
             >
               <SlidersHorizontal className="size-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only">Customize</span>
-            </Button>
+              <span className="max-sm:sr-only">Customize</span>
+            </button>
+
+            <div className="ring-border/80 bg-background/70 hidden shrink-0 items-center rounded-full p-0.5 ring-1 lg:flex">
+              <button
+                type="button"
+                aria-label="Scroll to previous stages"
+                onClick={() => scrollBoard(-1)}
+                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-9 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
+              >
+                <ChevronLeft className="size-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                aria-label="Scroll to next stages"
+                onClick={() => scrollBoard(1)}
+                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-9 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
+              >
+                <ChevronRight className="size-4" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -832,7 +723,7 @@ export function CareerKanban({
               role="dialog"
               aria-modal={isMobileViewport || undefined}
               aria-labelledby="career-board-customization-title"
-              className="border-border bg-card lg:bg-muted/25 absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto rounded-t-3xl border border-b-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl lg:relative lg:inset-auto lg:mt-4 lg:max-h-none lg:overflow-visible lg:rounded-xl lg:border lg:pb-4 lg:shadow-none"
+              className="bg-card ring-border motion-safe:max-lg:animate-analyst-sheet lg:bg-background/60 absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto rounded-t-[1.75rem] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 lg:relative lg:inset-auto lg:mt-2 lg:max-h-none lg:overflow-visible lg:rounded-[1.125rem] lg:p-4 lg:shadow-none"
             >
               <div
                 className="bg-muted-foreground/25 mx-auto mb-4 h-1 w-10 rounded-full lg:hidden"
@@ -847,7 +738,7 @@ export function CareerKanban({
                     Make the board yours
                   </h3>
                   <p className="text-muted-foreground mt-1 text-xs leading-5">
-                    Your layout preferences stay on this device.
+                    Your layout stays on this device.
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
@@ -855,6 +746,7 @@ export function CareerKanban({
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className="rounded-full"
                     onClick={() => updatePreferences(defaultPreferences)}
                   >
                     <RotateCcw className="size-3.5" aria-hidden="true" />
@@ -867,7 +759,7 @@ export function CareerKanban({
                     size="icon"
                     aria-label="Close customization"
                     onClick={() => setCustomizationOpen(false)}
-                    className="lg:hidden"
+                    className="rounded-full lg:hidden"
                   >
                     <X className="size-4" aria-hidden="true" />
                   </Button>
@@ -876,10 +768,8 @@ export function CareerKanban({
 
               <div className="mt-5 grid gap-5 lg:mt-4 lg:grid-cols-[0.75fr_1fr_2fr]">
                 <fieldset>
-                  <legend className="text-muted-foreground text-[10px] font-semibold tracking-[0.12em] uppercase">
-                    Card density
-                  </legend>
-                  <div className="border-border bg-background mt-2 grid grid-cols-2 rounded-xl border p-1">
+                  <legend className={legendClass}>Card density</legend>
+                  <div className="bg-muted/60 ring-border/70 mt-2 grid grid-cols-2 rounded-full p-1 ring-1">
                     {(["comfortable", "compact"] as const).map((density) => (
                       <button
                         key={density}
@@ -889,9 +779,9 @@ export function CareerKanban({
                           updatePreferences({ ...preferences, density })
                         }
                         className={cn(
-                          "focus-visible:ring-ring min-h-9 rounded-lg px-2 text-xs font-semibold capitalize focus-visible:ring-2 focus-visible:outline-none",
+                          "focus-visible:ring-ring min-h-9 rounded-full px-2 text-xs font-semibold capitalize transition-colors focus-visible:ring-2 focus-visible:outline-none",
                           preferences.density === density
-                            ? "bg-primary-solid text-primary-solid-foreground shadow-sm"
+                            ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
                             : "text-muted-foreground hover:text-foreground",
                         )}
                       >
@@ -902,9 +792,7 @@ export function CareerKanban({
                 </fieldset>
 
                 <fieldset>
-                  <legend className="text-muted-foreground text-[10px] font-semibold tracking-[0.12em] uppercase">
-                    Card details
-                  </legend>
+                  <legend className={legendClass}>Card details</legend>
                   <div className="mt-2 space-y-2">
                     {[
                       ["showLocation", "Location & setup"],
@@ -915,7 +803,7 @@ export function CareerKanban({
                       return (
                         <label
                           key={key}
-                          className="border-border bg-background flex min-h-10 cursor-pointer items-center justify-between rounded-xl border px-3 text-xs font-medium"
+                          className="bg-background/70 ring-border/80 flex min-h-11 cursor-pointer items-center justify-between rounded-xl px-3 text-xs font-medium ring-1 sm:min-h-10"
                         >
                           {itemLabel}
                           <input
@@ -936,9 +824,7 @@ export function CareerKanban({
                 </fieldset>
 
                 <fieldset>
-                  <legend className="text-muted-foreground text-[10px] font-semibold tracking-[0.12em] uppercase">
-                    Visible columns
-                  </legend>
+                  <legend className={legendClass}>Visible columns</legend>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {careerStages.map((stage) => {
                       const checked = visibleStages.includes(stage);
@@ -946,8 +832,10 @@ export function CareerKanban({
                         <label
                           key={stage}
                           className={cn(
-                            "border-border bg-background focus-within:ring-ring inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-xl border px-3 text-xs font-medium focus-within:ring-2",
-                            checked && "border-primary/35 bg-primary/5",
+                            "focus-within:ring-ring inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3 text-xs font-medium ring-1 transition-colors focus-within:ring-2 sm:min-h-10",
+                            checked
+                              ? "bg-primary/8 ring-primary/30"
+                              : "bg-background/70 ring-border/80 text-muted-foreground",
                           )}
                         >
                           <input
@@ -973,17 +861,18 @@ export function CareerKanban({
                             className="peer sr-only"
                           />
                           <span
+                            aria-hidden="true"
                             className={cn(
-                              "border-border grid size-4 place-items-center rounded border",
-                              checked &&
-                                "border-primary-solid bg-primary-solid text-primary-solid-foreground",
+                              "grid size-4 place-items-center rounded-full ring-1",
+                              checked
+                                ? "bg-primary-solid text-primary-solid-foreground ring-primary-solid"
+                                : "ring-border",
                             )}
                           >
-                            {checked ? (
-                              <Check className="size-3" aria-hidden="true" />
-                            ) : null}
+                            {checked ? <Check className="size-3" /> : null}
                           </span>
                           <span
+                            aria-hidden="true"
                             className={cn(
                               "size-2 rounded-full",
                               stageTones[stage].dot,
@@ -1011,68 +900,27 @@ export function CareerKanban({
         ) : null}
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4">
-        <p className="text-muted-foreground hidden text-xs lg:block">
-          Drag cards between columns. Use the arrows to explore every stage.
-        </p>
-        <p className="text-muted-foreground text-xs lg:hidden">
-          Select a stage.
-        </p>
-        <div className="flex shrink-0 items-center gap-2">
-          <label>
-            <span className="sr-only">Sort applications</span>
-            <select
-              value={sortMode}
-              onChange={(event) =>
-                setSortMode(event.currentTarget.value as SortMode)
-              }
-              aria-label="Sort applications"
-              className="border-border bg-background min-h-10 rounded-xl border px-3 text-xs font-medium"
-            >
-              <option value="attention">Needs attention</option>
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-            </select>
-          </label>
-          <div className="border-border bg-card hidden rounded-xl border p-1 lg:flex">
-            <button
-              type="button"
-              aria-label="Scroll to previous stages"
-              onClick={() =>
-                boardScroll.current?.scrollBy({
-                  left: -608,
-                  behavior: "smooth",
-                })
-              }
-              className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-8 place-items-center rounded-lg focus-visible:ring-2 focus-visible:outline-none"
-            >
-              <ChevronLeft className="size-4" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              aria-label="Scroll to next stages"
-              onClick={() =>
-                boardScroll.current?.scrollBy({
-                  left: 608,
-                  behavior: "smooth",
-                })
-              }
-              className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-8 place-items-center rounded-lg focus-visible:ring-2 focus-visible:outline-none"
-            >
-              <ChevronRight className="size-4" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      </div>
+      <p className="text-muted-foreground mt-3 hidden px-2 text-xs lg:block">
+        Drag a card to another column to move it, or change its stage on the
+        card.
+        {hiddenCount > 0
+          ? ` ${hiddenCount} ${hiddenCount === 1 ? "application is" : "applications are"} in hidden columns.`
+          : ""}
+      </p>
 
       <div
         ref={stageTabList}
         role="tablist"
         aria-label="Application stages"
-        className="border-border bg-card mt-3 flex snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto rounded-2xl border p-1.5 sm:mt-4 lg:hidden [&::-webkit-scrollbar]:hidden"
+        // `relative` keeps the tabs' screen-reader text inside the strip.
+        className="bg-muted/50 ring-border/80 relative mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-1 overflow-x-auto rounded-full p-1 ring-1 backdrop-blur lg:hidden [&::-webkit-scrollbar]:hidden"
       >
         {visibleStages.map((stage) => {
           const selected = activeStage === stage;
+          const urgent = resolvedApplications.some(
+            (application) =>
+              application.stage === stage && application.is_follow_up_overdue,
+          );
           return (
             <button
               key={stage}
@@ -1085,19 +933,28 @@ export function CareerKanban({
               aria-controls={`career-kanban-column-${stage}`}
               onClick={() => setSelectedStage(stage)}
               className={cn(
-                "focus-visible:ring-ring min-h-14 min-w-25 snap-start rounded-xl px-3 text-center focus-visible:ring-2 focus-visible:outline-none",
+                "focus-visible:ring-ring inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
                 selected
-                  ? "bg-primary-solid text-primary-solid-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
+                  : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
               )}
             >
-              <span className="block text-[11px] font-semibold whitespace-nowrap">
-                {stageLabels[stage]}
-              </span>
-              <span className="mt-1 block font-mono text-xs font-semibold tabular-nums">
-                {filtersActive
-                  ? `${filteredCounts[stage]}/${stageTotals[stage]}`
-                  : stageTotals[stage]}
+              <span
+                aria-hidden="true"
+                className={cn("size-2 rounded-full", stageTones[stage].dot)}
+              />
+              {stageLabels[stage]}
+              <span
+                className={cn(
+                  "grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-mono text-[0.6875rem] leading-none tabular-nums",
+                  urgent
+                    ? "bg-destructive text-white dark:bg-red-500/20 dark:text-red-300"
+                    : selected
+                      ? "bg-primary/12 text-primary"
+                      : "bg-foreground/[0.07]",
+                )}
+              >
+                {stageCount(stage)}
               </span>
             </button>
           );
@@ -1107,7 +964,7 @@ export function CareerKanban({
       <div
         ref={boardScroll}
         data-testid="career-board-scroll"
-        className="-mx-4 mt-3 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:mt-4 sm:px-6 lg:mx-0 lg:px-0"
+        className="-mx-4 mt-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:mt-3 lg:px-0"
       >
         <div className="flex min-w-full items-start gap-3 lg:w-max">
           {visibleStages.map((stage) => {
@@ -1123,6 +980,7 @@ export function CareerKanban({
               (application) =>
                 application.stage === stage && application.is_follow_up_overdue,
             ).length;
+            const dropping = dropStage === stage && Boolean(draggingId);
 
             return (
               <section
@@ -1153,41 +1011,48 @@ export function CareerKanban({
                   if (application) moveApplication(application, stage);
                 }}
                 className={cn(
-                  "lg:border-border lg:bg-muted/25 w-full min-w-0 flex-col transition-[border-color,background-color,box-shadow] lg:flex lg:w-[292px] lg:shrink-0 lg:rounded-2xl lg:border lg:p-2",
+                  "lg:bg-card/45 lg:ring-border/70 relative w-full min-w-0 flex-col transition-[background-color,box-shadow] lg:flex lg:w-[300px] lg:shrink-0 lg:rounded-[1.375rem] lg:p-2 lg:ring-1 lg:backdrop-blur",
                   selected ? "flex" : "hidden",
                   !selected && "lg:flex",
-                  dropStage === stage &&
-                    draggingId &&
-                    "border-primary bg-primary/5 ring-primary/20 rounded-2xl ring-2",
+                  dropping &&
+                    "lg:bg-primary/[0.06] ring-primary/45 lg:ring-primary/45 rounded-[1.375rem] ring-2 lg:ring-2",
                 )}
               >
-                <header className="hidden min-h-12 items-center justify-between gap-3 px-2 py-1.5 lg:flex">
-                  <div className="flex min-w-0 items-center gap-2.5">
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute inset-x-5 top-0 hidden h-0.5 rounded-b-full opacity-80 lg:block",
+                    tone.dot,
+                  )}
+                />
+                <header className="hidden min-h-11 items-center justify-between gap-3 px-2 pt-1 pb-1.5 lg:flex">
+                  <div className="flex min-w-0 items-center gap-2">
                     <span
-                      className={cn("size-2.5 shrink-0 rounded-full", tone.dot)}
+                      aria-hidden="true"
+                      className={cn("size-2 shrink-0 rounded-full", tone.dot)}
                     />
-                    <h3 className="truncate text-sm font-semibold">
+                    <h3 className="truncate text-sm font-semibold tracking-[-0.01em]">
                       {stageLabels[stage]}
                     </h3>
                     <span
                       className={cn(
-                        "rounded-lg px-2 py-1 font-mono text-[10px] font-semibold tabular-nums",
+                        "grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-mono text-[0.6875rem] leading-none font-semibold tabular-nums ring-1",
                         tone.soft,
                         tone.text,
+                        tone.ring,
                       )}
                     >
-                      {filtersActive
-                        ? `${filteredCounts[stage]}/${stageTotals[stage]}`
-                        : stageTotals[stage]}
+                      {stageCount(stage)}
                     </span>
                   </div>
                   {overdueInStage > 0 ? (
                     <span
-                      className="text-destructive inline-flex items-center gap-1 text-[10px] font-semibold"
+                      className="text-destructive inline-flex items-center gap-1 text-[11px] font-semibold"
                       title={`${overdueInStage} overdue`}
                     >
-                      <AlertCircle className="size-3.5" aria-hidden="true" />
+                      <AlarmClock className="size-3.5" aria-hidden="true" />
                       {overdueInStage}
+                      <span className="sr-only"> overdue</span>
                     </span>
                   ) : null}
                 </header>
@@ -1195,7 +1060,7 @@ export function CareerKanban({
                 <div
                   className={cn(
                     "flex min-h-32 flex-col",
-                    preferences.density === "compact" ? "gap-2" : "gap-3",
+                    preferences.density === "compact" ? "gap-2" : "gap-2.5",
                   )}
                 >
                   {stageApplications.length > 0 ? (
@@ -1222,25 +1087,34 @@ export function CareerKanban({
                       />
                     ))
                   ) : (
-                    <div className="border-border/80 text-muted-foreground bg-background/45 grid min-h-32 place-items-center rounded-xl border border-dashed px-4 text-center">
+                    <div
+                      className={cn(
+                        "text-muted-foreground grid min-h-32 place-items-center rounded-2xl px-4 text-center outline-1 -outline-offset-1 transition-colors outline-dashed",
+                        dropping
+                          ? "bg-primary/[0.06] text-primary outline-primary/50"
+                          : "bg-background/40 outline-border",
+                      )}
+                    >
                       <div>
-                        <BriefcaseBusiness
-                          className="mx-auto size-5 opacity-65"
+                        <Inbox
+                          className="mx-auto size-5 opacity-60"
                           aria-hidden="true"
                         />
                         <p className="mt-2 text-xs font-medium">
-                          {filtersActive
-                            ? "No matching applications"
-                            : `No applications in ${stageLabels[stage].toLowerCase()}`}
+                          {dropping
+                            ? `Drop to move to ${stageLabels[stage].toLowerCase()}`
+                            : filtersActive
+                              ? "No matching applications"
+                              : `Nothing in ${stageLabels[stage].toLowerCase()}`}
                         </p>
-                        {filtersActive ? (
+                        {filtersActive && !dropping ? (
                           <button
                             type="button"
                             onClick={() => {
                               setQuery("");
                               setAttentionOnly(false);
                             }}
-                            className="text-primary mt-2 min-h-8 text-[11px] font-semibold"
+                            className="text-primary hover:bg-primary/10 focus-visible:ring-ring mt-2 min-h-9 rounded-full px-3 text-[11px] font-semibold focus-visible:ring-2 focus-visible:outline-none"
                           >
                             Clear filters
                           </button>
