@@ -14,9 +14,11 @@ import {
   dashboardTileClass,
 } from "@/components/dashboard/dashboard-card";
 import { MoneyAmount } from "@/components/money/money-amount";
+import type { MonthPace } from "@/lib/budgets/plan";
 import { budgetUsage, cashFlow, paydayLabel } from "@/lib/dashboard/today";
 import { formatCalendarDate } from "@/lib/dates/dates";
 import { cn } from "@/lib/utils";
+import styles from "./today.module.css";
 
 export type FinancialSnapshot = {
   total_balance_centavos: number;
@@ -28,16 +30,30 @@ export type FinancialSnapshot = {
   days_until_payday: number | null;
 };
 
-function Bar({ share, className }: { share: number; className: string }) {
+function Bar({
+  share,
+  className,
+  marker,
+}: {
+  share: number;
+  className: string;
+  /** Where an even pace would be, 0–1. */
+  marker?: number;
+}) {
   return (
-    <span
-      aria-hidden="true"
-      className="bg-muted block h-2 overflow-hidden rounded-full"
-    >
-      <span
-        className={cn("block h-full rounded-full", className)}
-        style={{ width: `${Math.min(Math.max(share, 0), 1) * 100}%` }}
-      />
+    <span aria-hidden="true" className="relative block">
+      <span className="bg-muted block h-2 overflow-hidden rounded-full">
+        <span
+          className={cn(styles.fill, "block h-full rounded-full", className)}
+          style={{ width: `${Math.min(Math.max(share, 0), 1) * 100}%` }}
+        />
+      </span>
+      {marker != null ? (
+        <span
+          className="bg-foreground ring-card absolute -top-1 -bottom-1 w-0.5 -translate-x-1/2 rounded-full ring-2"
+          style={{ left: `${Math.min(Math.max(marker, 0), 1) * 100}%` }}
+        />
+      ) : null}
     </span>
   );
 }
@@ -113,6 +129,12 @@ function CashFlow({
               )}
             />{" "}
             {flow.netCentavos >= 0 ? "kept so far" : "more out than in"}
+            {flow.netCentavos > 0 && incomeCentavos > 0 ? (
+              <span className="bg-positive/10 text-positive ml-2 inline-flex rounded-full px-2 py-0.5 text-[11px] leading-4 font-semibold whitespace-nowrap">
+                {Math.round((flow.netCentavos / incomeCentavos) * 100)}% of
+                income
+              </span>
+            ) : null}
           </p>
         </>
       )}
@@ -138,7 +160,7 @@ function MoneyTile({
       href={href}
       className={cn(
         dashboardTileClass,
-        "group hover:ring-primary/35 focus-visible:ring-ring flex flex-col transition-shadow focus-visible:ring-2 focus-visible:outline-none",
+        "group hover:ring-primary/35 focus-visible:ring-ring hover:bg-background/80 flex flex-col transition-[box-shadow,background-color] focus-visible:ring-2 focus-visible:outline-none",
       )}
     >
       <span className="text-muted-foreground flex items-center justify-between gap-2 text-xs font-medium">
@@ -148,7 +170,7 @@ function MoneyTile({
         </span>
         <ArrowRight
           aria-hidden="true"
-          className="group-hover:text-primary size-3 shrink-0 transition-colors"
+          className="group-hover:text-primary size-3 shrink-0 transition-colors max-sm:hidden"
         />
       </span>
       <span className="mt-2 block font-mono text-lg leading-tight font-semibold tracking-[-0.02em] [overflow-wrap:anywhere]">
@@ -162,9 +184,12 @@ function MoneyTile({
 export function FinancialOverview({
   financial,
   monthName,
+  pace,
 }: {
   financial: FinancialSnapshot;
   monthName: string;
+  /** This month's progress, for an even-pace marker on the budget. */
+  pace?: MonthPace;
 }) {
   const budget = budgetUsage(
     financial.remaining_budget_centavos,
@@ -175,6 +200,7 @@ export function FinancialOverview({
   return (
     <section
       aria-labelledby="financial-snapshot"
+      data-spotlight
       className={cn(dashboardCardClass, "flex flex-col")}
     >
       <DashboardCardHeading
@@ -190,7 +216,7 @@ export function FinancialOverview({
           <dt className="text-muted-foreground text-xs font-medium">
             Available balance
           </dt>
-          <dd className="mt-2 min-w-0 font-mono text-[clamp(2rem,9vw,2.625rem)] leading-none font-semibold tracking-[-0.045em] [overflow-wrap:anywhere] break-words">
+          <dd className="mt-2 min-w-0 font-mono text-[clamp(2.125rem,10vw,2.875rem)] leading-none font-semibold tracking-[-0.05em] [overflow-wrap:anywhere] break-words">
             <MoneyAmount
               centavos={financial.total_balance_centavos}
               quietCentavos
@@ -238,7 +264,14 @@ export function FinancialOverview({
               <span className="mt-3 block">
                 <Bar
                   share={budget.ratio}
-                  className={budget.over ? "bg-destructive" : "bg-primary"}
+                  className={
+                    budget.over
+                      ? "bg-destructive"
+                      : "from-primary-solid to-primary bg-gradient-to-r"
+                  }
+                  marker={
+                    pace?.phase === "current" ? pace.elapsedRatio : undefined
+                  }
                 />
               </span>
               <span className="text-muted-foreground mt-2 block text-xs leading-5">
@@ -254,6 +287,11 @@ export function FinancialOverview({
                 ) : (
                   "Spending with nothing planned"
                 )}
+                {pace?.phase === "current" ? (
+                  <span className="block">
+                    Day {pace.daysElapsed} of {pace.daysInMonth}
+                  </span>
+                ) : null}
               </span>
             </>
           ) : (

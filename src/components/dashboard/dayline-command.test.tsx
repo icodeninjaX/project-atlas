@@ -93,10 +93,63 @@ describe("DaylineCommand", () => {
         .map((item) => item.textContent),
     ).toEqual(["Due today", "High priority"]);
     expect(screen.getByText("Task")).toBeInTheDocument();
+    const next = screen.getByRole("link", { name: /Review the launch goal/ });
+    expect(next).toHaveTextContent(/^NEXT/);
+    expect(within(next).getByText("Goal")).toBeInTheDocument();
+    expect(screen.getByText("2 of 3 priorities")).toBeInTheDocument();
+  });
+
+  it("times the route from now and shows the open time", () => {
+    render(
+      <DaylineCommand
+        items={[
+          ...items,
+          {
+            id: "career-1",
+            kind: "career",
+            position: "LATER",
+            title: "Follow up with Acme",
+            reason: "Career next action is due",
+            durationMinutes: 15,
+            href: "/career?highlight=career-1",
+          },
+        ]}
+        plannedMinutes={80}
+        capacityMinutes={180}
+        now={new Date("2026-10-14T09:12:00+08:00")}
+      />,
+    );
+
+    expect(screen.getByText("Your route from 9:12 AM")).toBeInTheDocument();
+    expect(screen.getByText(/Clear by 10:32 AM/)).toBeInTheDocument();
+    expect(screen.getByText(/until 9:57 AM/)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Review the launch goal/ }),
-    ).toHaveTextContent(/NEXT\s*Goal/);
-    expect(screen.getByText("2 of 3 priorities")).toBeInTheDocument();
+    ).toHaveTextContent("9:57 AM");
+    expect(
+      screen.getByRole("link", { name: /Follow up with Acme/ }),
+    ).toHaveTextContent("10:17 AM");
+    const timing = screen.getByRole("list", { name: "Route timing" });
+    expect(
+      within(timing)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Now45 min", "Next20 min", "Later15 min", "Open1 h 40 min"]);
+  });
+
+  it("leaves the route untimed when a stop has no estimate", () => {
+    render(
+      <DaylineCommand
+        items={[items[0]!, { ...items[1]!, durationMinutes: null }]}
+        now={new Date("2026-10-14T09:12:00+08:00")}
+      />,
+    );
+
+    expect(screen.getByText("Then on your route")).toBeInTheDocument();
+    expect(screen.queryByText(/Clear by/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("list", { name: "Route timing" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows a calm empty state without removing planning controls", () => {
@@ -129,10 +182,11 @@ describe("DaylineCommand", () => {
     expect(
       screen.getByRole("heading", { name: /Prepare complete final/ }),
     ).toHaveClass("break-words", "min-w-0");
+    // Full width on phones, where it sits under the thumb.
     expect(screen.getByRole("link", { name: /Open this next/ })).toHaveClass(
       "w-full",
       "min-w-0",
-      "min-[360px]:w-auto",
+      "sm:w-auto",
     );
   });
 });

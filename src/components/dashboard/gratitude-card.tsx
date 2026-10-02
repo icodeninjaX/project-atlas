@@ -4,6 +4,7 @@ import { Sunrise } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import styles from "./today.module.css";
 import {
   getRandomWisdomQuote,
   type WisdomQuote,
@@ -79,7 +80,10 @@ export function GratitudeCard({
       className={cn(
         "relative overflow-hidden",
         compact
-          ? "border-border text-foreground bg-[#e8eef8] shadow-none dark:bg-[#111a29] dark:text-white"
+          ? cn(
+              styles.edge,
+              "text-foreground border-0 bg-[#edf2fa] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] dark:bg-[#0f1726] dark:text-white",
+            )
           : "border-[#9a795f]/80 bg-[#172236] text-white",
         className,
       )}
@@ -141,6 +145,15 @@ export function GratitudeCard({
         >
           New on refresh · Changes hourly · {quote.collectionSize} famous quotes
         </p>
+
+        {compact ? (
+          <span
+            aria-hidden="true"
+            className="text-primary/10 pointer-events-none absolute right-5 -bottom-10 font-serif text-[10rem] leading-none select-none dark:text-white/[0.04]"
+          >
+            ”
+          </span>
+        ) : null}
 
         <Sunrise
           aria-hidden="true"

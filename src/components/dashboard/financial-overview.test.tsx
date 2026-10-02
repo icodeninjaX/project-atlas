@@ -62,6 +62,41 @@ describe("FinancialOverview", () => {
     expect(debt).toHaveTextContent("Next due Oct 16, 2026");
   });
 
+  it("adds the savings rate and how far through the month the budget is", () => {
+    render(
+      <FinancialOverview
+        financial={financial}
+        monthName="October"
+        pace={{
+          phase: "current",
+          daysInMonth: 31,
+          daysElapsed: 14,
+          daysLeft: 18,
+          elapsedRatio: 14 / 31,
+        }}
+      />,
+    );
+
+    // ₱9,525 kept of ₱50,500 income.
+    expect(screen.getByText("19% of income")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Budget left/ })).toHaveTextContent(
+      "Day 14 of 31",
+    );
+  });
+
+  it("leaves out the savings rate when more went out than came in", () => {
+    render(
+      <FinancialOverview
+        financial={{ ...financial, expense_month_centavos: 6_000_000 }}
+        monthName="October"
+      />,
+    );
+
+    expect(screen.getByText(/more out than in/)).toBeInTheDocument();
+    expect(screen.queryByText(/of income/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Day \d+ of/)).not.toBeInTheDocument();
+  });
+
   it("names overspending and an unplanned month plainly", () => {
     const { rerender } = render(
       <FinancialOverview

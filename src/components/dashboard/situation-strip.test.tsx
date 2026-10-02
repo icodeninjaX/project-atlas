@@ -45,11 +45,11 @@ describe("SituationStrip", () => {
     const heading = screen.getByRole("heading", { name: "Situation" });
     const grid = heading.parentElement?.nextElementSibling;
 
-    // Columns follow the strip's width in rem, so 200% text gets one
-    // column on a phone instead of two cramped ones.
+    // Columns follow the strip's width in rem: a 320 px phone gets two,
+    // while 200% text gets one column instead of two cramped ones.
     expect(grid).toHaveClass(
       "grid-cols-1",
-      "@[20rem]:grid-cols-2",
+      "@[17rem]:grid-cols-2",
       "@[56rem]:grid-cols-4",
     );
     expect(screen.getAllByRole("link")).toHaveLength(4);
@@ -58,7 +58,7 @@ describe("SituationStrip", () => {
     ).toHaveAttribute("href", "/money/accounts");
     expect(screen.getByRole("link", { name: /Tasks/ })).toHaveClass(
       "min-w-0",
-      "@[20rem]:min-h-24",
+      "@[17rem]:min-h-24",
     );
     expect(screen.getByText("Available cash")).not.toHaveClass("truncate");
     expect(screen.getByText("₱13,218.00")).not.toHaveClass("truncate");

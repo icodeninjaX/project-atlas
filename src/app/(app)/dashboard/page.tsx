@@ -2,6 +2,7 @@ import {
   TodayDashboard,
   type DashboardData,
 } from "@/components/dashboard/today-dashboard";
+import { manilaIsoDate } from "@/lib/dashboard/today";
 import { loadDayline } from "@/lib/dayline/server";
 import { getRandomWisdomQuote } from "@/lib/gratitude/gratitude-reflections";
 import { loadNextBestActions } from "@/lib/next-best-action/server";
@@ -31,15 +32,6 @@ const emptyData: DashboardData = {
   review_complete: false,
   priorities: [],
 };
-
-function manilaIsoDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Manila",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-}
 
 export const metadata = { title: "Today" };
 
