@@ -1,0 +1,118 @@
+/*
+ * Recorded history's marks and motion. Series colors arrive as
+ * `currentColor` from a `text-*` class; theme colors come from the tokens,
+ * so both themes follow. Only marks move; text never animates.
+ */
+
+/* A partial bucket: the series color in fine stripes. */
+.partial {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      currentColor 0 1.5px,
+      transparent 1.5px 5px
+    ),
+    color-mix(in srgb, currentColor 26%, transparent);
+}
+
+/*
+ * A recorded bucket: the series color deepening toward the baseline, with a
+ * bright cap. Layers, not box-shadow, so ring and shadow utilities still
+ * apply.
+ */
+.solid {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, #fff 30%, currentColor) 0 1.5px,
+      transparent 1.5px
+    ),
+    linear-gradient(
+      to top,
+      color-mix(in srgb, currentColor 48%, transparent),
+      currentColor
+    );
+}
+
+/* A bucket with no history: a dashed stub on the baseline. */
+.none {
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--muted-foreground) 50%, transparent) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+/* The typical bucket, as a dashed rule across the chart. */
+.typical {
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--foreground) 45%, transparent) 0 4px,
+    transparent 4px 8px
+  );
+}
+
+@keyframes rise {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+/* Bars rise from the baseline on arrival. */
+.rise {
+  transform-origin: bottom;
+  animation: rise 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Lines draw in from left to right. */
+.reveal {
+  animation: reveal 1100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Matrix cells settle in. */
+.appear {
+  animation: appear 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The ledger's disclosure chevron turns when open. */
+.chevron {
+  transition: transform 200ms ease;
+}
+
+details[open] > summary .chevron {
+  transform: rotate(180deg);
+}
+
+/* No default disclosure marker; the chevron stands in. */
+.summary {
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .reveal,
+  .appear {
+    animation: none;
+  }
+
+  .chevron {
+    transition: none;
+  }
+}
