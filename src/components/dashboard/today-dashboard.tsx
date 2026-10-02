@@ -1,36 +1,37 @@
-import {
-  ArrowRight,
-  CalendarClock,
-  CircleDollarSign,
-  Plus,
-} from "lucide-react";
+import { CircleDollarSign, Moon, Plus, Sun, Sunrise } from "lucide-react";
 import Link from "next/link";
 import {
   DaylineCommand,
   type DashboardDaylineItem,
 } from "@/components/dashboard/dayline-command";
 import { NextBestActions } from "@/components/dashboard/next-best-actions";
-import { FinancialOverview } from "@/components/dashboard/financial-overview";
+import {
+  FinancialOverview,
+  type FinancialSnapshot,
+} from "@/components/dashboard/financial-overview";
 import { GratitudeCard } from "@/components/dashboard/gratitude-card";
-import { SituationStrip } from "@/components/dashboard/situation-strip";
+import {
+  SituationStrip,
+  type SituationItem,
+} from "@/components/dashboard/situation-strip";
+import { WeekPosition } from "@/components/dashboard/week-position";
 import { SignalsPanel } from "@/components/signals/signals-panel";
 import { Button } from "@/components/ui/button";
-import { formatCalendarDate, manilaDateLabel } from "@/lib/dates/dates";
+import {
+  manilaDayLabel,
+  manilaDayPart,
+  manilaMonthName,
+  manilaWeekdayIndex,
+  paydayLabel,
+} from "@/lib/dashboard/today";
 import type { WisdomQuote } from "@/lib/gratitude/gratitude-reflections";
 import { formatCentavos } from "@/lib/money/money";
 import type { NextBestAction } from "@/lib/next-best-action/engine";
 import type { Signal } from "@/lib/signals/engine";
+import { formatTaskMinutes } from "@/lib/tasks/task-view";
 
 export type DashboardData = {
-  financial: {
-    total_balance_centavos: number;
-    income_month_centavos: number;
-    expense_month_centavos: number;
-    remaining_budget_centavos: number | null;
-    debt_remaining_centavos: number;
-    next_financial_deadline: string | null;
-    days_until_payday: number | null;
-  };
+  financial: FinancialSnapshot;
   tasks: {
     today: number;
     overdue: number;
@@ -67,6 +68,65 @@ export type TodayDayline = {
   energyLevel?: string;
 };
 
+const greetings = {
+  morning: { text: "Good morning", icon: Sunrise },
+  afternoon: { text: "Good afternoon", icon: Sun },
+  evening: { text: "Good evening", icon: Moon },
+} as const;
+
+function plural(count: number, word: string) {
+  return `${count} ${word}${count === 1 ? "" : "s"}`;
+}
+
+function situationItems(dashboard: DashboardData): SituationItem[] {
+  const { financial, tasks, career, goals } = dashboard;
+  const leadGoal = goals[0];
+
+  return [
+    {
+      label: "Available cash",
+      area: "money",
+      value: formatCentavos(financial.total_balance_centavos),
+      detail: paydayLabel(financial.days_until_payday) ?? "Active accounts",
+      href: "/money/accounts",
+      sensitive: true,
+    },
+    {
+      label: "Tasks",
+      area: "tasks",
+      value: `${tasks.overdue} overdue`,
+      // Not `completed_today`: the snapshot counts it from UTC midnight.
+      detail:
+        tasks.remaining_minutes > 0
+          ? `${tasks.today} due today · ${formatTaskMinutes(tasks.remaining_minutes, { compact: true })}`
+          : `${tasks.today} due today`,
+      href: "/tasks?view=overdue",
+      urgent: tasks.overdue > 0,
+    },
+    {
+      label: "Career",
+      area: "career",
+      value: plural(career.follow_up, "overdue follow-up"),
+      detail:
+        career.interviews > 0
+          ? `${career.active} active · ${career.interviews} interviewing`
+          : plural(career.active, "active application"),
+      href: "/career",
+      urgent: career.follow_up > 0,
+    },
+    {
+      label: "Goals",
+      area: "goals",
+      value: `${goals.length} active`,
+      detail: leadGoal
+        ? `${leadGoal.title} · ${Math.round(leadGoal.progress_percent)}%`
+        : "Define an outcome",
+      href: "/goals",
+      meter: leadGoal ? leadGoal.progress_percent / 100 : undefined,
+    },
+  ];
+}
+
 /** The Today page body, from data the page has already loaded. */
 export function TodayDashboard({
   now,
@@ -84,74 +144,24 @@ export function TodayDashboard({
   wisdomQuote: WisdomQuote;
 }) {
   const daylineItems = dayline.items;
-
-  const metrics = [
-    {
-      label: "Available",
-      value: formatCentavos(dashboard.financial.total_balance_centavos),
-      note: "Across active accounts",
-    },
-    {
-      label: "Income",
-      value: formatCentavos(dashboard.financial.income_month_centavos),
-      note: "Transfers excluded",
-    },
-    {
-      label: "Expenses",
-      value: formatCentavos(dashboard.financial.expense_month_centavos),
-      note:
-        dashboard.financial.remaining_budget_centavos == null
-          ? "No budget set"
-          : `${formatCentavos(dashboard.financial.remaining_budget_centavos)} budget left`,
-      sensitiveNote: dashboard.financial.remaining_budget_centavos != null,
-    },
-    {
-      label: "Debt remaining",
-      value: formatCentavos(dashboard.financial.debt_remaining_centavos),
-      note: dashboard.financial.next_financial_deadline
-        ? `Next due ${formatCalendarDate(dashboard.financial.next_financial_deadline)}`
-        : "No active deadline",
-    },
-  ];
-
-  const situation = [
-    {
-      label: "Available cash",
-      value: formatCentavos(dashboard.financial.total_balance_centavos),
-      detail: "Active accounts",
-      href: "/money/accounts" as const,
-      sensitive: true,
-    },
-    {
-      label: "Tasks",
-      value: `${dashboard.tasks.overdue} overdue`,
-      detail: `${dashboard.tasks.today} due today`,
-      href: "/tasks?view=overdue" as const,
-      urgent: dashboard.tasks.overdue > 0,
-    },
-    {
-      label: "Career",
-      value: `${dashboard.career.follow_up} overdue follow-up${dashboard.career.follow_up === 1 ? "" : "s"}`,
-      detail: `${dashboard.career.active} active applications`,
-      href: "/career" as const,
-      urgent: dashboard.career.follow_up > 0,
-    },
-    {
-      label: "Goals",
-      value: `${dashboard.goals.length} active`,
-      detail: dashboard.goals[0]?.title ?? "Define an outcome",
-      href: "/goals" as const,
-    },
-  ];
+  const greeting = greetings[manilaDayPart(now)];
+  const GreetingIcon = greeting.icon;
 
   return (
     <div className="mx-auto w-full max-w-[1240px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-        <div className="max-w-2xl">
-          <p className="text-primary text-xs font-semibold tracking-[0.1em] uppercase">
-            {manilaDateLabel(now)}
+      <header className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
+        <div className="max-w-2xl min-w-0">
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold tracking-[0.1em] uppercase">
+            <span className="text-primary inline-flex items-center gap-1.5">
+              <GreetingIcon aria-hidden="true" className="size-3.5" />
+              {greeting.text}
+            </span>
+            <span aria-hidden="true" className="text-muted-foreground/60">
+              ·
+            </span>
+            <span className="text-muted-foreground">{manilaDayLabel(now)}</span>
           </p>
-          <h1 className="mt-3 text-[2rem] leading-none font-semibold tracking-[-0.05em] sm:text-[2.5rem] lg:text-[2.75rem]">
+          <h1 className="mt-3 text-[2rem] leading-none font-semibold tracking-[-0.05em] sm:text-[2.5rem] lg:text-[2.875rem]">
             {daylineItems.length ? "Your Day, Mapped." : "Your route is clear."}
           </h1>
           <p className="text-muted-foreground mt-3 text-sm leading-6 sm:text-[0.9375rem]">
@@ -176,7 +186,7 @@ export function TodayDashboard({
         </div>
       </header>
 
-      <div className="mt-8">
+      <div className="mt-7 sm:mt-8">
         <DaylineCommand
           items={daylineItems}
           plannedMinutes={dayline.plannedMinutes}
@@ -187,45 +197,26 @@ export function TodayDashboard({
 
       <NextBestActions actions={nextBestActions} />
 
-      <SituationStrip items={situation} />
+      <SituationStrip items={situationItems(dashboard)} />
 
-      <div className="mt-10 grid items-start gap-8 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.8fr)] xl:gap-10">
-        <FinancialOverview metrics={metrics} />
-        <SignalsPanel signals={signals} className="mt-0" />
+      <div className="mt-8 grid gap-5 sm:mt-10 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.85fr)] xl:gap-6">
+        <FinancialOverview
+          financial={dashboard.financial}
+          monthName={manilaMonthName(now)}
+        />
+        <SignalsPanel signals={signals} />
       </div>
 
-      <div className="border-border mt-10 grid gap-8 border-t pt-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] lg:items-stretch">
-        <GratitudeCard initialQuote={wisdomQuote} compact />
-        <section
-          aria-labelledby="week-position"
-          className="border-border bg-card flex min-h-36 flex-col justify-between rounded-2xl border p-5 sm:p-6"
-        >
-          <div>
-            <div className="flex items-center gap-2.5">
-              <span className="bg-muted text-muted-foreground grid size-9 place-items-center rounded-xl">
-                <CalendarClock aria-hidden="true" className="size-4" />
-              </span>
-              <h2 id="week-position" className="text-sm font-semibold">
-                Week position
-              </h2>
-            </div>
-            <p className="mt-4 text-base font-semibold">
-              {dashboard.review_complete
-                ? "This week is reviewed"
-                : "Review when the week closes"}
-            </p>
-            <p className="text-muted-foreground mt-1 text-xs leading-5">
-              The facts stay beside your reflection, without interrupting today.
-            </p>
-          </div>
-          <Link
-            href="/reviews"
-            className="text-primary focus-visible:ring-ring mt-4 inline-flex min-h-9 w-fit items-center gap-1 rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
-          >
-            Open weekly reviews{" "}
-            <ArrowRight aria-hidden="true" className="size-3" />
-          </Link>
-        </section>
+      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] lg:items-stretch xl:gap-6">
+        <GratitudeCard
+          initialQuote={wisdomQuote}
+          compact
+          className="rounded-[1.5rem]"
+        />
+        <WeekPosition
+          dayIndex={manilaWeekdayIndex(now)}
+          reviewComplete={dashboard.review_complete}
+        />
       </div>
     </div>
   );

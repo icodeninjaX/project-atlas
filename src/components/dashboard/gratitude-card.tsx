@@ -3,6 +3,7 @@
 import { Sunrise } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   getRandomWisdomQuote,
   type WisdomQuote,
@@ -75,11 +76,13 @@ export function GratitudeCard({
   return (
     <Card
       aria-label="Daily wisdom"
-      className={`relative overflow-hidden ${
+      className={cn(
+        "relative overflow-hidden",
         compact
           ? "border-border text-foreground bg-[#e8eef8] shadow-none dark:bg-[#111a29] dark:text-white"
-          : "border-[#9a795f]/80 bg-[#172236] text-white"
-      } ${className}`}
+          : "border-[#9a795f]/80 bg-[#172236] text-white",
+        className,
+      )}
       style={{
         backgroundImage: 'url("/gratitude/atlas-gratitude-card-surface.webp")',
         backgroundPosition: "center",
@@ -90,7 +93,7 @@ export function GratitudeCard({
       <CardContent
         className={`relative flex h-full flex-col justify-between ${
           compact
-            ? "min-h-36 p-5 sm:min-h-40 sm:p-6"
+            ? "min-h-36 p-5 sm:min-h-40 sm:p-6 lg:p-7"
             : "min-h-44 p-4 sm:min-h-52 sm:p-6 lg:min-h-56 lg:p-7"
         }`}
       >
@@ -106,19 +109,19 @@ export function GratitudeCard({
           </p>
           <blockquote
             aria-live="polite"
-            className={compact ? "mt-2" : "mt-3 sm:mt-4"}
+            className={compact ? "mt-3" : "mt-3 sm:mt-4"}
           >
             <p
               className={`max-w-xl font-serif ${
                 compact
-                  ? "text-foreground text-base leading-6 sm:text-lg dark:text-[#eef3fa]"
+                  ? "text-foreground text-lg leading-7 sm:text-xl sm:leading-8 lg:text-2xl lg:leading-[1.4] dark:text-[#eef3fa]"
                   : "text-lg leading-6 text-[#f8fafc] sm:text-2xl sm:leading-[1.45] lg:text-[1.7rem] lg:leading-[1.35]"
               }`}
             >
               “{quote.message}”
             </p>
             <footer
-              className={`mt-2 text-xs font-medium sm:text-sm ${
+              className={`text-xs font-medium sm:text-sm ${compact ? "mt-3" : "mt-2"} ${
                 compact
                   ? "text-muted-foreground dark:text-[#dce6f5]"
                   : "text-[#dce6f5]"
@@ -129,12 +132,15 @@ export function GratitudeCard({
           </blockquote>
         </div>
 
-        {!compact && (
-          <p className="mt-4 text-xs leading-5 text-[#aab6c8] sm:mt-5">
-            New on refresh · Changes hourly · {quote.collectionSize} famous
-            quotes
-          </p>
-        )}
+        <p
+          className={`mt-4 text-xs leading-5 sm:mt-5 ${
+            compact
+              ? "text-muted-foreground dark:text-[#aab6c8]"
+              : "text-[#aab6c8]"
+          }`}
+        >
+          New on refresh · Changes hourly · {quote.collectionSize} famous quotes
+        </p>
 
         <Sunrise
           aria-hidden="true"

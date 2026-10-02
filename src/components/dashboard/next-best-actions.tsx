@@ -1,9 +1,14 @@
 "use client";
 
+import { BriefcaseBusiness } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import type { Route } from "next";
+import {
+  dashboardCardClass,
+  dashboardTileClass,
+} from "@/components/dashboard/dashboard-card";
 import { chooseCareerFollowupAction } from "@/lib/next-best-action/actions";
 import type { NextBestAction } from "@/lib/next-best-action/engine";
 import { buttonVariants } from "@/components/ui/button";
@@ -39,19 +44,29 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
   return (
     <section
       aria-labelledby="next-best-action-title"
-      className="border-border bg-card mt-6 rounded-3xl border p-5 sm:p-7"
+      className={cn(dashboardCardClass, "mt-5 sm:p-7")}
     >
-      <p className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
-        Next best action
-      </p>
-      <h2 id="next-best-action-title" className="mt-1 text-xl font-semibold">
-        Turn a follow-up into a task
-      </h2>
-      <p className="text-muted-foreground mt-2 text-sm">
-        {visible.length === 1
-          ? "This follow-up is on today’s route but isn’t a task yet. Add it to Tasks to track it, or dismiss it."
-          : "These follow-ups are on today’s route but aren’t tasks yet. Add one to Tasks to track it, or dismiss it."}
-      </p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="bg-primary/10 text-primary ring-primary/15 grid size-10 shrink-0 place-items-center rounded-xl ring-1">
+          <BriefcaseBusiness aria-hidden="true" className="size-[1.125rem]" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-primary text-[11px] font-semibold tracking-[0.14em] uppercase">
+            Next best action
+          </p>
+          <h2
+            id="next-best-action-title"
+            className="mt-0.5 text-lg font-semibold tracking-[-0.02em]"
+          >
+            Turn a follow-up into a task
+          </h2>
+          <p className="text-muted-foreground mt-1.5 text-sm leading-6">
+            {visible.length === 1
+              ? "This follow-up is on today’s route but isn’t a task yet. Add it to Tasks to track it, or dismiss it."
+              : "These follow-ups are on today’s route but aren’t tasks yet. Add one to Tasks to track it, or dismiss it."}
+          </p>
+        </div>
+      </div>
       {message && (
         <p role="status" className="mt-4 text-sm">
           {message}
@@ -59,10 +74,7 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
       )}
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
         {visible.map((action) => (
-          <article
-            key={action.id}
-            className="border-border min-w-0 rounded-2xl border p-4 sm:p-5"
-          >
+          <article key={action.id} className={cn(dashboardTileClass, "sm:p-5")}>
             <p className="text-xs font-semibold">
               <span className="text-primary">{action.urgency}</span>
               <span className="text-muted-foreground">
@@ -117,7 +129,7 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
               </button>
             </div>
             {reviewing === action.id && (
-              <div className="border-primary/30 bg-primary/5 mt-4 rounded-xl border p-4">
+              <div className="bg-primary/5 ring-primary/25 mt-4 rounded-xl p-4 ring-1">
                 <p className="text-sm font-semibold">
                   Create a follow-up task?
                 </p>

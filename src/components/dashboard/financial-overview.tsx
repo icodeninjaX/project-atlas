@@ -1,100 +1,290 @@
-import { ArrowRight, CreditCard } from "lucide-react";
+import {
+  ArrowRight,
+  ChartPie,
+  Landmark,
+  WalletCards,
+  type LucideIcon,
+} from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
-import { SensitiveValue } from "@/components/privacy/privacy-provider";
+import type { ReactNode } from "react";
+import {
+  DashboardCardHeading,
+  dashboardCardClass,
+  dashboardTileClass,
+} from "@/components/dashboard/dashboard-card";
+import { MoneyAmount } from "@/components/money/money-amount";
+import { budgetUsage, cashFlow, paydayLabel } from "@/lib/dashboard/today";
+import { formatCalendarDate } from "@/lib/dates/dates";
+import { cn } from "@/lib/utils";
 
-export type FinancialMetric = {
-  label: string;
-  value: string;
-  note: string;
-  sensitiveNote?: boolean;
+export type FinancialSnapshot = {
+  total_balance_centavos: number;
+  income_month_centavos: number;
+  expense_month_centavos: number;
+  remaining_budget_centavos: number | null;
+  debt_remaining_centavos: number;
+  next_financial_deadline: string | null;
+  days_until_payday: number | null;
 };
 
-function dashboardPeso(value: string): string {
-  return value.replace(/\.00(?=\s|$)/g, "");
+function Bar({ share, className }: { share: number; className: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="bg-muted block h-2 overflow-hidden rounded-full"
+    >
+      <span
+        className={cn("block h-full rounded-full", className)}
+        style={{ width: `${Math.min(Math.max(share, 0), 1) * 100}%` }}
+      />
+    </span>
+  );
 }
 
-function MetricNote({ metric }: { metric: FinancialMetric }) {
-  const note = dashboardPeso(metric.note);
-
-  return metric.sensitiveNote ? <SensitiveValue>{note}</SensitiveValue> : note;
+function FlowRow({
+  label,
+  centavos,
+  share,
+  barClassName,
+}: {
+  label: string;
+  centavos: number;
+  share: number;
+  barClassName: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+      <dt className="text-muted-foreground text-xs">{label}</dt>
+      <dd className="font-mono text-sm font-semibold [overflow-wrap:anywhere]">
+        <MoneyAmount centavos={centavos} quietCentavos />
+      </dd>
+      <dd className="mt-1.5 basis-full">
+        <Bar share={share} className={barClassName} />
+      </dd>
+    </div>
+  );
 }
 
-export function FinancialOverview({ metrics }: { metrics: FinancialMetric[] }) {
-  const available =
-    metrics.find(({ label }) => label.toLowerCase() === "available") ??
-    metrics[0];
-  const supportingMetrics = metrics
-    .filter((metric) => metric !== available)
-    .sort((left, right) => {
-      const priority = ["expenses", "debt remaining", "income"];
-      const rank = (label: string) => {
-        const index = priority.indexOf(label.toLowerCase());
-        return index === -1 ? priority.length : index;
-      };
-      return rank(left.label) - rank(right.label);
-    });
+function CashFlow({
+  incomeCentavos,
+  expenseCentavos,
+  monthName,
+}: {
+  incomeCentavos: number;
+  expenseCentavos: number;
+  monthName: string;
+}) {
+  const flow = cashFlow(incomeCentavos, expenseCentavos);
 
   return (
-    <section aria-labelledby="financial-snapshot" className="min-w-0">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="bg-primary/10 text-primary grid size-9 shrink-0 place-items-center rounded-xl">
-            <CreditCard aria-hidden="true" className="size-4" />
-          </span>
-          <div className="min-w-0">
-            <h2 id="financial-snapshot" className="text-sm font-semibold">
-              Financial position
-            </h2>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              Where your money stands now
-            </p>
-          </div>
-        </div>
-        <Link
-          href="/money/accounts"
-          className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-lg px-1 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
-        >
-          Money <ArrowRight aria-hidden="true" className="size-3" />
-        </Link>
+    <div className={dashboardTileClass}>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+        <p className="text-xs font-semibold">{monthName} so far</p>
+        <p className="text-muted-foreground text-[11px]">Transfers excluded</p>
       </div>
-      <div className="border-border mt-3 border-y">
-        {available && (
-          <dl className="py-3">
-            <dt className="text-muted-foreground text-[11px] font-medium">
-              Available balance
-            </dt>
-            <dd className="mt-1 min-w-0 font-mono text-[clamp(1.75rem,9vw,2.25rem)] leading-tight font-semibold tracking-[-0.04em] [overflow-wrap:anywhere] break-words sm:text-4xl">
-              <SensitiveValue>{dashboardPeso(available.value)}</SensitiveValue>
-            </dd>
-            <dd className="text-muted-foreground mt-1 text-xs leading-4">
-              Available across active accounts
-            </dd>
+      {flow.empty ? (
+        <p className="text-muted-foreground mt-3 text-xs leading-5">
+          No income or expenses recorded yet this month.
+        </p>
+      ) : (
+        <>
+          <dl className="mt-3 space-y-3">
+            <FlowRow
+              label="Money in"
+              centavos={incomeCentavos}
+              share={flow.incomeShare}
+              barClassName="bg-positive"
+            />
+            <FlowRow
+              label="Money out"
+              centavos={expenseCentavos}
+              share={flow.expenseShare}
+              barClassName="bg-primary"
+            />
           </dl>
-        )}
+          <p className="border-border text-muted-foreground mt-3.5 border-t pt-3 text-xs leading-5">
+            <MoneyAmount
+              centavos={flow.netCentavos}
+              sign="always"
+              className={cn(
+                "font-mono font-semibold",
+                flow.netCentavos >= 0 ? "text-positive" : "text-destructive",
+              )}
+            />{" "}
+            {flow.netCentavos >= 0 ? "kept so far" : "more out than in"}
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
 
-        <dl className="border-border divide-border divide-y border-t">
-          {supportingMetrics.map((metric) => (
-            <div
-              key={metric.label}
-              className="grid min-w-0 gap-x-3 gap-y-1 py-3 min-[360px]:grid-cols-[minmax(0,1fr)_auto] min-[360px]:items-start"
-            >
-              <dt className="text-muted-foreground min-w-0 text-xs leading-5 break-words">
-                {metric.label}
-              </dt>
-              <dd className="min-w-0 font-mono text-sm leading-5 font-semibold tracking-tight [overflow-wrap:anywhere] break-words min-[360px]:text-right">
-                <SensitiveValue>{dashboardPeso(metric.value)}</SensitiveValue>
-              </dd>
-              <dd className="text-muted-foreground min-w-0 text-xs leading-4 break-words min-[360px]:col-span-2">
-                <MetricNote metric={metric} />
-              </dd>
-            </div>
-          ))}
+function MoneyTile({
+  href,
+  icon: Icon,
+  label,
+  value,
+  children,
+}: {
+  href: Route;
+  icon: LucideIcon;
+  label: string;
+  value: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        dashboardTileClass,
+        "group hover:ring-primary/35 focus-visible:ring-ring flex flex-col transition-shadow focus-visible:ring-2 focus-visible:outline-none",
+      )}
+    >
+      <span className="text-muted-foreground flex items-center justify-between gap-2 text-xs font-medium">
+        <span className="flex min-w-0 items-center gap-2">
+          <Icon aria-hidden="true" className="text-primary size-3.5 shrink-0" />
+          {label}
+        </span>
+        <ArrowRight
+          aria-hidden="true"
+          className="group-hover:text-primary size-3 shrink-0 transition-colors"
+        />
+      </span>
+      <span className="mt-2 block font-mono text-lg leading-tight font-semibold tracking-[-0.02em] [overflow-wrap:anywhere]">
+        {value}
+      </span>
+      {children}
+    </Link>
+  );
+}
+
+export function FinancialOverview({
+  financial,
+  monthName,
+}: {
+  financial: FinancialSnapshot;
+  monthName: string;
+}) {
+  const budget = budgetUsage(
+    financial.remaining_budget_centavos,
+    financial.expense_month_centavos,
+  );
+  const payday = paydayLabel(financial.days_until_payday);
+
+  return (
+    <section
+      aria-labelledby="financial-snapshot"
+      className={cn(dashboardCardClass, "flex flex-col")}
+    >
+      <DashboardCardHeading
+        id="financial-snapshot"
+        icon={WalletCards}
+        title="Financial position"
+        description="Where your money stands now"
+        action={{ href: "/money/accounts", label: "Money" }}
+      />
+
+      <div className="mt-6 grid gap-5 @lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] @lg:items-center @lg:gap-6">
+        <dl className="min-w-0">
+          <dt className="text-muted-foreground text-xs font-medium">
+            Available balance
+          </dt>
+          <dd className="mt-2 min-w-0 font-mono text-[clamp(2rem,9vw,2.625rem)] leading-none font-semibold tracking-[-0.045em] [overflow-wrap:anywhere] break-words">
+            <MoneyAmount
+              centavos={financial.total_balance_centavos}
+              quietCentavos
+            />
+          </dd>
+          <dd className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+            <span className="text-muted-foreground text-xs">
+              Across active accounts
+            </span>
+            {payday ? (
+              <span className="bg-positive/10 text-positive ring-positive/20 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] leading-none font-semibold ring-1">
+                {payday}
+              </span>
+            ) : null}
+          </dd>
         </dl>
+        <CashFlow
+          incomeCentavos={financial.income_month_centavos}
+          expenseCentavos={financial.expense_month_centavos}
+          monthName={monthName}
+        />
       </div>
-      <div className="mt-1 flex justify-end">
+
+      <div className="mt-3 grid gap-3 @[18rem]:grid-cols-2">
+        <MoneyTile
+          href="/money/budget"
+          icon={ChartPie}
+          label={budget?.over ? "Over budget by" : "Budget left"}
+          value={
+            budget ? (
+              <MoneyAmount
+                centavos={Math.abs(budget.leftCentavos)}
+                quietCentavos
+                className={cn(budget.over && "text-destructive")}
+              />
+            ) : (
+              <span className="text-muted-foreground font-sans text-base font-medium tracking-normal">
+                No budget set
+              </span>
+            )
+          }
+        >
+          {budget ? (
+            <>
+              <span className="mt-3 block">
+                <Bar
+                  share={budget.ratio}
+                  className={budget.over ? "bg-destructive" : "bg-primary"}
+                />
+              </span>
+              <span className="text-muted-foreground mt-2 block text-xs leading-5">
+                {budget.plannedCentavos > 0 ? (
+                  <>
+                    {Math.round(budget.ratio * 100)}% of{" "}
+                    <MoneyAmount
+                      centavos={budget.plannedCentavos}
+                      className="font-mono"
+                    />{" "}
+                    used
+                  </>
+                ) : (
+                  "Spending with nothing planned"
+                )}
+              </span>
+            </>
+          ) : (
+            <span className="text-primary mt-2 block text-xs leading-5 font-semibold">
+              Plan {monthName}
+            </span>
+          )}
+        </MoneyTile>
+        <MoneyTile
+          href="/debts"
+          icon={Landmark}
+          label="Debt remaining"
+          value={
+            <MoneyAmount
+              centavos={financial.debt_remaining_centavos}
+              quietCentavos
+            />
+          }
+        >
+          <span className="text-muted-foreground mt-2 block text-xs leading-5 break-words">
+            {financial.next_financial_deadline
+              ? `Next due ${formatCalendarDate(financial.next_financial_deadline)}`
+              : "No active deadline"}
+          </span>
+        </MoneyTile>
+      </div>
+
+      <div className="mt-auto flex justify-end pt-2">
         <Link
           href="/money/runway"
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-[11px] font-medium focus-visible:ring-2 focus-visible:outline-none"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-xs font-medium focus-visible:ring-2 focus-visible:outline-none"
         >
           View runway <ArrowRight aria-hidden="true" className="size-3" />
         </Link>
