@@ -1,0 +1,44 @@
+/*
+ * The decision journal's motion. Bars rise from their baseline and the
+ * review arc draws on arrival; text never animates, so contrast checks hold.
+ */
+
+@keyframes rise {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes reach {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.rise {
+  transform-origin: bottom;
+  animation: rise 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.reach {
+  transform-origin: left;
+  animation: reach 1000ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The stretch of the arc still ahead of today. */
+.ahead {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--muted-foreground) 26%, transparent) 0 1.5px,
+      transparent 1.5px 6px
+    ),
+    color-mix(in srgb, var(--muted) 70%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .reach {
+    animation: none;
+  }
+}

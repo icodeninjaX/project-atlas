@@ -1,18 +1,26 @@
 "use client";
 
+import { Link2, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import {
+  fieldLabelClass,
+  fieldSelectClass,
+} from "@/components/career/application-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { searchGraphCandidatesAction } from "@/lib/graph/actions";
 import type { GraphEntitySummary } from "@/lib/graph/registry";
 
-const labels: Record<"task" | "transaction" | "job_application", string> = {
+export const recordTypeLabels: Record<
+  "task" | "transaction" | "job_application",
+  string
+> = {
   task: "Task",
   transaction: "Transaction",
   job_application: "Career application",
 };
 
-type SourceType = keyof typeof labels;
+type SourceType = keyof typeof recordTypeLabels;
 
 export function RecordPicker({
   name,
@@ -65,17 +73,28 @@ export function RecordPicker({
   }
 
   return (
-    <div ref={root} className="sm:col-span-2">
-      <p className="text-muted-foreground text-xs">{label} (optional)</p>
+    <div ref={root} className="col-span-full min-w-0">
+      <p className="text-muted-foreground text-xs font-medium">
+        {label} (optional)
+      </p>
       <input
         type="hidden"
         name={name}
         value={selected ? `${selected.type}:${selected.id}` : ""}
       />
       {selected ? (
-        <div className="border-border bg-background mt-1.5 flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl border p-3">
-          <span className="min-w-0 text-sm break-words">
-            {labels[selected.type as SourceType]} · {selected.title}
+        <div className="bg-primary/[0.06] ring-primary/20 mt-1.5 flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl py-2 pr-2 pl-3 ring-1">
+          <span className="flex min-w-0 items-center gap-2 text-sm break-words">
+            <Link2
+              aria-hidden="true"
+              className="text-primary size-4 shrink-0"
+            />
+            <span className="min-w-0">
+              <span className="text-muted-foreground">
+                {recordTypeLabels[selected.type as SourceType]} ·{" "}
+              </span>
+              {selected.title}
+            </span>
           </span>
           <Button
             type="button"
@@ -87,9 +106,9 @@ export function RecordPicker({
           </Button>
         </div>
       ) : (
-        <div className="mt-1.5 grid gap-2 sm:grid-cols-[11rem_minmax(0,1fr)_auto]">
+        <div className="mt-1.5 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-[11rem_minmax(0,1fr)_auto]">
           {types.length > 1 && (
-            <label className="text-muted-foreground text-xs">
+            <label className={fieldLabelClass}>
               Record type
               <select
                 value={type}
@@ -97,18 +116,21 @@ export function RecordPicker({
                   setType(event.target.value as SourceType);
                   setCandidates([]);
                 }}
-                className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+                className={fieldSelectClass}
               >
                 {types.map((item) => (
                   <option key={item} value={item}>
-                    {labels[item]}
+                    {recordTypeLabels[item]}
                   </option>
                 ))}
               </select>
             </label>
           )}
-          <label className="text-muted-foreground text-xs">
-            Search {types.length === 1 ? labels[type].toLowerCase() : "records"}
+          <label className={fieldLabelClass}>
+            Search{" "}
+            {types.length === 1
+              ? recordTypeLabels[type].toLowerCase()
+              : "records"}
             <Input
               className="mt-1.5"
               value={query}
@@ -124,13 +146,14 @@ export function RecordPicker({
             disabled={loading}
             onClick={() => void search()}
           >
+            <Search aria-hidden="true" className="size-4" />
             {loading ? "Searching…" : "Find"}
           </Button>
         </div>
       )}
       {!selected && candidates.length > 0 && (
         <ul
-          className="border-border bg-background mt-2 max-h-52 overflow-y-auto rounded-xl border p-1"
+          className="bg-background ring-border mt-2 max-h-52 overflow-y-auto rounded-xl p-1 shadow-[0_12px_30px_-18px_rgb(7_10_15/0.45)] ring-1"
           aria-label="Matching records"
         >
           {candidates.map((item) => (
@@ -141,10 +164,14 @@ export function RecordPicker({
                   setSelected(item);
                   setCandidates([]);
                 }}
-                className="hover:bg-muted focus-visible:ring-ring min-h-11 w-full rounded-lg px-3 py-2 text-left text-sm break-words focus-visible:ring-2"
+                className="hover:bg-muted focus-visible:ring-ring min-h-11 w-full rounded-lg px-3 py-2 text-left text-sm break-words focus-visible:ring-2 focus-visible:outline-none"
               >
                 {item.title}
-                {item.subtitle ? ` · ${item.subtitle}` : ""}
+                {item.subtitle ? (
+                  <span className="text-muted-foreground">
+                    {` · ${item.subtitle}`}
+                  </span>
+                ) : null}
               </button>
             </li>
           ))}

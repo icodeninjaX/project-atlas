@@ -84,9 +84,8 @@ test.describe("Decision journal local browser flow", () => {
       await expect(
         page.getByRole("heading", { name: "Decision journal" }),
       ).toBeVisible();
-      // The form starts open only while the journal is empty.
-      const openForm = page.getByRole("button", { name: "Record a decision" });
-      if (await openForm.isVisible()) await openForm.click();
+      // The empty journal's hero holds the only add button; it opens a sheet.
+      await page.getByRole("button", { name: "Record a decision" }).click();
       await page
         .getByRole("textbox", { name: "Decision", exact: true })
         .fill("Apply weekly");
@@ -104,8 +103,12 @@ test.describe("Decision journal local browser flow", () => {
         .getByRole("button", { name: /Apply to roles/ })
         .click();
       await page.getByRole("button", { name: "Record decision" }).click();
+      await expect(page.getByText("Decision recorded.")).toBeVisible();
+      await expect(page.getByRole("dialog")).toBeHidden();
       await expect(
-        page.getByRole("status").filter({ hasText: "Decision recorded." }),
+        page
+          .getByRole("region", { name: "Your decisions" })
+          .getByRole("link", { name: "Apply weekly" }),
       ).toBeVisible();
       const { data: saved, error: saveError } = await owner
         .from("decisions")
@@ -127,7 +130,9 @@ test.describe("Decision journal local browser flow", () => {
         page.getByRole("link", { name: "Apply weekly" }),
       ).toBeVisible();
       await page.goto(`/decisions/${saved!.id}`);
-      await expect(page.getByText("Action task: Apply to roles")).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Action task: Apply to roles" }),
+      ).toBeVisible();
       await page
         .getByLabel("What did you observe?")
         .first()
@@ -158,6 +163,7 @@ test.describe("Decision journal local browser flow", () => {
         );
         expect(overflow).toBeLessThanOrEqual(1);
       }
+      await page.getByRole("button", { name: "Edit decision" }).click();
       await page.getByLabel("What will you do?").fill("Apply selectively");
       await page
         .getByLabel("Assumptions or other factors (optional)")
