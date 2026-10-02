@@ -62,27 +62,21 @@ test.describe("authenticated ATLAS workflows", () => {
 
   test("adds a debt and records a payment", async ({ page }) => {
     const unique = Date.now();
+    const creditor = `E2E debt ${unique}`;
     await page.goto("/debts");
     await page.getByRole("button", { name: "Add debt" }).click();
-    await page
-      .locator("#debt-create-form")
-      .getByLabel("Creditor name")
-      .fill(`E2E debt ${unique}`);
-    await page
-      .locator("#debt-create-form")
-      .getByLabel("Original balance in pesos")
-      .fill("1000.00");
-    await page
-      .locator("#debt-create-form")
-      .getByLabel("Minimum payment in pesos")
-      .fill("100.00");
-    await page.getByRole("button", { name: "Add debt" }).click();
-    await page
-      .getByRole("link", { name: new RegExp(`E2E debt ${unique}`) })
-      .click();
+    const form = page.locator("#debt-create-form");
+    await form.getByLabel("Creditor name").fill(creditor);
+    await form.getByLabel("Original balance in pesos").fill("1000.00");
+    await form.getByLabel("Minimum payment in pesos").fill("100.00");
+    await syncClick(page, form.getByRole("button", { name: "Add debt" }));
+    await page.getByRole("link", { name: creditor }).click();
     await page.getByLabel("Payment amount in pesos").fill("250.00");
-    await page.getByRole("button", { name: "Record payment" }).click();
-    await expect(page.getByText("₱750.00")).toBeVisible();
+    await syncClick(page, page.getByRole("button", { name: "Record payment" }));
+    // The balance leads the debt's hero, which is named by the creditor.
+    await expect(
+      page.getByRole("region", { name: creditor }).getByText("₱750.00"),
+    ).toBeVisible();
   });
 
   test("captures and completes a task", async ({ page }) => {

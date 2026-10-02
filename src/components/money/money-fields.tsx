@@ -105,6 +105,7 @@ export function PesoInput({
   value,
   onValueChange,
   describedBy,
+  ariaLabel,
   placeholder = "0.00",
   disabled = false,
   large = false,
@@ -114,6 +115,8 @@ export function PesoInput({
   value: string;
   onValueChange: (value: string) => void;
   describedBy?: string;
+  /** Names the amount when the visible label leaves out "in pesos". */
+  ariaLabel?: string;
   placeholder?: string;
   disabled?: boolean;
   large?: boolean;
@@ -148,6 +151,7 @@ export function PesoInput({
         enterKeyHint="next"
         placeholder={placeholder}
         disabled={disabled}
+        aria-label={ariaLabel}
         aria-describedby={describedBy}
         className={cn(
           "placeholder:text-muted-foreground/45 min-w-0 flex-1 bg-transparent text-right font-mono font-semibold outline-none disabled:cursor-not-allowed",
@@ -200,7 +204,7 @@ export function DateField({
             {shortcut.label}
           </button>
         ))}
-        <label className="relative min-w-[10.5rem] flex-1">
+        <label className="relative min-w-[min(10.5rem,100%)] flex-1">
           <span className="sr-only">{ariaLabel}</span>
           <CalendarDays
             aria-hidden="true"

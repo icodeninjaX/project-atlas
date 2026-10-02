@@ -19,6 +19,37 @@ export function resolveDebtStrategy(
   return "avalanche";
 }
 
+/** A debt as stored, with its columns' own names. */
+export type DebtRecord = {
+  id: string;
+  creditor_name: string;
+  debt_type: string;
+  original_balance_centavos: number;
+  current_balance_centavos: number;
+  interest_rate_percent: number;
+  minimum_payment_centavos: number;
+  due_day: number | null;
+  next_due_date: string | null;
+  status: string;
+  priority: number;
+  notes: string | null;
+};
+
+export const DEBT_COLUMNS =
+  "id,creditor_name,debt_type,original_balance_centavos,current_balance_centavos,interest_rate_percent,minimum_payment_centavos,due_day,next_due_date,status,priority,notes";
+
+/** Database numerics can arrive as strings; the app works in numbers. */
+export function toDebtRecord(row: DebtRecord): DebtRecord {
+  return {
+    ...row,
+    original_balance_centavos: Number(row.original_balance_centavos),
+    current_balance_centavos: Number(row.current_balance_centavos),
+    interest_rate_percent: Number(row.interest_rate_percent),
+    minimum_payment_centavos: Number(row.minimum_payment_centavos),
+    priority: Number(row.priority),
+  };
+}
+
 export type DebtForStrategy = {
   id: string;
   balanceCentavos: number;
