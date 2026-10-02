@@ -1,16 +1,27 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { CalendarDays, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
+import {
+  Archive,
+  CalendarDays,
+  CircleCheck,
+  CirclePause,
+  MoreHorizontal,
+  Pencil,
+  PiggyBank,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { AtlasMark } from "@/components/atlas/atlas-mark";
+import { goalAreaTheme } from "@/components/goals/goal-area";
 import { GoalForm } from "@/components/goals/goal-form";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { TooltipHint } from "@/components/ui/tooltip";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
-import { formatCalendarDate } from "@/lib/dates/dates";
+import { calendarDaysBetween, formatCalendarDate } from "@/lib/dates/dates";
 import { formatCentavos } from "@/lib/money/money";
 
 type Goal = {
@@ -53,9 +64,106 @@ function GoalAreaBadge({ area }: { area: string }) {
   return (
     <span
       aria-label={`Goal category: ${areaLabel}`}
-      className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-[0.08em] uppercase ${goalAreaBadgeStyles[area] ?? fallbackGoalAreaBadgeStyle}`}
+      className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] uppercase ${goalAreaBadgeStyles[area] ?? fallbackGoalAreaBadgeStyle}`}
     >
       {areaLabel}
+    </span>
+  );
+}
+
+function GoalAreaTile({ area }: { area: string }) {
+  const { icon: Icon, tile } = goalAreaTheme(area);
+
+  return (
+    <span
+      aria-hidden="true"
+      className={`grid size-10 shrink-0 place-items-center rounded-xl ring-1 ring-inset sm:size-11 sm:rounded-2xl ${tile}`}
+    >
+      <Icon className="size-[18px] sm:size-5" strokeWidth={1.75} />
+    </span>
+  );
+}
+
+const goalStatusPills: Record<
+  string,
+  { label: string; icon: typeof CircleCheck; className: string }
+> = {
+  paused: {
+    label: "Paused",
+    icon: CirclePause,
+    className:
+      "border-amber-300/60 bg-amber-50 text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/50 dark:text-amber-300",
+  },
+  completed: {
+    label: "Completed",
+    icon: CircleCheck,
+    className:
+      "border-emerald-300/60 bg-emerald-50 text-emerald-800 dark:border-emerald-700/60 dark:bg-emerald-950/50 dark:text-emerald-300",
+  },
+  abandoned: {
+    label: "Abandoned",
+    icon: Archive,
+    className: "border-border bg-muted text-muted-foreground",
+  },
+};
+
+function GoalStatusPill({ status }: { status: string }) {
+  const pill = goalStatusPills[status];
+  if (!pill) return null;
+  const Icon = pill.icon;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${pill.className}`}
+    >
+      <Icon className="size-3" aria-hidden="true" />
+      {pill.label}
+    </span>
+  );
+}
+
+function deadlineLabel(daysLeft: number) {
+  if (daysLeft === 0) return "Due today";
+  if (daysLeft === 1) return "Due tomorrow";
+  if (daysLeft > 1) return `${daysLeft} days left`;
+  return daysLeft === -1 ? "1 day overdue" : `${-daysLeft} days overdue`;
+}
+
+function GoalDeadline({
+  targetDate,
+  status,
+  today,
+}: {
+  targetDate: string;
+  status: string;
+  today?: string;
+}) {
+  const open = status === "active" || status === "paused";
+  const daysLeft =
+    open && today ? calendarDaysBetween(today, targetDate) : undefined;
+  const tone =
+    daysLeft === undefined
+      ? "bg-muted/70 text-muted-foreground"
+      : daysLeft < 0
+        ? "bg-destructive/10 text-destructive"
+        : daysLeft <= 14
+          ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          : "bg-muted/70 text-muted-foreground";
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ${tone}`}
+    >
+      <CalendarDays className="size-3.5" aria-hidden="true" />
+      Target {formatCalendarDate(targetDate)}
+      {daysLeft !== undefined ? (
+        <>
+          <span aria-hidden="true" className="opacity-50">
+            ·
+          </span>
+          <span className="font-semibold">{deadlineLabel(daysLeft)}</span>
+        </>
+      ) : null}
     </span>
   );
 }
@@ -82,7 +190,14 @@ function DeleteGoalButton({ title }: { title: string }) {
   );
 }
 
-export function GoalCardHeader({ goal }: { goal: Goal }) {
+export function GoalCardHeader({
+  goal,
+  today,
+}: {
+  goal: Goal;
+  /** Today's `YYYY-MM-DD` date, used for the target-date countdown. */
+  today?: string;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -148,8 +263,17 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
 
   return (
     <Dialog.Root open={deleteOpen} onOpenChange={(open) => setDeleteOpen(open)}>
-      <div className="flex items-center justify-between gap-3">
-        <GoalAreaBadge area={goal.area} />
+      <div className="flex items-start gap-3 sm:gap-3.5">
+        <GoalAreaTile area={goal.area} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <GoalAreaBadge area={goal.area} />
+            <GoalStatusPill status={goal.status} />
+          </div>
+          <h2 className="mt-1.5 text-[1.0625rem] leading-snug font-semibold tracking-[-0.02em] text-balance sm:text-lg">
+            {goal.title}
+          </h2>
+        </div>
         <div ref={menuRef} className="relative shrink-0">
           <TooltipHint label="Goal actions" side="left">
             <Button
@@ -157,7 +281,7 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
               type="button"
               variant="ghost"
               size="icon"
-              className="-mt-1.5 -mr-2 rounded-lg sm:-mt-0 sm:-mr-1 sm:size-8 sm:min-h-8"
+              className="-mt-1.5 -mr-2 rounded-lg sm:-mt-0.5 sm:-mr-1.5 sm:size-8 sm:min-h-8"
               aria-label={`Open actions for goal ${goal.title}`}
               aria-expanded={menuOpen}
               aria-haspopup="menu"
@@ -205,33 +329,34 @@ export function GoalCardHeader({ goal }: { goal: Goal }) {
           </div>
         </div>
       </div>
-      <h2 className="mt-3 text-[1.0625rem] leading-snug font-semibold tracking-[-0.02em] sm:mt-4 sm:text-lg">
-        {goal.title}
-      </h2>
-      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-        {goal.target_date ? (
-          <span className="bg-muted/70 text-muted-foreground inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px]">
-            <CalendarDays className="size-3.5" aria-hidden="true" />
-            Target {formatCalendarDate(goal.target_date)}
-          </span>
-        ) : null}
-        {goal.target_amount_centavos ? (
-          <span className="bg-muted/70 text-muted-foreground rounded-full px-2 py-0.5 text-[11px]">
-            <SensitiveValue>
-              {formatCentavos(goal.saved_amount_centavos ?? 0)}
-            </SensitiveValue>{" "}
-            of{" "}
-            <SensitiveValue>
-              {formatCentavos(goal.target_amount_centavos)}
-            </SensitiveValue>{" "}
-            saved
-          </span>
-        ) : null}
-      </div>
       {goal.success_definition ? (
-        <p className="text-muted-foreground mt-3 text-[13px] leading-6">
+        <p className="text-muted-foreground border-border mt-4 border-l-2 pl-3 text-[13px] leading-6">
           {goal.success_definition}
         </p>
+      ) : null}
+      {goal.target_date || goal.target_amount_centavos ? (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {goal.target_date ? (
+            <GoalDeadline
+              targetDate={goal.target_date}
+              status={goal.status}
+              today={today}
+            />
+          ) : null}
+          {goal.target_amount_centavos ? (
+            <span className="bg-muted/70 text-muted-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium">
+              <PiggyBank className="size-3.5" aria-hidden="true" />
+              <SensitiveValue>
+                {formatCentavos(goal.saved_amount_centavos ?? 0)}
+              </SensitiveValue>{" "}
+              of{" "}
+              <SensitiveValue>
+                {formatCentavos(goal.target_amount_centavos)}
+              </SensitiveValue>{" "}
+              saved
+            </span>
+          ) : null}
+        </div>
       ) : null}
       {editorOpen ? (
         <div id={editorId} className="mt-4">

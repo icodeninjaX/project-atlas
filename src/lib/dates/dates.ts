@@ -78,6 +78,22 @@ export function formatCalendarDate(value: string | Date): string {
     : calendarDateManila.format(date);
 }
 
+/** Today's calendar date in Asia/Manila as `YYYY-MM-DD`. */
+export function manilaTodayIsoDate(now: Date = new Date()): string {
+  return manilaIsoDate(now);
+}
+
+/**
+ * Whole calendar days from `from` to `to` (both `YYYY-MM-DD`); negative when
+ * `to` is earlier than `from`.
+ */
+export function calendarDaysBetween(from: string, to: string): number {
+  return Math.round(
+    (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
+      86_400_000,
+  );
+}
+
 const monthYear = new Intl.DateTimeFormat("en-PH", {
   timeZone: "UTC",
   month: "short",

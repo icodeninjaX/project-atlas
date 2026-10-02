@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  calendarDaysBetween,
   formatCalendarDate,
   formatCalendarMonth,
   formatWeekOfTitle,
   compactReviewWeekLabel,
   manilaDateLabel,
+  manilaTodayIsoDate,
   mondayWeekStart,
   previousManilaDayWindow,
   reviewWeekLabel,
@@ -12,6 +14,18 @@ import {
 } from "./dates";
 
 describe("date helpers", () => {
+  it("returns today's calendar date in Asia/Manila", () => {
+    expect(manilaTodayIsoDate(new Date("2026-09-30T16:30:00.000Z"))).toBe(
+      "2026-10-01",
+    );
+  });
+
+  it("counts whole calendar days between two dates", () => {
+    expect(calendarDaysBetween("2026-10-01", "2026-12-31")).toBe(91);
+    expect(calendarDaysBetween("2026-10-01", "2026-10-01")).toBe(0);
+    expect(calendarDaysBetween("2026-10-01", "2026-09-20")).toBe(-11);
+  });
+
   it("formats UTC timestamps as dates in Asia/Manila", () => {
     expect(manilaDateLabel("2026-07-25T17:00:00.000Z")).toBe(
       "Sunday, July 26, 2026",
