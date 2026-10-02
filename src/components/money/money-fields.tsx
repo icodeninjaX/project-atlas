@@ -95,6 +95,69 @@ export const AmountField = forwardRef<
   );
 });
 
+/**
+ * A peso amount in a compact field: the peso sign, then right-aligned
+ * figures kept to digits and two decimals as they are typed.
+ */
+export function PesoInput({
+  id,
+  name,
+  value,
+  onValueChange,
+  describedBy,
+  placeholder = "0.00",
+  disabled = false,
+  large = false,
+}: {
+  id: string;
+  name?: string;
+  value: string;
+  onValueChange: (value: string) => void;
+  describedBy?: string;
+  placeholder?: string;
+  disabled?: boolean;
+  large?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "border-border bg-background/60 focus-within:border-primary focus-within:ring-primary/15 flex min-w-0 items-center gap-1.5 rounded-xl border px-3 transition-[border-color,box-shadow] focus-within:ring-4",
+        large ? "h-14" : "h-11",
+        disabled && "opacity-50",
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "text-muted-foreground font-medium",
+          large ? "text-lg" : "text-sm",
+        )}
+      >
+        ₱
+      </span>
+      <input
+        id={id}
+        name={name}
+        value={value}
+        onChange={(event) =>
+          onValueChange(sanitizePesoInput(event.target.value))
+        }
+        onBlur={() => onValueChange(formatPesoInput(value))}
+        inputMode="decimal"
+        autoComplete="off"
+        enterKeyHint="next"
+        placeholder={placeholder}
+        disabled={disabled}
+        aria-describedby={describedBy}
+        className={cn(
+          "placeholder:text-muted-foreground/45 min-w-0 flex-1 bg-transparent text-right font-mono font-semibold outline-none disabled:cursor-not-allowed",
+          large ? "text-xl tracking-[-0.02em]" : "text-sm",
+        )}
+      />
+    </div>
+  );
+}
+
 /** Today and Yesterday as one tap, with a calendar for anything older. */
 export function DateField({
   name,

@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   calculateRunway,
+  pickRunwayBudget,
   type RunwayBudget,
   type RunwaySource,
 } from "@/lib/runway/engine";
@@ -29,6 +30,8 @@ export type RunwayWorkspace = {
   source: RunwaySource;
   analysis: ReturnType<typeof calculateRunway>;
   monthStart: string;
+  /** Every budget up to this month, newest first, for previewing choices. */
+  budgets: RunwayBudget[];
 };
 
 export async function loadRunwayWorkspace(
@@ -55,14 +58,14 @@ export async function loadRunwayWorkspace(
     supabase
       .from("financial_account_balances")
       .select(
-        "id,name,account_type,current_balance_centavos,include_in_runway,is_archived",
+        "id,name,account_type,provider_id,current_balance_centavos,include_in_runway,is_archived",
       )
       .eq("user_id", user.id)
       .eq("is_archived", false)
       .order("name"),
     supabase
       .from("transaction_categories")
-      .select("id,name,is_essential,is_system")
+      .select("id,name,icon,is_essential,is_system")
       .eq("user_id", user.id)
       .eq("category_type", "expense")
       .order("name"),
@@ -114,37 +117,16 @@ export async function loadRunwayWorkspace(
   if (budgetItemsError)
     throw new Error("Runway budget data could not be loaded.");
 
-  const selectedCategoryIds = new Set(
-    (categoriesResult.data ?? [])
-      .filter(
-        (category) =>
-          category.is_essential &&
-          category.name.toLowerCase() !== "debt payment",
-      )
-      .map((category) => category.id),
-  );
-  const budget = (budgetsResult.data ?? []).reduce<RunwayBudget | null>(
-    (latest, candidate) => {
-      if (latest) return latest;
-      const items = (budgetItems ?? [])
-        .filter((item) => item.monthly_budget_id === candidate.id)
-        .map((item) => ({
-          categoryId: item.category_id,
-          plannedCentavos: Number(item.planned_centavos),
-        }));
-      return items.some(
-        (item) =>
-          selectedCategoryIds.has(item.categoryId) && item.plannedCentavos > 0,
-      )
-        ? {
-            monthStart: candidate.month_start,
-            expectedIncomeCentavos: Number(candidate.expected_income_centavos),
-            items,
-          }
-        : null;
-    },
-    null,
-  );
+  const budgets: RunwayBudget[] = (budgetsResult.data ?? []).map((budget) => ({
+    monthStart: budget.month_start,
+    expectedIncomeCentavos: Number(budget.expected_income_centavos),
+    items: (budgetItems ?? [])
+      .filter((item) => item.monthly_budget_id === budget.id)
+      .map((item) => ({
+        categoryId: item.category_id,
+        plannedCentavos: Number(item.planned_centavos),
+      })),
+  }));
 
   const { data: preferences, error: preferencesError } = await supabase
     .from("user_preferences")
@@ -154,6 +136,13 @@ export async function loadRunwayWorkspace(
   if (preferencesError)
     throw new Error("Runway preferences could not be loaded.");
 
+  const categories = (categoriesResult.data ?? []).map((category) => ({
+    id: category.id,
+    name: category.name,
+    isEssential: category.is_essential,
+    isSystem: category.is_system,
+    icon: category.icon,
+  }));
   const source: RunwaySource = {
     accounts: (accountsResult.data ?? []).map((account) => ({
       id: account.id,
@@ -162,13 +151,9 @@ export async function loadRunwayWorkspace(
       currentBalanceCentavos: Number(account.current_balance_centavos),
       includeInRunway: account.include_in_runway,
       isArchived: account.is_archived,
+      providerId: account.provider_id,
     })),
-    categories: (categoriesResult.data ?? []).map((category) => ({
-      id: category.id,
-      name: category.name,
-      isEssential: category.is_essential,
-      isSystem: category.is_system,
-    })),
+    categories,
     monthlyTotals: (
       (totalsResult.data ?? []) as Array<{
         month_start: string;
@@ -182,7 +167,7 @@ export async function loadRunwayWorkspace(
       transactionType: total.transaction_type as "income" | "expense",
       amountCentavos: Number(total.amount_centavos),
     })),
-    budget,
+    budget: pickRunwayBudget(budgets, categories),
     debts: (debtsResult.data ?? []).map((debt) => ({
       id: debt.id,
       creditorName: debt.creditor_name,
@@ -197,5 +182,10 @@ export async function loadRunwayWorkspace(
     targetMonths: Number(preferences?.runway_target_months ?? 3),
   };
 
-  return { source, analysis: calculateRunway(source, now), monthStart };
+  return {
+    source,
+    analysis: calculateRunway(source, now),
+    monthStart,
+    budgets,
+  };
 }

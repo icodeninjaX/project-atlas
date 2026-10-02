@@ -1,0 +1,35 @@
+/*
+ * The runway track's months. Colors come from the theme tokens, so both
+ * themes follow.
+ */
+
+/* Months still to cover before the reserve target; --gap sets the hue. */
+.gap {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--gap) 55%, transparent) 0 1.5px,
+      transparent 1.5px 6px
+    ),
+    color-mix(in srgb, var(--gap) 12%, transparent);
+}
+
+/* Each covered month lights up in turn on arrival; text never animates. */
+@keyframes light {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+.light {
+  animation: light 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* A scenario's changes slide rather than jump. */
+  transition: clip-path 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .light {
+    animation: none;
+    transition: none;
+  }
+}

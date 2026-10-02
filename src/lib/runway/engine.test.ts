@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyRunwayChoices,
   calculateRunway,
   calculateScenario,
+  essentialBreakdown,
   formatRunwayMonths,
+  monthlyCategoryAmounts,
+  pickRunwayBudget,
+  type RunwayBudget,
   type RunwaySource,
 } from "./engine";
 
@@ -249,5 +254,155 @@ describe("runway engine", () => {
     expect(formatRunwayMonths(0.04)).toBe("Less than 0.1 months");
     expect(formatRunwayMonths(2.345)).toBe("2.3 months");
     expect(formatRunwayMonths(100)).toBe("99+ months");
+  });
+});
+
+describe("runway choices and breakdown", () => {
+  const budgets: RunwayBudget[] = [
+    {
+      monthStart: "2026-09-01",
+      expectedIncomeCentavos: 300_000,
+      items: [{ categoryId: "fun", plannedCentavos: 50_000 }],
+    },
+    {
+      monthStart: "2026-08-01",
+      expectedIncomeCentavos: 280_000,
+      items: [
+        { categoryId: "food", plannedCentavos: 120_000 },
+        { categoryId: "fun", plannedCentavos: 40_000 },
+      ],
+    },
+  ];
+  const categories = [
+    ...source().categories,
+    { id: "fun", name: "Fun", isEssential: false, isSystem: false },
+  ];
+
+  it("falls back to the newest budget that plans a selected essential", () => {
+    expect(pickRunwayBudget(budgets, categories)?.monthStart).toBe(
+      "2026-08-01",
+    );
+    expect(
+      pickRunwayBudget(
+        budgets,
+        categories.map((category) => ({ ...category, isEssential: true })),
+      )?.monthStart,
+    ).toBe("2026-09-01");
+    expect(
+      pickRunwayBudget(
+        budgets,
+        categories.map((category) => ({ ...category, isEssential: false })),
+      ),
+    ).toBeNull();
+  });
+
+  it("previews new choices the way the server would load them", () => {
+    const base = source({ monthlyTotals: [], categories });
+    const preview = applyRunwayChoices(base, budgets, {
+      accountIds: [],
+      categoryIds: ["fun"],
+      targetMonths: 6,
+    });
+
+    expect(preview.accounts[0]?.includeInRunway).toBe(false);
+    expect(
+      preview.categories
+        .filter((category) => category.isEssential)
+        .map(({ id }) => id),
+    ).toEqual(["fun"]);
+    expect(preview.budget?.monthStart).toBe("2026-09-01");
+    expect(preview.targetMonths).toBe(6);
+    expect(calculateRunway(preview, september).status).toBe(
+      "missing_liquid_accounts",
+    );
+
+    const withAccount = calculateRunway(
+      applyRunwayChoices(base, budgets, {
+        accountIds: ["cash"],
+        categoryIds: ["fun"],
+        targetMonths: 6,
+      }),
+      september,
+    );
+    expect(withAccount).toMatchObject({
+      status: "ready",
+      baselineSource: "budget",
+      monthlyEssentialCentavos: 50_000,
+      targetMonths: 6,
+    });
+    expect(base.accounts[0]?.includeInRunway).toBe(true);
+  });
+
+  it("splits essential spending by category so the parts add up exactly", () => {
+    const totals = (
+      month: string,
+      amounts: Record<string, number>,
+    ): RunwaySource["monthlyTotals"] =>
+      Object.entries(amounts).map(([categoryId, amountCentavos]) => ({
+        monthStart: month,
+        categoryId,
+        transactionType: "expense" as const,
+        amountCentavos,
+      }));
+    const three = source({
+      categories: [
+        { id: "a", name: "Rent", isEssential: true, isSystem: false },
+        { id: "b", name: "Food", isEssential: true, isSystem: false },
+        { id: "c", name: "Water", isEssential: true, isSystem: false },
+        { id: "d", name: "Health", isEssential: true, isSystem: false },
+        { id: "e", name: "Fun", isEssential: false, isSystem: false },
+      ],
+      monthlyTotals: [
+        // Rent averages 100, Food 100.67, and Water 100.33: the centavo
+        // lost to rounding goes to Food, which lost the most.
+        ...totals("2026-06-01", { a: 100, b: 100, c: 100, e: 900 }),
+        ...totals("2026-07-01", { a: 100, b: 101, c: 100 }),
+        ...totals("2026-08-01", { a: 100, b: 101, c: 101 }),
+      ],
+    });
+    const analysis = calculateRunway(three, september);
+    const parts = essentialBreakdown(three, analysis);
+
+    expect(analysis.monthlyEssentialCentavos).toBe(301);
+    expect(parts.map((part) => part.category.name)).toEqual([
+      "Food",
+      "Rent",
+      "Water",
+      "Health",
+    ]);
+    expect(parts.map((part) => part.monthlyCentavos)).toEqual([
+      101, 100, 100, 0,
+    ]);
+    expect(parts.reduce((sum, part) => sum + part.monthlyCentavos, 0)).toBe(
+      analysis.monthlyEssentialCentavos,
+    );
+    // Every category, essential or not, for the assumption hints.
+    expect(monthlyCategoryAmounts(three, analysis).get("e")).toBe(300);
+  });
+
+  it("splits a budget baseline by its planned items", () => {
+    const fromBudget = source({
+      monthlyTotals: [],
+      categories,
+      budget: pickRunwayBudget(budgets, categories),
+    });
+    const analysis = calculateRunway(fromBudget, september);
+
+    expect(essentialBreakdown(fromBudget, analysis)).toEqual([
+      { category: categories[0], monthlyCentavos: 120_000 },
+    ]);
+    expect(monthlyCategoryAmounts(fromBudget, analysis).get("fun")).toBe(
+      40_000,
+    );
+  });
+
+  it("has nothing to split without a baseline", () => {
+    const empty = source({ monthlyTotals: [], budget: null });
+    const analysis = calculateRunway(empty, september);
+
+    expect(monthlyCategoryAmounts(empty, analysis).size).toBe(0);
+    expect(essentialBreakdown(empty, analysis)).toEqual([
+      { category: empty.categories[0], monthlyCentavos: 0 },
+    ]);
   });
 });

@@ -286,17 +286,41 @@ test.describe("authenticated ATLAS workflows", () => {
       page.getByRole("heading", { name: "Personal runway" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Saved assumptions", exact: true }),
+      page.getByRole("heading", { name: "Estimated runway" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Save assumptions" }),
+      page.getByRole("heading", {
+        name: "How the estimate stays conservative",
+      }),
     ).toBeVisible();
 
-    const dimensions = await page.evaluate(() => ({
-      clientWidth: document.documentElement.clientWidth,
-      scrollWidth: document.documentElement.scrollWidth,
-    }));
-    expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+    const fits = async () => {
+      const dimensions = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(dimensions.scrollWidth).toBeLessThanOrEqual(
+        dimensions.clientWidth,
+      );
+    };
+    await fits();
+
+    // With an estimate the hero edits assumptions; while one is missing it
+    // offers the choice that fixes it, unless an account must be added first.
+    const edit = page
+      .getByRole("button", {
+        name: /^(Edit assumptions|Choose accounts|Choose essentials|Review assumptions)$/,
+      })
+      .first();
+    if (await edit.isVisible()) {
+      await edit.click();
+      const sheet = page.getByRole("dialog", { name: "Assumptions" });
+      await expect(sheet).toBeVisible();
+      await expect(
+        sheet.getByRole("button", { name: "Save assumptions" }),
+      ).toBeVisible();
+      await fits();
+    }
   });
 
   test("mobile shell fits and exposes every destination", async ({ page }) => {
