@@ -1,0 +1,21 @@
+/*
+ * The Timeline's motion. Bars rise from the baseline on arrival; text never
+ * animates, so contrast checks hold.
+ */
+
+@keyframes rise {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+.rise {
+  transform-origin: bottom;
+  animation: rise 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+}
