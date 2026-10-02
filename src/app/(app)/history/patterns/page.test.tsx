@@ -9,6 +9,7 @@ vi.mock("@/lib/history/server", () => ({
 }));
 vi.mock("@/components/privacy/privacy-provider", () => ({
   SensitiveValue: ({ children }: { children: React.ReactNode }) => children,
+  usePrivacyMode: () => ({ hidden: false }),
 }));
 
 afterEach(() => {
@@ -54,6 +55,22 @@ describe("recorded patterns page", () => {
     expect(html).toContain("Monthly values behind this association");
     expect(html).toContain("/money/transactions");
     expect(html).toContain("/tasks");
+    expect(html).toContain("1 pattern found");
+    // Months read as months, and the coefficient keeps its sign.
+    expect(html).toContain("Feb 2025");
+    expect(html).not.toContain("2025-02-01</th>");
+  });
+
+  it("names why each tested pair was held back", async () => {
+    history.load.mockResolvedValue([]);
+    const container = document.createElement("div");
+    container.innerHTML = renderToStaticMarkup(await PatternsPage());
+    expect(container.textContent).toMatch(/Not enough history.*15 pairs/);
+    expect(
+      container.querySelectorAll(
+        'table[class*="border-separate"] td span[title]',
+      ),
+    ).toHaveLength(15);
   });
 
   it("withholds findings when history is unavailable", async () => {
