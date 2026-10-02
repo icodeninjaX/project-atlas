@@ -1,96 +1,115 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive,
   BookOpen,
-  Brain,
-  Eye,
-  Pencil,
+  CalendarCheck2,
+  GraduationCap,
   Plus,
-  RotateCcw,
-  Search,
-  Sparkles,
-  X,
+  SearchX,
+  Sprout,
+  type LucideIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { CollapsibleFilters } from "@/components/shared/collapsible-filters";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { surfaceClass } from "@/components/dashboard/dashboard-card";
+import { SpotlightArea } from "@/components/dashboard/spotlight-area";
+import todayStyles from "@/components/dashboard/today.module.css";
+import { ConceptFormSheet } from "@/components/knowledge/concept-form-sheet";
+import { ConceptLibrary } from "@/components/knowledge/concept-library";
+import { ConceptPanel } from "@/components/knowledge/concept-panel";
 import {
-  createKnowledgeConceptAction,
-  reviewKnowledgeConceptAction,
-  setKnowledgeConceptArchivedAction,
-  type KnowledgeActionState,
-  updateKnowledgeConceptAction,
-} from "@/lib/knowledge/actions";
-import { useScrollStrip } from "@/components/shared/scroll-strip";
+  KnowledgeEmptyHero,
+  KnowledgeHero,
+} from "@/components/knowledge/knowledge-hero";
+import { KnowledgeToolbar } from "@/components/knowledge/knowledge-toolbar";
+import {
+  ReviewSession,
+  type SessionMode,
+} from "@/components/knowledge/review-session";
+import { MoneySheet } from "@/components/money/money-sheet";
+import { Button } from "@/components/ui/button";
+import {
+  conceptCategories,
+  conceptReviews,
+  filterConcepts,
+  isDue,
+  libraryGroups,
+  memorySummary,
+  recallStats,
+  reviewForecast,
+  reviewStreak,
+  sortConcepts,
+  viewCounts,
+  whenPhrase,
+  type KnowledgeConcept,
+  type KnowledgeReview,
+  type KnowledgeSort,
+  type KnowledgeView,
+} from "@/lib/knowledge/view";
+import { cn } from "@/lib/utils";
 
-export type KnowledgeConcept = {
-  id: string;
+export type { KnowledgeConcept, KnowledgeReview } from "@/lib/knowledge/view";
+
+/** Where the selected concept sits beside the list instead of in a sheet. */
+const WIDE = "(min-width: 80rem)";
+
+function isWide() {
+  return typeof window === "undefined" || !window.matchMedia
+    ? true
+    : window.matchMedia(WIDE).matches;
+}
+
+function scrollToConcept(conceptId: string) {
+  document
+    .getElementById(`concept-${conceptId}`)
+    ?.scrollIntoView({ block: "center" });
+}
+
+function LibraryEmpty({
+  icon: Icon,
+  title,
+  detail,
+  action,
+}: {
+  icon: LucideIcon;
   title: string;
-  notes: string;
-  category: string;
-  tags: string[];
-  example: string | null;
-  personal_explanation: string | null;
-  confidence: number;
-  review_count: number;
-  interval_days: number;
-  last_reviewed_at: string | null;
-  next_review_at: string;
-  archived_at: string | null;
-  created_at: string;
-};
-
-export type KnowledgeReview = {
-  id: string;
-  concept_id: string;
-  outcome: "again" | "hard" | "good" | "easy";
-  reviewed_at: string;
-  next_review_at: string;
-  next_interval_days: number;
-};
-
-const initialState: KnowledgeActionState = { success: false, message: "" };
-const outcomes = [
-  ["again", "Again", "10 min"],
-  ["hard", "Hard", "1+ day"],
-  ["good", "Good", "3+ days"],
-  ["easy", "Easy", "7+ days"],
-] as const;
-
-type KnowledgeView = "all" | "due" | "weak" | "archived";
-type KnowledgeSort = "next-review" | "newest" | "title";
-
-const primaryViews: Array<{
-  value: Exclude<KnowledgeView, "archived">;
-  label: string;
-}> = [
-  { value: "all", label: "All concepts" },
-  { value: "due", label: "Due for review" },
-  { value: "weak", label: "Needs practice" },
-];
-
-function dateLabel(value: string | null) {
-  if (!value) return "Not reviewed yet";
-  return new Date(value).toLocaleDateString("en-PH", {
-    timeZone: "Asia/Manila",
-    dateStyle: "medium",
-  });
+  detail?: string;
+  action?: { label: string; onClick: () => void };
+}) {
+  return (
+    <div
+      className={cn(
+        surfaceClass,
+        "bg-card/80 relative grid min-h-56 place-items-center rounded-[1.5rem] p-6 text-center",
+      )}
+    >
+      <div className="max-w-sm">
+        <span className="bg-primary/10 text-primary ring-primary/15 mx-auto grid size-11 place-items-center rounded-2xl ring-1">
+          <Icon aria-hidden="true" className="size-5" />
+        </span>
+        <p className="mt-4 font-semibold">{title}</p>
+        {detail ? (
+          <p className="text-muted-foreground mt-1.5 text-sm leading-6">
+            {detail}
+          </p>
+        ) : null}
+        {action ? (
+          <Button
+            type="button"
+            size="sm"
+            className="mt-4"
+            onClick={action.onClick}
+          >
+            {action.label}
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
-function sortConcepts(concepts: KnowledgeConcept[], sort: KnowledgeSort) {
-  return [...concepts].sort((left, right) => {
-    if (sort === "title") return left.title.localeCompare(right.title);
-    if (sort === "newest")
-      return right.created_at.localeCompare(left.created_at);
-    return left.next_review_at.localeCompare(right.next_review_at);
-  });
-}
-
+/** The Knowledge page body, from data the page has already loaded. */
 export function KnowledgeWorkspace({
   concepts,
   reviews,
@@ -107,111 +126,94 @@ export function KnowledgeWorkspace({
   initialQuery: string;
   initialCategory: string;
   initialSort: KnowledgeSort;
+  /** Opened from a link elsewhere in ATLAS. */
   initialConceptId?: string;
   nowIso: string;
 }) {
-  const [view, setView] = useState(initialView);
+  const linked = initialConceptId
+    ? concepts.find((item) => item.id === initialConceptId)
+    : undefined;
+  // A link to an archived concept opens the archive, where it is listed.
+  const [view, setView] = useState<KnowledgeView>(
+    linked?.archived_at ? "archived" : initialView,
+  );
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);
   const [sort, setSort] = useState<KnowledgeSort>(initialSort);
-  const [creating, setCreating] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [activeId, setActiveId] = useState(
-    initialConceptId ?? concepts[0]?.id ?? "",
+  const [activeId, setActiveId] = useState(linked?.id ?? "");
+  const [highlightId, setHighlightId] = useState(linked?.id);
+  // A concept just rated stays in view, though it may have left the list,
+  // until the reader moves on.
+  const [heldId, setHeldId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [form, setForm] = useState<{ open: boolean; conceptId: string | null }>(
+    { open: false, conceptId: null },
   );
-  const [revealed, setRevealed] = useState(false);
-  const [createState, createAction, createPending] = useActionState(
-    createKnowledgeConceptAction,
-    initialState,
-  );
-  const [reviewState, reviewAction, reviewPending] = useActionState(
-    reviewKnowledgeConceptAction,
-    initialState,
-  );
-  const [updateState, updateAction, updatePending] = useActionState(
-    updateKnowledgeConceptAction,
-    initialState,
-  );
-  const [archiveState, archiveAction, archivePending] = useActionState(
-    setKnowledgeConceptArchivedAction,
-    initialState,
-  );
+  const [session, setSession] = useState<{
+    key: number;
+    ids: string[];
+    mode: SessionMode;
+  } | null>(null);
+  const pendingScroll = useRef<string | null>(null);
   const pathname = usePathname();
   const router = useRouter();
-  useEffect(() => {
-    const state = archiveState.message
-      ? archiveState
-      : updateState.message
-        ? updateState
-        : reviewState.message
-          ? reviewState
-          : createState;
-    if (!state.message) return;
-    if (state.success) toast.success(state.message);
-    else toast.error(state.message);
-  }, [archiveState, createState, reviewState, updateState]);
 
-  const now = new Date(nowIso).getTime();
-  const activeConcepts = useMemo(
-    () => concepts.filter((item) => !item.archived_at),
-    [concepts],
+  const counts = useMemo(
+    () => viewCounts(concepts, nowIso),
+    [concepts, nowIso],
   );
-  const dueConcepts = useMemo(
-    () =>
-      activeConcepts.filter(
-        (item) => new Date(item.next_review_at).getTime() <= now,
-      ),
-    [activeConcepts, now],
-  );
-  const categories = useMemo(
-    () =>
-      [
-        ...new Set(
-          concepts.map((item) => item.category.trim()).filter(Boolean),
-        ),
-      ].sort((left, right) => left.localeCompare(right)),
-    [concepts],
-  );
+  const categories = useMemo(() => conceptCategories(concepts), [concepts]);
   const selectedCategory =
     category === "all" || categories.includes(category) ? category : "all";
-  const filtered = useMemo(() => {
-    let visible = activeConcepts;
-    if (view === "archived")
-      visible = concepts.filter((item) => item.archived_at);
-    if (view === "due") visible = dueConcepts;
-    if (view === "weak")
-      visible = activeConcepts.filter((item) => item.confidence <= 2);
+  const visible = useMemo(
+    () =>
+      sortConcepts(
+        filterConcepts(concepts, {
+          view,
+          query,
+          category: selectedCategory,
+          nowIso,
+        }),
+        sort,
+      ),
+    [concepts, nowIso, query, selectedCategory, sort, view],
+  );
+  const groups = useMemo(
+    () => libraryGroups(visible, { view, sort, nowIso }),
+    [nowIso, sort, view, visible],
+  );
+  const summary = useMemo(
+    () => memorySummary(concepts, nowIso),
+    [concepts, nowIso],
+  );
+  const forecast = useMemo(
+    () => reviewForecast(concepts, nowIso),
+    [concepts, nowIso],
+  );
+  const recall = useMemo(() => recallStats(reviews, nowIso), [nowIso, reviews]);
+  const streak = useMemo(
+    () => reviewStreak(reviews, nowIso),
+    [nowIso, reviews],
+  );
 
-    const normalizedQuery = query.trim().toLocaleLowerCase();
-    if (normalizedQuery) {
-      visible = visible.filter((item) =>
-        [item.title, item.category, ...item.tags].some((value) =>
-          value.toLocaleLowerCase().includes(normalizedQuery),
-        ),
-      );
-    }
-    if (selectedCategory !== "all") {
-      visible = visible.filter((item) => item.category === selectedCategory);
-    }
-    return sortConcepts(visible, sort);
-  }, [
-    activeConcepts,
-    concepts,
-    dueConcepts,
-    query,
-    selectedCategory,
-    sort,
-    view,
-  ]);
-  const active = filtered.find((item) => item.id === activeId) ?? filtered[0];
-  const isActiveSelection = active?.id === activeId;
-  const revealedActive = isActiveSelection && revealed;
-  const editingActive = isActiveSelection && editing;
-  const activeReviews = reviews.filter(
-    (review) => review.concept_id === active?.id,
+  const active =
+    visible.find((item) => item.id === activeId) ??
+    (heldId && heldId === activeId
+      ? concepts.find((item) => item.id === heldId)
+      : undefined) ??
+    visible[0];
+  const activeReviews = useMemo(
+    () => (active ? conceptReviews(reviews, active.id) : []),
+    [active, reviews],
+  );
+  const nextDue = visible.find(
+    (item) => item.id !== active?.id && isDue(item, nowIso),
   );
   const filtersActive =
     query.trim() !== "" || selectedCategory !== "all" || sort !== "next-review";
+  const editing = form.conceptId
+    ? (concepts.find((item) => item.id === form.conceptId) ?? null)
+    : null;
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -223,599 +225,273 @@ export function KnowledgeWorkspace({
     router.replace(nextUrl as never);
   }, [pathname, query, router, selectedCategory, sort, view]);
 
-  const selectView = (nextView: KnowledgeView) => {
-    setView(nextView);
-    setRevealed(false);
-    setEditing(false);
+  // Opened from a link: bring its row into view, and below the wide layout
+  // open the concept itself.
+  const linkedId = linked?.id;
+  useEffect(() => {
+    if (!linkedId) return;
+    scrollToConcept(linkedId);
+    if (isWide()) return;
+    const frame = requestAnimationFrame(() => setSheetOpen(true));
+    return () => cancelAnimationFrame(frame);
+  }, [linkedId]);
+
+  // A concept just added scrolls into view once it arrives in the list.
+  useEffect(() => {
+    const conceptId = pendingScroll.current;
+    if (!conceptId || !visible.some((item) => item.id === conceptId)) return;
+    pendingScroll.current = null;
+    scrollToConcept(conceptId);
+  }, [visible]);
+
+  // The sheet gives way when the panel takes its place beside the list.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const wide = window.matchMedia(WIDE);
+    const onChange = () => {
+      if (wide.matches) setSheetOpen(false);
+    };
+    wide.addEventListener("change", onChange);
+    return () => wide.removeEventListener("change", onChange);
+  }, []);
+
+  const moveOn = () => setHeldId(null);
+  const select = (conceptId: string) => {
+    moveOn();
+    setActiveId(conceptId);
+    if (conceptId !== highlightId) setHighlightId(undefined);
+    if (!isWide()) setSheetOpen(true);
   };
-
-  const viewStrip = useRef<HTMLDivElement>(null);
-  useScrollStrip(viewStrip, { activeKey: view });
-
+  const changeView = (next: KnowledgeView) => {
+    moveOn();
+    setView(next);
+  };
+  const changeQuery = (next: string) => {
+    moveOn();
+    setQuery(next);
+  };
+  const changeCategory = (next: string) => {
+    moveOn();
+    setCategory(next);
+  };
+  const changeSort = (next: KnowledgeSort) => {
+    moveOn();
+    setSort(next);
+  };
   const clearFilters = () => {
+    moveOn();
     setQuery("");
     setCategory("all");
     setSort("next-review");
   };
+  const startSession = (mode: SessionMode) => {
+    const queue = mode === "due" ? summary.queue : summary.practice;
+    if (queue.length === 0) return;
+    setSheetOpen(false);
+    setSession({ key: Date.now(), ids: queue.map((item) => item.id), mode });
+  };
+  const openCreate = () => setForm({ open: true, conceptId: null });
+  const openEdit = (conceptId: string) => {
+    setSheetOpen(false);
+    setForm({ open: true, conceptId });
+  };
+  const onSaved = (conceptId: string | null) => {
+    if (!conceptId || form.conceptId) return;
+    // A new concept is due at once; show it where it lands.
+    moveOn();
+    if (view === "archived") setView("all");
+    setActiveId(conceptId);
+    setHighlightId(conceptId);
+    pendingScroll.current = conceptId;
+  };
+
+  const panelProps = active
+    ? {
+        concept: active,
+        reviews: activeReviews,
+        nowIso,
+        onEdit: () => openEdit(active.id),
+        onRecorded: () => setHeldId(active.id),
+        onNext: nextDue ? () => select(nextDue.id) : undefined,
+      }
+    : null;
+
+  const empty = filtersActive ? (
+    <LibraryEmpty
+      icon={SearchX}
+      title="No concepts match these filters."
+      detail="Clear the filters above to see more concepts."
+    />
+  ) : view === "due" ? (
+    <LibraryEmpty
+      icon={CalendarCheck2}
+      title="Nothing is due for review right now."
+      detail={
+        summary.nextScheduled
+          ? `Your next review is ${whenPhrase(summary.nextScheduled.next_review_at, nowIso)}.`
+          : undefined
+      }
+    />
+  ) : view === "archived" ? (
+    <LibraryEmpty
+      icon={Archive}
+      title="Your archive is empty."
+      detail="Archive a concept to pause its reviews without losing it."
+    />
+  ) : view === "weak" ? (
+    <LibraryEmpty
+      icon={Sprout}
+      title="No concepts need extra practice right now."
+      detail="Concepts you rate Again or Hard gather here."
+    />
+  ) : (
+    <LibraryEmpty
+      icon={BookOpen}
+      title="Your knowledge library is empty."
+      action={{ label: "Add a concept", onClick: openCreate }}
+    />
+  );
 
   return (
-    <div className="mt-6 space-y-5">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[
-          [dueConcepts.length, "Due now"],
-          [activeConcepts.length, "Concepts"],
-          [
-            activeConcepts.filter((item) => item.confidence >= 4).length,
-            "Strong concepts",
-          ],
-          [
-            activeConcepts.filter((item) => item.confidence <= 2).length,
-            "Needs practice",
-          ],
-        ].map(([value, label]) => (
-          <Card key={label}>
-            <CardContent className="p-4">
-              <p className="font-mono text-2xl font-semibold">{value}</p>
-              <p className="text-muted-foreground mt-1 text-xs">{label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+    <SpotlightArea className="relative isolate mx-auto w-full max-w-[1280px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <div
+        aria-hidden="true"
+        className={cn(todayStyles.aurora, todayStyles.grain)}
+      />
 
-      <section
-        aria-label="Browse concepts"
-        className={concepts.length === 0 ? "hidden" : "space-y-3"}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div
-            ref={viewStrip}
-            className="border-border bg-card flex max-w-full [scrollbar-width:none] gap-1 overflow-x-auto rounded-xl border p-1 [&::-webkit-scrollbar]:hidden"
-          >
-            {primaryViews.map(({ value, label }) => {
-              const count =
-                value === "all"
-                  ? activeConcepts.length
-                  : value === "due"
-                    ? dueConcepts.length
-                    : activeConcepts.filter((item) => item.confidence <= 2)
-                        .length;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  aria-label={`${label}, ${count} ${count === 1 ? "concept" : "concepts"}`}
-                  aria-pressed={view === value}
-                  onClick={() => selectView(value)}
-                  className={`focus-visible:ring-ring min-h-10 shrink-0 rounded-lg px-3 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none ${view === value ? "bg-primary-solid text-primary-solid-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
-                >
-                  {label}
-                  <span className="ml-1.5 font-mono text-[10px] opacity-80">
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant={view === "archived" ? "secondary" : "ghost"}
-              onClick={() =>
-                selectView(view === "archived" ? "all" : "archived")
-              }
-            >
-              <Archive className="size-3.5" />
-              Archive
-            </Button>
-            <Button onClick={() => setCreating((value) => !value)}>
-              <Plus className="size-4" />
-              Add concept
-            </Button>
-          </div>
+      <header className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
+        <div className="max-w-2xl min-w-0">
+          <p className="bg-card/60 text-primary ring-border/70 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.1em] uppercase ring-1 backdrop-blur">
+            <GraduationCap aria-hidden="true" className="size-3.5" />
+            Learning system
+          </p>
+          <h1 className="from-foreground via-foreground to-foreground/60 mt-4 bg-gradient-to-br bg-clip-text pb-[0.08em] text-[2.125rem] leading-[1.04] font-semibold tracking-[-0.05em] break-words text-transparent sm:text-[2.75rem] lg:text-[3.25rem]">
+            Knowledge
+          </h1>
+          <p className="text-muted-foreground mt-2.5 max-w-xl text-sm leading-6 text-pretty sm:text-[0.9375rem]">
+            Capture what you learn, explain it in your own words, and let spaced
+            reviews make it stick.
+          </p>
         </div>
-        <div className="border-border bg-card grid gap-3 rounded-2xl border p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(10rem,0.4fr)_minmax(10rem,0.4fr)_auto]">
-          <label className="text-muted-foreground text-xs">
-            Search concepts
-            <span className="relative mt-1 block">
-              <Search className="text-muted-foreground pointer-events-none absolute top-3.5 left-3 size-4" />
-              <Input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Title, category, or tag"
-                className="pl-9"
-              />
-            </span>
-          </label>
-          <CollapsibleFilters
-            activeCount={
-              Number(selectedCategory !== "all") +
-              Number(sort !== "next-review")
-            }
-            actions={
-              filtersActive ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="min-h-11 self-end sm:min-h-9"
-                >
-                  <X className="size-3.5" />
-                  Clear filters
-                </Button>
-              ) : null
-            }
+        {/* Until something is saved, the hero holds the only add button. */}
+        {concepts.length ? (
+          <Button
+            type="button"
+            onClick={openCreate}
+            className="self-start sm:self-auto"
           >
-            <label className="text-muted-foreground text-xs">
-              Category
-              <select
-                value={selectedCategory}
-                onChange={(event) => setCategory(event.target.value)}
-                className="border-border bg-background focus-visible:ring-ring mt-1 min-h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
-              >
-                <option value="all">All categories</option>
-                {categories.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-muted-foreground text-xs">
-              Sort by
-              <select
-                value={sort}
-                onChange={(event) =>
-                  setSort(event.target.value as KnowledgeSort)
-                }
-                className="border-border bg-background focus-visible:ring-ring mt-1 min-h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
-              >
-                <option value="next-review">Next review</option>
-                <option value="newest">Newest added</option>
-                <option value="title">Title A–Z</option>
-              </select>
-            </label>
-          </CollapsibleFilters>
-        </div>
-      </section>
-
-      {creating && (
-        <form
-          action={createAction}
-          className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-2"
-        >
-          <label className="text-muted-foreground text-xs">
-            Concept title
-            <Input
-              name="title"
-              required
-              maxLength={160}
-              className="mt-1.5"
-              placeholder="e.g. Compound interest"
-            />
-          </label>
-          <label className="text-muted-foreground text-xs">
-            Category
-            <Input
-              name="category"
-              required
-              maxLength={80}
-              className="mt-1.5"
-              placeholder="Finance, technology, career…"
-            />
-          </label>
-          <label className="text-muted-foreground text-xs sm:col-span-2">
-            Learning notes
-            <textarea
-              name="notes"
-              required
-              maxLength={10000}
-              rows={4}
-              className="border-border bg-background mt-1.5 w-full rounded-xl border p-3 text-sm"
-              placeholder="The explanation you want to remember"
-            />
-          </label>
-          <label className="text-muted-foreground text-xs">
-            Tags
-            <Input
-              name="tags"
-              className="mt-1.5"
-              placeholder="Comma-separated"
-            />
-          </label>
-          <label className="text-muted-foreground text-xs">
-            Example
-            <Input
-              name="example"
-              maxLength={2000}
-              className="mt-1.5"
-              placeholder="A concrete example"
-            />
-          </label>
-          <label className="text-muted-foreground text-xs sm:col-span-2">
-            Personal explanation
-            <textarea
-              name="personalExplanation"
-              maxLength={2000}
-              rows={2}
-              className="border-border bg-background mt-1.5 w-full rounded-xl border p-3 text-sm"
-              placeholder="How would you explain this in your own words?"
-            />
-          </label>
-          <div className="flex justify-end gap-2 sm:col-span-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setCreating(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              pending={createPending}
-              pendingLabel="Saving…"
-            >
-              Save concept
-            </Button>
-          </div>
-        </form>
-      )}
+            <Plus aria-hidden="true" className="size-4" />
+            Add concept
+          </Button>
+        ) : null}
+      </header>
 
       {concepts.length === 0 ? (
-        <div className="border-border grid min-h-72 place-items-center rounded-2xl border border-dashed p-6 text-center">
-          <div className="max-w-sm">
-            <BookOpen className="text-primary mx-auto size-7" />
-            <p className="mt-4 font-semibold">Build your knowledge library</p>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Add the first concept you want ATLAS to help you retain.
-            </p>
-            <Button className="mt-5" onClick={() => setCreating(true)}>
-              Add your first concept
-            </Button>
-          </div>
-        </div>
+        <KnowledgeEmptyHero onAdd={openCreate} />
       ) : (
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.9fr)]">
-          <Card>
-            <CardContent>
-              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <h2 className="text-lg font-semibold">
-                  {view === "due"
-                    ? "Due for review"
-                    : view === "weak"
-                      ? "Needs practice"
-                      : view === "archived"
-                        ? "Archived concepts"
-                        : "Knowledge library"}
-                </h2>
-                <p className="text-muted-foreground text-xs">
-                  {filtered.length}{" "}
-                  {filtered.length === 1 ? "concept" : "concepts"}
-                  {concepts.length === 200 && " across the 200 loaded concepts"}
-                </p>
-              </div>
-              <div className="mt-4 space-y-3">
-                {filtered.map((concept) => (
-                  <button
-                    type="button"
-                    key={concept.id}
-                    onClick={() => {
-                      setActiveId(concept.id);
-                      setRevealed(false);
-                      setEditing(false);
-                    }}
-                    className={`border-border hover:border-primary w-full rounded-xl border p-4 text-left ${active?.id === concept.id ? "bg-primary/5 border-primary" : "bg-background"}`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-semibold">{concept.title}</p>
-                        <div className="mt-1 flex flex-wrap gap-1.5">
-                          <span className="text-primary text-xs">
-                            {concept.category}
-                          </span>
-                          {concept.tags.slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[10px]"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <span className="bg-muted text-muted-foreground rounded-full px-2 py-1 font-mono text-[10px]">
-                        Confidence {concept.confidence}/5
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground mt-3 text-xs">
-                      {concept.archived_at
-                        ? "Archived"
-                        : `Next review: ${dateLabel(concept.next_review_at)}`}
-                    </p>
-                  </button>
-                ))}
-                {filtered.length === 0 && (
-                  <div className="text-muted-foreground py-12 text-center text-sm">
-                    <p>
-                      {filtersActive
-                        ? "No concepts match these filters."
-                        : view === "due"
-                          ? "Nothing is due for review right now."
-                          : view === "archived"
-                            ? "Your archive is empty."
-                            : view === "weak"
-                              ? "No concepts need extra practice right now."
-                              : "Your knowledge library is empty."}
-                    </p>
-                    {filtersActive ? (
-                      <p className="mt-2 text-xs">
-                        Clear the filters above to see more concepts.
-                      </p>
-                    ) : view === "all" ? (
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="mt-3"
-                        onClick={() => setCreating(true)}
-                      >
-                        Add a concept
-                      </Button>
-                    ) : null}
-                  </div>
+        <>
+          <KnowledgeHero
+            summary={summary}
+            forecast={forecast}
+            recall={recall}
+            streak={streak}
+            nowIso={nowIso}
+            onStart={startSession}
+            onOpen={(conceptId) => {
+              const target = concepts.find((item) => item.id === conceptId);
+              if (target && !visible.includes(target)) {
+                // Make room for it in the list before opening it.
+                setView("all");
+                setQuery("");
+                setCategory("all");
+              }
+              select(conceptId);
+              requestAnimationFrame(() => scrollToConcept(conceptId));
+            }}
+          />
+          <KnowledgeToolbar
+            view={view}
+            counts={counts}
+            query={query}
+            category={selectedCategory}
+            categories={categories}
+            sort={sort}
+            onView={changeView}
+            onQuery={changeQuery}
+            onCategory={changeCategory}
+            onSort={changeSort}
+            onClear={clearFilters}
+          />
+          <div
+            className={cn(
+              "mt-8 grid gap-6",
+              panelProps &&
+                "xl:grid-cols-[minmax(0,1fr)_minmax(22rem,25rem)] xl:items-start",
+            )}
+          >
+            <ConceptLibrary
+              groups={groups}
+              activeId={active?.id}
+              highlightId={highlightId}
+              nowIso={nowIso}
+              onSelect={select}
+              empty={empty}
+            />
+            {panelProps ? (
+              <aside
+                aria-label="Selected concept"
+                className={cn(
+                  surfaceClass,
+                  "bg-card/90 relative [scrollbar-width:thin] rounded-[1.5rem] p-5 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] max-xl:hidden sm:p-6 xl:sticky xl:top-6 xl:max-h-[calc(100dvh-3rem)] xl:overflow-y-auto xl:overscroll-contain",
                 )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {active && active.archived_at && (
-            <Card className="xl:sticky xl:top-6 xl:self-start">
-              <CardContent>
-                <h2 className="text-lg font-semibold">{active.title}</h2>
-                <p className="text-primary mt-1 text-xs">{active.category}</p>
-                <p className="mt-5 text-sm leading-6 whitespace-pre-wrap">
-                  {active.notes}
-                </p>
-                <form action={archiveAction} className="mt-5">
-                  <input type="hidden" name="conceptId" value={active.id} />
-                  <input type="hidden" name="archived" value="false" />
-                  <Button
-                    type="submit"
-                    pending={archivePending}
-                    pendingLabel="Restoring…"
-                  >
-                    <RotateCcw className="size-4" />
-                    Restore concept
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-          {active && !active.archived_at && (
-            <Card className="xl:sticky xl:top-6 xl:self-start">
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Brain className="text-primary size-5" />
-                    <h2 className="text-lg font-semibold">Active recall</h2>
-                  </div>
-                  <span className="text-muted-foreground text-xs">
-                    {active.review_count} reviews
-                  </span>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => {
-                      if (active) setActiveId(active.id);
-                      setEditing(!editingActive);
-                    }}
-                  >
-                    <Pencil className="size-3.5" />
-                    Edit
-                  </Button>
-                  <form action={archiveAction}>
-                    <input type="hidden" name="conceptId" value={active.id} />
-                    <input type="hidden" name="archived" value="true" />
-                    <Button
-                      type="submit"
-                      size="sm"
-                      variant="ghost"
-                      pending={archivePending}
-                      pendingLabel="Archiving…"
-                    >
-                      <Archive className="size-3.5" />
-                      Archive
-                    </Button>
-                  </form>
-                </div>
-                {editingActive && (
-                  <form
-                    action={updateAction}
-                    className="border-border mt-4 grid gap-3 rounded-xl border p-3"
-                  >
-                    <input type="hidden" name="conceptId" value={active.id} />
-                    <label className="text-muted-foreground text-xs">
-                      Title
-                      <Input
-                        name="title"
-                        required
-                        maxLength={160}
-                        defaultValue={active.title}
-                        className="mt-1"
-                      />
-                    </label>
-                    <label className="text-muted-foreground text-xs">
-                      Category
-                      <Input
-                        name="category"
-                        required
-                        maxLength={80}
-                        defaultValue={active.category}
-                        className="mt-1"
-                      />
-                    </label>
-                    <label className="text-muted-foreground text-xs">
-                      Notes
-                      <textarea
-                        name="notes"
-                        required
-                        maxLength={10000}
-                        rows={4}
-                        defaultValue={active.notes}
-                        className="border-border bg-background mt-1 w-full rounded-xl border p-3 text-sm"
-                      />
-                    </label>
-                    <label className="text-muted-foreground text-xs">
-                      Tags
-                      <Input
-                        name="tags"
-                        defaultValue={active.tags.join(", ")}
-                        className="mt-1"
-                      />
-                    </label>
-                    <label className="text-muted-foreground text-xs">
-                      Example
-                      <Input
-                        name="example"
-                        maxLength={2000}
-                        defaultValue={active.example ?? ""}
-                        className="mt-1"
-                      />
-                    </label>
-                    <label className="text-muted-foreground text-xs">
-                      Personal explanation
-                      <textarea
-                        name="personalExplanation"
-                        maxLength={2000}
-                        rows={2}
-                        defaultValue={active.personal_explanation ?? ""}
-                        className="border-border bg-background mt-1 w-full rounded-xl border p-3 text-sm"
-                      />
-                    </label>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => setEditing(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        pending={updatePending}
-                        pendingLabel="Saving…"
-                      >
-                        Save changes
-                      </Button>
-                    </div>
-                  </form>
-                )}
-                {!editingActive && (
-                  <>
-                    <p className="mt-6 text-lg font-semibold">
-                      Explain “{active.title}” in your own words.
-                    </p>
-                    <form action={reviewAction} className="mt-4">
-                      <input type="hidden" name="conceptId" value={active.id} />
-                      <textarea
-                        name="recalledAnswer"
-                        rows={5}
-                        className="border-border bg-background w-full rounded-xl border p-3 text-sm"
-                        placeholder="Type your answer before revealing the notes…"
-                      />
-                      {!revealedActive ? (
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          className="mt-3"
-                          onClick={() => {
-                            setActiveId(active.id);
-                            setRevealed(true);
-                          }}
-                        >
-                          <Eye className="size-4" />
-                          Reveal notes
-                        </Button>
-                      ) : (
-                        <div className="bg-muted mt-3 rounded-xl p-4">
-                          <p className="text-primary text-[11px] font-semibold tracking-wider uppercase">
-                            Learning notes
-                          </p>
-                          <p className="mt-2 text-sm leading-6 whitespace-pre-wrap">
-                            {active.notes}
-                          </p>
-                          {active.example && (
-                            <p className="text-muted-foreground mt-3 text-xs">
-                              <strong>Example:</strong> {active.example}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                      <fieldset
-                        disabled={!revealedActive || reviewPending}
-                        className="mt-5"
-                      >
-                        <legend className="text-muted-foreground mb-2 text-xs">
-                          How well did you recall it?
-                        </legend>
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                          {outcomes.map(([value, label, interval]) => (
-                            <button
-                              key={value}
-                              name="outcome"
-                              value={value}
-                              className="border-border hover:border-primary min-h-14 rounded-xl border px-2 text-xs font-semibold disabled:opacity-40"
-                            >
-                              <span className="block">{label}</span>
-                              <span className="text-muted-foreground mt-1 block font-mono text-[9px]">
-                                {interval}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      </fieldset>
-                    </form>
-                    <p className="text-muted-foreground mt-4 flex gap-2 text-[11px] leading-4">
-                      <Sparkles className="size-3.5 shrink-0" />
-                      ATLAS schedules reviews deterministically from your last
-                      interval and rating.
-                    </p>
-                    {activeReviews.length > 0 && (
-                      <section className="border-border mt-5 border-t pt-4">
-                        <h3 className="text-sm font-semibold">
-                          Review history
-                        </h3>
-                        <ol className="mt-3 space-y-2">
-                          {activeReviews.slice(0, 8).map((review) => (
-                            <li
-                              key={review.id}
-                              className="flex items-center justify-between gap-3 text-xs"
-                            >
-                              <span className="capitalize">
-                                {review.outcome}
-                              </span>
-                              <span className="text-muted-foreground">
-                                {dateLabel(review.reviewed_at)} ·{" "}
-                                {review.next_interval_days === 0
-                                  ? "10 min"
-                                  : `${review.next_interval_days} days`}
-                              </span>
-                            </li>
-                          ))}
-                        </ol>
-                      </section>
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              >
+                <ConceptPanel {...panelProps} onArchived={moveOn} />
+              </aside>
+            ) : null}
+          </div>
+        </>
       )}
-    </div>
+
+      {panelProps ? (
+        <MoneySheet
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          eyebrow={`Knowledge / ${panelProps.concept.category}`}
+          title={panelProps.concept.title}
+          closeLabel="Close concept"
+        >
+          <ConceptPanel
+            {...panelProps}
+            showTitle={false}
+            onArchived={() => {
+              moveOn();
+              setSheetOpen(false);
+            }}
+          />
+        </MoneySheet>
+      ) : null}
+
+      <ConceptFormSheet
+        open={form.open}
+        onOpenChange={(open) => setForm((current) => ({ ...current, open }))}
+        concept={editing}
+        categories={categories}
+        onSaved={onSaved}
+      />
+
+      {session ? (
+        <ReviewSession
+          key={session.key}
+          open
+          onOpenChange={(open) => {
+            if (!open) setSession(null);
+          }}
+          ids={session.ids}
+          concepts={concepts}
+          mode={session.mode}
+          nowIso={nowIso}
+        />
+      ) : null}
+    </SpotlightArea>
   );
 }
