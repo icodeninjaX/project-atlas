@@ -39,7 +39,7 @@ export function CollapsibleFilters({
       >
         {children}
       </div>
-      <div className="flex gap-2 sm:contents">
+      <div className="flex flex-wrap gap-2 sm:contents">
         <Button
           type="button"
           variant="secondary"

@@ -130,7 +130,7 @@ test.describe("authenticated ATLAS workflows", () => {
       completedEvent.getByRole("heading", { name: title }),
     ).toBeVisible();
     await expect(
-      completedEvent.getByRole("link", { name: "Open source" }),
+      completedEvent.getByRole("link", { name: `Open in Tasks: ${title}` }),
     ).toBeVisible();
 
     const dimensions = await page.evaluate(() => ({
