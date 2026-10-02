@@ -20,6 +20,11 @@
   --color-destructive: var(--destructive);
   --color-positive: var(--positive);
   --color-sidebar: var(--sidebar);
+  /* Weekly review scores share the validated money series palette, so a
+     score keeps its color in both themes. */
+  --color-score-overall: var(--money-series-1);
+  --color-score-stress: var(--money-series-2);
+  --color-score-energy: var(--money-series-3);
   --font-sans: var(--font-app);
   /* Figures use the UI face with tabular numerals: aligned like a ledger,
      without the terminal feel of a monospace face. */
