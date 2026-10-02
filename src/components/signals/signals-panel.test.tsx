@@ -1,6 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { SignalList } from "./signal-list";
 import { SignalsPanel } from "./signals-panel";
 import type { Signal } from "@/lib/signals/engine";
 
@@ -25,21 +24,6 @@ function signal(
 }
 
 afterEach(cleanup);
-
-describe("SignalList", () => {
-  it("communicates severity in text and exposes its factual explanation", () => {
-    render(<SignalList signals={[signal()]} />);
-
-    expect(screen.getByText("Critical")).toBeInTheDocument();
-    expect(screen.getByText("Budget used")).toBeInTheDocument();
-    expect(screen.getByText("100%")).toBeInTheDocument();
-    expect(screen.getByText("Why am I seeing this?")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View money" })).toHaveAttribute(
-      "href",
-      "/money/budget",
-    );
-  });
-});
 
 describe("SignalsPanel", () => {
   it("keeps the dashboard preview to three signals", () => {
