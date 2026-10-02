@@ -68,7 +68,7 @@ export function SignalsPanel({
         </div>
       ) : (
         <div className="ring-border bg-background/40 mt-5 overflow-hidden rounded-2xl ring-1">
-          <SignalList signals={visibleSignals} compact />
+          <SignalList signals={visibleSignals} />
         </div>
       )}
     </section>
