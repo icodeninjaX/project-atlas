@@ -7,7 +7,22 @@ import {
   knowledgeReviewSchema,
 } from "@/lib/validation/schemas";
 
-export type KnowledgeActionState = { success: boolean; message: string };
+export type KnowledgeReviewResult = {
+  conceptId: string;
+  outcome: "again" | "hard" | "good" | "easy";
+  intervalDays: number;
+  nextReviewAt: string;
+  confidence: number;
+};
+
+export type KnowledgeActionState = {
+  success: boolean;
+  message: string;
+  /** The concept a create saved, so the page can select it. */
+  conceptId?: string;
+  /** The schedule a review set, so the reviewer sees it at once. */
+  review?: KnowledgeReviewResult;
+};
 
 async function authenticatedClient() {
   const supabase = await createClient();
@@ -39,20 +54,28 @@ export async function createKnowledgeConceptAction(
       message: result.error.issues[0]?.message ?? "Check the concept.",
     };
   }
-  const { error } = await context.supabase.from("knowledge_concepts").insert({
-    user_id: context.user.id,
-    title: result.data.title,
-    notes: result.data.notes,
-    category: result.data.category,
-    tags: result.data.tags,
-    example: result.data.example ?? null,
-    personal_explanation: result.data.personalExplanation ?? null,
-  });
+  const { data, error } = await context.supabase
+    .from("knowledge_concepts")
+    .insert({
+      user_id: context.user.id,
+      title: result.data.title,
+      notes: result.data.notes,
+      category: result.data.category,
+      tags: result.data.tags,
+      example: result.data.example ?? null,
+      personal_explanation: result.data.personalExplanation ?? null,
+    })
+    .select("id")
+    .single();
   if (error)
     return { success: false, message: "The concept could not be saved." };
   revalidatePath("/knowledge");
   revalidatePath("/search");
-  return { success: true, message: "Concept added to your library." };
+  return {
+    success: true,
+    message: "Concept added to your library.",
+    conceptId: data.id,
+  };
 }
 
 function parseConceptForm(formData: FormData) {
@@ -116,18 +139,31 @@ export async function reviewKnowledgeConceptAction(
     return { success: false, message: "Choose a valid review outcome." };
   const context = await authenticatedClient();
   if (!context) return { success: false, message: "Your session expired." };
-  const { error } = await context.supabase.rpc("review_knowledge_concept", {
-    p_concept_id: result.data.conceptId,
-    p_outcome: result.data.outcome,
-    p_recalled_answer: result.data.recalledAnswer ?? null,
-  });
+  const { data, error } = await context.supabase.rpc(
+    "review_knowledge_concept",
+    {
+      p_concept_id: result.data.conceptId,
+      p_outcome: result.data.outcome,
+      p_recalled_answer: result.data.recalledAnswer ?? null,
+    },
+  );
   if (error)
     return { success: false, message: "The review could not be recorded." };
   revalidatePath("/knowledge");
   revalidatePath("/settings/activity");
+  const schedule = data?.[0];
   return {
     success: true,
     message: "Review recorded. Your schedule is updated.",
+    review: schedule
+      ? {
+          conceptId: result.data.conceptId,
+          outcome: result.data.outcome,
+          intervalDays: schedule.interval_days,
+          nextReviewAt: schedule.next_review_at,
+          confidence: schedule.confidence,
+        }
+      : undefined,
   };
 }
 

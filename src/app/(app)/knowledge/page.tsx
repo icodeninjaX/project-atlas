@@ -1,9 +1,5 @@
-import {
-  KnowledgeWorkspace,
-  type KnowledgeConcept,
-  type KnowledgeReview,
-} from "@/components/knowledge/knowledge-workspace";
-import { PageHeading } from "@/components/shared/page-heading";
+import { KnowledgeWorkspace } from "@/components/knowledge/knowledge-workspace";
+import type { KnowledgeConcept, KnowledgeReview } from "@/lib/knowledge/view";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Knowledge" };
@@ -71,19 +67,12 @@ export default async function KnowledgePage({
       ])
     : [{ data: [] }, { data: [] }];
   return (
-    <div className="mx-auto max-w-[1280px] p-4 sm:p-6 lg:p-8">
-      <PageHeading
-        eyebrow="Learning system"
-        title="Knowledge"
-        description="Remember what matters, one review at a time."
-      />
-      <KnowledgeWorkspace
-        concepts={(conceptResult.data ?? []) as KnowledgeConcept[]}
-        reviews={(reviewResult.data ?? []) as KnowledgeReview[]}
-        {...browseState}
-        initialConceptId={params.highlight}
-        nowIso={new Date().toISOString()}
-      />
-    </div>
+    <KnowledgeWorkspace
+      concepts={(conceptResult.data ?? []) as KnowledgeConcept[]}
+      reviews={(reviewResult.data ?? []) as KnowledgeReview[]}
+      {...browseState}
+      initialConceptId={params.highlight}
+      nowIso={new Date().toISOString()}
+    />
   );
 }

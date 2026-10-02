@@ -1,0 +1,33 @@
+/*
+ * Knowledge's motion. Bars rise from the baseline, revealed notes and new
+ * session cards settle in from below. Only transforms animate, never
+ * opacity, so text keeps its contrast from the first frame.
+ */
+
+@keyframes rise {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes settle {
+  from {
+    transform: translateY(0.5rem);
+  }
+}
+
+.rise {
+  transform-origin: bottom;
+  animation: rise 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.settle {
+  animation: settle 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .settle {
+    animation: none;
+  }
+}
