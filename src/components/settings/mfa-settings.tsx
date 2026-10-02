@@ -12,6 +12,10 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  FormFeedback,
+  StatusChip,
+} from "@/components/settings/settings-chrome";
 import { createClient } from "@/lib/supabase/client";
 
 type Enrollment = {
@@ -172,22 +176,34 @@ export function MfaSettings() {
   };
 
   return (
-    <div className="border-border mt-5 border-t pt-5">
+    <div className="bg-background/55 ring-border/80 relative mt-2.5 overflow-hidden rounded-2xl p-3.5 ring-1 sm:p-4">
       <div className="flex items-start gap-3">
-        <span className="bg-primary/10 text-primary grid size-9 shrink-0 place-items-center rounded-xl">
+        <span
+          aria-hidden="true"
+          className={
+            verifiedFactor
+              ? "bg-positive/12 text-positive ring-positive/25 grid size-9 shrink-0 place-items-center rounded-xl ring-1"
+              : "bg-muted/80 text-muted-foreground ring-border/80 grid size-9 shrink-0 place-items-center rounded-xl ring-1"
+          }
+        >
           <ShieldCheck className="size-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Authenticator app</p>
+          <p className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+            Authenticator app
+            <StatusChip tone={verifiedFactor ? "positive" : "caution"}>
+              {verifiedFactor ? "Protected" : "Recommended"}
+            </StatusChip>
+          </p>
           <p className="text-muted-foreground mt-1 text-xs leading-5">
             Require a rotating 6-digit code after your password. ATLAS enforces
             the stronger session before opening private pages.
           </p>
 
           {verifiedFactor ? (
-            <div className="border-primary/25 bg-primary/5 mt-4 rounded-xl border p-4">
-              <p className="text-primary flex items-center gap-2 text-sm font-semibold">
-                <KeyRound className="size-4" />
+            <div className="bg-positive/[0.06] ring-positive/20 mt-4 rounded-xl p-3.5 ring-1">
+              <p className="text-positive flex items-center gap-2 text-sm font-semibold">
+                <KeyRound aria-hidden="true" className="size-4" />
                 Two-step verification enabled
               </p>
               <p className="text-muted-foreground mt-1 text-xs">
@@ -218,10 +234,20 @@ export function MfaSettings() {
               </div>
             </div>
           ) : enrollment ? (
-            <div className="border-border bg-background mt-4 rounded-xl border p-4">
-              <ol className="text-muted-foreground space-y-1 text-xs leading-5">
-                <li>1. Scan the code with an authenticator app.</li>
-                <li>2. Enter the current 6-digit code to finish.</li>
+            <div className="bg-card/70 ring-border/80 mt-4 rounded-xl p-3.5 ring-1 sm:p-4">
+              <ol className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1.5 text-xs leading-5">
+                <li className="flex items-center gap-2">
+                  <span className="bg-primary/12 text-primary grid size-5 place-items-center rounded-full font-mono text-[10px] font-semibold">
+                    1
+                  </span>
+                  Scan the code with an authenticator app.
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="bg-primary/12 text-primary grid size-5 place-items-center rounded-full font-mono text-[10px] font-semibold">
+                    2
+                  </span>
+                  Enter the current 6-digit code to finish.
+                </li>
               </ol>
               <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
                 <Image
@@ -230,14 +256,14 @@ export function MfaSettings() {
                   width={176}
                   height={176}
                   unoptimized
-                  className="border-border rounded-xl border bg-white p-2"
+                  className="self-center rounded-xl bg-white p-2 shadow-[0_10px_30px_-18px_rgb(7_10_15/0.6)] ring-1 ring-black/10 sm:self-start"
                 />
                 <div className="min-w-0 flex-1 space-y-3">
                   <div>
                     <p className="text-muted-foreground text-xs">
                       Manual setup key
                     </p>
-                    <code className="bg-muted mt-1 block overflow-x-auto rounded-lg px-2 py-2 font-mono text-xs">
+                    <code className="bg-muted/80 ring-border/80 mt-1 block overflow-x-auto rounded-lg px-2.5 py-2 font-mono text-xs tracking-wider ring-1">
                       {enrollment.secret}
                     </code>
                   </div>
@@ -249,6 +275,7 @@ export function MfaSettings() {
                     maxLength={6}
                     placeholder="123456"
                     aria-label="Authenticator verification code"
+                    className="font-mono text-lg tracking-[0.4em]"
                   />
                   <div className="flex gap-2">
                     <Button
@@ -279,7 +306,6 @@ export function MfaSettings() {
           ) : (
             <Button
               type="button"
-              variant="secondary"
               size="sm"
               className="mt-4"
               disabled={pending}
@@ -293,14 +319,9 @@ export function MfaSettings() {
           )}
 
           {(message || error) && (
-            <p
-              role="status"
-              className={`mt-3 text-xs leading-5 ${
-                error ? "text-destructive" : "text-primary"
-              }`}
-            >
+            <FormFeedback success={!error} className="mt-3">
               {error || message}
-            </p>
+            </FormFeedback>
           )}
         </div>
       </div>
