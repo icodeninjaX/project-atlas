@@ -3,18 +3,21 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GoalRelatedSummary } from "./goal-related-summary";
 import { GoalRelatedDetails } from "./goal-related-details";
+import { GoalLinkSuggestions } from "./goal-link-suggestions";
 import type { RelatedEntity } from "@/lib/graph/model";
 
 const refresh = vi.fn();
 const add = vi.fn();
 const remove = vi.fn();
 const search = vi.fn();
+const dismiss = vi.fn();
 const setTaskGoal = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/lib/graph/actions", () => ({
   addGraphRelationshipAction: (...args: unknown[]) => add(...args),
   removeGraphRelationshipAction: (...args: unknown[]) => remove(...args),
   searchGraphCandidatesAction: (...args: unknown[]) => search(...args),
+  dismissGraphSuggestionAction: (...args: unknown[]) => dismiss(...args),
 }));
 vi.mock("@/lib/tasks/actions", () => ({
   setTaskGoalRelationshipAction: (...args: unknown[]) => setTaskGoal(...args),
@@ -33,6 +36,13 @@ const task = {
   title: "Prepare a very long developer portfolio and application package",
   subtitle: "planned",
   href: "/tasks?highlight=task-id",
+};
+const otherTask = {
+  type: "task" as const,
+  id: "other-task-id",
+  title: "Update résumé",
+  subtitle: "planned",
+  href: "/tasks?highlight=other-task-id",
 };
 const knowledge = {
   type: "knowledge_concept" as const,
@@ -118,7 +128,7 @@ describe("Goal Graph UI", () => {
 
   it("links and unlinks a task through its canonical goal field", async () => {
     const user = userEvent.setup();
-    search.mockResolvedValue([task]);
+    search.mockResolvedValue([otherTask]);
     setTaskGoal.mockResolvedValue({
       success: true,
       message: "Task linked to goal.",
@@ -130,16 +140,17 @@ describe("Goal Graph UI", () => {
       screen.getByRole("option", { name: "Tasks" }),
     );
     expect(screen.getByLabelText("Item type")).toHaveValue("5");
-    await user.click(
-      screen.getByRole("button", { name: "Search related items" }),
-    );
     expect(search).toHaveBeenCalledWith("task", "");
     await user.click(
-      await screen.findByRole("button", { name: new RegExp(task.title) }),
+      await screen.findByRole("button", { name: /Update résumé/ }),
     );
     await user.click(screen.getByRole("button", { name: "Link item" }));
     await waitFor(() =>
-      expect(setTaskGoal).toHaveBeenCalledWith("task-id", "goal-id", "link"),
+      expect(setTaskGoal).toHaveBeenCalledWith(
+        "other-task-id",
+        "goal-id",
+        "link",
+      ),
     );
     setTaskGoal.mockResolvedValue({
       success: true,
@@ -167,9 +178,6 @@ describe("Goal Graph UI", () => {
     await user.click(screen.getByRole("button", { name: "Add related item" }));
     expect(screen.queryByLabelText("Item type")).not.toBeInTheDocument();
     await user.click(
-      screen.getByRole("button", { name: "Search related items" }),
-    );
-    await user.click(
       await screen.findByRole("button", { name: "Server Actions" }),
     );
     await user.click(screen.getByRole("button", { name: "Link item" }));
@@ -194,9 +202,6 @@ describe("Goal Graph UI", () => {
     );
     render(<GoalRelatedDetails goalId="goal-id" items={[]} />);
     await user.click(screen.getByRole("button", { name: "Add related item" }));
-    await user.click(
-      screen.getByRole("button", { name: "Search related items" }),
-    );
     expect(screen.getByText("Loading…")).toBeInTheDocument();
     rejectSearch(new Error("unavailable"));
     expect(
@@ -209,9 +214,12 @@ describe("Goal Graph UI", () => {
     add.mockResolvedValue({ success: true, message: "Relationship added." });
     render(<GoalRelatedDetails goalId="goal-id" items={[]} />);
     await user.click(screen.getByRole("button", { name: "Add related item" }));
+    await waitFor(() =>
+      expect(search).toHaveBeenCalledWith("knowledge_concept", ""),
+    );
     await user.type(screen.getByLabelText("Search knowledge"), "Server");
-    await user.click(
-      screen.getByRole("button", { name: "Search related items" }),
+    await waitFor(() =>
+      expect(search).toHaveBeenLastCalledWith("knowledge_concept", "Server"),
     );
     await screen.findByRole("button", { name: "Server Actions" });
     await user.click(screen.getByRole("button", { name: "Server Actions" }));
@@ -238,18 +246,24 @@ describe("Goal Graph UI", () => {
       success: true,
       message: "Relationship removed.",
     });
-    render(<GoalRelatedDetails goalId="goal-id" items={[manual]} />);
-    await user.click(screen.getByRole("button", { name: "Add related item" }));
-    await user.click(
-      screen.getByRole("button", { name: "Search related items" }),
+    const { unmount } = render(
+      <GoalRelatedDetails goalId="goal-id" items={[]} />,
     );
+    await user.click(screen.getByRole("button", { name: "Add related item" }));
     await user.click(
       await screen.findByRole("button", { name: "Server Actions" }),
     );
     await user.click(screen.getByRole("button", { name: "Link item" }));
     expect(
-      await screen.findByText("This relationship already exists."),
+      await screen.findByText(/This relationship already exists\./),
     ).toBeInTheDocument();
+    unmount();
+    render(<GoalRelatedDetails goalId="goal-id" items={[manual]} />);
+    await user.click(screen.getByRole("button", { name: "Add related item" }));
+    expect(
+      await screen.findByRole("button", { name: /Server Actions/ }),
+    ).toBeDisabled();
+    expect(screen.getByText("Already linked")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Close dialog" }));
     await user.click(
       screen.getByRole("button", { name: "Remove relationship" }),
@@ -257,5 +271,71 @@ describe("Goal Graph UI", () => {
     expect(remove).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Confirm removal" }));
     await waitFor(() => expect(remove).toHaveBeenCalledWith("edge-id"));
+  });
+
+  it("links several selected records at once", async () => {
+    const user = userEvent.setup();
+    const second = { ...knowledge, id: "knowledge-2", title: "Caching" };
+    search.mockResolvedValue([knowledge, second]);
+    add.mockResolvedValue({ success: true, message: "Relationship added." });
+    render(<GoalRelatedDetails goalId="goal-id" items={[]} />);
+    await user.click(screen.getByRole("button", { name: "Add related item" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Server Actions" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Caching" }));
+    await user.click(screen.getByRole("button", { name: "Link 2 items" }));
+    await waitFor(() => expect(add).toHaveBeenCalledTimes(2));
+    expect(add).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sourceId: "knowledge-2", targetId: "goal-id" }),
+    );
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("confirms or dismisses suggested links", async () => {
+    const user = userEvent.setup();
+    const debt = {
+      type: "debt" as const,
+      id: "debt-id",
+      title: "Car loan",
+      subtitle: "active",
+      href: "/debts/debt-id",
+    };
+    add.mockResolvedValue({ success: true, message: "Relationship added." });
+    dismiss.mockResolvedValue({ success: true, message: "Suggestion hidden." });
+    render(
+      <GoalLinkSuggestions
+        goalId="goal-id"
+        suggestions={[
+          { item: debt, reason: "Mentions “loan”", score: 2 },
+          { item: knowledge, reason: "Same area as this goal", score: 1 },
+        ]}
+      />,
+    );
+    expect(screen.getByText(/Mentions “loan”/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Link Car loan" }));
+    await waitFor(() =>
+      expect(add).toHaveBeenCalledWith({
+        sourceType: "debt",
+        sourceId: "debt-id",
+        targetType: "goal",
+        targetId: "goal-id",
+        kind: "tracks_goal",
+      }),
+    );
+    expect(refresh).toHaveBeenCalled();
+    await user.click(
+      screen.getByRole("button", { name: "Not related: Server Actions" }),
+    );
+    await waitFor(() =>
+      expect(dismiss).toHaveBeenCalledWith({
+        goalId: "goal-id",
+        entityType: "knowledge_concept",
+        entityId: "knowledge-id",
+      }),
+    );
+    expect(
+      screen.queryByRole("heading", { name: "Suggested for this goal" }),
+    ).not.toBeInTheDocument();
   });
 });

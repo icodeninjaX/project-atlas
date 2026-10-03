@@ -15,6 +15,7 @@ import {
   fieldSelectClass,
   fieldTextareaClass,
 } from "@/components/career/application-fields";
+import { RelatedGoalField } from "@/components/graph/related-goal-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { CareerActionState } from "@/lib/career/actions";
@@ -272,6 +273,7 @@ export function ApplicationForm({
               className={fieldTextareaClass}
             />
           </label>
+          <RelatedGoalField className="sm:col-span-2" />
         </FormSection>
       </div>
 

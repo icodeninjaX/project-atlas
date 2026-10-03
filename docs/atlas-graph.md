@@ -33,7 +33,31 @@ User-initiated link and unlink actions write title-free activity history entries
 
 JSON export version 3 includes `atlas_relationships`, knowledge concepts, and knowledge reviews. Graph CSV export contains manual relationship rows. Native links remain in the canonical task and milestone fields and are not repeated as export edges.
 
-## Current limits
+## Less manual linking — 2026-10-03
+
+Three additions reduce how often the owner has to hunt for records to link.
+All writes still require an explicit owner action; nothing links automatically.
+
+- **Link at creation.** The knowledge, debt, career application and transaction
+  create forms have an optional "Related goal" picker (`RelatedGoalField`). The
+  create action saves the record, then inserts the canonical manual edge with
+  `linkCreatedRecordToGoal`. A failed link never undoes the create; the success
+  message says to add it from the goal instead. Offline replays tolerate the
+  duplicate edge.
+- **Suggested links.** `getGoalLinkSuggestions` ranks knowledge, debts, career
+  applications and transactions for a goal by keywords shared with its title,
+  description and success definition (numbers and stop words are ignored), plus
+  recent records from a matching area (finance → debts, career → applications,
+  learning → knowledge). It is rule-based, makes no model calls, and excludes
+  records already linked. The goal page shows up to six with Link, Link all and
+  "Not related" controls.
+- **Dismissals.** "Not related" stores a row in `atlas_relationship_dismissals`
+  (owner-scoped RLS, restrictive MFA policy, no UPDATE grant, cascades with the
+  goal) so the suggestion is not offered again. Dismissals never create or
+  remove relationships.
+- **Faster dialog.** "Add related item" loads recent records on open, searches as
+  you type, supports selecting several records, uses a date picker for weekly
+  reviews, and marks records that are already linked.
 
 The related page displays at most 100 direct edges per request; very large goals need a future cursor-based list. Signal provenance is available only for rules that identify a specific goal or debt. Other entity detail pages can consume the same read helper but currently rely on the Goal hub and existing source links. No permanent relationship is created by AI.
 

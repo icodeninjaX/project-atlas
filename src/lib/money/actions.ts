@@ -2,6 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { pesoInputToCentavos, signedPesoInputToCentavos } from "./money";
+import {
+  linkCreatedRecordToGoal,
+  relatedGoalIdFrom,
+  withGoalLinkMessage,
+} from "@/lib/graph/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   accountSchema,
@@ -273,25 +278,40 @@ export async function createTransactionAction(
     };
   }
 
-  const { error } = await auth.supabase.from("transactions").insert({
-    ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
-    user_id: auth.user.id,
-    account_id: result.data.accountId,
-    category_id: result.data.categoryId,
-    transaction_type: result.data.type,
-    amount_centavos: result.data.amountCentavos,
-    transaction_date: result.data.transactionDate,
-    merchant_or_source: result.data.merchantOrSource ?? null,
-    description: result.data.description ?? null,
-  });
+  const { data: created, error } = await auth.supabase
+    .from("transactions")
+    .insert({
+      ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
+      user_id: auth.user.id,
+      account_id: result.data.accountId,
+      category_id: result.data.categoryId,
+      transaction_type: result.data.type,
+      amount_centavos: result.data.amountCentavos,
+      transaction_date: result.data.transactionDate,
+      merchant_or_source: result.data.merchantOrSource ?? null,
+      description: result.data.description ?? null,
+    })
+    .select("id")
+    .single();
   if (error)
     return { success: false, message: "The transaction could not be saved." };
+  const link = await linkCreatedRecordToGoal(
+    auth.supabase,
+    auth.user.id,
+    "transaction",
+    created.id,
+    relatedGoalIdFrom(formData),
+  );
 
   revalidatePath("/money/transactions");
   revalidatePath("/money/accounts");
   revalidatePath("/money/runway");
   revalidatePath("/dashboard");
-  return { success: true, message: "Transaction recorded." };
+  if (link.linked) revalidatePath("/goals");
+  return {
+    success: true,
+    message: withGoalLinkMessage("Transaction recorded.", link),
+  };
 }
 
 export async function updateTransactionAction(

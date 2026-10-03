@@ -14,6 +14,15 @@ import {
   type GraphRecord,
   type GraphRelationshipType,
 } from "@/lib/graph/registry";
+import {
+  areaSuggestionType,
+  goalKeywords,
+  rankGoalSuggestions,
+  suggestibleGraphTypes,
+  type GraphLinkSuggestion,
+  type SuggestibleGraphType,
+  type SuggestionCandidate,
+} from "@/lib/graph/suggestions";
 import { createClient } from "@/lib/supabase/server";
 
 type ExplicitRow = {
@@ -410,6 +419,108 @@ export async function searchGraphCandidates(
   return (data ?? []).map((record) =>
     definition.summarize(record as unknown as GraphRecord),
   );
+}
+
+/** Text columns scanned for goal keywords, beyond each type's display columns. */
+const suggestionTextColumns: Record<SuggestibleGraphType, string[]> = {
+  knowledge_concept: ["title", "category"],
+  debt: ["creditor_name", "debt_type", "notes"],
+  job_application: ["company_name", "role_title", "notes"],
+  transaction: ["merchant_or_source", "description"],
+};
+
+/**
+ * Rule-based link suggestions for a goal: records sharing goal keywords, plus
+ * recent records from the goal's area. Read-only; nothing is linked until the
+ * owner confirms. Already linked and dismissed records are excluded.
+ */
+export async function getGoalLinkSuggestions(
+  goalId: string,
+): Promise<GraphLinkSuggestion[]> {
+  if (!uuidPattern.test(goalId)) return [];
+  const { client, ownerId } = await authorizedClient();
+  const { data: goal, error } = await client
+    .from("goals")
+    .select("id,title,description,success_definition,area")
+    .eq("user_id", ownerId)
+    .eq("id", goalId)
+    .maybeSingle();
+  if (error || !goal) return [];
+  const keywords = goalKeywords(goal);
+  const areaType = areaSuggestionType(goal.area);
+  if (keywords.length === 0 && !areaType) return [];
+
+  const candidateQueries = suggestibleGraphTypes.map(async (type) => {
+    const definition = graphRegistry[type];
+    const textColumns = suggestionTextColumns[type];
+    const columns = [
+      ...new Set([...definition.columns.split(","), ...textColumns]),
+    ].join(",");
+    const requests = [];
+    if (keywords.length > 0)
+      requests.push(
+        client
+          .from(definition.table)
+          .select(columns)
+          .eq("user_id", ownerId)
+          .or(
+            keywords
+              .flatMap((word) =>
+                textColumns.map((column) => `${column}.ilike.%${word}%`),
+              )
+              .join(","),
+          )
+          .order("created_at", { ascending: false })
+          .limit(25),
+      );
+    if (type === areaType)
+      requests.push(
+        client
+          .from(definition.table)
+          .select(columns)
+          .eq("user_id", ownerId)
+          .order("created_at", { ascending: false })
+          .limit(10),
+      );
+    const results = await Promise.all(requests);
+    return results.flatMap((result): SuggestionCandidate[] =>
+      result.error
+        ? []
+        : (
+            (result.data ?? []) as unknown as Array<Record<string, unknown>>
+          ).map((record) => ({
+            summary: definition.summarize(record as unknown as GraphRecord),
+            text: textColumns
+              .map((column) => record[column])
+              .filter((value) => typeof value === "string")
+              .join(" "),
+          })),
+    );
+  });
+  const [linked, dismissed, ...candidates] = await Promise.all([
+    client
+      .from("atlas_relationships")
+      .select("source_type,source_id")
+      .eq("user_id", ownerId)
+      .eq("target_type", "goal")
+      .eq("target_id", goalId)
+      .limit(500),
+    client
+      .from("atlas_relationship_dismissals")
+      .select("entity_type,entity_id")
+      .eq("user_id", ownerId)
+      .eq("goal_id", goalId)
+      .limit(500),
+    ...candidateQueries,
+  ]);
+  if (linked.error || dismissed.error) return [];
+  const excluded = new Set([
+    ...(linked.data ?? []).map((row) => `${row.source_type}:${row.source_id}`),
+    ...(dismissed.data ?? []).map(
+      (row) => `${row.entity_type}:${row.entity_id}`,
+    ),
+  ]);
+  return rankGoalSuggestions(goal, candidates.flat(), excluded);
 }
 
 const searchGraphTypes: Record<string, GraphEntityType | undefined> = {

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { DEBT_TYPE_OPTIONS } from "@/components/debts/debt-visuals";
 import { MoneyAmount } from "@/components/money/money-amount";
 import { PesoInput } from "@/components/money/money-fields";
+import { RelatedGoalField } from "@/components/graph/related-goal-field";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -369,6 +370,9 @@ export function DebtForm({
               className="mt-1.5"
             />
           </label>
+          {editing ? null : (
+            <RelatedGoalField className="min-[26rem]:col-span-2" />
+          )}
         </div>
       </Section>
 

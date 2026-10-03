@@ -8,6 +8,7 @@ import {
   fieldLabelClass,
   fieldTextareaClass,
 } from "@/components/career/application-fields";
+import { RelatedGoalField } from "@/components/graph/related-goal-field";
 import { MoneySheet } from "@/components/money/money-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,6 +99,7 @@ function ConceptForm({
               className="mt-1.5"
             />
           </label>
+          {editing ? null : <RelatedGoalField className="sm:col-span-2" />}
         </FormSection>
 
         <FormSection

@@ -1,6 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  linkCreatedRecordToGoal,
+  relatedGoalIdFrom,
+  withGoalLinkMessage,
+} from "@/lib/graph/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   knowledgeConceptSchema,
@@ -69,11 +74,19 @@ export async function createKnowledgeConceptAction(
     .single();
   if (error)
     return { success: false, message: "The concept could not be saved." };
+  const link = await linkCreatedRecordToGoal(
+    context.supabase,
+    context.user.id,
+    "knowledge_concept",
+    data.id,
+    relatedGoalIdFrom(formData),
+  );
   revalidatePath("/knowledge");
   revalidatePath("/search");
+  if (link.linked) revalidatePath("/goals");
   return {
     success: true,
-    message: "Concept added to your library.",
+    message: withGoalLinkMessage("Concept added to your library.", link),
     conceptId: data.id,
   };
 }

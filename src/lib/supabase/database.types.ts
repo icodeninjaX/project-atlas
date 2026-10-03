@@ -329,6 +329,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      atlas_relationship_dismissals: {
+        Row: {
+          created_at: string;
+          entity_id: string;
+          entity_type: string;
+          goal_id: string;
+          id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          entity_id: string;
+          entity_type: string;
+          goal_id: string;
+          id?: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          entity_id?: string;
+          entity_type?: string;
+          goal_id?: string;
+          id?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       atlas_relationships: {
         Row: {
           created_at: string;
