@@ -2,7 +2,6 @@
 
 import { ArrowUp, RotateCcw, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { DIGEST_FOLLOW_UP, useDigest } from "@/components/analyst/digest-panel";
 import { ClaimText } from "@/components/analyst/evidence-display";
 import {
   MemoryList,
@@ -299,7 +298,6 @@ export function IntelligenceWorkspace({
   const [context, setContext] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const memory = useMemories(consent !== null);
-  const digest = useDigest(consent, model);
   const composer = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -477,58 +475,6 @@ export function IntelligenceWorkspace({
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      {/* The month's summary opens the page; a conversation takes its place. */}
-      {turns.length === 0 && digest.status !== "hidden" && (
-        <section
-          aria-labelledby="analyst-digest-title"
-          className="flex min-w-0 flex-col gap-2"
-        >
-          <h2 id="analyst-digest-title" className="text-sm font-semibold">
-            This month so far
-          </h2>
-          {digest.status === "loading" && (
-            <p
-              className="text-muted-foreground flex items-center gap-2 text-xs"
-              role="status"
-            >
-              <span
-                aria-hidden="true"
-                className="bg-primary size-1.5 rounded-full motion-safe:animate-pulse"
-              />
-              Looking at this month so far…
-            </p>
-          )}
-          {digest.status === "error" && (
-            <p className="text-muted-foreground text-xs">
-              The summary isn&apos;t available right now. You can still ask
-              below.
-            </p>
-          )}
-          {digest.status === "ready" && (
-            <>
-              <AnswerCard
-                answer={
-                  {
-                    ...digest.digest,
-                    context: null,
-                    contextNotice: null,
-                  } as Answer
-                }
-                onAsk={(text) => void ask(text)}
-                disabled={pending}
-              />
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => void ask(DIGEST_FOLLOW_UP)}
-                className="border-border hover:bg-muted w-fit rounded-full border px-3 py-1.5 text-xs disabled:opacity-50"
-              >
-                Ask about this
-              </button>
-            </>
-          )}
-        </section>
-      )}
       <ol
         className="flex min-w-0 flex-col gap-4"
         aria-label="Analyst conversation"
