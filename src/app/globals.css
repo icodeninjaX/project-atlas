@@ -396,6 +396,14 @@ pre {
   }
 }
 
+/* Native dropdown popups take their colors from the options, not the
+   select. Without this, selects hidden behind custom triggers (opacity-0)
+   open with faded text on the browser's default white list. */
+select option {
+  background-color: var(--card);
+  color: var(--card-foreground);
+}
+
 ::selection {
   background: color-mix(in srgb, var(--primary) 35%, transparent);
 }
