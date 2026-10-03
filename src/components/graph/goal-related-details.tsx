@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AddGraphRelationshipDialog } from "@/components/graph/add-relationship-dialog";
+import { GoalLinkSuggestions } from "@/components/graph/goal-link-suggestions";
 import { Button } from "@/components/ui/button";
 import { removeGraphRelationshipAction } from "@/lib/graph/actions";
 import {
@@ -12,6 +13,7 @@ import {
   type GraphEntityType,
 } from "@/lib/graph/registry";
 import { groupRelatedItems, type RelatedEntity } from "@/lib/graph/model";
+import type { GraphLinkSuggestion } from "@/lib/graph/suggestions";
 import { setTaskGoalRelationshipAction } from "@/lib/tasks/actions";
 
 const order: GraphEntityType[] = [
@@ -31,10 +33,12 @@ export function GoalRelatedDetails({
   goalId,
   items,
   milestoneId,
+  suggestions = [],
 }: {
   goalId: string;
   items: RelatedEntity[];
   milestoneId?: string;
+  suggestions?: GraphLinkSuggestion[];
 }) {
   const router = useRouter();
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -61,8 +65,14 @@ export function GoalRelatedDetails({
         <AddGraphRelationshipDialog
           anchorType={milestoneId ? "goal_milestone" : "goal"}
           anchorId={milestoneId ?? goalId}
+          linkedKeys={items.map(
+            (item) => `${item.related.type}:${item.related.id}`,
+          )}
         />
       </div>
+      {milestoneId ? null : (
+        <GoalLinkSuggestions goalId={goalId} suggestions={suggestions} />
+      )}
       <p
         role="status"
         aria-live="polite"

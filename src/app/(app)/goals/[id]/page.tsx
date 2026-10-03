@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GoalRelatedDetails } from "@/components/graph/goal-related-details";
 import { PageHeading } from "@/components/shared/page-heading";
-import { getRelatedEntities } from "@/lib/graph/server";
+import { getGoalLinkSuggestions, getRelatedEntities } from "@/lib/graph/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Goal relationships" };
@@ -33,11 +33,11 @@ export default async function GoalRelationshipsPage({
   const requestedLimit = Number((await searchParams).limit);
   const limit =
     Number.isFinite(requestedLimit) && requestedLimit > 40 ? 100 : 40;
-  const relationships = await getRelatedEntities({
-    entityType: "goal",
-    entityId: id,
-    limit,
-  });
+  const [relationships, suggestions] = await Promise.all([
+    getRelatedEntities({ entityType: "goal", entityId: id, limit }),
+    // Suggestions are a convenience; the page still works without them.
+    getGoalLinkSuggestions(id).catch(() => []),
+  ]);
 
   return (
     <div className="mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
@@ -52,7 +52,11 @@ export default async function GoalRelationshipsPage({
         title={goal.title}
         description="Direct relationships connected to this goal."
       />
-      <GoalRelatedDetails goalId={id} items={relationships.items} />
+      <GoalRelatedDetails
+        goalId={id}
+        items={relationships.items}
+        suggestions={suggestions}
+      />
       {relationships.hasMore && limit < 100 ? (
         <Link
           href={`/goals/${id}?limit=100`}

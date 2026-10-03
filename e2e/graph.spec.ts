@@ -6,14 +6,19 @@ const password = process.env.E2E_PASSWORD;
 test.describe("ATLAS Graph", () => {
   test.skip(!email || !password, "Dedicated E2E credentials are required.");
 
-  test("links knowledge and a native task from a goal at phone and desktop widths", async ({
+  test("links at creation, from suggestions and from the dialog at phone and desktop widths", async ({
     page,
   }) => {
     test.setTimeout(90_000);
     const unique = Date.now();
-    const goalTitle = `Graph goal with a long readable title ${unique}`;
+    // Suggestions match words, not numbers, so share a unique word.
+    const tag = unique
+      .toString(36)
+      .replace(/\d/g, (digit) => "abcdefghij"[Number(digit)]!);
+    const goalTitle = `Graph goal ${tag} with a long readable title ${unique}`;
     const conceptTitle = `Graph concept ${unique}`;
     const taskTitle = `Graph task ${unique}`;
+    const suggestedTitle = `Suggested ${tag} notes`;
     await page.goto("/login");
     await page.getByLabel("Email").fill(email!);
     await page.getByLabel("Password").fill(password!);
@@ -35,8 +40,18 @@ test.describe("ATLAS Graph", () => {
     await page.getByLabel("Concept title").fill(conceptTitle);
     await page.locator('form input[name="category"]').fill("Technology");
     await page.getByLabel("Learning notes").fill("One-hop Graph verification.");
+    await page
+      .getByLabel("Related goal (optional)")
+      .selectOption({ label: goalTitle });
     await page.getByRole("button", { name: "Save concept" }).click();
     await expect(page.getByText(conceptTitle).first()).toBeVisible();
+
+    await page.getByRole("button", { name: "Add concept" }).click();
+    await page.getByLabel("Concept title").fill(suggestedTitle);
+    await page.locator('form input[name="category"]').fill("Technology");
+    await page.getByLabel("Learning notes").fill("Suggestion verification.");
+    await page.getByRole("button", { name: "Save concept" }).click();
+    await expect(page.getByText(suggestedTitle).first()).toBeVisible();
 
     await page.goto("/tasks?view=inbox");
     await page.getByRole("button", { name: "Add task" }).first().click();
@@ -54,17 +69,20 @@ test.describe("ATLAS Graph", () => {
       .filter({ hasText: goalTitle })
       .getByRole("link", { name: /View relationships/ })
       .click();
-    await expect(page.getByText("Nothing connected yet.")).toBeVisible();
-    await page.getByRole("button", { name: "Add related item" }).click();
-    await page.getByLabel("Search knowledge").fill(conceptTitle);
-    await page.getByRole("button", { name: "Search related items" }).click();
-    await page.getByRole("button", { name: conceptTitle }).click();
-    await page.getByRole("button", { name: "Link item" }).click();
+    // Linked when the concept was created.
     await expect(page.getByRole("link", { name: conceptTitle })).toBeVisible();
+    // Suggested because it shares a word with the goal; linked on confirm.
+    await page
+      .getByRole("button", { name: `Link ${suggestedTitle}`, exact: true })
+      .click();
+    await expect(
+      page
+        .locator("section[aria-labelledby=graph-knowledge_concept]")
+        .getByRole("link", { name: suggestedTitle }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Add related item" }).click();
     await page.getByLabel("Item type").selectOption({ label: "Tasks" });
     await page.getByLabel("Search tasks").fill(taskTitle);
-    await page.getByRole("button", { name: "Search related items" }).click();
     await page.getByRole("button", { name: new RegExp(taskTitle) }).click();
     await page.getByRole("button", { name: "Link item" }).click();
     await expect(page.getByRole("link", { name: taskTitle })).toBeVisible();
@@ -80,8 +98,28 @@ test.describe("ATLAS Graph", () => {
     await page.getByRole("button", { name: "Unlink from goal" }).click();
     await page.getByRole("button", { name: "Confirm unlink" }).click();
     await expect(page.getByRole("link", { name: taskTitle })).toHaveCount(0);
-    await page.getByRole("button", { name: "Remove relationship" }).click();
-    await page.getByRole("button", { name: "Confirm removal" }).click();
+    for (let count = 2; count > 0; count -= 1) {
+      await expect(
+        page.getByRole("button", { name: "Remove relationship" }),
+      ).toHaveCount(count);
+      await page
+        .getByRole("button", { name: "Remove relationship" })
+        .first()
+        .click();
+      await page.getByRole("button", { name: "Confirm removal" }).click();
+    }
     await expect(page.getByText("Nothing connected yet.")).toBeVisible();
+
+    // A dismissed suggestion stays hidden after reload.
+    const dismiss = page.getByRole("button", {
+      name: `Not related: ${suggestedTitle}`,
+    });
+    await dismiss.click();
+    await expect(dismiss).toHaveCount(0);
+    await page.reload();
+    await expect(
+      page.getByRole("button", { name: `Link ${conceptTitle}`, exact: true }),
+    ).toBeVisible();
+    await expect(dismiss).toHaveCount(0);
   });
 });

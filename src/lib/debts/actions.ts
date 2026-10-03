@@ -1,6 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  linkCreatedRecordToGoal,
+  relatedGoalIdFrom,
+  withGoalLinkMessage,
+} from "@/lib/graph/link";
 import { pesoInputToCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 import { debtPaymentSchema, debtSchema } from "@/lib/validation/schemas";
@@ -56,27 +61,39 @@ export async function createDebtAction(
       message: result.error.issues[0]?.message ?? "Check the debt.",
     };
 
-  const { error } = await session.supabase.from("debts").insert({
-    ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
-    user_id: session.user.id,
-    creditor_name: result.data.creditorName,
-    debt_type: result.data.debtType,
-    original_balance_centavos: result.data.originalBalanceCentavos,
-    current_balance_centavos: result.data.originalBalanceCentavos,
-    interest_rate_percent: result.data.interestRatePercent,
-    minimum_payment_centavos: result.data.minimumPaymentCentavos,
-    due_day: result.data.dueDay ?? null,
-    next_due_date: result.data.nextDueDate ?? null,
-    status: result.data.status,
-    priority: result.data.priority,
-    notes: result.data.notes ?? null,
-  });
+  const { data: created, error } = await session.supabase
+    .from("debts")
+    .insert({
+      ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
+      user_id: session.user.id,
+      creditor_name: result.data.creditorName,
+      debt_type: result.data.debtType,
+      original_balance_centavos: result.data.originalBalanceCentavos,
+      current_balance_centavos: result.data.originalBalanceCentavos,
+      interest_rate_percent: result.data.interestRatePercent,
+      minimum_payment_centavos: result.data.minimumPaymentCentavos,
+      due_day: result.data.dueDay ?? null,
+      next_due_date: result.data.nextDueDate ?? null,
+      status: result.data.status,
+      priority: result.data.priority,
+      notes: result.data.notes ?? null,
+    })
+    .select("id")
+    .single();
   if (error) return { success: false, message: "The debt could not be saved." };
+  const link = await linkCreatedRecordToGoal(
+    session.supabase,
+    session.user.id,
+    "debt",
+    created.id,
+    relatedGoalIdFrom(formData),
+  );
 
   revalidatePath("/debts");
   revalidatePath("/money/runway");
   revalidatePath("/dashboard");
-  return { success: true, message: "Debt added." };
+  if (link.linked) revalidatePath("/goals");
+  return { success: true, message: withGoalLinkMessage("Debt added.", link) };
 }
 
 export async function updateDebtAction(

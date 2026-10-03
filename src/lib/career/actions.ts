@@ -1,6 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  linkCreatedRecordToGoal,
+  relatedGoalIdFrom,
+  withGoalLinkMessage,
+} from "@/lib/graph/link";
 import { pesoInputToCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 import { jobApplicationSchema } from "@/lib/validation/schemas";
@@ -102,16 +107,31 @@ export async function createApplicationAction(
       message: result.error.issues[0]?.message ?? "Check the application.",
     };
   const value = result.data;
-  const { error } = await supabase.from("job_applications").insert({
-    ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
-    user_id: user.id,
-    ...applicationRecord(value),
-  });
+  const { data: created, error } = await supabase
+    .from("job_applications")
+    .insert({
+      ...(offlineEntityId(formData) ? { id: offlineEntityId(formData) } : {}),
+      user_id: user.id,
+      ...applicationRecord(value),
+    })
+    .select("id")
+    .single();
   if (error)
     return { success: false, message: "The application could not be saved." };
+  const link = await linkCreatedRecordToGoal(
+    supabase,
+    user.id,
+    "job_application",
+    created.id,
+    relatedGoalIdFrom(formData),
+  );
   revalidatePath("/career");
   revalidatePath("/dashboard");
-  return { success: true, message: "Application added." };
+  if (link.linked) revalidatePath("/goals");
+  return {
+    success: true,
+    message: withGoalLinkMessage("Application added.", link),
+  };
 }
 
 export async function updateApplicationAction(

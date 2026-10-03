@@ -21,6 +21,7 @@ import {
   DateField,
   focusForNextEntry,
 } from "@/components/money/money-fields";
+import { RelatedGoalField } from "@/components/graph/related-goal-field";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -433,6 +434,7 @@ export function TransactionForm({
               className="mt-1.5"
             />
           </label>
+          {isEdit ? null : <RelatedGoalField className="sm:col-span-2" />}
         </div>
         {merchantsForType.length ? (
           <datalist id={datalistId}>

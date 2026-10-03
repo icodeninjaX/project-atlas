@@ -1,8 +1,8 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { Plus, Search, X } from "lucide-react";
-import { useState } from "react";
+import { Check, Plus, Search, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   addGraphRelationshipAction,
@@ -28,9 +28,12 @@ const nativeTaskPair = {
 export function AddGraphRelationshipDialog({
   anchorType,
   anchorId,
+  linkedKeys = [],
 }: {
   anchorType: "goal" | "goal_milestone";
   anchorId: string;
+  /** `type:id` keys already related to the anchor, shown as linked. */
+  linkedKeys?: string[];
 }) {
   const router = useRouter();
   const pairs = [
@@ -46,48 +49,91 @@ export function AddGraphRelationshipDialog({
   ) as GraphEntityType;
   const [query, setQuery] = useState("");
   const [candidates, setCandidates] = useState<GraphEntitySummary[]>([]);
-  const [selected, setSelected] = useState<GraphEntitySummary | null>(null);
+  const [selected, setSelected] = useState<Map<string, GraphEntitySummary>>(
+    new Map(),
+  );
   const [loading, setLoading] = useState(false);
+  const [linking, setLinking] = useState(false);
   const [message, setMessage] = useState("");
   const [open, setOpen] = useState(false);
+  const requestRef = useRef(0);
+  const linked = new Set(linkedKeys);
 
-  async function search() {
-    setLoading(true);
-    setMessage("");
-    setSelected(null);
-    try {
-      const results = await searchGraphCandidatesAction(candidateType, query);
-      setCandidates(results.filter((item) => item.id !== anchorId));
-      if (results.length === 0)
-        setMessage("No matching items. Try a different search.");
-    } catch {
-      setMessage("Search could not be completed. Try again.");
-    } finally {
-      setLoading(false);
-    }
+  // Recent items load as soon as the dialog opens; typing narrows them.
+  useEffect(() => {
+    if (!open) return;
+    const request = ++requestRef.current;
+    const timer = window.setTimeout(
+      async () => {
+        setLoading(true);
+        setMessage("");
+        try {
+          const results = await searchGraphCandidatesAction(
+            candidateType,
+            query,
+          );
+          if (request !== requestRef.current) return;
+          setCandidates(results.filter((item) => item.id !== anchorId));
+          if (results.length === 0)
+            setMessage(
+              query.trim()
+                ? "No matching items. Try a different search."
+                : `No ${graphRegistry[candidateType].label.toLowerCase()} yet.`,
+            );
+        } catch {
+          if (request === requestRef.current)
+            setMessage("Search could not be completed. Try again.");
+        } finally {
+          if (request === requestRef.current) setLoading(false);
+        }
+      },
+      query.trim() ? 250 : 0,
+    );
+    return () => window.clearTimeout(timer);
+  }, [anchorId, candidateType, open, query]);
+
+  function toggle(item: GraphEntitySummary) {
+    setSelected((current) => {
+      const next = new Map(current);
+      if (next.has(item.id)) next.delete(item.id);
+      else next.set(item.id, item);
+      return next;
+    });
   }
 
   async function add() {
-    if (!selected) return;
-    setLoading(true);
-    const result =
-      pair.kind === "task_goal"
-        ? await setTaskGoalRelationshipAction(selected.id, anchorId, "link")
-        : await addGraphRelationshipAction({
-            sourceType: pair.source,
-            sourceId: pair.source === anchorType ? anchorId : selected.id,
-            targetType: pair.target,
-            targetId: pair.target === anchorType ? anchorId : selected.id,
-            kind: pair.kind,
-          });
-    setLoading(false);
-    setMessage(result.message);
-    if (result.success) {
-      setOpen(false);
-      setSelected(null);
-      setCandidates([]);
-      router.refresh();
+    if (selected.size === 0) return;
+    setLinking(true);
+    let added = 0;
+    let lastFailure = "";
+    for (const item of selected.values()) {
+      const result =
+        pair.kind === "task_goal"
+          ? await setTaskGoalRelationshipAction(item.id, anchorId, "link")
+          : await addGraphRelationshipAction({
+              sourceType: pair.source,
+              sourceId: pair.source === anchorType ? anchorId : item.id,
+              targetType: pair.target,
+              targetId: pair.target === anchorType ? anchorId : item.id,
+              kind: pair.kind,
+            });
+      if (result.success) added += 1;
+      else lastFailure = result.message;
     }
+    setLinking(false);
+    if (added > 0) router.refresh();
+    if (!lastFailure) {
+      setOpen(false);
+      setSelected(new Map());
+      setQuery("");
+      return;
+    }
+    setMessage(
+      added > 0
+        ? `Linked ${added}. Some items failed: ${lastFailure}`
+        : lastFailure,
+    );
+    setSelected(new Map());
   }
 
   return (
@@ -106,7 +152,7 @@ export function AddGraphRelationshipDialog({
                 Add relationship
               </Dialog.Title>
               <Dialog.Description className="text-muted-foreground mt-1 text-sm">
-                Search your records and choose one item to link.
+                Pick one or more of your records to link.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>
@@ -135,7 +181,8 @@ export function AddGraphRelationshipDialog({
                   onChange={(event) => {
                     setPairIndex(Number(event.target.value));
                     setCandidates([]);
-                    setSelected(null);
+                    setSelected(new Map());
+                    setQuery("");
                     setMessage("");
                   }}
                   className="border-border bg-background min-h-11 w-full rounded-xl border px-3 text-sm"
@@ -157,12 +204,7 @@ export function AddGraphRelationshipDialog({
                 </select>
               </div>
             ) : null}
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                void search();
-              }}
-            >
+            <form onSubmit={(event) => event.preventDefault()}>
               <label
                 htmlFor="graph-search"
                 className="mb-1 block text-sm font-semibold"
@@ -174,22 +216,21 @@ export function AddGraphRelationshipDialog({
                   id="graph-search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder={
-                    candidateType === "weekly_review"
-                      ? "YYYY-MM-DD"
-                      : "Name or title"
-                  }
+                  type={candidateType === "weekly_review" ? "date" : "search"}
+                  placeholder="Name or title"
                   maxLength={80}
+                  autoComplete="off"
                 />
-                <Button
-                  type="submit"
-                  variant="secondary"
-                  disabled={loading}
-                  aria-label="Search related items"
-                >
-                  <Search className="size-4" />
-                </Button>
+                <Search
+                  className="text-muted-foreground size-4 shrink-0 self-center"
+                  aria-hidden="true"
+                />
               </div>
+              <p className="text-muted-foreground mt-1 text-xs">
+                {query.trim()
+                  ? "Results update as you type."
+                  : "Showing your most recent items."}
+              </p>
             </form>
             <div
               role="status"
@@ -204,24 +245,45 @@ export function AddGraphRelationshipDialog({
                 role="group"
                 aria-label="Search results"
               >
-                {candidates.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setSelected(item)}
-                    aria-pressed={selected?.id === item.id}
-                    className="border-border hover:bg-muted focus-visible:ring-ring flex min-h-12 w-full min-w-0 flex-col border-b px-3 py-2 text-left last:border-b-0 focus-visible:ring-2"
-                  >
-                    <span className="w-full text-sm font-semibold break-words">
-                      {item.title}
-                    </span>
-                    {item.subtitle ? (
-                      <span className="text-muted-foreground text-xs">
-                        {item.subtitle}
+                {candidates.map((item) => {
+                  const alreadyLinked = linked.has(`${item.type}:${item.id}`);
+                  const isSelected = selected.has(item.id);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => toggle(item)}
+                      disabled={alreadyLinked}
+                      aria-pressed={isSelected}
+                      className="border-border hover:bg-muted focus-visible:ring-ring aria-pressed:bg-primary/10 flex min-h-12 w-full min-w-0 items-center gap-3 border-b px-3 py-2 text-left last:border-b-0 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="border-border aria-checked:border-primary aria-checked:bg-primary aria-checked:text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-md border"
+                        aria-checked={isSelected || alreadyLinked}
+                      >
+                        {isSelected || alreadyLinked ? (
+                          <Check className="size-3.5" />
+                        ) : null}
                       </span>
-                    ) : null}
-                  </button>
-                ))}
+                      <span className="flex min-w-0 flex-col">
+                        <span className="w-full text-sm font-semibold break-words">
+                          {item.title}
+                        </span>
+                        {item.subtitle || alreadyLinked ? (
+                          <span className="text-muted-foreground text-xs">
+                            {[
+                              alreadyLinked ? "Already linked" : null,
+                              item.subtitle,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </span>
+                        ) : null}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             ) : null}
             <div className="border-border bg-muted/30 rounded-xl border p-3 text-sm">
@@ -236,10 +298,14 @@ export function AddGraphRelationshipDialog({
             </Dialog.Close>
             <Button
               type="button"
-              disabled={!selected || loading}
+              disabled={selected.size === 0 || linking}
               onClick={() => void add()}
             >
-              {loading ? "Linking…" : "Link item"}
+              {linking
+                ? "Linking…"
+                : selected.size > 1
+                  ? `Link ${selected.size} items`
+                  : "Link item"}
             </Button>
           </div>
         </Dialog.Content>
