@@ -12,7 +12,7 @@ export const metadata = { title: "Transactions" };
 
 const HISTORY_LIMIT = 100;
 const TRANSACTION_COLUMNS =
-  "id,account_id,category_id,transaction_type,amount_centavos,transaction_date,merchant_or_source,description,financial_accounts(name),transaction_categories(name,icon)";
+  "id,account_id,category_id,transaction_type,amount_centavos,transaction_date,created_at,merchant_or_source,description,financial_accounts(name),transaction_categories(name,icon)";
 
 function todayInManila() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -113,14 +113,17 @@ export default async function TransactionsPage({
         ];
   const recentTransactions = transactionsResult.data ?? [];
   const highlighted = highlightedTransactionResult.data;
+  // A highlighted entry older than the history cap joins the list in its
+  // dated place, so the history stays newest-first.
   const transactions =
-    highlighted && (!accountFilter || highlighted.account_id === accountFilter)
-      ? [
-          highlighted,
-          ...recentTransactions.filter(
-            (transaction) => transaction.id !== highlighted.id,
-          ),
-        ]
+    highlighted &&
+    (!accountFilter || highlighted.account_id === accountFilter) &&
+    !recentTransactions.some((transaction) => transaction.id === highlighted.id)
+      ? [...recentTransactions, highlighted].sort(
+          (left, right) =>
+            right.transaction_date.localeCompare(left.transaction_date) ||
+            right.created_at.localeCompare(left.created_at),
+        )
       : recentTransactions;
   const monthRows = monthResult.data ?? [];
   const income = monthRows
