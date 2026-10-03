@@ -1,4 +1,10 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -199,6 +205,8 @@ describe("TransactionForm", () => {
       categoryId: "salary",
       accountId: "cash",
       transactionDate: "2026-09-03",
+      // "Now" is offered for today only; another day stays untimed.
+      transactionTime: "",
       merchantOrSource: "Payroll",
     });
 
@@ -211,6 +219,55 @@ describe("TransactionForm", () => {
     expect(screen.getByRole("radio", { name: "Income" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Cash" })).toBeChecked();
     expect(screen.getByLabelText("Transaction date")).toHaveValue("2026-09-03");
+  });
+
+  it("stamps a today entry with the current Manila time unless one is set", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    // 06:15 UTC is 2:15 PM in Manila.
+    vi.setSystemTime(new Date("2026-09-04T06:15:00Z"));
+    try {
+      const user = userEvent.setup();
+      const submit = vi.fn(async () => ({
+        success: true,
+        message: "Transaction recorded.",
+      }));
+      render(
+        <TransactionForm
+          accounts={accounts}
+          categories={categories}
+          today="2026-09-04"
+        />,
+        { wrapper: withSubmit(submit) },
+      );
+
+      expect(screen.getByRole("button", { name: "Now" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await user.type(screen.getByLabelText("Amount in pesos"), "50");
+      await chooseCategory(user, "Food");
+      await user.click(screen.getByRole("radio", { name: "Cash" }));
+      await user.click(screen.getByRole("button", { name: /Record expense/ }));
+      await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
+      const [, nowData] = submit.mock.calls[0] as unknown as [string, FormData];
+      expect(nowData.get("transactionTime")).toBe("14:15");
+
+      await user.type(screen.getByLabelText("Amount in pesos"), "80");
+      await chooseCategory(user, "Food");
+      fireEvent.change(screen.getByLabelText("Transaction time"), {
+        target: { value: "08:05" },
+      });
+      expect(screen.getByRole("button", { name: "Now" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+      await user.click(screen.getByRole("button", { name: /Record expense/ }));
+      await waitFor(() => expect(submit).toHaveBeenCalledTimes(2));
+      const [, setData] = submit.mock.calls[1] as unknown as [string, FormData];
+      expect(setData.get("transactionTime")).toBe("08:05");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("edits an existing transaction without a balance preview", async () => {
@@ -234,6 +291,7 @@ describe("TransactionForm", () => {
           transaction_type: "expense",
           amount_centavos: 12_550,
           transaction_date: "2026-09-01",
+          transaction_time: null,
           merchant_or_source: "Canteen",
           description: null,
         }}

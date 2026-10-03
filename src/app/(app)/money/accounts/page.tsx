@@ -50,6 +50,7 @@ export default async function AccountsPage() {
             )
             .eq("account_id", account.id)
             .order("transaction_date", { ascending: false })
+            .order("transaction_time", { ascending: false, nullsFirst: false })
             .order("created_at", { ascending: false })
             .limit(ACTIVITY_PER_ACCOUNT),
         ),

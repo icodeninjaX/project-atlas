@@ -14,6 +14,7 @@ import {
   transactionSchema,
 } from "@/lib/validation/schemas";
 import { offlineEntityId } from "@/lib/offline/server";
+import { manilaClock, manilaIsoDate } from "@/lib/tasks/task-view";
 
 export type MoneyActionState = { success: boolean; message: string };
 
@@ -248,6 +249,15 @@ export async function deleteArchivedAccountAction(
   return { success: true, message: "Archived account permanently deleted." };
 }
 
+/**
+ * An entry recorded without a time, such as from Capture, happened now when
+ * it is dated today; any other day stays untimed.
+ */
+function recordedNowTime(transactionDate: string): string | null {
+  const now = new Date();
+  return manilaIsoDate(now) === transactionDate ? manilaClock(now) : null;
+}
+
 export async function createTransactionAction(
   _state: MoneyActionState,
   formData: FormData,
@@ -268,6 +278,7 @@ export async function createTransactionAction(
     type: formData.get("type"),
     amountCentavos,
     transactionDate: formData.get("transactionDate"),
+    transactionTime: formData.get("transactionTime") || undefined,
     merchantOrSource: formData.get("merchantOrSource"),
     description: formData.get("description"),
   });
@@ -288,6 +299,9 @@ export async function createTransactionAction(
       transaction_type: result.data.type,
       amount_centavos: result.data.amountCentavos,
       transaction_date: result.data.transactionDate,
+      transaction_time:
+        result.data.transactionTime ??
+        recordedNowTime(result.data.transactionDate),
       merchant_or_source: result.data.merchantOrSource ?? null,
       description: result.data.description ?? null,
     })
@@ -339,6 +353,7 @@ export async function updateTransactionAction(
     type: formData.get("type"),
     amountCentavos,
     transactionDate: formData.get("transactionDate"),
+    transactionTime: formData.get("transactionTime") || undefined,
     merchantOrSource: formData.get("merchantOrSource"),
     description: formData.get("description"),
   });
@@ -357,6 +372,10 @@ export async function updateTransactionAction(
       transaction_type: result.data.type,
       amount_centavos: result.data.amountCentavos,
       transaction_date: result.data.transactionDate,
+      // A form without the field (an older queued edit) keeps the time.
+      ...(formData.has("transactionTime")
+        ? { transaction_time: result.data.transactionTime ?? null }
+        : {}),
       merchant_or_source: result.data.merchantOrSource ?? null,
       description: result.data.description ?? null,
     })

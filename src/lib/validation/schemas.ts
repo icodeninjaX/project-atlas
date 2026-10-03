@@ -78,6 +78,10 @@ export const transactionSchema = z.object({
   type: z.enum(["income", "expense"]),
   amountCentavos: z.number().int().positive(),
   transactionDate: z.iso.date(),
+  transactionTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a valid time")
+    .optional(),
   merchantOrSource: optionalText,
   description: optionalText,
 });

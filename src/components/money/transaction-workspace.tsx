@@ -37,6 +37,7 @@ import {
   groupByDate,
   relativeDayLabel,
 } from "@/lib/money/history";
+import { formatTaskTime } from "@/lib/tasks/task-time";
 import { cn } from "@/lib/utils";
 
 export type TransactionWorkspaceView = "record" | "history";
@@ -48,6 +49,7 @@ export type TransactionHistoryItem = {
   transaction_type: "expense" | "income";
   amount_centavos: number;
   transaction_date: string;
+  transaction_time: string | null;
   merchant_or_source: string | null;
   description: string | null;
   account_name: string | null;
@@ -572,6 +574,9 @@ function TransactionHistory({
                                     {transactionTitle(transaction)}
                                   </span>{" "}
                                   <span className="text-muted-foreground mt-0.5 block truncate text-xs">
+                                    {transaction.transaction_time
+                                      ? `${formatTaskTime(transaction.transaction_time)} · `
+                                      : null}
                                     {transaction.category_name ?? "Category"} ·{" "}
                                     {transaction.account_name ?? "Account"}
                                   </span>{" "}
