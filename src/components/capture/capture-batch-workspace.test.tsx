@@ -291,6 +291,33 @@ describe("Capture 2.0 review", () => {
     ).toBeEnabled();
   });
 
+  it("previews once with Ctrl+Enter while a preview is pending", async () => {
+    let finish!: (value: unknown) => void;
+    mocks.interpret.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    render(
+      <CaptureBatchWorkspace
+        accounts={[]}
+        categories={[]}
+        models={[{ id: "model-1", label: "Model", pool: "small" }]}
+        defaultModel="model-1"
+      />,
+    );
+    const text = screen.getByLabelText("What happened?");
+    fireEvent.change(text, { target: { value: "Call Acme tomorrow" } });
+    fireEvent.keyDown(text, { key: "Enter", ctrlKey: true });
+    await screen.findByRole("button", { name: "Interpreting…" });
+    fireEvent.keyDown(text, { key: "Enter", ctrlKey: true });
+    fireEvent.keyDown(text, { key: "Enter", metaKey: true });
+    await waitFor(() => expect(mocks.interpret).toHaveBeenCalledOnce());
+    finish({ message: "Nothing found.", batchId: null, items: [] });
+    await screen.findByText("Nothing found.");
+    expect(mocks.interpret).toHaveBeenCalledOnce();
+  });
+
   it("rejects an individual card without calling the save action", async () => {
     await preview();
     mocks.reject.mockResolvedValue({
