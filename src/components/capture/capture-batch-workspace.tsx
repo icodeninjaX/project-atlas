@@ -499,6 +499,9 @@ export function CaptureBatchWorkspace({
                     (event.metaKey || event.ctrlKey)
                   ) {
                     event.preventDefault();
+                    // requestSubmit skips the disabled Preview button, so
+                    // apply its rules here: one preview at a time, in limit.
+                    if (interpreting || overLimit) return;
                     event.currentTarget.form?.requestSubmit();
                   }
                 }}
