@@ -104,6 +104,7 @@ describe("edit form parity", () => {
           transaction_type: "expense",
           amount_centavos: 12_550,
           transaction_date: "2026-08-01",
+          transaction_time: null,
           merchant_or_source: "Grocery",
           description: "Weekly supplies",
         }}

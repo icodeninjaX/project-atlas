@@ -20,12 +20,15 @@ import {
   AmountField,
   DateField,
   focusForNextEntry,
+  TimeField,
 } from "@/components/money/money-fields";
 import { RelatedGoalField } from "@/components/graph/related-goal-field";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { MoneyActionState } from "@/lib/money/actions";
+import { formatTaskTime, taskTimeInputValue } from "@/lib/tasks/task-time";
+import { manilaClock } from "@/lib/tasks/task-view";
 import {
   formatPesoInput,
   parsePesoInput,
@@ -67,6 +70,7 @@ type EditableTransaction = {
   transaction_type: TransactionType;
   amount_centavos: number;
   transaction_date: string;
+  transaction_time: string | null;
   merchant_or_source: string | null;
   description: string | null;
 };
@@ -280,6 +284,11 @@ export function TransactionForm({
     return accounts.length === 1 ? accounts[0]!.id : "";
   });
   const [date, setDate] = useState(transaction?.transaction_date ?? today);
+  // Empty is "Now" while recording today, and no time otherwise.
+  const [time, setTime] = useState(() =>
+    taskTimeInputValue(transaction?.transaction_time ?? null),
+  );
+  const timeIsNow = !isEdit && date === today && time === "";
   const [merchant, setMerchant] = useState(
     transaction?.merchant_or_source ?? "",
   );
@@ -303,6 +312,7 @@ export function TransactionForm({
         setCategoryId("");
         setMerchant("");
         setDescription("");
+        setTime("");
         focusForNextEntry(amountRef.current);
       }
       onSuccess?.();
@@ -359,6 +369,10 @@ export function TransactionForm({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    // Stamp "Now" as it is sent, so a queued offline entry keeps its moment.
+    if (timeIsNow) {
+      formData.set("transactionTime", manilaClock(new Date()) ?? "");
+    }
     startTransition(() => action(formData));
   }
 
@@ -399,6 +413,14 @@ export function TransactionForm({
         today={today}
         legend="When"
         ariaLabel="Transaction date"
+      />
+      <TimeField
+        name="transactionTime"
+        value={time}
+        onValueChange={setTime}
+        allowNow={!isEdit && date === today}
+        legend="Time"
+        ariaLabel="Transaction time"
       />
       <fieldset className="min-w-0">
         <legend className="text-sm font-semibold">
@@ -491,6 +513,7 @@ export function TransactionForm({
           <div className="border-border mt-3 flex items-baseline justify-between gap-3 border-t pt-3">
             <span className="text-muted-foreground text-xs">
               {relativeDayLabel(date, today)}
+              {time ? ` · ${formatTaskTime(time)}` : timeIsNow ? " · Now" : ""}
             </span>
             <span className="font-mono text-base font-semibold">
               {validAmount ? (

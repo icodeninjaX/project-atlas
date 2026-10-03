@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Clock } from "lucide-react";
 import { forwardRef, useId } from "react";
 import { Input } from "@/components/ui/input";
 import {
@@ -221,6 +221,72 @@ export function DateField({
               "rounded-full pl-9",
               value !== today && value !== yesterday && "border-primary",
             )}
+          />
+        </label>
+      </div>
+    </fieldset>
+  );
+}
+
+/**
+ * When in the day it happened, as `HH:MM`. With `allowNow`, an empty value
+ * means "Now" and is stamped when the form is sent; otherwise it means the
+ * entry has no time.
+ */
+export function TimeField({
+  name,
+  value,
+  onValueChange,
+  allowNow,
+  legend,
+  ariaLabel,
+}: {
+  name: string;
+  value: string;
+  onValueChange: (value: string) => void;
+  allowNow: boolean;
+  legend: string;
+  ariaLabel: string;
+}) {
+  const now = allowNow && value === "";
+
+  return (
+    <fieldset className="min-w-0">
+      <legend className="text-sm font-semibold">
+        {legend}{" "}
+        {allowNow ? null : (
+          <span className="text-muted-foreground font-normal">(optional)</span>
+        )}
+      </legend>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {allowNow ? (
+          <button
+            type="button"
+            aria-pressed={now}
+            onClick={() => onValueChange("")}
+            className={cn(
+              "focus-visible:ring-ring inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-10",
+              now
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-border bg-background/60 text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            Now
+          </button>
+        ) : null}
+        <label className="relative min-w-[min(10.5rem,100%)] flex-1">
+          <span className="sr-only">{ariaLabel}</span>
+          <Clock
+            aria-hidden="true"
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+          />
+          <Input
+            name={name}
+            type="time"
+            value={value}
+            onChange={(event) => onValueChange(event.target.value)}
+            aria-label={ariaLabel}
+            className={cn("rounded-full pl-9", value && "border-primary")}
           />
         </label>
       </div>

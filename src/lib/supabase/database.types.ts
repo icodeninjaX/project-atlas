@@ -1194,6 +1194,7 @@ export type Database = {
           id: string;
           merchant_or_source: string | null;
           transaction_date: string;
+          transaction_time: string | null;
           transaction_type: string;
           updated_at: string;
           user_id: string;
@@ -1207,6 +1208,7 @@ export type Database = {
           id?: string;
           merchant_or_source?: string | null;
           transaction_date: string;
+          transaction_time?: string | null;
           transaction_type: string;
           updated_at?: string;
           user_id: string;
@@ -1220,6 +1222,7 @@ export type Database = {
           id?: string;
           merchant_or_source?: string | null;
           transaction_date?: string;
+          transaction_time?: string | null;
           transaction_type?: string;
           updated_at?: string;
           user_id?: string;

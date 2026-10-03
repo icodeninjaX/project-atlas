@@ -34,6 +34,7 @@ const transaction = {
   transaction_type: "expense" as const,
   amount_centavos: 12550,
   transaction_date: "2026-08-24",
+  transaction_time: "14:30:00" as string | null,
   merchant_or_source: "Canteen",
   description: null,
   account_name: "Cash",
@@ -58,6 +59,7 @@ const props = {
       transaction_type: "income" as const,
       amount_centavos: 500000,
       transaction_date: "2026-08-23",
+      transaction_time: null,
       merchant_or_source: "Payroll",
       account_name: "GCash",
       category_name: "Salary",
@@ -102,7 +104,9 @@ describe("TransactionWorkspace", () => {
     const today = screen.getByRole("region", { name: /^Today/ });
     expect(within(today).getByText("Canteen")).toBeVisible();
     expect(within(today).getAllByText("−₱125.50")).toHaveLength(2);
+    expect(within(today).getByText(/2:30 PM · Food · Cash/)).toBeVisible();
     const yesterday = screen.getByRole("region", { name: /^Yesterday/ });
+    expect(within(yesterday).getByText(/^Salary · GCash/)).toBeVisible();
     expect(within(yesterday).getAllByText("+₱5,000.00")).toHaveLength(2);
   });
 
