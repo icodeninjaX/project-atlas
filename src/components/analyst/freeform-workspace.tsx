@@ -23,6 +23,8 @@ import {
   type LucideIcon,
   Info,
   CornerDownRight,
+  Calculator,
+  Lock,
 } from "lucide-react";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import {
@@ -44,6 +46,13 @@ import { AI_MODELS, type AnalystModelId } from "@/lib/ai/models";
 import { ModelPicker, optionFor } from "@/components/analyst/model-picker";
 import { formatPeriodLabel } from "@/lib/history/period-label";
 import { cn } from "@/lib/utils";
+import {
+  eyebrowClass,
+  glassCardClass,
+  iconTileClass,
+  tileClass,
+  type AreaTone,
+} from "@/components/analyst/analyst-chrome";
 
 type FreeformResult = {
   status: "answered" | "fallback" | "unsupported" | "clarification_required";
@@ -104,14 +113,16 @@ export const SUGGESTED_QUESTIONS = [
   "What if my monthly income falls by 20%?",
 ] as const;
 
-const starterIcons: LucideIcon[] = [
-  Wallet,
-  Compass,
-  TrendingDown,
-  CalendarCheck,
-  Target,
-  Scale,
-];
+/** Each starter's icon, area, and color, in SUGGESTED_QUESTIONS order. */
+const starterStyles: Array<{ icon: LucideIcon; area: string; tone: AreaTone }> =
+  [
+    { icon: Wallet, area: "Money", tone: "emerald" },
+    { icon: Compass, area: "Overview", tone: "sky" },
+    { icon: TrendingDown, area: "Debts", tone: "rose" },
+    { icon: CalendarCheck, area: "Tasks", tone: "violet" },
+    { icon: Target, area: "Goals", tone: "amber" },
+    { icon: Scale, area: "Scenarios", tone: "primary" },
+  ];
 
 const consentKey = (userId: string) => `atlas:analyst-consent:${userId}`;
 
@@ -221,7 +232,7 @@ function Citations({
           key={id}
           href={`#${anchor(id)}`}
           onClick={onOpen}
-          className="text-muted-foreground hover:text-primary hover:border-primary/40 border-border bg-background/40 inline-flex min-h-8 items-center gap-1 rounded-full border px-2.5 text-[11px] font-medium transition-colors"
+          className="text-muted-foreground hover:text-primary hover:ring-primary/40 bg-background/55 ring-border/80 focus-visible:ring-ring inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-medium ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           <span
             aria-hidden="true"
@@ -258,7 +269,7 @@ function AnswerBody({ turn }: { turn: Turn }) {
       <div className="space-y-5 px-5 pb-5 sm:px-6">
         {result.message &&
           (claims.length === 0 ? (
-            <p className="border-border bg-background/40 text-muted-foreground flex gap-2.5 rounded-2xl border p-3.5 text-sm leading-6">
+            <p className="bg-primary/[0.05] ring-primary/15 text-muted-foreground flex gap-2.5 rounded-2xl p-3.5 text-sm leading-6 ring-1">
               <Info
                 aria-hidden="true"
                 className="text-primary mt-1 size-4 shrink-0"
@@ -266,11 +277,13 @@ function AnswerBody({ turn }: { turn: Turn }) {
               {result.message}
             </p>
           ) : (
-            <p className="text-[0.9375rem] leading-7">{result.message}</p>
+            <p className="text-[0.9375rem] leading-7 text-pretty">
+              {result.message}
+            </p>
           ))}
         {lead.map((claim, index) => (
           <div key={`lead-${index}`}>
-            <p className="text-[0.9375rem] leading-7 text-pretty">
+            <p className="text-[1rem] leading-7 tracking-[-0.005em] text-pretty">
               <ClaimText text={personalize(claim.text, result)} />
             </p>
             <Citations
@@ -283,19 +296,22 @@ function AnswerBody({ turn }: { turn: Turn }) {
         ))}
         {focusTasks.length > 0 && (
           <div aria-label="This week's focus">
-            <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.1em] uppercase">
-              This week’s focus
-            </p>
-            <ol className="border-border mt-2 divide-y overflow-hidden rounded-2xl border">
+            <p className={eyebrowClass}>This week’s focus</p>
+            <ol
+              className={cn(
+                tileClass,
+                "divide-border/70 mt-2 divide-y overflow-hidden rounded-2xl",
+              )}
+            >
               {focusTasks.map((item, index) => {
                 const label = result.labels![item.id]!;
                 return (
                   <li key={item.id}>
                     <Link
                       href={item.source.href as Route}
-                      className="hover:bg-primary/5 flex min-h-14 items-center gap-3 px-3.5 py-2.5 transition-colors"
+                      className="group hover:bg-primary/[0.05] focus-visible:ring-ring flex min-h-14 items-center gap-3 px-3.5 py-2.5 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
                     >
-                      <span className="bg-primary/12 text-primary grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold">
+                      <span className="from-primary/25 to-primary/8 text-primary ring-primary/20 grid size-7 shrink-0 place-items-center rounded-full bg-gradient-to-br font-mono text-xs font-semibold ring-1 ring-inset">
                         {index + 1}
                       </span>
                       <span className="min-w-0 flex-1">
@@ -310,7 +326,7 @@ function AnswerBody({ turn }: { turn: Turn }) {
                       </span>
                       <ArrowUpRight
                         aria-hidden="true"
-                        className="text-muted-foreground size-4 shrink-0"
+                        className="text-muted-foreground group-hover:text-primary size-4 shrink-0 transition-colors"
                       />
                     </Link>
                   </li>
@@ -323,20 +339,27 @@ function AnswerBody({ turn }: { turn: Turn }) {
           <dl
             aria-label="Key figures"
             className={cn(
-              "border-border grid overflow-hidden rounded-2xl border",
+              "grid gap-2",
               figures.length > 1 && "grid-cols-2",
-              figures.length > 2 && "sm:grid-cols-4",
+              figures.length > 2 && "@xl:grid-cols-4",
             )}
           >
             {figures.map((item) => (
               <div
                 key={item.id}
-                className="border-border bg-background/40 min-w-0 border-t border-l p-3.5 sm:first:border-l-0 [&:nth-child(-n+2)]:border-t-0 sm:[&:nth-child(-n+4)]:border-t-0 [&:nth-child(odd)]:border-l-0 sm:[&:nth-child(odd)]:border-l"
+                className={cn(
+                  tileClass,
+                  "relative overflow-hidden rounded-2xl p-3.5",
+                )}
               >
+                <span
+                  aria-hidden="true"
+                  className="via-primary/40 absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
+                />
                 <dt className="text-muted-foreground line-clamp-2 text-xs leading-4">
                   {item.metric}
                 </dt>
-                <dd className="mt-1.5 font-mono text-lg font-semibold tracking-tight tabular-nums">
+                <dd className="mt-1.5 font-mono text-xl font-semibold tracking-tight tabular-nums">
                   <SensitiveValue>{displayValue(item)}</SensitiveValue>
                 </dd>
                 <dd className="text-muted-foreground mt-0.5 text-[11px]">
@@ -352,14 +375,33 @@ function AnswerBody({ turn }: { turn: Turn }) {
           return (
             <div
               key={`insight-${index}`}
-              className="border-primary/40 border-l-2 pl-4"
+              className={cn(
+                "relative rounded-2xl p-4 pl-5 ring-1",
+                claim.kind === "suggestion"
+                  ? "bg-violet-500/[0.05] ring-violet-500/20"
+                  : "bg-primary/[0.05] ring-primary/15",
+              )}
             >
-              <p className="text-primary flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.1em] uppercase">
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "absolute inset-y-4 left-0 w-[3px] rounded-r-full",
+                  claim.kind === "suggestion" ? "bg-violet-500" : "bg-primary",
+                )}
+              />
+              <p
+                className={cn(
+                  "flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.1em] uppercase",
+                  claim.kind === "suggestion"
+                    ? "text-violet-700 dark:text-violet-300"
+                    : "text-primary",
+                )}
+              >
                 <Icon aria-hidden="true" className="size-3.5" />
                 {style.label}
                 <span className="sr-only">({claim.kind})</span>
               </p>
-              <p className="text-muted-foreground mt-1.5 text-sm leading-6 text-pretty">
+              <p className="text-foreground/85 mt-1.5 text-sm leading-6 text-pretty">
                 <ClaimText text={personalize(claim.text, result)} />
               </p>
               <Citations
@@ -373,15 +415,15 @@ function AnswerBody({ turn }: { turn: Turn }) {
         })}
         {groups.length > 0 && (
           <div aria-label="Runway scenario comparison">
-            <div className="grid gap-2 md:grid-cols-3">
+            <div className="grid gap-2 @xl:grid-cols-3">
               {groups.map((group) => (
                 <article
                   key={group.label}
                   className={cn(
-                    "min-w-0 rounded-2xl border p-4",
+                    "min-w-0 rounded-2xl p-4 ring-1",
                     group.label === "Current"
-                      ? "border-border bg-background/40"
-                      : "border-primary/25 bg-primary/5",
+                      ? "bg-background/55 ring-border/80"
+                      : "bg-primary/[0.06] ring-primary/25",
                   )}
                 >
                   <h3
@@ -429,7 +471,7 @@ function AnswerBody({ turn }: { turn: Turn }) {
         )}
       </div>
       {(result.limitations.length > 0 || result.evidence.length > 0) && (
-        <footer className="border-border bg-background/35 border-t px-5 py-3 sm:px-6">
+        <footer className="border-border/70 bg-background/30 border-t px-5 py-3 sm:px-6">
           {result.evidence.length > 0 && (
             <details
               ref={sources}
@@ -450,12 +492,12 @@ function AnswerBody({ turn }: { turn: Turn }) {
                   className="size-3.5 transition-transform group-open:rotate-180"
                 />
               </summary>
-              <div className="mt-2 mb-2 grid gap-2 sm:grid-cols-2">
+              <div className="mt-2 mb-2 grid gap-2 @lg:grid-cols-2">
                 {result.evidence.map((item) => (
                   <article
                     key={item.id}
                     id={anchor(item.id)}
-                    className="border-border bg-card min-w-0 scroll-mt-24 rounded-xl border p-3.5"
+                    className="bg-card ring-border/80 target:ring-primary/60 min-w-0 scroll-mt-24 rounded-2xl p-3.5 ring-1 transition-shadow target:ring-2"
                   >
                     <h4 className="text-muted-foreground text-xs font-medium">
                       {nameOf(result, item)}
@@ -551,7 +593,7 @@ function ProgressChecklist({ turn }: { turn: Turn }) {
                 aria-hidden="true"
                 className={cn(
                   "relative grid size-5 shrink-0 place-items-center rounded-full",
-                  state === "done" && "bg-primary/12 text-primary",
+                  state === "done" && "bg-positive/12 text-positive",
                   state === "active" && "bg-primary/15",
                   state === "upcoming" && "border-border border",
                 )}
@@ -578,8 +620,8 @@ function ProgressChecklist({ turn }: { turn: Turn }) {
         className="mt-4 space-y-2.5 motion-safe:animate-pulse"
         aria-hidden="true"
       >
-        <div className="bg-muted h-2.5 w-11/12 rounded-full" />
-        <div className="bg-muted h-2.5 w-3/5 rounded-full" />
+        <div className="from-muted via-primary/15 to-muted h-2.5 w-11/12 rounded-full bg-gradient-to-r" />
+        <div className="from-muted via-primary/10 to-muted h-2.5 w-3/5 rounded-full bg-gradient-to-r" />
       </div>
     </div>
   );
@@ -598,9 +640,7 @@ function FollowUps({
   if (suggestions.length === 0) return null;
   return (
     <div aria-label="Suggested follow-ups" role="group" className="pl-1">
-      <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.1em] uppercase">
-        Ask next
-      </p>
+      <p className={eyebrowClass}>Ask next</p>
       <ul className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         {suggestions.map((text, index) => (
           <li
@@ -612,7 +652,7 @@ function FollowUps({
               type="button"
               disabled={disabled}
               onClick={() => onAsk(text)}
-              className="group border-border bg-card hover:border-primary/40 hover:bg-primary/5 focus-visible:ring-ring flex min-h-11 w-full items-center gap-2 rounded-2xl border px-3.5 py-2 text-left text-sm leading-5 shadow-[0_6px_18px_rgb(7_10_15/0.06)] transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60 sm:w-auto sm:rounded-full"
+              className="group bg-card/80 ring-border/80 hover:ring-primary/40 hover:bg-primary/[0.05] focus-visible:ring-ring flex min-h-11 w-full items-center gap-2 rounded-2xl px-3.5 py-2 text-left text-sm leading-5 shadow-[0_6px_18px_rgb(7_10_15/0.06)] ring-1 backdrop-blur transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60 sm:w-auto sm:rounded-full"
             >
               <CornerDownRight
                 aria-hidden="true"
@@ -633,12 +673,20 @@ function AnswerCard({ turn }: { turn: Turn }) {
     <article
       aria-label="Analyst answer"
       aria-live="polite"
-      className="border-border bg-card overflow-hidden rounded-[1.5rem] border shadow-[0_18px_50px_rgb(7_10_15/0.10)]"
+      data-spotlight
+      className={cn(glassCardClass, "overflow-hidden")}
     >
+      <div
+        aria-hidden="true"
+        className="via-primary/45 pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
+      />
       <header className="flex items-center justify-between gap-3 px-5 pt-5 pb-4 sm:px-6">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="bg-primary/12 text-primary grid size-8 shrink-0 place-items-center rounded-xl">
-            <Sparkles aria-hidden="true" className="size-4" />
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="from-primary via-primary/70 grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br to-violet-500/80 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_10px_24px_-12px_color-mix(in_srgb,var(--primary)_90%,transparent)]"
+          >
+            <Sparkles className="size-4" />
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold whitespace-nowrap">
@@ -659,7 +707,7 @@ function AnswerCard({ turn }: { turn: Turn }) {
         {verified && (
           <span
             title="Every figure and comparison was checked against the ATLAS records it cites."
-            className="bg-primary/10 text-primary inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+            className="bg-positive/10 text-positive ring-positive/25 inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1"
           >
             <ShieldCheck aria-hidden="true" className="size-3.5" />
             Checked
@@ -667,7 +715,7 @@ function AnswerCard({ turn }: { turn: Turn }) {
           </span>
         )}
         {turn.result?.status === "fallback" && (
-          <span className="bg-muted text-muted-foreground inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold">
+          <span className="bg-background/60 text-muted-foreground ring-border inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1">
             ATLAS facts only
           </span>
         )}
@@ -796,7 +844,7 @@ function Composer({
       }
       className={cn(
         "placeholder:text-muted-foreground/80 block w-full resize-none bg-transparent text-[0.9375rem] leading-6 focus:outline-none",
-        followUp ? "min-w-0 flex-1 px-1 py-2" : "px-4 pt-3.5 pb-1",
+        followUp ? "min-w-0 flex-1 px-1 py-2" : "px-4 pt-4 pb-1 sm:text-base",
       )}
     />
   );
@@ -808,7 +856,7 @@ function Composer({
       className={cn(
         "grid size-10 shrink-0 place-items-center rounded-full transition-all",
         canAsk
-          ? "bg-primary-solid text-primary-solid-foreground shadow-[0_8px_20px_rgb(43_102_242/0.35)] hover:brightness-110"
+          ? "from-primary-solid to-primary-solid/80 text-primary-solid-foreground bg-gradient-to-br shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_8px_20px_rgb(43_102_242/0.35)] hover:brightness-110"
           : "bg-muted text-muted-foreground",
       )}
     >
@@ -827,7 +875,7 @@ function Composer({
         event.preventDefault();
         onAsk();
       }}
-      className="border-border bg-background/60 focus-within:border-primary/50 focus-within:ring-primary/15 rounded-2xl border transition-shadow focus-within:ring-4"
+      className="bg-background/60 ring-border/80 hover:ring-primary/30 focus-within:ring-ring/70 rounded-2xl ring-1 transition-[box-shadow] focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,var(--primary)_12%,transparent)]"
     >
       <label htmlFor="analyst-question" className="sr-only">
         Ask about your ATLAS records
@@ -1091,9 +1139,9 @@ export function FreeformWorkspace({
   );
 
   const consentNotice = !consent && (
-    <div className="border-border bg-background/40 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center">
-      <span className="bg-primary/10 text-primary grid size-9 shrink-0 place-items-center rounded-xl">
-        <ShieldCheck aria-hidden="true" className="size-4" />
+    <div className="bg-primary/[0.05] ring-primary/20 flex flex-col gap-3 rounded-2xl p-4 ring-1 sm:flex-row sm:items-center">
+      <span aria-hidden="true" className={iconTileClass("primary", "sm")}>
+        <ShieldCheck className="size-4" />
       </span>
       <p className="text-muted-foreground min-w-0 flex-1 text-xs leading-5">
         To answer, Analyst shares the relevant facts from your records with
@@ -1104,7 +1152,7 @@ export function FreeformWorkspace({
       <button
         type="button"
         onClick={() => updateConsent(true)}
-        className="bg-primary-solid text-primary-solid-foreground min-h-9 shrink-0 rounded-full px-4 text-xs font-semibold hover:brightness-110"
+        className="bg-primary-solid text-primary-solid-foreground focus-visible:ring-ring min-h-10 shrink-0 rounded-full px-4 text-xs font-semibold shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_4px_14px_-4px_color-mix(in_srgb,var(--primary-solid)_55%,transparent)] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         Allow data sharing
       </button>
@@ -1113,7 +1161,10 @@ export function FreeformWorkspace({
 
   const sharingStatus = consent && (
     <p className="text-muted-foreground flex items-center justify-center gap-1.5 text-[11px]">
-      <ShieldCheck aria-hidden="true" className="size-3.5" />
+      <span
+        aria-hidden="true"
+        className="bg-positive size-1.5 shrink-0 rounded-full"
+      />
       Data sharing on
       <span aria-hidden="true">·</span>
       <button
@@ -1127,129 +1178,248 @@ export function FreeformWorkspace({
   );
 
   return (
-    <section aria-label="Ask Analyst" className="space-y-6">
-      {turns.length === 0 ? (
-        <div className="border-primary/25 bg-card relative overflow-hidden rounded-[1.75rem] border shadow-[0_24px_70px_rgb(7_10_15/0.14)]">
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-8">
+      <section aria-label="Ask Analyst" className="min-w-0 space-y-6">
+        {turns.length === 0 ? (
           <div
-            aria-hidden="true"
-            className="from-primary/12 pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b to-transparent"
-          />
-          <div className="relative space-y-4 px-5 pt-6 pb-5 sm:px-7 sm:pt-7">
-            <div>
-              <p className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
-                Ask ATLAS
-              </p>
-              <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em] sm:text-2xl">
-                What would you like to understand?
-              </h2>
+            data-spotlight
+            className={cn(
+              glassCardClass,
+              "bg-card isolate overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:rounded-[2rem]",
+            )}
+          >
+            <div
+              aria-hidden="true"
+              className="from-primary/14 pointer-events-none absolute inset-x-0 top-0 -z-10 h-56 bg-gradient-to-b to-transparent"
+            />
+            <div
+              aria-hidden="true"
+              className="bg-primary/20 pointer-events-none absolute -top-40 -right-24 -z-10 size-96 rounded-full blur-3xl"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-40 -left-24 -z-10 size-80 rounded-full bg-violet-400/10 blur-3xl"
+            />
+            <div
+              aria-hidden="true"
+              className="atlas-grid pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 [mask-image:radial-gradient(70%_100%_at_100%_0%,black,transparent)] opacity-40"
+            />
+            <div
+              aria-hidden="true"
+              className="via-primary/70 pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
+            />
+            <div className="relative space-y-4 px-4 pt-5 pb-5 min-[360px]:px-5 sm:px-7 sm:pt-7">
+              <div className="flex items-start gap-3.5">
+                <span
+                  aria-hidden="true"
+                  className="from-primary via-primary/70 grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br to-violet-500/80 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_12px_28px_-12px_color-mix(in_srgb,var(--primary)_90%,transparent)]"
+                >
+                  <Sparkles className="size-[1.15rem]" />
+                </span>
+                <div className="min-w-0">
+                  <p className={eyebrowClass}>Ask ATLAS</p>
+                  <h2 className="mt-0.5 text-xl font-semibold tracking-[-0.03em] text-balance sm:text-2xl">
+                    What would you like to understand?
+                  </h2>
+                </div>
+              </div>
+              {consentNotice}
+              {composer(false)}
+              {sharingStatus}
             </div>
-            {consentNotice}
-            {composer(false)}
-            {sharingStatus}
+            <div className="border-border/70 bg-background/30 relative border-t px-4 pt-4 pb-5 min-[360px]:px-5 sm:px-7">
+              <h3 className={eyebrowClass}>Start with</h3>
+              <ul className="mt-3 grid gap-2 @xl:grid-cols-2">
+                {SUGGESTED_QUESTIONS.map((suggestion, index) => {
+                  const { icon: Icon, area, tone } = starterStyles[index]!;
+                  return (
+                    <li key={suggestion} className="min-w-0">
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => {
+                          if (consent) void ask(suggestion);
+                          else {
+                            setQuestion(suggestion);
+                            input.current?.focus();
+                          }
+                        }}
+                        className="group bg-card/70 ring-border/80 hover:ring-primary/40 hover:bg-primary/[0.04] focus-visible:ring-ring flex min-h-16 w-full items-center gap-3 rounded-2xl p-3 text-left text-sm ring-1 transition-[background-color,box-shadow,transform] hover:-translate-y-px focus-visible:ring-2 focus-visible:outline-none motion-reduce:hover:translate-y-0"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={iconTileClass(tone, "sm")}
+                        >
+                          <Icon className="size-4" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span
+                            aria-hidden="true"
+                            className="text-muted-foreground block text-[10px] font-semibold tracking-[0.12em] uppercase"
+                          >
+                            {area}
+                          </span>
+                          <span className="mt-0.5 block leading-5 font-medium">
+                            {suggestion}
+                          </span>
+                        </span>
+                        <ArrowUpRight
+                          aria-hidden="true"
+                          className="text-muted-foreground/50 group-hover:text-primary size-4 shrink-0 transition-colors"
+                        />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </div>
-          <div className="border-border bg-background/35 relative border-t px-5 pt-4 pb-5 sm:px-7">
-            <h3 className="text-muted-foreground text-[11px] font-semibold tracking-[0.12em] uppercase">
-              Start with
-            </h3>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-              {SUGGESTED_QUESTIONS.map((suggestion, index) => {
-                const Icon = starterIcons[index]!;
-                return (
-                  <li key={suggestion}>
-                    <button
-                      type="button"
-                      disabled={pending}
-                      onClick={() => {
-                        if (consent) void ask(suggestion);
-                        else {
-                          setQuestion(suggestion);
-                          input.current?.focus();
-                        }
-                      }}
-                      className="group border-border bg-card hover:border-primary/40 hover:bg-primary/5 flex min-h-14 w-full items-center gap-3 rounded-2xl border p-3 text-left text-sm transition-colors"
-                    >
-                      <span className="bg-muted text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 grid size-8 shrink-0 place-items-center rounded-xl transition-colors">
-                        <Icon aria-hidden="true" className="size-4" />
-                      </span>
-                      <span className="min-w-0 flex-1 leading-5">
-                        {suggestion}
-                      </span>
-                      <ArrowUpRight
-                        aria-hidden="true"
-                        className="text-muted-foreground/50 group-hover:text-primary size-4 shrink-0 transition-colors"
+        ) : (
+          <>
+            <ol aria-label="Conversation" className="space-y-6">
+              {turns.map((turn, index) => (
+                <li
+                  key={turn.id}
+                  ref={index === turns.length - 1 ? latest : undefined}
+                  className="scroll-mt-6 space-y-3"
+                >
+                  <div className="flex justify-end">
+                    <p className="from-primary-solid to-primary-solid/85 text-primary-solid-foreground max-w-[85%] rounded-2xl rounded-br-md bg-gradient-to-br px-4 py-2.5 text-sm leading-6 break-words shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_10px_28px_-8px_rgb(43_102_242/0.45)]">
+                      {turn.question}
+                      {turn.focus && (
+                        <span className="mt-0.5 block text-xs opacity-80">
+                          Focus: {turn.focus}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <AnswerCard turn={turn} />
+                  {index === turns.length - 1 &&
+                    (turn.result?.status === "answered" ||
+                      turn.result?.status === "fallback") && (
+                      <FollowUps
+                        suggestions={(turn.result.suggestions ?? [])
+                          .filter((text) => !asked.has(questionKey(text)))
+                          .slice(0, 3)}
+                        disabled={pending || !consent}
+                        onAsk={(text) => void ask(text, turn.id)}
                       />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </div>
-      ) : (
-        <>
-          <ol aria-label="Conversation" className="space-y-6">
-            {turns.map((turn, index) => (
-              <li
-                key={turn.id}
-                ref={index === turns.length - 1 ? latest : undefined}
-                className="scroll-mt-6 space-y-3"
-              >
-                <div className="flex justify-end">
-                  <p className="bg-primary-solid text-primary-solid-foreground max-w-[85%] rounded-2xl rounded-br-md px-4 py-2.5 text-sm leading-6 break-words shadow-[0_8px_24px_rgb(43_102_242/0.25)]">
-                    {turn.question}
-                    {turn.focus && (
-                      <span className="mt-0.5 block text-xs opacity-80">
-                        Focus: {turn.focus}
-                      </span>
                     )}
+                </li>
+              ))}
+            </ol>
+            {consentNotice}
+            <div className="bg-card/90 ring-border/80 sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 rounded-2xl shadow-[0_18px_50px_rgb(7_10_15/0.22)] ring-1 backdrop-blur-xl lg:bottom-4">
+              {composer(true)}
+            </div>
+            {sharingStatus}
+          </>
+        )}
+      </section>
+
+      <aside
+        aria-label="About Analyst"
+        className="min-w-0 space-y-5 lg:sticky lg:top-8"
+      >
+        <section
+          aria-labelledby="analyst-how"
+          data-spotlight
+          className={cn(glassCardClass, "p-4 min-[360px]:p-5")}
+        >
+          <p className={eyebrowClass}>Guide</p>
+          <h2
+            id="analyst-how"
+            className="mt-0.5 text-[0.9375rem] font-semibold tracking-[-0.01em]"
+          >
+            How Analyst answers
+          </h2>
+          <ol className="mt-3.5 space-y-3.5">
+            {(
+              [
+                {
+                  icon: Calculator,
+                  tone: "emerald",
+                  title: "ATLAS calculates",
+                  text: "Every figure comes from your records, not the model.",
+                },
+                {
+                  icon: Sparkles,
+                  tone: "violet",
+                  title: "A model explains",
+                  text: "GPT-5.4 mini plans which records to read, and the model you choose explains them.",
+                },
+                {
+                  icon: ShieldCheck,
+                  tone: "primary",
+                  title: "Every number is checked",
+                  text: "Each figure is checked against the facts it cites.",
+                },
+              ] as const
+            ).map(({ icon: Icon, tone, title, text }, index) => (
+              <li key={title} className="flex items-start gap-3">
+                <span aria-hidden="true" className={iconTileClass(tone, "sm")}>
+                  <Icon className="size-4" />
+                </span>
+                <div className="min-w-0 pt-0.5">
+                  <p className="text-sm leading-5 font-medium">
+                    <span className="text-muted-foreground mr-1.5 font-mono text-xs">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    {title}
+                  </p>
+                  <p className="text-muted-foreground mt-0.5 text-xs leading-4">
+                    {text}
                   </p>
                 </div>
-                <AnswerCard turn={turn} />
-                {index === turns.length - 1 &&
-                  (turn.result?.status === "answered" ||
-                    turn.result?.status === "fallback") && (
-                    <FollowUps
-                      suggestions={(turn.result.suggestions ?? [])
-                        .filter((text) => !asked.has(questionKey(text)))
-                        .slice(0, 3)}
-                      disabled={pending || !consent}
-                      onAsk={(text) => void ask(text, turn.id)}
-                    />
-                  )}
               </li>
             ))}
           </ol>
-          {consentNotice}
-          <div className="bg-card/95 sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 rounded-2xl shadow-[0_18px_50px_rgb(7_10_15/0.22)] backdrop-blur lg:bottom-4">
-            {composer(true)}
+          <div className="border-border/70 text-muted-foreground mt-4 space-y-2 border-t pt-4 text-xs leading-5">
+            <p>
+              Models run on OpenAI’s free daily token pools, and ATLAS stops
+              before a pool is used up. Follow-ups use your last two answers as
+              context.
+            </p>
+            <p>
+              Scenarios are estimates, and extra debt payments are treated as
+              monthly. Mark amounts with ₱ or “pesos”. Questions about
+              unavailable history may need clarification.
+            </p>
           </div>
-          {sharingStatus}
-        </>
-      )}
+        </section>
 
-      <details className="group text-muted-foreground text-xs">
-        <summary className="hover:text-foreground inline-flex min-h-9 cursor-pointer list-none items-center gap-1 font-medium [&::-webkit-details-marker]:hidden">
-          How Analyst answers
-          <ChevronDown
-            aria-hidden="true"
-            className="size-3.5 transition-transform group-open:rotate-180"
-          />
-        </summary>
-        <div className="mt-1 max-w-2xl space-y-1 leading-5">
-          <p>
-            ATLAS calculates every figure from your records. GPT-5.4 mini plans
-            which records to read, and the model you choose explains them; every
-            number it writes is checked against the facts it cites. Models run
-            on OpenAI’s free daily token pools, and ATLAS stops before a pool is
-            used up. Follow-ups use your last two answers as context.
-          </p>
-          <p>
-            Scenarios are estimates, and extra debt payments are treated as
-            monthly. Mark amounts with ₱ or “pesos”. Questions about unavailable
-            history may need clarification.
-          </p>
-        </div>
-      </details>
-    </section>
+        <section
+          aria-labelledby="analyst-privacy"
+          data-spotlight
+          className={cn(glassCardClass, "p-4 min-[360px]:p-5")}
+        >
+          <p className={eyebrowClass}>Privacy</p>
+          <h2
+            id="analyst-privacy"
+            className="mt-0.5 text-[0.9375rem] font-semibold tracking-[-0.01em]"
+          >
+            What leaves ATLAS
+          </h2>
+          <div className="mt-3 space-y-2">
+            {[
+              "Only the facts an answer needs.",
+              "Never task titles or notes.",
+              "Your sharing choice stays on this device.",
+            ].map((line) => (
+              <p
+                key={line}
+                className="text-muted-foreground flex items-start gap-2 text-xs leading-4"
+              >
+                <Lock
+                  aria-hidden="true"
+                  className="text-primary mt-px size-3.5 shrink-0"
+                />
+                {line}
+              </p>
+            ))}
+          </div>
+        </section>
+      </aside>
+    </div>
   );
 }
