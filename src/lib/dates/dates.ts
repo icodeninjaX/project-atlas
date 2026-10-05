@@ -78,6 +78,22 @@ export function formatCalendarDate(value: string | Date): string {
     : calendarDateManila.format(date);
 }
 
+/**
+ * Whether `value` is a real `YYYY-MM-DD` calendar date. The format alone
+ * lets through "2026-02-31" and "2026-13-01", which databases reject and
+ * `Date` either rolls over or cannot parse.
+ */
+export function isCalendarDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return (
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 10) === value
+  );
+}
+
 /** Today's calendar date in Asia/Manila as `YYYY-MM-DD`. */
 export function manilaTodayIsoDate(now: Date = new Date()): string {
   return manilaIsoDate(now);

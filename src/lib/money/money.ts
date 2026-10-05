@@ -14,14 +14,18 @@ export function formatCentavos(centavos: number): string {
 }
 
 export function pesoInputToCentavos(value: string): number {
-  const normalized = value.replaceAll(",", "").trim();
+  // Phone keyboards and copied amounts bring a peso sign, spaces, or a
+  // dangling decimal point ("₱1,500.", ".50"); all name a valid amount.
+  const normalized = value
+    .replace(/^\s*(?:₱|PHP)\s*/i, "")
+    .replace(/[,\s]/g, "");
 
-  if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) {
+  if (!/^(?:\d+(?:\.\d{0,2})?|\.\d{1,2})$/.test(normalized)) {
     throw new Error("Enter a valid peso amount");
   }
 
-  const [pesos, decimals = ""] = normalized.split(".");
-  const centavos = Number(pesos) * 100 + Number(decimals.padEnd(2, "0"));
+  const [pesos = "", decimals = ""] = normalized.split(".");
+  const centavos = Number(pesos || "0") * 100 + Number(decimals.padEnd(2, "0"));
 
   if (!Number.isSafeInteger(centavos)) {
     throw new Error("Enter a valid peso amount");
