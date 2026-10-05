@@ -3,9 +3,9 @@
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { AuthAction } from "@/lib/auth/actions";
+import type { AuthAction, AuthState } from "@/lib/auth/actions";
 
-const initialState = { message: "", success: false };
+const initialState: AuthState = { message: "", success: false };
 
 export function AuthForm({
   action,
@@ -34,6 +34,9 @@ export function AuthForm({
           name="email"
           type="email"
           autoComplete="email"
+          // React resets the form after each action; restoring the email
+          // keeps a mistyped password from costing the address too.
+          defaultValue={state.email}
           required
           placeholder="you@example.com"
         />

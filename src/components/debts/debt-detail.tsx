@@ -434,44 +434,46 @@ function Outlook({
             <summary className="text-muted-foreground hover:text-foreground inline-flex min-h-11 cursor-pointer items-center text-xs font-semibold sm:min-h-0">
               Show the balance year by year
             </summary>
-            <table className="mt-2 w-full text-left text-xs">
-              <thead className="text-muted-foreground">
-                <tr>
-                  <th scope="col" className="py-1.5 font-medium">
-                    Month
-                  </th>
-                  {series.map((item) => (
-                    <th
-                      key={item.key}
-                      scope="col"
-                      className="py-1.5 text-right font-medium"
-                    >
-                      {item.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="font-mono">
-                {yearly.map((month) => (
-                  <tr key={month} className="border-t">
-                    <th scope="row" className="py-1.5 font-sans font-medium">
-                      {payoffMonthLabel(today, month)}
+            <div className="mt-2 max-w-full overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="text-muted-foreground">
+                  <tr>
+                    <th scope="col" className="py-1.5 font-medium">
+                      Month
                     </th>
                     {series.map((item) => (
-                      <td key={item.key} className="py-1.5 text-right">
-                        <MoneyAmount
-                          centavos={
-                            item.balances[
-                              Math.min(month, item.balances.length - 1)
-                            ] ?? 0
-                          }
-                        />
-                      </td>
+                      <th
+                        key={item.key}
+                        scope="col"
+                        className="py-1.5 pl-3 text-right font-medium"
+                      >
+                        {item.label}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="font-mono">
+                  {yearly.map((month) => (
+                    <tr key={month} className="border-t">
+                      <th scope="row" className="py-1.5 font-sans font-medium">
+                        {payoffMonthLabel(today, month)}
+                      </th>
+                      {series.map((item) => (
+                        <td key={item.key} className="py-1.5 pl-3 text-right">
+                          <MoneyAmount
+                            centavos={
+                              item.balances[
+                                Math.min(month, item.balances.length - 1)
+                              ] ?? 0
+                            }
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </details>
         </div>
       ) : null}

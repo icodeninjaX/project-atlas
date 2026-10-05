@@ -1309,7 +1309,7 @@ export function FreeformWorkspace({
               ))}
             </ol>
             {consentNotice}
-            <div className="bg-card/90 ring-border/80 sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 rounded-2xl shadow-[0_18px_50px_rgb(7_10_15/0.22)] ring-1 backdrop-blur-xl lg:bottom-4">
+            <div className="bg-card/90 ring-border/80 sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 rounded-2xl shadow-[0_18px_50px_rgb(7_10_15/0.22)] ring-1 backdrop-blur-xl group-data-[keyboard=open]/shell:bottom-2 lg:bottom-4">
               {composer(true)}
             </div>
             {sharingStatus}

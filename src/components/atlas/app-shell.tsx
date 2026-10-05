@@ -106,6 +106,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const moreSheetRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const [sheetPathname, setSheetPathname] = useState(pathname);
+  // Back/forward gestures change the page without a tap on a sheet link;
+  // the sheet closes with them so it never covers the new page.
+  if (sheetPathname !== pathname) {
+    setSheetPathname(pathname);
+    setMoreOpen(false);
+  }
 
   const isActive = (href: string) => {
     if (href === "/money/accounts") {
@@ -192,7 +199,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (!viewport) return;
 
     const updateKeyboardState = () => {
-      setKeyboardOpen(window.innerHeight - viewport.height > 160);
+      // Pinch-zoom shrinks the visual viewport too, but scales it back to the
+      // layout height; only the keyboard leaves a real gap.
+      setKeyboardOpen(
+        window.innerHeight - viewport.height * viewport.scale > 160,
+      );
     };
 
     updateKeyboardState();
@@ -425,7 +436,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={() => setMoreOpen(false)}
                   aria-current={isActive(href) ? "page" : undefined}
                   className={cn(
-                    "border-border hover:bg-muted/60 focus-visible:ring-ring flex min-h-16 min-w-0 items-center gap-3 border-b px-3 text-sm font-medium transition-colors last:border-b-0 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset min-[360px]:odd:border-r min-[360px]:odd:last:col-span-2 min-[360px]:odd:last:border-r-0",
+                    "border-border hover:bg-muted/60 focus-visible:ring-ring flex min-h-16 min-w-0 items-center gap-3 border-b px-3 text-sm font-medium transition-colors last:border-b-0 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset min-[360px]:odd:border-r min-[360px]:odd:last:col-span-2 min-[360px]:odd:last:border-r-0 min-[360px]:[&:nth-last-child(2):nth-child(odd)]:border-b-0",
                     isActive(href) && "bg-primary/10 text-primary",
                   )}
                 >

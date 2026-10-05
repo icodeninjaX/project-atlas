@@ -27,6 +27,11 @@ export default async function ReviewsPage({
   endDate.setDate(endDate.getDate() + 7);
   const weekEnd = endDate.toISOString();
   const weekStartIso = new Date(`${weekStart}T00:00:00+08:00`).toISOString();
+  // Date columns end at next Monday. `weekEnd` is a UTC instant that falls on
+  // Sunday's date, so slicing it would drop the week's last day.
+  const nextWeekStart = new Date(`${weekStart}T00:00:00Z`);
+  nextWeekStart.setUTCDate(nextWeekStart.getUTCDate() + 7);
+  const nextWeekStartDate = nextWeekStart.toISOString().slice(0, 10);
   const supabase = await createClient();
   const results = supabase
     ? await Promise.all([
@@ -52,12 +57,12 @@ export default async function ReviewsPage({
           .select("amount_centavos")
           .eq("transaction_type", "expense")
           .gte("transaction_date", weekStart)
-          .lt("transaction_date", weekEnd.slice(0, 10)),
+          .lt("transaction_date", nextWeekStartDate),
         supabase
           .from("debt_payments")
           .select("amount_centavos")
           .gte("payment_date", weekStart)
-          .lt("payment_date", weekEnd.slice(0, 10)),
+          .lt("payment_date", nextWeekStartDate),
         supabase
           .from("job_applications")
           .select("id", { count: "exact", head: true })
