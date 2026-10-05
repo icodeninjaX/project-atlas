@@ -7,7 +7,12 @@ import { safeRedirectPath } from "@/lib/auth/redirects";
 import { createClient } from "@/lib/supabase/server";
 import { authSchema } from "@/lib/validation/schemas";
 
-export type AuthState = { message: string; success: boolean };
+export type AuthState = {
+  message: string;
+  success: boolean;
+  /** The submitted email, so a failed attempt does not clear the field. */
+  email?: string;
+};
 export type AuthAction = (
   state: AuthState,
   formData: FormData,
@@ -23,20 +28,26 @@ export async function signInAction(
   _state: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "");
   const values = authSchema.safeParse(Object.fromEntries(formData));
   if (!values.success) {
     return {
       success: false,
+      email,
       message: values.error.issues[0]?.message ?? "Check your details.",
     };
   }
 
   const supabase = await createClient();
-  if (!supabase) return configurationError;
+  if (!supabase) return { ...configurationError, email };
 
   const { error } = await supabase.auth.signInWithPassword(values.data);
   if (error) {
-    return { success: false, message: "Email or password is incorrect." };
+    return {
+      success: false,
+      message: "Email or password is incorrect.",
+      email,
+    };
   }
 
   const requestedDestination = String(formData.get("next") ?? "");
@@ -57,16 +68,18 @@ export async function signUpAction(
   _state: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "");
   const values = authSchema.safeParse(Object.fromEntries(formData));
   if (!values.success) {
     return {
       success: false,
+      email,
       message: values.error.issues[0]?.message ?? "Check your details.",
     };
   }
 
   const supabase = await createClient();
-  if (!supabase) return configurationError;
+  if (!supabase) return { ...configurationError, email };
 
   const { data, error } = await supabase.auth.signUp({
     ...values.data,
@@ -79,6 +92,7 @@ export async function signUpAction(
     if (error.code === "user_already_exists") {
       return {
         success: false,
+        email,
         message:
           "An account with this email may already exist. Try signing in instead.",
       };
@@ -87,12 +101,14 @@ export async function signUpAction(
     if (error.code === "signup_disabled") {
       return {
         success: false,
+        email,
         message: "New account creation is temporarily unavailable.",
       };
     }
 
     return {
       success: false,
+      email,
       message: "We could not create your account right now. Try again shortly.",
     };
   }
@@ -113,11 +129,15 @@ export async function forgotPasswordAction(
   const email = String(formData.get("email") ?? "").trim();
   const result = authSchema.pick({ email: true }).safeParse({ email });
   if (!result.success) {
-    return { success: false, message: "Enter a valid email address." };
+    return {
+      success: false,
+      message: "Enter a valid email address.",
+      email,
+    };
   }
 
   const supabase = await createClient();
-  if (!supabase) return configurationError;
+  if (!supabase) return { ...configurationError, email };
 
   await supabase.auth.resetPasswordForEmail(result.data.email, {
     redirectTo: `${getAppUrl()}/auth/callback?next=/reset-password`,

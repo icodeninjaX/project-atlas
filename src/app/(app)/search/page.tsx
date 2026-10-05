@@ -87,7 +87,7 @@ export default async function SearchPage({
       </div>
 
       <div className="mt-8">
-        {!query ? (
+        {query.length < 2 ? (
           <div className="border-border grid min-h-60 place-items-center rounded-2xl border border-dashed text-center">
             <div>
               <Search className="text-primary mx-auto size-6" />

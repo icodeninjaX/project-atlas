@@ -317,7 +317,9 @@ function JournalPage({
               key={kind}
               className={cn(
                 tileClass,
-                "flex flex-row-reverse items-center justify-end gap-2.5 p-2.5 sm:gap-3 sm:p-3",
+                // Phones stack the ring over its label; three tiles side by
+                // side leave no room for the label beside the ring.
+                "flex flex-col-reverse items-center gap-1.5 p-2.5 text-center sm:flex-row-reverse sm:justify-end sm:gap-3 sm:p-3 sm:text-left",
               )}
             >
               <dt className="text-muted-foreground min-w-0 text-xs leading-4 font-medium">
