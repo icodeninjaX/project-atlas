@@ -2,6 +2,7 @@ import {
   act,
   cleanup,
   fireEvent,
+  render as renderInTree,
   screen,
   waitFor,
 } from "@testing-library/react";
@@ -12,6 +13,7 @@ import type {
   OfflineActionState,
   OfflineMutationType,
 } from "@/lib/offline/types";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { renderWithProviders as render } from "@/test/render";
 import { TaskFocusMode } from "./task-focus-mode";
 
@@ -70,6 +72,62 @@ describe("TaskFocusMode", () => {
     fireEvent.click(screen.getByRole("button", { name: "Pause" }));
     act(() => vi.advanceTimersByTime(2_000));
     expect(screen.getByRole("timer")).toHaveTextContent("24:59");
+  });
+
+  it("follows an edited estimate until the session starts", () => {
+    const focusMode = (estimatedMinutes: number) => (
+      <TaskFocusMode
+        taskId="1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb"
+        title="Write proposal"
+        description={null}
+        estimatedMinutes={estimatedMinutes}
+        scheduledLabel={null}
+      />
+    );
+    // `rerender` keeps the wrapper, so the open dialog survives new props.
+    const { rerender } = renderInTree(focusMode(25), {
+      wrapper: TooltipProvider,
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Focus on Write proposal" }),
+    );
+    expect(screen.getByRole("timer")).toHaveTextContent("25:00");
+
+    rerender(focusMode(45));
+    expect(screen.getByRole("timer")).toHaveTextContent("45:00");
+  });
+
+  it("trims a paused session to a shorter estimate", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-14T01:00:00.000Z"));
+    const focusMode = (estimatedMinutes: number) => (
+      <TaskFocusMode
+        taskId="1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb"
+        title="Write proposal"
+        description={null}
+        estimatedMinutes={estimatedMinutes}
+        scheduledLabel={null}
+      />
+    );
+    // `rerender` keeps the wrapper, so the open dialog survives new props.
+    const { rerender } = renderInTree(focusMode(25), {
+      wrapper: TooltipProvider,
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Focus on Write proposal" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Start focus" }));
+    act(() => vi.advanceTimersByTime(60_000));
+    fireEvent.click(screen.getByRole("button", { name: "Pause" }));
+    expect(screen.getByRole("timer")).toHaveTextContent("24:00");
+
+    rerender(focusMode(30));
+    expect(screen.getByRole("timer")).toHaveTextContent("24:00");
+
+    rerender(focusMode(10));
+    expect(screen.getByRole("timer")).toHaveTextContent("10:00");
   });
 
   it("plays the activation chime when Focus opens", () => {

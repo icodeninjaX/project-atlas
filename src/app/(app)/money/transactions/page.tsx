@@ -6,6 +6,7 @@ import {
 import { TransactionSummary } from "@/components/money/transaction-summary";
 import { PageHeading } from "@/components/shared/page-heading";
 import { MoneyNavigation } from "@/components/money/money-navigation";
+import { fetchIncomeExpenseTotals } from "@/lib/money/month-totals";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Transactions" };
@@ -68,7 +69,7 @@ export default async function TransactionsPage({
     transactionsResult,
     preferencesResult,
     highlightedTransactionResult,
-    monthResult,
+    monthTotals,
   ] =
     supabase && historyQuery
       ? await Promise.all([
@@ -97,12 +98,9 @@ export default async function TransactionsPage({
                 .eq("id", highlightId)
                 .maybeSingle()
             : Promise.resolve({ data: null }),
-          // The month summary covers every account, whatever the history shows.
-          supabase
-            .from("transactions")
-            .select("transaction_type,amount_centavos")
-            .gte("transaction_date", month.start)
-            .lt("transaction_date", month.next),
+          // The month summary covers every account, whatever the history
+          // shows, and every row however busy the month.
+          fetchIncomeExpenseTotals(supabase, month.start, month.next),
         ])
       : [
           { data: [] },
@@ -110,7 +108,7 @@ export default async function TransactionsPage({
           { data: [] },
           { data: null },
           { data: null },
-          { data: [] },
+          { incomeCentavos: 0, expenseCentavos: 0, entryCount: 0 },
         ];
   const recentTransactions = transactionsResult.data ?? [];
   const highlighted = highlightedTransactionResult.data;
@@ -130,13 +128,8 @@ export default async function TransactionsPage({
             right.created_at.localeCompare(left.created_at),
         )
       : recentTransactions;
-  const monthRows = monthResult.data ?? [];
-  const income = monthRows
-    .filter((transaction) => transaction.transaction_type === "income")
-    .reduce((sum, transaction) => sum + Number(transaction.amount_centavos), 0);
-  const expenses = monthRows
-    .filter((transaction) => transaction.transaction_type === "expense")
-    .reduce((sum, transaction) => sum + Number(transaction.amount_centavos), 0);
+  const income = monthTotals.incomeCentavos;
+  const expenses = monthTotals.expenseCentavos;
   const initialView: TransactionWorkspaceView =
     query.create === "true" || query.view === "record" ? "record" : "history";
   const transactionHistory: TransactionHistoryItem[] = transactions.map(
@@ -205,7 +198,7 @@ export default async function TransactionsPage({
             monthLabel={monthName(today)}
             income={income}
             expenses={expenses}
-            entryCount={monthRows.length}
+            entryCount={monthTotals.entryCount}
           />
         }
       />

@@ -26,3 +26,22 @@ export function safeRedirectPath(
     return fallback;
   }
 }
+
+/**
+ * `path` with a validated `next` destination attached, so a detour through
+ * sign-up, onboarding, or password recovery can still return the user to
+ * the page they first asked for. Unsafe or missing destinations are dropped.
+ */
+export function pathWithNext(
+  path: string,
+  next: string | null | undefined,
+): string {
+  const destination = safeRedirectPath(next, "");
+  // A destination that is this page itself would only bring the user back.
+  const samePage =
+    destination &&
+    new URL(destination, "https://atlas.invalid").pathname === path;
+  return destination && !samePage
+    ? `${path}?next=${encodeURIComponent(destination)}`
+    : path;
+}

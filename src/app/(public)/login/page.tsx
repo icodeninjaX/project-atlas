@@ -1,8 +1,9 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthForm } from "@/components/auth/auth-form";
 import { signInAction } from "@/lib/auth/actions";
-import { safeRedirectPath } from "@/lib/auth/redirects";
+import { pathWithNext, safeRedirectPath } from "@/lib/auth/redirects";
 
 export const metadata = { title: "Log in" };
 
@@ -25,7 +26,7 @@ export default async function LoginPage({
         <>
           New to ATLAS?{" "}
           <Link
-            href="/signup"
+            href={pathWithNext("/signup", next) as Route}
             className="text-primary font-medium hover:underline"
           >
             Create an account
@@ -39,7 +40,7 @@ export default async function LoginPage({
         hiddenFields={next ? { next } : undefined}
       />
       <Link
-        href="/forgot-password"
+        href={pathWithNext("/forgot-password", next) as Route}
         className="text-muted-foreground hover:text-foreground mt-4 block text-center text-xs"
       >
         Forgot your password?

@@ -103,6 +103,20 @@ function FocusTimer({
   const [open, setOpen] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(totalSeconds);
   const [running, setRunning] = useState(false);
+  const [trackedTotalSeconds, setTrackedTotalSeconds] = useState(totalSeconds);
+  // An edited estimate resets a timer that has not started (or has
+  // finished) to the new length. A paused session keeps its place, trimmed
+  // to the new length; a running one is left alone.
+  if (trackedTotalSeconds !== totalSeconds) {
+    setTrackedTotalSeconds(totalSeconds);
+    if (!running) {
+      setRemainingSeconds(
+        remainingSeconds === trackedTotalSeconds || remainingSeconds === 0
+          ? totalSeconds
+          : Math.min(remainingSeconds, totalSeconds),
+      );
+    }
+  }
   const [fullscreen, setFullscreen] = useState(false);
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const deadlineRef = useRef<number | null>(null);
@@ -111,7 +125,7 @@ function FocusTimer({
   const gradientId = useId().replaceAll(":", "");
   const menuItem = triggerPresentation === "menu";
   const finished = remainingSeconds === 0;
-  const progress = remainingSeconds / totalSeconds;
+  const progress = Math.min(1, remainingSeconds / totalSeconds);
   const circumference = 2 * Math.PI * 108;
   const strokeOffset = circumference * (1 - progress);
 

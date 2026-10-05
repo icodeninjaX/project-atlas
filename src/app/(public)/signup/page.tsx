@@ -1,11 +1,19 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthForm } from "@/components/auth/auth-form";
 import { signUpAction } from "@/lib/auth/actions";
+import { pathWithNext, safeRedirectPath } from "@/lib/auth/redirects";
 
 export const metadata = { title: "Create account" };
 
-export default function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const next = safeRedirectPath((await searchParams).next, "");
+
   return (
     <AuthCard
       eyebrow="Create your ATLAS"
@@ -15,7 +23,7 @@ export default function SignupPage() {
         <>
           Already have an account?{" "}
           <Link
-            href="/login"
+            href={pathWithNext("/login", next) as Route}
             className="text-primary font-medium hover:underline"
           >
             Log in
@@ -23,7 +31,11 @@ export default function SignupPage() {
         </>
       }
     >
-      <AuthForm action={signUpAction} submitLabel="Create account" />
+      <AuthForm
+        action={signUpAction}
+        submitLabel="Create account"
+        hiddenFields={next ? { next } : undefined}
+      />
     </AuthCard>
   );
 }
