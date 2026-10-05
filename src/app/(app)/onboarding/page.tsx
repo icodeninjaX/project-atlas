@@ -1,8 +1,15 @@
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
+import { safeRedirectPath } from "@/lib/auth/redirects";
 
 export const metadata = { title: "Set up your ATLAS" };
 
-export default function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const next = safeRedirectPath((await searchParams).next, "");
+
   return (
     <div className="mx-auto max-w-3xl p-4 py-10 sm:p-8 lg:py-14">
       <p className="text-primary font-mono text-xs font-semibold tracking-[0.2em] uppercase">
@@ -16,7 +23,7 @@ export default function OnboardingPage() {
         and change every optional answer later.
       </p>
       <div className="border-border bg-card mt-8 rounded-2xl border p-5 sm:p-7">
-        <OnboardingForm />
+        <OnboardingForm next={next || null} />
       </div>
     </div>
   );

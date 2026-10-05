@@ -1,6 +1,8 @@
 "use server";
 
+import type { Route } from "next";
 import { redirect } from "next/navigation";
+import { safeRedirectPath } from "@/lib/auth/redirects";
 import { pesoInputToCentavos } from "@/lib/money/money";
 import { createClient } from "@/lib/supabase/server";
 import { onboardingSchema } from "@/lib/validation/schemas";
@@ -73,5 +75,14 @@ export async function completeOnboardingAction(
     };
   }
 
-  redirect("/dashboard");
+  const destination = safeRedirectPath(
+    String(formData.get("next") ?? ""),
+    "/dashboard",
+  );
+  // Never send a finished setup back to the setup page.
+  redirect(
+    (destination.startsWith("/onboarding")
+      ? "/dashboard"
+      : destination) as Route,
+  );
 }

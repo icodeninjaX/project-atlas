@@ -3,7 +3,7 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { getAppUrl } from "@/lib/env";
-import { safeRedirectPath } from "@/lib/auth/redirects";
+import { pathWithNext, safeRedirectPath } from "@/lib/auth/redirects";
 import { createClient } from "@/lib/supabase/server";
 import { authSchema } from "@/lib/validation/schemas";
 
@@ -81,10 +81,15 @@ export async function signUpAction(
   const supabase = await createClient();
   if (!supabase) return { ...configurationError, email };
 
+  // New accounts set up first, then continue to the page they asked for.
+  const onboarding = pathWithNext(
+    "/onboarding",
+    String(formData.get("next") ?? ""),
+  );
   const { data, error } = await supabase.auth.signUp({
     ...values.data,
     options: {
-      emailRedirectTo: `${getAppUrl()}/auth/callback?next=/onboarding`,
+      emailRedirectTo: `${getAppUrl()}/auth/callback?next=${encodeURIComponent(onboarding)}`,
     },
   });
 
@@ -113,7 +118,7 @@ export async function signUpAction(
     };
   }
 
-  if (data.session) redirect("/onboarding");
+  if (data.session) redirect(onboarding as Route);
 
   return {
     success: true,
@@ -140,7 +145,9 @@ export async function forgotPasswordAction(
   if (!supabase) return { ...configurationError, email };
 
   await supabase.auth.resetPasswordForEmail(result.data.email, {
-    redirectTo: `${getAppUrl()}/auth/callback?next=/reset-password`,
+    redirectTo: `${getAppUrl()}/auth/callback?next=${encodeURIComponent(
+      pathWithNext("/reset-password", String(formData.get("next") ?? "")),
+    )}`,
   });
 
   return {
@@ -175,7 +182,7 @@ export async function resetPasswordAction(
   }
   return {
     success: true,
-    message: "Password updated. You can continue to your dashboard.",
+    message: "Password updated. You can continue where you left off.",
   };
 }
 

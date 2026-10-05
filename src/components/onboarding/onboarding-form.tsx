@@ -10,7 +10,12 @@ import {
 
 const initialState: OnboardingState = { success: false, message: "" };
 
-export function OnboardingForm() {
+export function OnboardingForm({
+  next = null,
+}: {
+  /** Where to go once setup is saved; the dashboard when absent. */
+  next?: string | null;
+}) {
   const [state, action, pending] = useActionState(
     completeOnboardingAction,
     initialState,
@@ -21,6 +26,7 @@ export function OnboardingForm() {
 
   return (
     <form action={action} className="mt-8 space-y-7">
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <fieldset className="space-y-4">
         <legend className="text-sm font-semibold">About you</legend>
         <div className="space-y-1.5">

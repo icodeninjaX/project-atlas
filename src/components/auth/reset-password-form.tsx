@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,12 @@ import { resetPasswordAction } from "@/lib/auth/actions";
 
 const initial = { success: false, message: "" };
 
-export function ResetPasswordForm() {
+export function ResetPasswordForm({
+  destination = null,
+}: {
+  /** Where the user was headed before recovering their password. */
+  destination?: string | null;
+}) {
   const [state, action, pending] = useActionState(resetPasswordAction, initial);
   return (
     <form action={action} className="space-y-4">
@@ -52,7 +58,9 @@ export function ResetPasswordForm() {
       )}
       {state.success ? (
         <Button asChild className="w-full">
-          <Link href="/dashboard">Continue to dashboard</Link>
+          <Link href={(destination ?? "/dashboard") as Route}>
+            {destination ? "Continue" : "Continue to dashboard"}
+          </Link>
         </Button>
       ) : (
         <Button

@@ -1,10 +1,17 @@
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthForm } from "@/components/auth/auth-form";
 import { forgotPasswordAction } from "@/lib/auth/actions";
+import { safeRedirectPath } from "@/lib/auth/redirects";
 
 export const metadata = { title: "Reset password" };
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const next = safeRedirectPath((await searchParams).next, "");
+
   return (
     <AuthCard
       eyebrow="Account recovery"
@@ -15,6 +22,7 @@ export default function ForgotPasswordPage() {
         action={forgotPasswordAction}
         submitLabel="Send reset link"
         includePassword={false}
+        hiddenFields={next ? { next } : undefined}
       />
     </AuthCard>
   );

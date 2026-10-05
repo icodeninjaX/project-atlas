@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { safeRedirectPath } from "./redirects";
+import { pathWithNext, safeRedirectPath } from "./redirects";
 
 describe("safe redirect paths", () => {
   it.each([
@@ -32,5 +32,42 @@ describe("safe redirect paths", () => {
       "/dashboard",
     );
     expect(safeRedirectPath("//example.com", "/dashboard")).toBe("/dashboard");
+  });
+});
+
+describe("pathWithNext", () => {
+  it("attaches an encoded local destination", () => {
+    expect(pathWithNext("/onboarding", "/tasks?view=today#top")).toBe(
+      "/onboarding?next=%2Ftasks%3Fview%3Dtoday%23top",
+    );
+  });
+
+  it.each([null, undefined, "", "https://attacker.invalid", "//attacker"])(
+    "drops a missing or unsafe destination %j",
+    (next) => {
+      expect(pathWithNext("/signup", next)).toBe("/signup");
+    },
+  );
+
+  it("drops a destination that is the page itself", () => {
+    expect(pathWithNext("/onboarding", "/onboarding?step=2")).toBe(
+      "/onboarding",
+    );
+  });
+
+  it("round-trips through a callback's next parameter", () => {
+    const callback = new URL(
+      `https://atlas.invalid/auth/callback?next=${encodeURIComponent(
+        pathWithNext("/reset-password", "/money/budget?month=2026-10"),
+      )}`,
+    );
+    const landing = new URL(
+      safeRedirectPath(callback.searchParams.get("next"), "/dashboard"),
+      "https://atlas.invalid",
+    );
+    expect(landing.pathname).toBe("/reset-password");
+    expect(landing.searchParams.get("next")).toBe(
+      "/money/budget?month=2026-10",
+    );
   });
 });
