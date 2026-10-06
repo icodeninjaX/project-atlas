@@ -253,6 +253,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   text-rendering: optimizeLegibility;
+  /* A pasted URL or long unbroken name wraps instead of pushing past the
+     edge of its card on a phone. Only words that would overflow break. */
+  overflow-wrap: break-word;
 }
 
 .font-mono {

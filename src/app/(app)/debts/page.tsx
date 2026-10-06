@@ -8,12 +8,10 @@ import {
   type DebtRecord,
 } from "@/lib/debts/debt";
 import { manilaTodayIsoDate } from "@/lib/dates/dates";
+import { loadDebtPagePayments } from "@/lib/debts/payments";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Debts" };
-
-/** Enough recent payments for each debt's latest and this month's total. */
-const RECENT_PAYMENTS = 400;
 
 export default async function DebtsPage({
   searchParams,
@@ -22,23 +20,29 @@ export default async function DebtsPage({
 }) {
   const query = await searchParams;
   const supabase = await createClient();
-  const [debtsResult, paymentsResult, preferencesResult] = supabase
+  const today = manilaTodayIsoDate();
+  const [debtsResult, preferencesResult] = supabase
     ? await Promise.all([
         supabase.from("debts").select(DEBT_COLUMNS).order("priority"),
-        supabase
-          .from("debt_payments")
-          .select("debt_id,amount_centavos,payment_date")
-          .order("payment_date", { ascending: false })
-          .order("created_at", { ascending: false })
-          .limit(RECENT_PAYMENTS),
         supabase.from("user_preferences").select("debt_strategy").maybeSingle(),
       ])
-    : [{ data: [] }, { data: [] }, { data: null }];
+    : [{ data: [] }, { data: null }];
   const savedStrategy = resolveDebtStrategy(
     undefined,
     preferencesResult.data?.debt_strategy,
   );
   const debts = ((debtsResult.data ?? []) as DebtRecord[]).map(toDebtRecord);
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const nextMonth = new Date(`${monthStart}T00:00:00Z`);
+  nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+  const payments = supabase
+    ? await loadDebtPagePayments(
+        supabase,
+        debts.map((debt) => debt.id),
+        monthStart,
+        nextMonth.toISOString().slice(0, 10),
+      )
+    : [];
   const highlight = query.highlight;
 
   return (
@@ -52,12 +56,12 @@ export default async function DebtsPage({
       <MoneyNavigation currentHref="/debts" />
       <DebtsWorkspace
         debts={debts}
-        payments={(paymentsResult.data ?? []).map((payment) => ({
+        payments={payments.map((payment) => ({
           debtId: payment.debt_id,
           amountCentavos: Number(payment.amount_centavos),
           paymentDate: payment.payment_date,
         }))}
-        today={manilaTodayIsoDate()}
+        today={today}
         initialStrategy={resolveDebtStrategy(query.strategy, savedStrategy)}
         savedStrategy={savedStrategy}
         highlightId={

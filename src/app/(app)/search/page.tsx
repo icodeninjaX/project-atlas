@@ -4,7 +4,7 @@ import Link from "next/link";
 import { SearchInput } from "@/components/search/search-input";
 import { getSearchGoalContext, searchResultGraphKey } from "@/lib/graph/server";
 import { createClient } from "@/lib/supabase/server";
-import { formatWeekOfTitle } from "@/lib/dates/dates";
+import { formatWeekOfTitle, isCalendarDate } from "@/lib/dates/dates";
 
 export const metadata = { title: "Search" };
 
@@ -34,12 +34,8 @@ export default async function SearchPage({
     .slice(0, 100);
   const entityType = params.type ?? "all";
   const status = params.status ?? "all";
-  const fromDate = /^\d{4}-\d{2}-\d{2}$/.test(params.from ?? "")
-    ? params.from
-    : undefined;
-  const toDate = /^\d{4}-\d{2}-\d{2}$/.test(params.to ?? "")
-    ? params.to
-    : undefined;
+  const fromDate = isCalendarDate(params.from) ? params.from : undefined;
+  const toDate = isCalendarDate(params.to) ? params.to : undefined;
   let results: SearchResult[] = [];
 
   if (query.length >= 2) {

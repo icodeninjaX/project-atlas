@@ -6,10 +6,13 @@ import {
   Filter,
   History,
 } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { isCalendarDate } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Activity history" };
@@ -27,7 +30,7 @@ const entityTypes = [
 const pageSize = 25;
 
 function validDate(value: string | undefined) {
-  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
+  return isCalendarDate(value) ? value : "";
 }
 
 function pageHref({
@@ -93,6 +96,13 @@ export default async function ActivityPage({
     ? await query.range((page - 1) * pageSize, page * pageSize - 1)
     : { data: [], count: 0 };
   const activity = data ?? [];
+  // A page past the end (a stale bookmark, or filters that now match less)
+  // returns nothing; start the filtered list over rather than claim it is
+  // empty.
+  if (page > 1 && activity.length === 0) {
+    redirect(pageHref({ page: 1, type, from, to }) as Route);
+  }
+  const filtered = Boolean(type || from || to);
   const total = count ?? activity.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -223,13 +233,24 @@ export default async function ActivityPage({
               <span className="bg-primary/10 text-primary mx-auto grid size-12 place-items-center rounded-2xl">
                 <History className="size-5" />
               </span>
-              <p className="mt-4 text-sm font-semibold">No activity yet</p>
+              <p className="mt-4 text-sm font-semibold">
+                {filtered
+                  ? "No activity matches these filters"
+                  : "No activity yet"}
+              </p>
               <p className="text-muted-foreground mt-2 text-xs leading-5">
-                Completed tasks, knowledge reviews, debt payments, career stage
-                changes, goal updates, and submitted reviews will appear here.
+                {filtered
+                  ? from && to && from > to
+                    ? "The From date is after the To date. Swap them to see that range."
+                    : "Try another activity type or a wider date range."
+                  : "Completed tasks, knowledge reviews, debt payments, career stage changes, goal updates, and submitted reviews will appear here."}
               </p>
               <Button asChild size="sm" className="mt-5">
-                <Link href="/dashboard">Return to Today</Link>
+                {filtered ? (
+                  <Link href="/settings/activity">Clear filters</Link>
+                ) : (
+                  <Link href="/dashboard">Return to Today</Link>
+                )}
               </Button>
             </div>
           </div>
