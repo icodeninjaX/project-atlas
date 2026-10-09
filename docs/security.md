@@ -79,6 +79,59 @@ RLS is the final data boundary even if a route or client query is incorrect. UUI
 
 Vercel Firewall or an equivalent edge limiter should restrict repeated login, recovery, export, and future deletion requests by IP and account signal. Hosted Supabase Auth rate-limit values have not been independently verified. Rate limiting is deployment infrastructure, not an in-memory application map.
 
+## AI access guard
+
+Every AI request reserves quota in a security-definer function before any
+provider call, so the limits below hold whatever the route code does.
+`private.ai_access_class` sorts each caller into one class:
+
+| Class     | Who                                             | Analyst (per hour / day)        | Capture (per hour / day) | Token pools                                    |
+| --------- | ----------------------------------------------- | ------------------------------- | ------------------------ | ---------------------------------------------- |
+| owner     | `owner` tier **and** a verified MFA factor      | no cap; 200/day runaway ceiling | no cap; 200/day ceiling  | whole budget, including the owner reserve      |
+| standard  | established, email-confirmed account            | 8 / 25                          | 10 / 30                  | 15% of a pool per day, never the owner reserve |
+| probation | account under 72 hours old or email unconfirmed | 3 / 10                          | 5 / 10                   | as standard                                    |
+| blocked   | `blocked` tier                                  | refused                         | refused                  | refused                                        |
+
+Site-wide caps (300 Analyst and 300 Capture requests a day) count non-owner
+traffic only, so sign-ups cannot exhaust them for the owner. When an owner
+exists, 20% of each pool's daily budget is held back for owners. Refused
+callers see the same "usage limit reached" message as any quota, so a blocked
+account cannot tell it was singled out. Nothing here disables or deletes an
+account; a blocked user keeps every non-AI feature.
+
+Owner perks need MFA so that a leaked password alone cannot unlock them.
+Without a verified factor an `owner` row is treated as standard. The owner is
+still bound by the pools' stop point, so the free allowance is never crossed.
+
+Run these in the Supabase SQL editor; the `private` schema is not exposed to
+the API, so no user can read or change them:
+
+```sql
+-- Make yourself the owner (then enroll TOTP MFA in Settings → Security).
+insert into private.ai_user_tiers (user_id, tier, note)
+select id, 'owner', 'site owner' from auth.users where email = '<your email>'
+on conflict (user_id) do update set tier = 'owner', updated_at = now();
+
+-- Cut one account off from AI; delete the row to restore it.
+insert into private.ai_user_tiers (user_id, tier, note)
+select id, 'blocked', '<reason>' from auth.users where email = '<their email>'
+on conflict (user_id) do update set tier = 'blocked', updated_at = now();
+
+-- Incident kill switch: AI off for everyone but owners.
+update private.ai_guard_settings set public_ai_enabled = false;
+
+-- Tune without a migration.
+update private.ai_guard_settings
+set owner_reserve_ratio = 0.2, user_pool_share = 0.15,
+    probation_hours = 72, owner_daily_requests = 200;
+
+-- Who used the most pool tokens today.
+select u.email, p.pool, sum(coalesce(p.used_tokens, p.reserved_tokens)) as tokens
+from public.ai_pool_usage p join auth.users u on u.id = p.user_id
+where p.usage_day = (now() at time zone 'utc')::date
+group by 1, 2 order by 3 desc limit 20;
+```
+
 ## Verification
 
 Implemented checks:

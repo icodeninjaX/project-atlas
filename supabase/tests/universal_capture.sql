@@ -6,8 +6,8 @@ insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
   email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data
 ) values
-  ('aa000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'capture-a@example.test', '', now(), now(), now(), '{}', '{}'),
-  ('aa000000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'capture-b@example.test', '', now(), now(), now(), '{}', '{}');
+  ('aa000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'capture-a@example.test', '', now(), now() - interval '30 days', now(), '{}', '{}'),
+  ('aa000000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'capture-b@example.test', '', now(), now() - interval '30 days', now(), '{}', '{}');
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"aa000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
