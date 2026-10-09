@@ -1,9 +1,11 @@
+import { Goal } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GoalRelatedDetails } from "@/components/graph/goal-related-details";
-import { PageHeading } from "@/components/shared/page-heading";
+import { BackLink, PageHeading } from "@/components/shared/page-heading";
 import { getGoalLinkSuggestions, getRelatedEntities } from "@/lib/graph/server";
 import { createClient } from "@/lib/supabase/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Goal relationships" };
 
@@ -40,14 +42,10 @@ export default async function GoalRelationshipsPage({
   ]);
 
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
-      <Link
-        href={`/goals?highlight=${id}`}
-        className="text-primary inline-flex min-h-11 items-center text-sm font-semibold hover:underline"
-      >
-        ← Back to goals
-      </Link>
+    <PageShell>
+      <BackLink href="/goals">All goals</BackLink>
       <PageHeading
+        icon={Goal}
         eyebrow="ATLAS Graph"
         title={goal.title}
         description="Direct relationships connected to this goal."
@@ -65,6 +63,6 @@ export default async function GoalRelationshipsPage({
           View more related items
         </Link>
       ) : null}
-    </div>
+    </PageShell>
   );
 }

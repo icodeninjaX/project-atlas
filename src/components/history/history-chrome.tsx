@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { Route } from "next";
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { PageHeading, PageHeadingLink } from "@/components/shared/page-heading";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import styles from "@/components/history/history.module.css";
 import type { HistoryCoverage, HistoryTone } from "@/lib/history/view";
@@ -22,13 +22,10 @@ export const glassCardClass = cn(
 export const tileClass =
   "bg-background/55 ring-border/80 min-w-0 rounded-2xl p-3.5 ring-1 min-[360px]:p-4";
 
-const pillLinkClass =
-  "bg-card/60 text-foreground ring-border/80 hover:bg-card focus-visible:ring-ring inline-flex min-h-11 items-center gap-2 self-start rounded-full px-4 text-xs font-semibold ring-1 backdrop-blur transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 sm:self-auto";
-
-/** The page title over the atmosphere, with a companion page beside it. */
+/** The page title, with a companion page beside it. */
 export function HistoryHeader({
   eyebrow,
-  eyebrowIcon: EyebrowIcon,
+  eyebrowIcon,
   title,
   description,
   link,
@@ -39,26 +36,18 @@ export function HistoryHeader({
   description: string;
   link: { href: Route; label: string; icon: LucideIcon };
 }) {
-  const LinkIcon = link.icon;
   return (
-    <header className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
-      <div className="max-w-2xl min-w-0">
-        <p className="bg-card/60 text-primary ring-border/70 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.1em] uppercase ring-1 backdrop-blur">
-          <EyebrowIcon aria-hidden="true" className="size-3.5" />
-          {eyebrow}
-        </p>
-        <h1 className="from-foreground via-foreground to-foreground/60 mt-4 bg-gradient-to-br bg-clip-text pb-[0.08em] text-[2.125rem] leading-[1.04] font-semibold tracking-[-0.05em] text-transparent sm:text-[2.75rem] lg:text-[3.25rem]">
-          {title}
-        </h1>
-        <p className="text-muted-foreground mt-2.5 max-w-xl text-sm leading-6 sm:text-[0.9375rem]">
-          {description}
-        </p>
-      </div>
-      <Link href={link.href} className={pillLinkClass}>
-        <LinkIcon aria-hidden="true" className="text-primary size-4" />
-        {link.label}
-      </Link>
-    </header>
+    <PageHeading
+      eyebrow={eyebrow}
+      icon={eyebrowIcon}
+      title={title}
+      description={description}
+      aside={
+        <PageHeadingLink href={link.href} icon={link.icon}>
+          {link.label}
+        </PageHeadingLink>
+      }
+    />
   );
 }
 

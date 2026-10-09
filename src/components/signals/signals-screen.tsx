@@ -1,8 +1,6 @@
 import { Radar, RadioTower, SearchX } from "lucide-react";
 import Link from "next/link";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
-import { SpotlightArea } from "@/components/dashboard/spotlight-area";
-import todayStyles from "@/components/dashboard/today.module.css";
 import { Button } from "@/components/ui/button";
 import type { Signal } from "@/lib/signals/engine";
 import {
@@ -15,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { SignalCard } from "./signal-card";
 import { SignalsEmptyHero, SignalsHero } from "./signals-hero";
 import { SignalsToolbar } from "./signals-toolbar";
+import { PageHeading } from "@/components/shared/page-heading";
+import { PageShell } from "@/components/shared/page-shell";
 
 const checkedTime = new Intl.DateTimeFormat("en-PH", {
   timeZone: "Asia/Manila",
@@ -28,38 +28,31 @@ function signalCount(count: number) {
 
 function Header({ checkedAt }: { checkedAt: string | null }) {
   return (
-    <header className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
-      <div className="max-w-2xl min-w-0">
-        <p className="bg-card/60 text-primary ring-border/70 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.1em] uppercase ring-1 backdrop-blur">
-          <Radar aria-hidden="true" className="size-3.5" />
-          Insight engine
-        </p>
-        <h1 className="from-foreground via-foreground to-foreground/60 mt-4 bg-gradient-to-br bg-clip-text pb-[0.08em] text-[2.125rem] leading-[1.04] font-semibold tracking-[-0.05em] text-transparent sm:text-[2.75rem] lg:text-[3.25rem]">
-          Signals
-        </h1>
-        <p className="text-muted-foreground mt-2.5 max-w-xl text-sm leading-6 sm:text-[0.9375rem]">
-          Meaningful changes, risks, deadlines, and improvements detected from
-          your ATLAS records. Every signal shows the facts behind it.
-        </p>
-      </div>
-      {checkedAt ? (
-        <p className="bg-card/60 text-muted-foreground ring-border/80 inline-flex items-center gap-2 self-start rounded-full px-3.5 py-2 text-xs font-medium ring-1 backdrop-blur sm:self-auto">
-          <span aria-hidden="true" className="relative flex size-2">
-            <span className="bg-positive/40 absolute inset-0 animate-ping rounded-full motion-reduce:hidden" />
-            <span className="bg-positive relative size-2 rounded-full" />
-          </span>
-          <span>
-            Checked{" "}
-            <time
-              dateTime={checkedAt}
-              className="text-foreground font-mono font-semibold"
-            >
-              {checkedTime.format(new Date(checkedAt))}
-            </time>
-          </span>
-        </p>
-      ) : null}
-    </header>
+    <PageHeading
+      eyebrow="Insight engine"
+      icon={Radar}
+      title="Signals"
+      description="Meaningful changes, risks, deadlines, and improvements detected from your ATLAS records. Every signal shows the facts behind it."
+      aside={
+        checkedAt ? (
+          <p className="bg-card/60 text-muted-foreground ring-border/80 inline-flex min-h-9 items-center gap-2 self-start rounded-full px-4 text-xs font-medium ring-1 backdrop-blur">
+            <span aria-hidden="true" className="relative flex size-2">
+              <span className="bg-positive/40 absolute inset-0 animate-ping rounded-full motion-reduce:hidden" />
+              <span className="bg-positive relative size-2 rounded-full" />
+            </span>
+            <span>
+              Checked{" "}
+              <time
+                dateTime={checkedAt}
+                className="text-foreground font-mono font-semibold"
+              >
+                {checkedTime.format(new Date(checkedAt))}
+              </time>
+            </span>
+          </p>
+        ) : undefined
+      }
+    />
   );
 }
 
@@ -196,11 +189,7 @@ export function SignalsScreen({
     signals?.filter((signal) => matchesSignalFilters(signal, filters)) ?? [];
 
   return (
-    <SpotlightArea className="relative isolate mx-auto w-full max-w-5xl min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div
-        aria-hidden="true"
-        className={cn(todayStyles.aurora, todayStyles.grain)}
-      />
+    <PageShell>
       <Header checkedAt={signals ? checkedAt : null} />
 
       {signals === null ? (
@@ -221,6 +210,6 @@ export function SignalsScreen({
           )}
         </>
       )}
-    </SpotlightArea>
+    </PageShell>
   );
 }

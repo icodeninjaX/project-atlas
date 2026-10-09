@@ -1,10 +1,11 @@
-import { ArrowLeftRight, Scale } from "lucide-react";
+import { ArrowLeftRight, Scale, WalletCards } from "lucide-react";
 import type { AccountIdentity } from "@/components/money/account-visuals";
 import { TransferForm } from "@/components/money/transfer-form";
 import { TransferHistory } from "@/components/money/transfer-history";
 import { PageHeading } from "@/components/shared/page-heading";
 import { MoneyNavigation } from "@/components/money/money-navigation";
 import { createClient } from "@/lib/supabase/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Record transfer" };
 
@@ -84,8 +85,9 @@ export default async function TransfersPage({
   const today = todayInManila();
 
   return (
-    <div className="mx-auto max-w-[1100px] p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <PageHeading
+        icon={WalletCards}
         eyebrow="Money / Transfers"
         title="Move money between accounts"
         description="Record an internal transfer without counting it as income or an expense."
@@ -133,6 +135,6 @@ export default async function TransfersPage({
           highlightId={query.highlight}
         />
       </section>
-    </div>
+    </PageShell>
   );
 }

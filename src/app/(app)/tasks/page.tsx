@@ -28,6 +28,7 @@ import {
   type TaskView,
   type TodayPlanSummary,
 } from "@/lib/tasks/task-view";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Tasks" };
 
@@ -226,21 +227,12 @@ export default async function TasksPage({
   ];
 
   return (
-    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
-      <p className="text-primary text-xs font-semibold tracking-[0.1em] uppercase">
-        {manilaDateLabel(now)}
-      </p>
+    <PageShell>
       <TaskCreatePanel
-        heading={
-          <h1 className="text-[2rem] leading-none font-semibold tracking-[-0.045em] sm:text-[2.4rem]">
-            Tasks
-          </h1>
-        }
-        description={
-          <p className="text-muted-foreground mt-2 text-sm max-sm:hidden">
-            Capture quickly. Keep today small enough to finish.
-          </p>
-        }
+        eyebrow="Task list"
+        meta={manilaDateLabel(now)}
+        title="Tasks"
+        description="Capture quickly. Keep today small enough to finish."
         defaultPriority={taskDefaults?.default_task_priority ?? "medium"}
         defaultEstimatedMinutes={
           taskDefaults?.default_task_estimated_minutes ?? null
@@ -285,6 +277,6 @@ export default async function TasksPage({
           />
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { MoneyNavigation } from "@/components/money/money-navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Accounts" };
 
@@ -79,8 +80,9 @@ export default async function AccountsPage() {
     );
 
   return (
-    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <PageHeading
+        icon={WalletCards}
         eyebrow="Money / Accounts"
         title="Where your money lives"
         description="Every total is opening balance plus recorded movement, so it can always be explained."
@@ -121,6 +123,6 @@ export default async function AccountsPage() {
           />
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

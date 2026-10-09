@@ -1,7 +1,8 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { ClipboardCheck, Plus } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { PageHeading } from "@/components/shared/page-heading";
 import { QuickTaskForm } from "@/components/tasks/quick-task-form";
 import { OPEN_TASK_CREATE_EVENT } from "@/components/tasks/task-create-trigger";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,9 @@ import {
 } from "@/lib/tasks/task-time";
 
 export function TaskCreatePanel({
-  heading,
+  eyebrow,
+  meta,
+  title,
   description,
   defaultPriority = "medium",
   defaultEstimatedMinutes = null,
@@ -19,8 +22,10 @@ export function TaskCreatePanel({
   today,
   initiallyOpen = false,
 }: {
-  heading: ReactNode;
-  description: ReactNode;
+  eyebrow?: string;
+  meta?: ReactNode;
+  title: string;
+  description?: ReactNode;
   defaultPriority?: string;
   defaultEstimatedMinutes?: number | null;
   scheduledTasks?: ScheduledTaskSlot[];
@@ -59,28 +64,32 @@ export function TaskCreatePanel({
 
   return (
     <>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-        {heading}
-        {!isOpen ? (
-          <Button
-            type="button"
-            className="shrink-0 rounded-full pr-4 pl-3.5"
-            aria-expanded="false"
-            aria-controls="quick-task-form"
-            onClick={() => setIsOpen(true)}
-          >
-            <Plus className="size-4" />
-            Add task
-            <kbd
-              aria-hidden="true"
-              className="ml-1 hidden h-5 min-w-5 place-items-center rounded-md bg-white/20 px-1 text-[0.625rem] font-semibold lg:inline-grid"
+      <PageHeading
+        eyebrow={eyebrow}
+        icon={ClipboardCheck}
+        meta={meta}
+        title={title}
+        description={description}
+        actions={
+          isOpen ? undefined : (
+            <Button
+              type="button"
+              aria-expanded="false"
+              aria-controls="quick-task-form"
+              onClick={() => setIsOpen(true)}
             >
-              N
-            </kbd>
-          </Button>
-        ) : null}
-      </div>
-      {description}
+              <Plus className="size-4" />
+              Add task
+              <kbd
+                aria-hidden="true"
+                className="ml-1 hidden h-5 min-w-5 place-items-center rounded-md bg-white/20 px-1 text-[0.625rem] font-semibold lg:inline-grid"
+              >
+                N
+              </kbd>
+            </Button>
+          )
+        }
+      />
       {isOpen ? (
         <div className="mt-6 sm:mt-7">
           <QuickTaskForm

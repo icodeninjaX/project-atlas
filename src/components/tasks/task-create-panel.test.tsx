@@ -8,8 +8,8 @@ afterEach(cleanup);
 function renderPanel({ initiallyOpen = false } = {}) {
   return render(
     <TaskCreatePanel
-      heading={<h1>Tasks</h1>}
-      description={<p>Capture quickly.</p>}
+      title="Tasks"
+      description="Capture quickly."
       initiallyOpen={initiallyOpen}
     />,
   );
@@ -24,7 +24,7 @@ describe("TaskCreatePanel", () => {
     const heading = screen.getByRole("heading", { name: "Tasks" });
     const addTaskButton = screen.getByRole("button", { name: "Add task" });
 
-    expect(heading.parentElement).toContainElement(addTaskButton);
+    expect(heading.closest("header")).toContainElement(addTaskButton);
     fireEvent.click(addTaskButton);
 
     expect(screen.getByLabelText("Task title")).toHaveFocus();
@@ -40,10 +40,7 @@ describe("TaskCreatePanel", () => {
   it("opens from the empty-state Add task control", () => {
     render(
       <>
-        <TaskCreatePanel
-          heading={<h1>Tasks</h1>}
-          description={<p>Capture quickly.</p>}
-        />
+        <TaskCreatePanel title="Tasks" description="Capture quickly." />
         <TaskCreateTrigger />
       </>,
     );
@@ -105,8 +102,8 @@ describe("TaskCreatePanel on phones", () => {
   it("fills and clears the date from the Today and Tomorrow shortcuts", () => {
     render(
       <TaskCreatePanel
-        heading={<h1>Tasks</h1>}
-        description={<p>Capture quickly.</p>}
+        title="Tasks"
+        description="Capture quickly."
         today="2026-10-01"
         initiallyOpen
       />,

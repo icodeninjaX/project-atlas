@@ -1,20 +1,17 @@
 "use client";
 
 import {
-  ArrowLeft,
   ChartLine,
   HandCoins,
   History,
   PencilLine,
   Trash2,
 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useId, useMemo, useState } from "react";
 import {
   DashboardCardHeading,
   dashboardCardClass,
 } from "@/components/dashboard/dashboard-card";
-import { SpotlightArea } from "@/components/dashboard/spotlight-area";
 import { DebtSheet } from "@/components/debts/debt-sheet";
 import {
   DebtStatusPill,
@@ -55,6 +52,7 @@ import {
 } from "@/lib/money/history";
 import { centavosToPesoInput } from "@/lib/money/money";
 import { cn } from "@/lib/utils";
+import { BackLink } from "@/components/shared/page-heading";
 
 export type DebtPaymentRecord = {
   id: string;
@@ -109,7 +107,7 @@ function DetailHero({
   const interest = monthlyInterestCentavos([toPlanDebt(debt)]);
 
   return (
-    <MoneyHeroShell labelledBy="debt-heading" tone={tone} className="mt-5">
+    <MoneyHeroShell labelledBy="debt-heading" tone={tone}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <DebtTypeBadge type={debt.debt_type} size="lg" />
@@ -750,14 +748,8 @@ export function DebtDetail({
   }, [highlightPaymentId]);
 
   return (
-    <SpotlightArea>
-      <Link
-        href="/debts"
-        className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
-      >
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        All debts
-      </Link>
+    <>
+      <BackLink href="/debts">All debts</BackLink>
       <DetailHero
         debt={debt}
         base={base}
@@ -818,6 +810,6 @@ export function DebtDetail({
         debt={debt}
         today={today}
       />
-    </SpotlightArea>
+    </>
   );
 }

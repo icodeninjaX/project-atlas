@@ -15,7 +15,8 @@ import {
   type SituationItem,
 } from "@/components/dashboard/situation-strip";
 import { WeekPosition } from "@/components/dashboard/week-position";
-import { SpotlightArea } from "@/components/dashboard/spotlight-area";
+import { PageHeading } from "@/components/shared/page-heading";
+import { PageShell } from "@/components/shared/page-shell";
 import { SignalsPanel } from "@/components/signals/signals-panel";
 import { Button } from "@/components/ui/button";
 import { monthPace } from "@/lib/budgets/plan";
@@ -32,8 +33,6 @@ import { formatCentavos } from "@/lib/money/money";
 import type { NextBestAction } from "@/lib/next-best-action/engine";
 import type { Signal } from "@/lib/signals/engine";
 import { formatTaskMinutes } from "@/lib/tasks/task-view";
-import { cn } from "@/lib/utils";
-import styles from "./today.module.css";
 
 export type DashboardData = {
   financial: FinancialSnapshot;
@@ -150,55 +149,39 @@ export function TodayDashboard({
 }) {
   const daylineItems = dayline.items;
   const greeting = greetings[manilaDayPart(now)];
-  const GreetingIcon = greeting.icon;
   const today = manilaIsoDate(now);
 
   return (
-    <SpotlightArea className="relative isolate mx-auto w-full max-w-[1240px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div aria-hidden="true" className={cn(styles.aurora, styles.grain)} />
-
-      <header className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
-        <div className="max-w-2xl min-w-0">
-          <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs font-medium">
-            <span className="bg-card/60 text-primary ring-border/70 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.1em] uppercase ring-1 backdrop-blur">
-              <GreetingIcon aria-hidden="true" className="size-3.5" />
-              {greeting.text}
-            </span>
-            <span className="text-muted-foreground">{manilaDayLabel(now)}</span>
-          </p>
-          <h1 className="from-foreground via-foreground to-foreground/60 mt-4 bg-gradient-to-br bg-clip-text pb-[0.08em] text-[1.875rem] leading-[1.04] font-semibold tracking-[-0.05em] text-transparent min-[360px]:text-[2.125rem] sm:text-[2.75rem] lg:text-[3.25rem]">
-            {daylineItems.length ? "Your Day, Mapped." : "Your route is clear."}
-          </h1>
-          {/* The smallest phones skip the tagline so NOW starts higher. */}
-          <p className="text-muted-foreground mt-2.5 max-w-xl text-sm leading-6 max-[359px]:hidden sm:text-[0.9375rem]">
-            {daylineItems.length
-              ? "One clear move now. The rest of your system stays within reach."
-              : "Add what matters and ATLAS will surface the next useful move."}
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex">
-          <Button
-            asChild
-            variant="secondary"
-            size="sm"
-            className="backdrop-blur"
-          >
-            <Link href="/money/transactions?create=true">
-              <CircleDollarSign
-                aria-hidden="true"
-                className="size-4 max-[359px]:hidden"
-              />
-              Record expense
-            </Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href="/tasks?create=true">
-              <Plus aria-hidden="true" className="size-4 max-[359px]:hidden" />
-              Add task
-            </Link>
-          </Button>
-        </div>
-      </header>
+    <PageShell>
+      <PageHeading
+        eyebrow={greeting.text}
+        icon={greeting.icon}
+        meta={manilaDayLabel(now)}
+        title={
+          daylineItems.length ? "Your Day, Mapped." : "Your route is clear."
+        }
+        description={
+          daylineItems.length
+            ? "One clear move now. The rest of your system stays within reach."
+            : "Add what matters and ATLAS will surface the next useful move."
+        }
+        actions={
+          <>
+            <Button asChild variant="secondary" className="backdrop-blur">
+              <Link href="/money/transactions?create=true">
+                <CircleDollarSign aria-hidden="true" className="size-4" />
+                Record expense
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/tasks?create=true">
+                <Plus aria-hidden="true" className="size-4" />
+                Add task
+              </Link>
+            </Button>
+          </>
+        }
+      />
 
       <div className="mt-6 sm:mt-8">
         <DaylineCommand
@@ -234,6 +217,6 @@ export function TodayDashboard({
           reviewComplete={dashboard.review_complete}
         />
       </div>
-    </SpotlightArea>
+    </PageShell>
   );
 }

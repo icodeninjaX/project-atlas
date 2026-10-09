@@ -1,9 +1,11 @@
-import Link from "next/link";
+import type { Route } from "next";
+import { Goal } from "lucide-react";
 import { notFound } from "next/navigation";
 import { GoalRelatedDetails } from "@/components/graph/goal-related-details";
-import { PageHeading } from "@/components/shared/page-heading";
+import { BackLink, PageHeading } from "@/components/shared/page-heading";
 import { getRelatedEntities } from "@/lib/graph/server";
 import { createClient } from "@/lib/supabase/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Milestone relationships" };
 
@@ -36,14 +38,10 @@ export default async function MilestoneRelationshipsPage({
     limit: 100,
   });
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
-      <Link
-        href={`/goals/${id}`}
-        className="text-primary inline-flex min-h-11 items-center text-sm font-semibold hover:underline"
-      >
-        ← Back to goal relationships
-      </Link>
+    <PageShell>
+      <BackLink href={`/goals/${id}` as Route}>Goal relationships</BackLink>
       <PageHeading
+        icon={Goal}
         eyebrow="ATLAS Graph"
         title={milestone.title}
         description="Knowledge linked to this milestone."
@@ -53,6 +51,6 @@ export default async function MilestoneRelationshipsPage({
         milestoneId={milestoneId}
         items={related.items}
       />
-    </div>
+    </PageShell>
   );
 }

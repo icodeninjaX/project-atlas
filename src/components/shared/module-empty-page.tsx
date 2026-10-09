@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "./empty-state";
 import { PageHeading } from "./page-heading";
+import { PageShell } from "./page-shell";
 
 export function ModuleEmptyPage({
   eyebrow,
@@ -21,7 +22,7 @@ export function ModuleEmptyPage({
   actionLabel: string;
 }) {
   return (
-    <div className="mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <PageHeading
         eyebrow={eyebrow}
         title={title}
@@ -36,6 +37,6 @@ export function ModuleEmptyPage({
           action={<Button variant="secondary">{actionLabel}</Button>}
         />
       </div>
-    </div>
+    </PageShell>
   );
 }

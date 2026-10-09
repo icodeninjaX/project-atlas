@@ -7,8 +7,6 @@ import {
   Waypoints,
 } from "lucide-react";
 import { DashboardCardHeading } from "@/components/dashboard/dashboard-card";
-import { SpotlightArea } from "@/components/dashboard/spotlight-area";
-import todayStyles from "@/components/dashboard/today.module.css";
 import { FindingCard } from "@/components/history/finding-card";
 import {
   HeroShell,
@@ -39,6 +37,7 @@ import {
   type ScanSummary,
 } from "@/lib/history/pattern-view";
 import { cn } from "@/lib/utils";
+import { PageShell } from "@/components/shared/page-shell";
 
 const RULES = [
   "Both series have all eleven completed Asia/Manila months fully recorded.",
@@ -242,11 +241,7 @@ export function PatternsScreen({
 }) {
   const scan = summarizeScan(results);
   return (
-    <SpotlightArea className="relative isolate mx-auto w-full max-w-6xl min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div
-        aria-hidden="true"
-        className={cn(todayStyles.aurora, todayStyles.grain)}
-      />
+    <PageShell>
       <HistoryHeader
         eyebrow="Recorded history"
         eyebrowIcon={Waypoints}
@@ -295,6 +290,6 @@ export function PatternsScreen({
           <PatternsMethod version={version} />
         </>
       )}
-    </SpotlightArea>
+    </PageShell>
   );
 }

@@ -1,3 +1,4 @@
+import { ChartNoAxesCombined } from "lucide-react";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { AnswerV2View } from "@/components/analyst/answer-v2";
@@ -5,6 +6,7 @@ import { PageHeading } from "@/components/shared/page-heading";
 import { previewAnswers } from "@/lib/analyst/intelligence/evaluation/preview";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
 import { createClient } from "@/lib/supabase/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = {
   title: "Analyst V2 preview",
@@ -21,13 +23,14 @@ export default async function AnalystV2PreviewPage() {
   const user = client ? await client.auth.getUser() : null;
   if (!user?.data.user) notFound();
   return (
-    <div className="mx-auto max-w-3xl p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <PageHeading
+        icon={ChartNoAxesCombined}
         eyebrow="Internal preview"
         title="Analyst V2 answers"
         description="Synthetic fixture answers checked by the versioned claim ledger. Nothing here reads your records or calls a model."
       />
-      <div className="mt-8 flex flex-col gap-6">
+      <div className="mt-8 flex max-w-3xl flex-col gap-6">
         {previewAnswers().map((item) => (
           <section key={item.title} className="flex flex-col gap-2">
             <h2 className="text-sm font-semibold">{item.title}</h2>
@@ -40,6 +43,6 @@ export default async function AnalystV2PreviewPage() {
           </section>
         ))}
       </div>
-    </div>
+    </PageShell>
   );
 }
