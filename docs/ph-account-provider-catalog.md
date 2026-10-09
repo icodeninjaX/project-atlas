@@ -89,6 +89,27 @@ These are the first provider choices for the picker. All Wave 1 icons are now av
 | `bayad`            | Bayad            | e_wallet     | `#F58220`  | ready       | `public/icons/ph-accounts/bayad.png`            | https://www.bayad.com/                                                                           |
 | `wise`             | Wise             | e_wallet     | `#9FE870`  | ready       | `public/icons/ph-accounts/wise.png`             | https://wise.com/ph/                                                                             |
 
+### Icon audit — 2026-10-09
+
+Every Wave 1 icon was compared with the provider's own app icon on Google Play
+(PH store) or the Apple App Store (PH), matched by publisher name, plus the
+provider's website where the app icon is not the bank logo.
+
+| Provider                                                                                                       | Verdict                                | Fix and source                                                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BPI                                                                                                            | Wrong: old gold crest only             | Official BPI app icon (Play `com.bpi.ng.app`, Bank of the Philippine Islands)                                                                         |
+| BDO                                                                                                            | Blurry upscale                         | "BDO" mark cropped from the official BDO Online icon (Play `ph.com.bdo.retail`, BDO Unibank) without the "online" app label                           |
+| EastWest                                                                                                       | Wrong: "easyway" app promo art         | Bank diamond mark: shape from the vector logo and colors from the color logo on eastwestbanker.com (`2024-06/Footer-logo.svg`, `2025-07/ew-logo.png`) |
+| Chinabank                                                                                                      | Blurry upscale                         | Mark cropped from the official My CBC icon (Play `ph.chinabank.digital`, China Banking Corp) without the "My CBC" label                               |
+| PNB                                                                                                            | Blurry crest without wordmark          | Official PNB Digital icon (App Store, Philippine National Bank)                                                                                       |
+| Tonik                                                                                                          | Wrong: lone "t" glyph                  | Official Tonik icon (Play `com.tonik.mobile`, Tonik Digital Bank); card color `#785AFF`                                                               |
+| GrabPay                                                                                                        | Outdated green tile                    | Current official Grab icon (Play `com.grabtaxi.passenger`, Grab Holdings)                                                                             |
+| ShopeePay                                                                                                      | Wrong: seasonal "9.9 sale" Shopee icon | ShopeePay wallet mark from the ShopeePay Philippines, Inc. app (Play `com.shopeepay.merchant.ph`) without the "Partner" label                         |
+| Coins.ph                                                                                                       | Degraded copy                          | Official Coins icon (Play `asia.coins.mobile`, Coins Asia)                                                                                            |
+| PalawanPay                                                                                                     | Small, padded                          | Official PalawanPay icon (Play `com.palawanpay.ewallet`, PPS-PEPP); card color `#065B2D` (was blue)                                                   |
+| Bayad                                                                                                          | Off-tone copy                          | Official Bayad icon (Play `com.bayadcenter.bayad`); card color `#F06021`                                                                              |
+| GCash, Metrobank, UnionBank, RCBC, Security Bank, LANDBANK, Maya, Maya Bank, GoTyme, MariBank, UNO, CIMB, Wise | Correct                                | Unchanged                                                                                                                                             |
+
 Brand colors above are implementation starting points and must be checked against each provider’s current official asset before release.
 
 ## Full InstaPay-backed catalog
