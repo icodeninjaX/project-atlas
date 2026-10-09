@@ -8,6 +8,9 @@ values
  ('d8000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','pool-a@example.test','',now(),now(),now(),'{}','{}'),
  ('d8000000-0000-4000-8000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','pool-b@example.test','',now(),now(),now(),'{}','{}');
 
+-- These cases cover the shared pool; per-user shares are in ai_access_guard.sql.
+update private.ai_guard_settings set user_pool_share = 1;
+
 create temp table reservations (name text primary key, id bigint);
 grant all on reservations to authenticated, service_role;
 
