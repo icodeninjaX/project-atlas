@@ -6,10 +6,7 @@ afterEach(cleanup);
 
 function renderPanel() {
   return render(
-    <GoalCreatePanel
-      heading={<h1>Goals</h1>}
-      description={<p>Choose a direction.</p>}
-    />,
+    <GoalCreatePanel title="Goals" description="Choose a direction." />,
   );
 }
 
@@ -23,7 +20,7 @@ describe("GoalCreatePanel", () => {
     });
 
     expect(screen.queryByLabelText("Goal title")).not.toBeInTheDocument();
-    expect(heading.parentElement).toContainElement(createGoalButton);
+    expect(heading.closest("header")).toContainElement(createGoalButton);
   });
 
   it("opens and focuses the form when Create goal is selected", () => {

@@ -5,6 +5,7 @@ import { PageHeading } from "@/components/shared/page-heading";
 import { Card, CardContent } from "@/components/ui/card";
 import { manilaIsoDate } from "@/lib/dashboard/today";
 import { loadRunwayWorkspace } from "@/lib/runway/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Runway" };
 
@@ -18,8 +19,9 @@ export default async function RunwayPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <PageHeading
+        icon={WalletCards}
         eyebrow="Money / Runway"
         title="Personal runway"
         description="How long the money you have covers what you must keep paying. Future income never extends it."
@@ -48,6 +50,6 @@ export default async function RunwayPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageShell>
   );
 }

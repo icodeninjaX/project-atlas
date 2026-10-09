@@ -21,6 +21,7 @@ import {
   formatCalendarDate,
   manilaTodayIsoDate,
 } from "@/lib/dates/dates";
+import { PageShell } from "@/components/shared/page-shell";
 
 export type GoalsBoardGoal = {
   id: string;
@@ -57,7 +58,7 @@ function SummaryStat({
   detail: string;
 }) {
   return (
-    <div className="border-border/70 bg-background/60 min-w-0 rounded-2xl border p-3 backdrop-blur-sm sm:p-4">
+    <div className="border-border/70 bg-card/80 min-w-0 rounded-2xl border p-3 backdrop-blur-sm sm:p-4">
       <dt className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.12em] uppercase sm:text-[11px]">
         <Icon className="text-primary size-3.5 shrink-0" aria-hidden="true" />
         <span className="truncate">{label}</span>
@@ -134,24 +135,11 @@ export function GoalsBoard({
     : undefined;
 
   return (
-    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <GoalCreatePanel
-        eyebrow={
-          <p className="text-primary mb-3 text-xs font-semibold tracking-[0.14em] uppercase">
-            Direction
-          </p>
-        }
-        heading={
-          <h1 className="text-[2rem] leading-none font-semibold tracking-[-0.045em] sm:text-[2.6rem]">
-            Goals
-          </h1>
-        }
-        description={
-          <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-6">
-            Progress updates automatically as you complete, reopen, or add
-            milestones.
-          </p>
-        }
+        eyebrow="Direction"
+        title="Goals"
+        description="Progress updates automatically as you complete, reopen, or add milestones."
         summary={
           goals.length > 0 ? (
             <dl className="mt-6 grid grid-cols-2 gap-2 sm:mt-8 sm:gap-3 lg:grid-cols-4">
@@ -271,6 +259,6 @@ export function GoalsBoard({
           })
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

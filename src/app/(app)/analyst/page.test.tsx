@@ -12,6 +12,7 @@ vi.mock("@/components/analyst/intelligence-workspace", () => ({
 }));
 vi.mock("@/components/shared/page-heading", () => ({
   PageHeading: () => null,
+  PageHeadingNote: () => null,
 }));
 // Any query chain resolves to no rows.
 const rows = (): unknown =>

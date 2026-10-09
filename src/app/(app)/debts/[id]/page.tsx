@@ -3,6 +3,7 @@ import { DebtDetail } from "@/components/debts/debt-detail";
 import { DEBT_COLUMNS, toDebtRecord, type DebtRecord } from "@/lib/debts/debt";
 import { manilaTodayIsoDate } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Debt details" };
 
@@ -29,7 +30,7 @@ export default async function DebtDetailPage({
   if (!debt) notFound();
 
   return (
-    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <DebtDetail
         debt={toDebtRecord(debt as DebtRecord)}
         payments={(payments ?? []).map((payment) => ({
@@ -39,6 +40,6 @@ export default async function DebtDetailPage({
         today={manilaTodayIsoDate()}
         highlightPaymentId={query.highlightPayment ?? null}
       />
-    </div>
+    </PageShell>
   );
 }

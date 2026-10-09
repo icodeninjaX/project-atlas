@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { isCalendarDate } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Activity history" };
 
@@ -107,8 +108,9 @@ export default async function ActivityPage({
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <PageHeading
+        icon={History}
         eyebrow="Audit trail"
         title="Activity history"
         description="A concise record of meaningful changes. Full record payloads, passwords, and secrets are never stored here."
@@ -288,6 +290,6 @@ export default async function ActivityPage({
           </ol>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

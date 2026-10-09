@@ -1,3 +1,4 @@
+import { Landmark } from "lucide-react";
 import { DebtsWorkspace } from "@/components/debts/debts-workspace";
 import { MoneyNavigation } from "@/components/money/money-navigation";
 import { PageHeading } from "@/components/shared/page-heading";
@@ -10,6 +11,7 @@ import {
 import { manilaTodayIsoDate } from "@/lib/dates/dates";
 import { loadDebtPagePayments } from "@/lib/debts/payments";
 import { createClient } from "@/lib/supabase/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Debts" };
 
@@ -46,8 +48,9 @@ export default async function DebtsPage({
   const highlight = query.highlight;
 
   return (
-    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <PageHeading
+        icon={Landmark}
         eyebrow="Money / Debts"
         title="Debt payoff"
         description="What you owe, what it costs each month, and the order that clears it soonest."
@@ -70,6 +73,6 @@ export default async function DebtsPage({
             : null
         }
       />
-    </div>
+    </PageShell>
   );
 }

@@ -5,6 +5,8 @@ import { SearchInput } from "@/components/search/search-input";
 import { getSearchGoalContext, searchResultGraphKey } from "@/lib/graph/server";
 import { createClient } from "@/lib/supabase/server";
 import { formatWeekOfTitle, isCalendarDate } from "@/lib/dates/dates";
+import { PageHeading } from "@/components/shared/page-heading";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Search" };
 
@@ -63,15 +65,13 @@ export default async function SearchPage({
   );
 
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
-      <p className="text-primary font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
-        Across ATLAS
-      </p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">Search</h1>
-      <p className="text-muted-foreground mt-2 text-sm">
-        Results stay inside your account and are grouped by the record you
-        recognize.
-      </p>
+    <PageShell>
+      <PageHeading
+        eyebrow="Across ATLAS"
+        icon={Search}
+        title="Search"
+        description="Results stay inside your account and are grouped by the record you recognize."
+      />
       <div className="mt-7">
         <SearchInput
           defaultValue={query}
@@ -158,6 +158,6 @@ export default async function SearchPage({
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

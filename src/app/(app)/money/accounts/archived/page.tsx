@@ -8,6 +8,7 @@ import { PageHeading } from "@/components/shared/page-heading";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Archived accounts" };
 
@@ -25,8 +26,9 @@ export default async function ArchivedAccountsPage() {
   const accounts = (data ?? []) as AccountSummary[];
 
   return (
-    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <PageHeading
+        icon={WalletCards}
         eyebrow="Money / Accounts / Archived"
         title="Archived accounts"
         description="Accounts stored outside your active totals. Restore one whenever you need to use it again."
@@ -57,6 +59,6 @@ export default async function ArchivedAccountsPage() {
           ))}
         </ul>
       )}
-    </div>
+    </PageShell>
   );
 }

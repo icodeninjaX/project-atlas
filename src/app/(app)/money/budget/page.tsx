@@ -1,3 +1,4 @@
+import { WalletCards } from "lucide-react";
 import type { BudgetMonthData } from "@/components/money/budget-editor";
 import { BudgetWorkspace } from "@/components/money/budget-workspace";
 import { MoneyNavigation } from "@/components/money/money-navigation";
@@ -6,6 +7,7 @@ import { fetchExpensesBetween } from "@/lib/budgets/expenses";
 import { shiftMonth } from "@/lib/budgets/plan";
 import { formatCalendarMonth, resolveCalendarMonth } from "@/lib/dates/dates";
 import { createClient } from "@/lib/supabase/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Budget" };
 
@@ -90,8 +92,9 @@ export default async function BudgetPage({
   );
 
   return (
-    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <PageHeading
+        icon={WalletCards}
         eyebrow={`Money / Budget / ${formatCalendarMonth(month)}`}
         title="Monthly plan"
         description="What you mean to spend in each category, against what you actually record. Overspending is always named in text."
@@ -106,6 +109,6 @@ export default async function BudgetPage({
         previous={monthData(previousBudget, spentLastMonth)}
         notes={budget?.notes ?? null}
       />
-    </div>
+    </PageShell>
   );
 }

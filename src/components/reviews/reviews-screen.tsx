@@ -1,6 +1,4 @@
 import { NotebookPen } from "lucide-react";
-import { SpotlightArea } from "@/components/dashboard/spotlight-area";
-import todayStyles from "@/components/dashboard/today.module.css";
 import { ReviewForm } from "@/components/reviews/review-form";
 import { ReviewWorkspace } from "@/components/reviews/review-workspace";
 import { WeekHero, type WeekFacts } from "@/components/reviews/week-hero";
@@ -18,7 +16,8 @@ import {
   weekDayIndex,
   type ReviewArchiveItem,
 } from "@/lib/reviews/view";
-import { cn } from "@/lib/utils";
+import { PageHeading } from "@/components/shared/page-heading";
+import { PageShell } from "@/components/shared/page-shell";
 
 /** This week's saved review, in the form's own field names. */
 export type CurrentReview = {
@@ -79,25 +78,13 @@ export function ReviewsScreen({
   };
 
   return (
-    <SpotlightArea className="relative isolate mx-auto w-full max-w-[1180px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div
-        aria-hidden="true"
-        className={cn(todayStyles.aurora, todayStyles.grain)}
+    <PageShell>
+      <PageHeading
+        eyebrow="Monday–Sunday"
+        icon={NotebookPen}
+        title="Weekly reviews"
+        description="A quiet place to notice your patterns, remember your progress, and choose what matters next."
       />
-
-      <header className="max-w-2xl min-w-0">
-        <p className="bg-card/60 text-primary ring-border/70 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.1em] uppercase ring-1 backdrop-blur">
-          <NotebookPen aria-hidden="true" className="size-3.5" />
-          Monday–Sunday
-        </p>
-        <h1 className="from-foreground via-foreground to-foreground/60 mt-4 bg-gradient-to-br bg-clip-text pb-[0.08em] text-[2.125rem] leading-[1.04] font-semibold tracking-[-0.05em] text-transparent sm:text-[2.75rem] lg:text-[3.25rem]">
-          Weekly reviews
-        </h1>
-        <p className="text-muted-foreground mt-2.5 max-w-xl text-sm leading-6 sm:text-[0.9375rem]">
-          A quiet place to notice your patterns, remember your progress, and
-          choose what matters next.
-        </p>
-      </header>
 
       <ReviewWorkspace
         reviews={reviews}
@@ -129,6 +116,6 @@ export function ReviewsScreen({
           </div>
         }
       />
-    </SpotlightArea>
+    </PageShell>
   );
 }

@@ -1,8 +1,6 @@
 import { CloudOff, History, LogIn, ShieldCheck, Waypoints } from "lucide-react";
 import Link from "next/link";
 import { DashboardCardHeading } from "@/components/dashboard/dashboard-card";
-import { SpotlightArea } from "@/components/dashboard/spotlight-area";
-import todayStyles from "@/components/dashboard/today.module.css";
 import {
   CoverageSwatch,
   HistoryHeader,
@@ -29,6 +27,7 @@ import {
   type HistoryWindow,
 } from "@/lib/history/view";
 import { cn } from "@/lib/utils";
+import { PageShell } from "@/components/shared/page-shell";
 
 const coverageNotes: Array<{
   coverage: HistoryCoverage;
@@ -128,11 +127,7 @@ export function HistoryScreen({
   const overview = summarizeHistory(series);
 
   return (
-    <SpotlightArea className="relative isolate mx-auto w-full max-w-6xl min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div
-        aria-hidden="true"
-        className={cn(todayStyles.aurora, todayStyles.grain)}
-      />
+    <PageShell>
       <HistoryHeader
         eyebrow="Deterministic metrics"
         eyebrowIcon={History}
@@ -200,6 +195,6 @@ export function HistoryScreen({
           <HistoryNotes updatedAt={updatedAt} version={version} />
         </>
       )}
-    </SpotlightArea>
+    </PageShell>
   );
 }

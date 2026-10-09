@@ -13,8 +13,6 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
-import { SpotlightArea } from "@/components/dashboard/spotlight-area";
-import todayStyles from "@/components/dashboard/today.module.css";
 import { ConceptFormSheet } from "@/components/knowledge/concept-form-sheet";
 import { ConceptLibrary } from "@/components/knowledge/concept-library";
 import { ConceptPanel } from "@/components/knowledge/concept-panel";
@@ -48,6 +46,8 @@ import {
   type KnowledgeView,
 } from "@/lib/knowledge/view";
 import { cn } from "@/lib/utils";
+import { PageHeading } from "@/components/shared/page-heading";
+import { PageShell } from "@/components/shared/page-shell";
 
 export type { KnowledgeConcept, KnowledgeReview } from "@/lib/knowledge/view";
 
@@ -353,38 +353,22 @@ export function KnowledgeWorkspace({
   );
 
   return (
-    <SpotlightArea className="relative isolate mx-auto w-full max-w-[1280px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div
-        aria-hidden="true"
-        className={cn(todayStyles.aurora, todayStyles.grain)}
+    <PageShell>
+      <PageHeading
+        eyebrow="Learning system"
+        icon={GraduationCap}
+        title="Knowledge"
+        description="Capture what you learn, explain it in your own words, and let spaced reviews make it stick."
+        actions={
+          // Until something is saved, the hero holds the only add button.
+          concepts.length ? (
+            <Button type="button" onClick={openCreate}>
+              <Plus aria-hidden="true" className="size-4" />
+              Add concept
+            </Button>
+          ) : undefined
+        }
       />
-
-      <header className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
-        <div className="max-w-2xl min-w-0">
-          <p className="bg-card/60 text-primary ring-border/70 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.1em] uppercase ring-1 backdrop-blur">
-            <GraduationCap aria-hidden="true" className="size-3.5" />
-            Learning system
-          </p>
-          <h1 className="from-foreground via-foreground to-foreground/60 mt-4 bg-gradient-to-br bg-clip-text pb-[0.08em] text-[2.125rem] leading-[1.04] font-semibold tracking-[-0.05em] break-words text-transparent sm:text-[2.75rem] lg:text-[3.25rem]">
-            Knowledge
-          </h1>
-          <p className="text-muted-foreground mt-2.5 max-w-xl text-sm leading-6 text-pretty sm:text-[0.9375rem]">
-            Capture what you learn, explain it in your own words, and let spaced
-            reviews make it stick.
-          </p>
-        </div>
-        {/* Until something is saved, the hero holds the only add button. */}
-        {concepts.length ? (
-          <Button
-            type="button"
-            onClick={openCreate}
-            className="self-start sm:self-auto"
-          >
-            <Plus aria-hidden="true" className="size-4" />
-            Add concept
-          </Button>
-        ) : null}
-      </header>
 
       {concepts.length === 0 ? (
         <KnowledgeEmptyHero onAdd={openCreate} />
@@ -492,6 +476,6 @@ export function KnowledgeWorkspace({
           nowIso={nowIso}
         />
       ) : null}
-    </SpotlightArea>
+    </PageShell>
   );
 }

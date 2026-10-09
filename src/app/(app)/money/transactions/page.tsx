@@ -1,3 +1,4 @@
+import { WalletCards } from "lucide-react";
 import {
   TransactionWorkspace,
   type TransactionHistoryItem,
@@ -8,6 +9,7 @@ import { PageHeading } from "@/components/shared/page-heading";
 import { MoneyNavigation } from "@/components/money/money-navigation";
 import { fetchIncomeExpenseTotals } from "@/lib/money/month-totals";
 import { createClient } from "@/lib/supabase/server";
+import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Transactions" };
 
@@ -175,8 +177,9 @@ export default async function TransactionsPage({
   );
 
   return (
-    <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
+    <PageShell>
       <PageHeading
+        icon={WalletCards}
         eyebrow="Money / Transactions"
         title="Money movement"
         description="Income and expenses change balances. Transfers stay separate and never inflate either total."
@@ -202,6 +205,6 @@ export default async function TransactionsPage({
           />
         }
       />
-    </div>
+    </PageShell>
   );
 }
