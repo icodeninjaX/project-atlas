@@ -192,6 +192,20 @@ describe("shared validation schemas", () => {
     ).toBe(false);
   });
 
+  it("accepts only http and https job links", () => {
+    const application = (jobUrl: string) =>
+      jobApplicationSchema.safeParse({
+        companyName: "Sample company",
+        roleTitle: "Developer",
+        stage: "interested",
+        jobUrl,
+      }).success;
+    expect(application("https://jobs.example.test/42")).toBe(true);
+    expect(application("http://jobs.example.test/42")).toBe(true);
+    expect(application("javascript:alert(document.cookie)")).toBe(false);
+    expect(application("data:text/html,<script>alert(1)</script>")).toBe(false);
+  });
+
   it("rejects weekly review scores outside 1 to 10", () => {
     expect(
       weeklyReviewSchema.safeParse({
