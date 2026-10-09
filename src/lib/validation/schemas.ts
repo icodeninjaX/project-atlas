@@ -150,7 +150,8 @@ export const jobApplicationSchema = z
   .object({
     companyName: z.string().trim().min(1).max(160),
     roleTitle: z.string().trim().min(1).max(160),
-    jobUrl: z.url().optional(),
+    // Only web links: a javascript: or data: URL would run when the link is opened.
+    jobUrl: z.httpUrl("Use an http or https link").optional(),
     location: optionalText,
     workSetup: z
       .enum(["remote", "hybrid", "onsite", "unspecified"])

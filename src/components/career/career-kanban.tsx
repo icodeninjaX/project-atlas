@@ -45,7 +45,7 @@ import {
   type CareerApplication,
   type CareerStage,
 } from "@/lib/career/view";
-import { cn } from "@/lib/utils";
+import { cn, safeExternalHref } from "@/lib/utils";
 import { useScrollStrip } from "@/components/shared/scroll-strip";
 
 export type { CareerApplication } from "@/lib/career/view";
@@ -178,6 +178,7 @@ function ApplicationCard({
   const applied =
     showAppliedDate && application.applied_at ? application.applied_at : null;
   const compact = density === "compact";
+  const jobHref = safeExternalHref(application.job_url);
   const closed = !pipelineStages.includes(
     application.stage as (typeof pipelineStages)[number],
   );
@@ -321,9 +322,9 @@ function ApplicationCard({
             onStageChange={onStageChange}
             className="grow basis-40"
           />
-          {application.job_url ? (
+          {jobHref ? (
             <a
-              href={application.job_url}
+              href={jobHref}
               target="_blank"
               rel="noreferrer"
               aria-label={`Open job post for ${application.company_name}`}

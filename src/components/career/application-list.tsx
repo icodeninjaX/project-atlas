@@ -23,7 +23,7 @@ import {
   type ListGroup,
   type ListGroupId,
 } from "@/lib/career/view";
-import { cn } from "@/lib/utils";
+import { cn, safeExternalHref } from "@/lib/utils";
 
 const groupIcons: Record<
   ListGroupId,
@@ -91,6 +91,7 @@ function ApplicationRow({
     application.salary_max_centavos,
   );
   const closed = !isOpenStage(application.stage);
+  const jobHref = safeExternalHref(application.job_url);
 
   return (
     <li
@@ -172,9 +173,9 @@ function ApplicationRow({
             )}
           </div>
           <div className="flex shrink-0 items-center justify-end gap-0.5 max-lg:ml-auto">
-            {application.job_url ? (
+            {jobHref ? (
               <a
-                href={application.job_url}
+                href={jobHref}
                 target="_blank"
                 rel="noreferrer"
                 aria-label={`Open job post for ${application.company_name}`}

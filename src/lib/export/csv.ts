@@ -5,7 +5,8 @@ function safeCell(value: CsvValue): string {
   if (value == null) return "";
 
   let text = typeof value === "object" ? JSON.stringify(value) : String(value);
-  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  // OWASP formula triggers, including tab and carriage return.
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
 
   if (/[",\r\n]/.test(text)) {
     return `"${text.replaceAll('"', '""')}"`;

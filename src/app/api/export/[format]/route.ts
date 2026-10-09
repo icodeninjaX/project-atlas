@@ -209,7 +209,7 @@ export async function GET(
 
   if (format === "csv") {
     const entity = new URL(request.url).searchParams.get("entity") ?? "";
-    if (!(entity in csvEntities)) {
+    if (!Object.hasOwn(csvEntities, entity)) {
       return Response.json({ code: "invalid_export_entity" }, { status: 400 });
     }
 

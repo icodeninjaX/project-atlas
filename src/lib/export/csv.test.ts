@@ -13,6 +13,12 @@ describe("CSV export", () => {
     );
   });
 
+  it("neutralizes tab and carriage-return formula prefixes", () => {
+    expect(createCsv([{ a: "\t=1+1", b: "\r=1+1" }], ["a", "b"])).toBe(
+      "a,b\r\n'\t=1+1,\"'\r=1+1\"",
+    );
+  });
+
   it("uses stable columns for an empty export", () => {
     expect(createCsv([], ["title", "status"])).toBe("title,status");
   });
