@@ -8,6 +8,7 @@ import { MoneyAmount } from "@/components/money/money-amount";
 import { PesoInput } from "@/components/money/money-fields";
 import { RelatedGoalField } from "@/components/graph/related-goal-field";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
+import { Disclosure } from "@/components/debts/debt-disclosure";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { DebtActionState } from "@/lib/debts/actions";
@@ -166,6 +167,7 @@ export function DebtForm({
     debt && debt.status !== "paid" ? debt.status : "active",
   );
   const [rateUnit, setRateUnit] = useState<RateUnit>("year");
+  const [notes, setNotes] = useState(debt?.notes ?? "");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [minimum, setMinimum] = useState(
@@ -194,6 +196,7 @@ export function DebtForm({
         setMinimum("");
         setRate("");
         setDueDate("");
+        setNotes("");
       }
       onSaved?.();
       return result;
@@ -211,6 +214,18 @@ export function DebtForm({
     ? debt.original_balance_centavos - debt.current_balance_centavos
     : 0;
   const dueDay = dueDate ? dueDayFor(dueDate, debt?.due_day ?? null) : null;
+
+  const moreSummary = [
+    Number(rate) > 0 && Number.isFinite(ratePercent)
+      ? `${Number((ratePercent / 12).toFixed(2))}% interest a month`
+      : "Interest rate not set",
+    notes.trim() ? "Notes added" : null,
+    debt
+      ? STATUS_OPTIONS.find((option) => option.value === status)?.label
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   const deleteDebt = async () => {
     if (!debt) return;
@@ -278,7 +293,7 @@ export function DebtForm({
         </fieldset>
       </Section>
 
-      <Section step={2} title="What you owe">
+      <Section step={2} title="What you owe and when">
         <div className="grid gap-3 min-[26rem]:grid-cols-2">
           <div className="min-w-0 min-[26rem]:col-span-2">
             <label htmlFor={ids.balance} className={fieldLabel}>
@@ -337,6 +352,31 @@ export function DebtForm({
               />
             </div>
           </div>
+          <label className={cn(fieldLabel, "min-w-0")}>
+            Next due date
+            <Input
+              name="nextDueDate"
+              type="date"
+              value={dueDate}
+              onChange={(event) => setDueDate(event.target.value)}
+              aria-label="Next due date"
+              aria-describedby={`${id}-due-hint`}
+              className="mt-1.5"
+            />
+            <span
+              id={`${id}-due-hint`}
+              className="mt-1 block text-[0.6875rem] leading-4"
+            >
+              {dueDay
+                ? `Repeats monthly on day ${dueDay}. Paying the bill moves it to the next month.`
+                : "Leave it empty if there is no fixed due date."}
+            </span>
+          </label>
+        </div>
+      </Section>
+
+      <Disclosure label="More details" summary={moreSummary}>
+        <div className="grid gap-4">
           <div className="min-w-0">
             <label htmlFor={`${id}-rate`} className={fieldLabel}>
               Interest rate
@@ -396,44 +436,20 @@ export function DebtForm({
                 : "Lenders often quote it by the month, like 3% a month."}
             </p>
           </div>
-        </div>
-      </Section>
-
-      <Section step={3} title="When it is due">
-        <div className="grid gap-3 min-[26rem]:grid-cols-2">
-          <label className={cn(fieldLabel, "min-w-0")}>
-            Next due date
-            <Input
-              name="nextDueDate"
-              type="date"
-              value={dueDate}
-              onChange={(event) => setDueDate(event.target.value)}
-              aria-label="Next due date"
-              aria-describedby={`${id}-due-hint`}
-              className="mt-1.5"
-            />
-            <span
-              id={`${id}-due-hint`}
-              className="mt-1 block text-[0.6875rem] leading-4"
-            >
-              {dueDay
-                ? `Repeats monthly on day ${dueDay}. Paying the bill moves it to the next month.`
-                : "Leave it empty if there is no fixed due date."}
-            </span>
-          </label>
           <label className={cn(fieldLabel, "min-w-0")}>
             Notes
             <Input
               name="notes"
               maxLength={2000}
-              defaultValue={debt?.notes ?? ""}
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
               placeholder="Account number, payment channel…"
               aria-label="Notes"
               className="mt-1.5"
             />
           </label>
           {debt ? (
-            <fieldset className="min-w-0 min-[26rem]:col-span-2">
+            <fieldset className="min-w-0">
               <legend className={fieldLabel}>Status</legend>
               <div className="mt-1.5 grid gap-2 min-[30rem]:grid-cols-3">
                 {STATUS_OPTIONS.map((option) => (
@@ -464,10 +480,10 @@ export function DebtForm({
               ) : null}
             </fieldset>
           ) : (
-            <RelatedGoalField className="min-[26rem]:col-span-2" />
+            <RelatedGoalField />
           )}
         </div>
-      </Section>
+      </Disclosure>
 
       <Estimate
         balanceCentavos={balanceCentavos}

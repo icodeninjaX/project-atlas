@@ -83,7 +83,12 @@ describe("edit form parity", () => {
     );
     expect(screen.getByLabelText("Next due date")).toHaveValue("2026-08-15");
     expect(screen.getByText(/Repeats monthly on day 15/)).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: /Active/ })).toBeChecked();
+    expect(
+      screen.getByRole("radio", { name: /Active/, hidden: true }),
+    ).toBeChecked();
+    expect(
+      screen.getByRole("button", { name: /More details/ }),
+    ).toHaveTextContent("1% interest a month · Notes added · Active");
     expect(screen.getByLabelText("Notes")).toHaveValue(debt.notes);
   });
 

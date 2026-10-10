@@ -119,6 +119,9 @@ describe("DebtDetail", () => {
     ).toHaveTextContent("The ₱2,000.00 you have paid stays in the history.");
     expect(sheet.getByText(/Repeats monthly on day 30/)).toBeInTheDocument();
 
+    const more = sheet.getByRole("button", { name: /More details/ });
+    expect(more).toHaveTextContent("3% interest a month · Active");
+    await user.click(more);
     const rate = sheet.getByLabelText("Interest rate percent");
     await user.clear(rate);
     await user.type(rate, "3");
@@ -162,5 +165,56 @@ describe("DebtDetail", () => {
     expect(
       screen.queryByRole("region", { name: "When it will be paid off" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows the three latest payments and folds the rest", async () => {
+    const user = userEvent.setup();
+    function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <OfflineContext.Provider
+          value={{
+            userId: "user",
+            online: true,
+            pending: 0,
+            blocked: 0,
+            lastSyncedAt: null,
+            submit: async () => ({ success: true, message: "ok" }),
+            retry: async () => undefined,
+            syncNow: async () => undefined,
+            clearPrivateCache: async () => undefined,
+          }}
+        >
+          {children}
+        </OfflineContext.Provider>
+      );
+    }
+    const dates = ["2026-09-20", "2026-09-05", "2026-08-20", "2026-08-05"];
+    render(
+      <DebtDetail
+        debt={DEBT}
+        today="2026-10-02"
+        highlightPaymentId={null}
+        payments={dates.map((date, index) => ({
+          id: `3333333${index}-3333-4333-8333-333333333333`,
+          amount_centavos: 10_000,
+          payment_date: date,
+          notes: null,
+        }))}
+      />,
+      { wrapper: Wrapper },
+    );
+    const history = within(screen.getByRole("region", { name: "Payments" }));
+
+    expect(history.getAllByRole("listitem")).toHaveLength(3);
+    // The month total still counts the folded payment.
+    expect(history.getByText("August 2026").nextSibling).toHaveTextContent(
+      "₱200.00",
+    );
+
+    await user.click(
+      history.getByRole("button", { name: "Show all 4 payments" }),
+    );
+
+    expect(history.getAllByRole("listitem")).toHaveLength(4);
   });
 });
