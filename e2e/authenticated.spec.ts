@@ -67,7 +67,7 @@ test.describe("authenticated ATLAS workflows", () => {
     await page.getByRole("button", { name: "Add debt" }).click();
     const form = page.locator("#debt-create-form");
     await form.getByLabel("Creditor name").fill(creditor);
-    await form.getByLabel("Original balance in pesos").fill("1000.00");
+    await form.getByLabel("Amount owed in pesos").fill("1000.00");
     await form.getByLabel("Minimum payment in pesos").fill("100.00");
     await syncClick(page, form.getByRole("button", { name: "Add debt" }));
     await page.getByRole("link", { name: creditor }).click();

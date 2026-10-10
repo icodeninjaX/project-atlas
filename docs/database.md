@@ -21,6 +21,8 @@ An account stores `opening_balance_centavos`. `financial_account_balances` is a 
 
 Debt balances are recalculated inside PostgreSQL after every payment insert, update, or delete. The debt row is locked briefly, the sum is recomputed from the original balance, overpayment is rejected, and paid/active status is reconciled.
 
+`original_balance_centavos` is the amount owed in all: what was owed when the debt was added, plus any correction since. Editing a debt's balance in the app sets it to the new balance plus every payment so far, so the next recalculation keeps the corrected balance and payment history is untouched. A payment can carry a `transaction_id`: the app logs it as a Debt Payment expense from the chosen account, and deleting the payment deletes that expense. Deleting a debt cascades to its payments but leaves logged expenses in place. A payment marked as settling the bill moves `next_due_date` on a month, on `due_day` where the month has it.
+
 ## Ownership integrity
 
 Child tables use composite foreign keys such as `(account_id, user_id)` so a guessed ID cannot connect one user’s child row to another user’s parent row. Foreign-key and owner/filter columns are indexed.

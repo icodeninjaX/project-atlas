@@ -448,7 +448,7 @@ export function PayoffPlanner({
       id="plan"
       aria-labelledby="plan-title"
       data-spotlight
-      className={cn(dashboardCardClass, "mt-4 scroll-mt-24 sm:mt-5")}
+      className={cn(dashboardCardClass, "mt-8 scroll-mt-24 sm:mt-10")}
     >
       <DashboardCardHeading
         id="plan-title"

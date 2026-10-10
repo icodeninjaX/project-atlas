@@ -13,12 +13,15 @@ export function DebtSheet({
   onOpenChange,
   debt,
   today,
+  onDeleted,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   debt?: DebtRecord | null;
   /** YYYY-MM-DD in Manila. */
   today: string;
+  /** After the debt is deleted; the sheet has already closed. */
+  onDeleted?: () => void;
 }) {
   const close = () => onOpenChange(false);
 
@@ -30,7 +33,7 @@ export function DebtSheet({
       title={debt ? `Edit ${debt.creditor_name}` : "New debt"}
       description={
         debt
-          ? "Correct the terms or the schedule. Payments keep their history."
+          ? "Update the balance, terms, or due date. Payments keep their history."
           : "Enter it once as it stands today. Payments you record bring it down."
       }
       closeLabel={debt ? "Close debt editor" : "Close new debt form"}
@@ -43,6 +46,10 @@ export function DebtSheet({
           autoFocus={!debt}
           onCancel={close}
           onSaved={close}
+          onDeleted={() => {
+            close();
+            onDeleted?.();
+          }}
         />
       ) : null}
     </MoneySheet>

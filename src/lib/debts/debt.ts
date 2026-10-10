@@ -50,6 +50,24 @@ export function toDebtRecord(row: DebtRecord): DebtRecord {
   };
 }
 
+export type RateUnit = "month" | "year";
+
+/**
+ * A rate as a yearly percent, which is how it is stored. Lenders here often
+ * quote a monthly rate ("3% a month"); twelve of those make the year.
+ */
+export function annualRatePercent(rate: number, unit: RateUnit) {
+  if (!Number.isFinite(rate)) return Number.NaN;
+  return unit === "month" ? Math.round(rate * 12 * 10_000) / 10_000 : rate;
+}
+
+/** "3% a month · 36% a year", or "No interest". */
+export function formatRate(annualPercent: number) {
+  if (annualPercent <= 0) return "No interest";
+  const month = Number((annualPercent / 12).toFixed(2));
+  return `${month}% a month · ${Number(annualPercent.toFixed(2))}% a year`;
+}
+
 export type DebtForStrategy = {
   id: string;
   balanceCentavos: number;

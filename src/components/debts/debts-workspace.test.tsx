@@ -196,7 +196,7 @@ describe("DebtsWorkspace", () => {
 
     await user.type(sheet.getByLabelText("Creditor name"), "Atome");
     await user.click(sheet.getByRole("radio", { name: "Installment" }));
-    await user.type(sheet.getByLabelText("Original balance in pesos"), "12000");
+    await user.type(sheet.getByLabelText("Amount owed in pesos"), "12000");
     await user.type(sheet.getByLabelText("Minimum payment in pesos"), "1000");
     expect(sheet.getByText(/At the minimum, paid off in/)).toHaveTextContent(
       "1 year (Oct 2027), with no interest.",
@@ -208,7 +208,7 @@ describe("DebtsWorkspace", () => {
     expect(formData.get("creditorName")).toBe("Atome");
     expect(formData.get("debtType")).toBe("installment");
     // Formatted on blur; the server reads the separators.
-    expect(formData.get("originalBalance")).toBe("12,000.00");
+    expect(formData.get("balance")).toBe("12,000.00");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
@@ -221,7 +221,7 @@ describe("DebtsWorkspace", () => {
     const sheet = within(
       screen.getByRole("dialog", { name: "Edit Small Loan" }),
     );
-    expect(sheet.getByLabelText("Current balance in pesos")).toHaveValue(
+    expect(sheet.getByLabelText("Balance today in pesos")).toHaveValue(
       "500.00",
     );
     expect(sheet.getByRole("radio", { name: "Personal loan" })).toBeChecked();
@@ -245,5 +245,132 @@ describe("DebtsWorkspace", () => {
     expect(
       screen.queryByRole("region", { name: "Payoff plan" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("lists what is due soon, overdue first, each one tap from paying", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    const soon = within(screen.getByRole("region", { name: "Due soon" }));
+    const rows = soon.getAllByRole("listitem");
+    expect(rows.map((row) => row.querySelector("p")?.textContent)).toEqual([
+      "Big Card",
+      "Small Loan",
+    ]);
+    expect(within(rows[0]!).getByText("Overdue by 2 days")).toBeInTheDocument();
+
+    await user.click(soon.getByRole("button", { name: "Pay Small Loan" }));
+    const sheet = within(
+      screen.getByRole("dialog", { name: "Pay Small Loan" }),
+    );
+    expect(
+      sheet.getByRole("checkbox", { name: /This pays the bill due Oct 5/ }),
+    ).toBeChecked();
+  });
+
+  it("points out active debts with no due date", () => {
+    renderWorkspace({
+      debts: [
+        debt({
+          id: "44444444-4444-4444-8444-444444444444",
+          creditor_name: "Tita Lorna",
+          debt_type: "family",
+        }),
+      ],
+    });
+
+    const soon = within(screen.getByRole("region", { name: "Due soon" }));
+    expect(soon.getByText("Nothing due in the next 30 days.")).toBeVisible();
+    expect(
+      soon.getByRole("button", { name: "Tita Lorna, set its due date" }),
+    ).toBeInTheDocument();
+  });
+
+  it("pays a debt from its card", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+    const list = within(screen.getByRole("region", { name: "Open debts" }));
+
+    await user.click(list.getByRole("button", { name: "Pay Big Card" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "Pay Big Card" }),
+    ).toBeInTheDocument();
+  });
+
+  it("sets my priority order with the arrows and saves it", async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn<Submit>(async () => ({
+      success: true,
+      message: "Priority order saved.",
+    }));
+    renderWorkspace({ submit });
+
+    await user.click(screen.getByRole("radio", { name: "My priority" }));
+    expect(openDebtNames()).toEqual(["Small Loan", "Big Card"]);
+    expect(
+      screen.getByRole("button", { name: "Move Small Loan up" }),
+    ).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Move Big Card up" }));
+
+    expect(openDebtNames()).toEqual(["Big Card", "Small Loan"]);
+    expect(submit).toHaveBeenCalledWith("debt.reorder", expect.any(FormData));
+    expect(submit.mock.calls[0]![1].get("order")).toBe(
+      `${DEBTS[0]!.id},${DEBTS[1]!.id}`,
+    );
+  });
+
+  it("deletes a debt from its editor after a confirmation", async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn<Submit>(async () => ({
+      success: true,
+      message: "Debt deleted.",
+    }));
+    renderWorkspace({ submit });
+
+    await user.click(screen.getByRole("button", { name: "Edit Small Loan" }));
+    const sheet = within(
+      screen.getByRole("dialog", { name: "Edit Small Loan" }),
+    );
+    await user.click(sheet.getByRole("button", { name: "Delete" }));
+    expect(sheet.getByRole("alert")).toHaveTextContent("Delete Small Loan?");
+    expect(submit).not.toHaveBeenCalled();
+
+    await user.click(sheet.getByRole("button", { name: "Delete debt" }));
+
+    expect(submit).toHaveBeenCalledWith("debt.delete", expect.any(FormData));
+    expect(submit.mock.calls[0]![1].get("debtId")).toBe(DEBTS[1]!.id);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("edits the balance, a monthly rate, and the status", async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn<Submit>(async () => ({
+      success: true,
+      message: "Debt updated.",
+    }));
+    renderWorkspace({ submit });
+
+    await user.click(screen.getByRole("button", { name: "Edit Big Card" }));
+    const sheet = within(screen.getByRole("dialog", { name: "Edit Big Card" }));
+    expect(
+      sheet.getByText(/you have paid stays in the history/),
+    ).toHaveTextContent("The ₱2,000.00 you have paid stays in the history.");
+    expect(sheet.getByText(/Repeats monthly on day 30/)).toBeInTheDocument();
+
+    const rate = sheet.getByLabelText("Interest rate percent");
+    await user.clear(rate);
+    await user.type(rate, "3");
+    await user.click(sheet.getByRole("radio", { name: "/mo" }));
+    expect(sheet.getByText("That is 36% a year.")).toBeInTheDocument();
+    await user.click(sheet.getByRole("radio", { name: /Paused/ }));
+    await user.click(sheet.getByRole("button", { name: "Save changes" }));
+
+    const formData = submit.mock.calls[0]![1];
+    expect(formData.get("currentBalance")).toBe("4,000.00");
+    expect(formData.get("interestRatePercent")).toBe("3");
+    expect(formData.get("interestRateUnit")).toBe("month");
+    expect(formData.get("status")).toBe("paused");
   });
 });
