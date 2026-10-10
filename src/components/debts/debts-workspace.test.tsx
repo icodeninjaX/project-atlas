@@ -198,9 +198,27 @@ describe("DebtsWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("folds the plan's options away until asked for", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    const toggle = screen.getByRole("button", { name: /Adjust plan/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveTextContent("Highest rate first");
+    expect(
+      screen.queryByRole("radio", { name: "Snowball" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(toggle);
+
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("radio", { name: "Snowball" })).toBeVisible();
+  });
+
   it("orders the plan by the chosen strategy and keeps it in the address", async () => {
     const user = userEvent.setup();
     renderWorkspace();
+    await user.click(screen.getByRole("button", { name: /Adjust plan/ }));
 
     expect(planOrder()).toEqual(["Big Card", "Small Loan"]);
 
@@ -214,6 +232,7 @@ describe("DebtsWorkspace", () => {
     const user = userEvent.setup();
     renderWorkspace();
     const plan = within(screen.getByRole("region", { name: "Payoff plan" }));
+    await user.click(plan.getByRole("button", { name: /Adjust plan/ }));
 
     expect(plan.getByRole("status")).toHaveTextContent(
       "Try an amount to see how much sooner you finish.",
@@ -238,6 +257,7 @@ describe("DebtsWorkspace", () => {
     expect(
       screen.queryByRole("button", { name: /Move .* up/ }),
     ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Adjust plan/ }));
     await user.click(screen.getByRole("radio", { name: "My priority" }));
     expect(planOrder()).toEqual(["Small Loan", "Big Card"]);
     expect(
@@ -318,5 +338,31 @@ describe("DebtsWorkspace", () => {
     expect(
       screen.queryByRole("region", { name: "Payoff plan" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows three later bills and folds the rest", async () => {
+    const user = userEvent.setup();
+    const later = ["2026-10-04", "2026-10-06", "2026-10-08", "2026-10-10"];
+    renderWorkspace({
+      debts: [
+        debt({
+          id: "50000000-0000-4000-8000-000000000000",
+          creditor_name: "First",
+          next_due_date: "2026-10-03",
+        }),
+        ...later.map((date, index) =>
+          debt({
+            id: `5000000${index + 1}-0000-4000-8000-000000000000`,
+            creditor_name: `Later ${index + 1}`,
+            next_due_date: date,
+          }),
+        ),
+      ],
+    });
+    const next = within(screen.getByRole("region", { name: "Up next" }));
+
+    expect(next.getAllByRole("listitem")).toHaveLength(3);
+    await user.click(next.getByRole("button", { name: "Show 1 more" }));
+    expect(next.getAllByRole("listitem")).toHaveLength(4);
   });
 });

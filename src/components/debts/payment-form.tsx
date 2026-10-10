@@ -13,6 +13,7 @@ import { AccountLogo } from "@/components/money/account-visuals";
 import { MoneyAmount } from "@/components/money/money-amount";
 import { DateField, PesoInput } from "@/components/money/money-fields";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
+import { Disclosure } from "@/components/debts/debt-disclosure";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { DebtActionState } from "@/lib/debts/actions";
@@ -243,6 +244,7 @@ export function PaymentForm({
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(today);
   const [accountId, setAccountId] = useState("");
+  const [note, setNote] = useState("");
   // Null follows the date; a tick or untick from the person sticks.
   const [settles, setSettles] = useState<boolean | null>(null);
 
@@ -265,6 +267,7 @@ export function PaymentForm({
       form.current?.reset();
       setAmount("");
       setDate(today);
+      setNote("");
       setSettles(null);
       onSaved?.();
       return result;
@@ -283,6 +286,17 @@ export function PaymentForm({
   ].filter((item) => item !== null);
   const settlesDue = settles ?? settlesDueByDefault(nextDueDate, date);
   const showSchedule = Boolean(nextDueDate) && !clears;
+  const chosen = accounts.find((account) => account.id === accountId);
+  const moreSummary = [
+    accounts.length > 0
+      ? chosen
+        ? `From ${chosen.name}`
+        : "Not logged in Money"
+      : null,
+    note.trim() ? `Note: ${note.trim()}` : "No note",
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <form
@@ -348,14 +362,6 @@ export function PaymentForm({
         legend="Paid on"
         ariaLabel="Payment date"
       />
-      {accounts.length > 0 ? (
-        <AccountPicker
-          accounts={accounts}
-          value={accountId}
-          onChange={setAccountId}
-          amountCentavos={amountCentavos}
-        />
-      ) : null}
       {showSchedule && nextDueDate ? (
         <label className="bg-background/55 ring-border/80 has-[:checked]:bg-primary/[0.06] has-[:checked]:ring-primary/40 flex cursor-pointer items-start gap-3 rounded-2xl p-3.5 ring-1 transition-colors">
           <input
@@ -381,16 +387,30 @@ export function PaymentForm({
           </span>
         </label>
       ) : null}
-      <label className="text-sm font-semibold">
-        Note
-        <Input
-          name="notes"
-          maxLength={300}
-          placeholder="Reference number or channel (optional)"
-          aria-label="Payment note"
-          className="mt-2 font-normal"
-        />
-      </label>
+      <Disclosure label="More options" summary={moreSummary}>
+        <div className="grid gap-5">
+          {accounts.length > 0 ? (
+            <AccountPicker
+              accounts={accounts}
+              value={accountId}
+              onChange={setAccountId}
+              amountCentavos={amountCentavos}
+            />
+          ) : null}
+          <label className="text-sm font-semibold">
+            Note
+            <Input
+              name="notes"
+              maxLength={300}
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Reference number or channel (optional)"
+              aria-label="Payment note"
+              className="mt-2 font-normal"
+            />
+          </label>
+        </div>
+      </Disclosure>
       <Button
         type="submit"
         size="lg"

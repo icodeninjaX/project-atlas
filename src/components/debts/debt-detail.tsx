@@ -1,6 +1,6 @@
 "use client";
 
-import { HandCoins, PencilLine, Trash2 } from "lucide-react";
+import { ChevronDown, HandCoins, PencilLine, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import {
@@ -8,6 +8,7 @@ import {
   debtRowsClass,
   debtSurfaceClass,
 } from "@/components/debts/debt-section";
+import { Disclosure } from "@/components/debts/debt-disclosure";
 import { DebtSheet } from "@/components/debts/debt-sheet";
 import {
   DebtStatusPill,
@@ -402,9 +403,21 @@ function Outlook({
           </div>
         ) : null}
 
-        <div className="mt-5">
-          <label htmlFor={id} className="text-sm font-semibold">
-            What if you pay more each month?
+        <Disclosure
+          label="What if you pay more each month?"
+          summary={
+            boosted?.status === "paid_off" && savedMonths > 0
+              ? `${formatPayoffDuration(savedMonths)} sooner with ${peso.format(extraCentavos / 100)} more`
+              : "See how much sooner you could finish"
+          }
+          variant="row"
+          className="mt-5"
+        >
+          <label
+            htmlFor={id}
+            className="text-muted-foreground text-xs font-medium"
+          >
+            Extra on top of the minimum
           </label>
           <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] sm:items-center">
             <PesoInput id={id} value={extra} onValueChange={setExtra} />
@@ -475,7 +488,7 @@ function Outlook({
               <span className="text-muted-foreground">Same finish</span>
             )}
           </p>
-        </div>
+        </Disclosure>
       </div>
     </DebtSection>
   );
@@ -573,6 +586,9 @@ function PaymentRow({
   );
 }
 
+/** Payments shown before "Show all". */
+const VISIBLE_PAYMENTS = 3;
+
 function PaymentHistory({
   debtId,
   payments,
@@ -590,16 +606,30 @@ function PaymentHistory({
     (sum, payment) => sum + payment.amount_centavos,
     0,
   );
+  const highlightedLater = payments
+    .slice(VISIBLE_PAYMENTS)
+    .some((payment) => payment.id === highlightId);
+  const [showAll, setShowAll] = useState(highlightedLater);
   const months = useMemo(() => {
-    const groups: Array<{ month: string; items: DebtPaymentRecord[] }> = [];
-    for (const payment of payments) {
+    const groups: Array<{
+      month: string;
+      totalCentavos: number;
+      items: DebtPaymentRecord[];
+    }> = [];
+    payments.forEach((payment, index) => {
       const month = payment.payment_date.slice(0, 7);
-      const group = groups.at(-1);
-      if (group?.month === month) group.items.push(payment);
-      else groups.push({ month, items: [payment] });
-    }
-    return groups;
-  }, [payments]);
+      let group = groups.at(-1);
+      if (group?.month !== month) {
+        group = { month, totalCentavos: 0, items: [] };
+        groups.push(group);
+      }
+      // Month totals count every payment, shown or folded away.
+      group.totalCentavos += payment.amount_centavos;
+      if (showAll || index < VISIBLE_PAYMENTS) group.items.push(payment);
+    });
+    return groups.filter((group) => group.items.length > 0);
+  }, [payments, showAll]);
+  const hidden = payments.length - VISIBLE_PAYMENTS;
 
   return (
     <DebtSection
@@ -632,10 +662,7 @@ function PaymentHistory({
                   {monthHeading.format(new Date(`${group.month}-01T00:00:00Z`))}
                 </span>
                 <MoneyAmount
-                  centavos={group.items.reduce(
-                    (sum, payment) => sum + payment.amount_centavos,
-                    0,
-                  )}
+                  centavos={group.totalCentavos}
                   className="font-mono tabular-nums"
                 />
               </h3>
@@ -653,6 +680,23 @@ function PaymentHistory({
             </div>
           ))
         )}
+        {hidden > 0 ? (
+          <button
+            type="button"
+            aria-expanded={showAll}
+            onClick={() => setShowAll((value) => !value)}
+            className="text-primary hover:bg-muted/40 focus-visible:ring-ring border-border/70 flex min-h-12 w-full items-center justify-center gap-1 border-t text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+          >
+            {showAll ? "Show fewer" : `Show all ${payments.length} payments`}
+            <ChevronDown
+              aria-hidden="true"
+              className={cn(
+                "size-4 transition-transform",
+                showAll && "rotate-180",
+              )}
+            />
+          </button>
+        ) : null}
       </div>
     </DebtSection>
   );

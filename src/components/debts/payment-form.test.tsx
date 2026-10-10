@@ -153,6 +153,9 @@ describe("PaymentForm", () => {
       ],
     });
 
+    const more = screen.getByRole("button", { name: /More options/ });
+    expect(more).toHaveTextContent("Not logged in Money · No note");
+    await user.click(more);
     const picker = screen.getByRole("combobox", { name: "Paid from" });
     expect(picker).toHaveValue("");
     await user.selectOptions(picker, "GCash");
@@ -160,6 +163,8 @@ describe("PaymentForm", () => {
       screen.getByText(/Also saved as a Debt Payment expense/),
     ).toBeInTheDocument();
 
+    await user.click(more);
+    expect(more).toHaveTextContent("From GCash · No note");
     await user.type(screen.getByLabelText("Payment amount in pesos"), "100");
     await user.click(screen.getByRole("button", { name: "Record payment" }));
     expect(submit.mock.calls[0]![1].get("accountId")).toBe(

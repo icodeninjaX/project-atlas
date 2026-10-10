@@ -190,8 +190,10 @@ export function DebtsWorkspace({
           />
           {/* Phones read top to bottom; wide screens put what to pay
               beside the plan. */}
-          <div className="lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start lg:gap-6">
-            <div className="min-w-0">
+          <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start lg:gap-6">
+            {/* On phones the left column melts away so "Paid off" can
+                close the page, after the plan. */}
+            <div className="contents lg:block lg:min-w-0">
               {active.length > 0 ? (
                 <UpcomingPayments
                   debts={active}
@@ -205,7 +207,11 @@ export function DebtsWorkspace({
                 highlightId={highlightId}
                 today={today}
               />
-              {paid.length > 0 ? <PaidOffList debts={paid} /> : null}
+              {paid.length > 0 ? (
+                <div className="order-last lg:order-none">
+                  <PaidOffList debts={paid} />
+                </div>
+              ) : null}
             </div>
             <div className="min-w-0">
               <PayoffPlanner

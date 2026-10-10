@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronRight, HandCoins } from "lucide-react";
+import { ChevronDown, ChevronRight, HandCoins } from "lucide-react";
+import { useState } from "react";
 import {
   DebtSection,
   debtRowsClass,
@@ -14,6 +15,9 @@ import { cn } from "@/lib/utils";
 
 /** How far ahead the list looks: about one billing cycle. */
 export const UPCOMING_DAYS = 30;
+
+/** Later bills shown before "Show more". */
+const VISIBLE_LATER = 3;
 
 const monthShort = new Intl.DateTimeFormat("en-PH", {
   timeZone: "UTC",
@@ -147,6 +151,7 @@ export function UpcomingPayments({
   onPay: (debt: DebtRecord) => void;
   onEdit: (debt: DebtRecord) => void;
 }) {
+  const [showAll, setShowAll] = useState(false);
   const upcoming = debts
     .map((debt) => ({ debt, due: dueStatus(debt.next_due_date, today) }))
     .filter(
@@ -161,6 +166,8 @@ export function UpcomingPayments({
   );
   if (upcoming.length === 0 && undated.length === 0) return null;
   const [first, ...later] = upcoming;
+  const shown = showAll ? later : later.slice(0, VISIBLE_LATER);
+  const folded = later.length - VISIBLE_LATER;
 
   return (
     <DebtSection
@@ -192,44 +199,63 @@ export function UpcomingPayments({
       )}
 
       {later.length > 0 ? (
-        <ul className={cn(debtSurfaceClass, debtRowsClass, "mt-3")}>
-          {later.map(({ debt, due }) => (
-            <li key={debt.id}>
-              <button
-                type="button"
-                aria-label={`Pay ${debt.creditor_name}`}
-                onClick={() => onPay(debt)}
-                className="hover:bg-muted/50 focus-visible:ring-ring flex w-full min-w-0 items-center gap-3 px-4 py-3.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset"
-              >
-                <DateTile iso={debt.next_due_date!} tone={due.tone} />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold break-words">
-                    {debt.creditor_name}
+        <div className={cn(debtSurfaceClass, "mt-3")}>
+          <ul className={debtRowsClass}>
+            {shown.map(({ debt, due }) => (
+              <li key={debt.id}>
+                <button
+                  type="button"
+                  aria-label={`Pay ${debt.creditor_name}`}
+                  onClick={() => onPay(debt)}
+                  className="hover:bg-muted/50 focus-visible:ring-ring flex w-full min-w-0 items-center gap-3 px-4 py-3.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset"
+                >
+                  <DateTile iso={debt.next_due_date!} tone={due.tone} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold break-words">
+                      {debt.creditor_name}
+                    </span>
+                    <span className={cn("block text-xs", toneText[due.tone])}>
+                      {due.relative}
+                    </span>
                   </span>
-                  <span className={cn("block text-xs", toneText[due.tone])}>
-                    {due.relative}
+                  <span className="shrink-0 text-right">
+                    {debt.minimum_payment_centavos > 0 ? (
+                      <MoneyAmount
+                        centavos={debt.minimum_payment_centavos}
+                        quietCentavos
+                        className="block font-mono text-sm font-semibold tabular-nums"
+                      />
+                    ) : null}
+                    <span className="text-primary block text-xs font-semibold">
+                      Pay
+                    </span>
                   </span>
-                </span>
-                <span className="shrink-0 text-right">
-                  {debt.minimum_payment_centavos > 0 ? (
-                    <MoneyAmount
-                      centavos={debt.minimum_payment_centavos}
-                      quietCentavos
-                      className="block font-mono text-sm font-semibold tabular-nums"
-                    />
-                  ) : null}
-                  <span className="text-primary block text-xs font-semibold">
-                    Pay
-                  </span>
-                </span>
-                <ChevronRight
-                  aria-hidden="true"
-                  className="text-muted-foreground -mr-1 size-4 shrink-0"
-                />
-              </button>
-            </li>
-          ))}
-        </ul>
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="text-muted-foreground -mr-1 size-4 shrink-0"
+                  />
+                </button>
+              </li>
+            ))}
+          </ul>
+          {folded > 0 ? (
+            <button
+              type="button"
+              aria-expanded={showAll}
+              onClick={() => setShowAll((value) => !value)}
+              className="text-primary hover:bg-muted/40 focus-visible:ring-ring border-border/70 flex min-h-12 w-full items-center justify-center gap-1 border-t text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+            >
+              {showAll ? "Show fewer" : `Show ${folded} more`}
+              <ChevronDown
+                aria-hidden="true"
+                className={cn(
+                  "size-4 transition-transform",
+                  showAll && "rotate-180",
+                )}
+              />
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       {undated.length > 0 ? (
