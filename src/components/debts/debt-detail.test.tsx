@@ -85,12 +85,13 @@ describe("DebtDetail", () => {
     renderDetail();
 
     const hero = within(screen.getByRole("region", { name: "Big Card" }));
-    expect(hero.getByText(/paid off/).parentElement).toHaveTextContent(
-      "33% paid off · ₱2,000.00 of ₱6,000.00",
+    expect(hero.getByText(/paid off/)).toHaveTextContent("33% paid off");
+    expect(screen.getByRole("region", { name: "Big Card" })).toHaveTextContent(
+      "₱2,000.00 of ₱6,000.00",
     );
     expect(hero.getByText("Next due").nextSibling).toHaveTextContent("Sep 30");
     expect(hero.getByText("Overdue by 2 days")).toBeInTheDocument();
-    expect(hero.getByText("Interest").nextSibling).toHaveTextContent("3%");
+    expect(hero.getByText("Interest").nextSibling).toHaveTextContent("3% / mo");
     expect(
       screen.getByText("Sep 1 · from GCash", { exact: false }),
     ).toBeInTheDocument();

@@ -3,7 +3,11 @@
 import { ChevronRight, CircleCheckBig } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import { dashboardCardClass } from "@/components/dashboard/dashboard-card";
+import {
+  DebtSection,
+  debtRowsClass,
+  debtSurfaceClass,
+} from "@/components/debts/debt-section";
 import {
   DebtTypeBadge,
   RepaidBar,
@@ -54,32 +58,35 @@ function DebtRow({
       <Link
         href={`/debts/${debt.id}` as Route}
         className={cn(
-          "hover:bg-muted/50 focus-visible:ring-ring flex min-w-0 items-center gap-3 px-3.5 py-3.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset sm:px-4",
+          "hover:bg-muted/50 focus-visible:ring-ring flex min-w-0 items-center gap-3.5 px-4 py-4 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset sm:px-5",
           highlighted && "bg-primary/[0.08]",
         )}
       >
-        <DebtTypeBadge type={debt.debt_type} size="sm" />
+        <DebtTypeBadge type={debt.debt_type} />
         <span className="min-w-0 flex-1">
           <span className="flex min-w-0 items-baseline justify-between gap-3">
-            <span className="min-w-0 text-sm font-semibold break-words">
+            <span className="min-w-0 text-[0.9375rem] font-semibold tracking-[-0.01em] break-words">
               {debt.creditor_name}
             </span>
             <MoneyAmount
               centavos={debt.current_balance_centavos}
-              className="shrink-0 font-mono text-sm font-semibold"
+              quietCentavos
+              className="shrink-0 font-mono text-[0.9375rem] font-semibold tracking-[-0.02em] tabular-nums"
             />
           </span>
           <span className="text-muted-foreground mt-0.5 flex min-w-0 items-center justify-between gap-3 text-xs">
             <span className="min-w-0 truncate">
               <DebtLine debt={debt} today={today} />
             </span>
-            <span className="shrink-0">{formatPercent(share)} paid</span>
+            <span className="shrink-0 tabular-nums">
+              {formatPercent(share)} paid
+            </span>
           </span>
-          <RepaidBar share={share} size="sm" className="mt-2" />
+          <RepaidBar share={share} size="sm" className="mt-2.5" />
         </span>
         <ChevronRight
           aria-hidden="true"
-          className="text-muted-foreground size-4 shrink-0"
+          className="text-muted-foreground/70 -mr-1 size-4 shrink-0"
         />
       </Link>
     </li>
@@ -98,20 +105,12 @@ export function DebtList({
   today: string;
 }) {
   return (
-    <section
-      aria-labelledby="debts-list"
-      data-spotlight
-      className={cn(dashboardCardClass, "mt-4 sm:mt-5")}
+    <DebtSection
+      id="debts-list"
+      title="Your debts"
+      meta={`${debts.length} open`}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 id="debts-list" className="text-base font-semibold">
-          Your debts
-        </h2>
-        <p className="text-muted-foreground text-xs">
-          Tap one to pay, edit, or see its history
-        </p>
-      </div>
-      <ul className="bg-background/55 ring-border/80 divide-border mt-4 divide-y overflow-hidden rounded-2xl ring-1">
+      <ul data-spotlight className={cn(debtSurfaceClass, debtRowsClass)}>
         {debts.map((debt) => (
           <DebtRow
             key={debt.id}
@@ -121,7 +120,7 @@ export function DebtList({
           />
         ))}
       </ul>
-    </section>
+    </DebtSection>
   );
 }
 
@@ -133,37 +132,39 @@ export function PaidOffList({ debts }: { debts: DebtRecord[] }) {
   );
 
   return (
-    <section aria-labelledby="debts-paid" className="mt-4 sm:mt-5">
-      <details className={cn(dashboardCardClass, "group")}>
-        <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-x-4 gap-y-1 [&::-webkit-details-marker]:hidden">
-          <h2
-            id="debts-paid"
-            className="flex items-center gap-2 text-base font-semibold"
+    <section aria-labelledby="debts-paid" className="mt-8 sm:mt-10">
+      <details className={cn(debtSurfaceClass, "group")}>
+        <summary className="hover:bg-muted/40 flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 py-3 transition-colors sm:px-5 [&::-webkit-details-marker]:hidden">
+          <span
+            aria-hidden="true"
+            className="bg-positive/12 text-positive grid size-10 shrink-0 place-items-center rounded-xl"
           >
-            <CircleCheckBig
-              aria-hidden="true"
-              className="text-positive size-4"
-            />
-            Paid off
-          </h2>
-          <span className="text-muted-foreground flex items-center gap-1 text-xs">
-            <MoneyAmount
-              centavos={repaid}
-              className="text-foreground font-mono font-semibold"
-            />{" "}
-            across {debts.length} {debts.length === 1 ? "debt" : "debts"}
-            <ChevronRight
-              aria-hidden="true"
-              className="size-4 transition-transform group-open:rotate-90"
-            />
+            <CircleCheckBig className="size-[1.125rem]" />
           </span>
+          <span className="min-w-0 flex-1">
+            <h2 id="debts-paid" className="text-[0.9375rem] font-semibold">
+              Paid off
+            </h2>
+            <span className="text-muted-foreground block text-xs">
+              <MoneyAmount
+                centavos={repaid}
+                className="font-mono tabular-nums"
+              />{" "}
+              cleared across {debts.length}{" "}
+              {debts.length === 1 ? "debt" : "debts"}
+            </span>
+          </span>
+          <ChevronRight
+            aria-hidden="true"
+            className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-90"
+          />
         </summary>
-        <ul className="bg-background/55 ring-border/80 divide-border mt-4 divide-y overflow-hidden rounded-2xl ring-1">
+        <ul className={cn(debtRowsClass, "border-border/70 border-t")}>
           {debts.map((debt) => (
             <li key={debt.id}>
               <Link
                 href={`/debts/${debt.id}` as Route}
-                className="hover:bg-muted/50 focus-visible:ring-ring flex min-w-0 items-center gap-3 px-3.5 py-3 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset sm:px-4"
+                className="hover:bg-muted/50 focus-visible:ring-ring flex min-w-0 items-center gap-3.5 px-4 py-3 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset sm:px-5"
               >
                 <DebtTypeBadge type={debt.debt_type} size="sm" />
                 <span className="min-w-0 flex-1 text-sm font-semibold break-words">
@@ -171,7 +172,7 @@ export function PaidOffList({ debts }: { debts: DebtRecord[] }) {
                 </span>
                 <MoneyAmount
                   centavos={debt.original_balance_centavos}
-                  className="text-muted-foreground font-mono text-xs font-semibold"
+                  className="text-muted-foreground font-mono text-xs font-semibold tabular-nums"
                 />
               </Link>
             </li>

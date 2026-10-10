@@ -44,23 +44,22 @@ function heroStatus(
   return null;
 }
 
-function Fact({
+function Stat({
   label,
   value,
   tone,
 }: {
   label: string;
   value: ReactNode;
-  tone?: "positive" | "destructive";
+  tone?: "positive";
 }) {
   return (
     <div className="min-w-0">
       <dt className="text-muted-foreground text-xs">{label}</dt>
       <dd
         className={cn(
-          "mt-1 font-mono text-base font-semibold tracking-[-0.02em] [overflow-wrap:anywhere] sm:text-lg",
+          "mt-1 font-mono text-lg leading-tight font-semibold tracking-[-0.03em] [overflow-wrap:anywhere] tabular-nums",
           tone === "positive" && "text-positive",
-          tone === "destructive" && "text-destructive",
         )}
       >
         {value}
@@ -70,8 +69,9 @@ function Fact({
 }
 
 /**
- * The debts page lead, kept to three answers: how much is owed, how much
- * of it is paid, and when it ends.
+ * The debts page lead: one figure, how far along it is, when it ends, and
+ * two quiet numbers for the month. Adding a debt is a small action here;
+ * paying is the page's main one.
  */
 export function DebtsHero({
   plan,
@@ -98,56 +98,77 @@ export function DebtsHero({
   const repaid = owedInAllCentavos - remainingCentavos;
   const share = owedInAllCentavos > 0 ? repaid / owedInAllCentavos : 0;
   const month = monthName.format(new Date(`${today.slice(0, 7)}-01T00:00:00Z`));
+  const paidOff = plan.status === "paid_off";
 
   return (
     <MoneyHeroShell labelledBy="debts-heading" tone={status?.tone ?? "neutral"}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <h2
           id="debts-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-muted-foreground text-[0.8125rem] font-medium"
         >
-          You owe
+          Total debt
         </h2>
-        {status ? <TonePill tone={status.tone}>{status.label}</TonePill> : null}
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={onAdd}
+          className="-my-1 rounded-full"
+        >
+          <Plus className="size-3.5" aria-hidden="true" />
+          Add debt
+        </Button>
       </div>
-      <p className="mt-3">
+      <p className="mt-2">
         <MoneyAmount
           centavos={remainingCentavos}
           quietCentavos
-          className="font-mono text-[clamp(2.5rem,12vw,4.25rem)] leading-[0.95] font-semibold tracking-[-0.055em] [overflow-wrap:anywhere]"
+          className="font-mono text-[clamp(2.75rem,13vw,4.5rem)] leading-[0.95] font-semibold tracking-[-0.06em] [overflow-wrap:anywhere] tabular-nums"
         />
       </p>
-      <div className="mt-5 max-w-xl">
+      {status ? (
+        <TonePill tone={status.tone} className="mt-3">
+          {status.label}
+        </TonePill>
+      ) : null}
+
+      <div className="mt-6">
         <RepaidBar share={share} />
-        <p className="text-muted-foreground mt-2 text-xs">
-          <span className="text-foreground font-semibold">
-            {formatPercent(share)} paid off
-          </span>{" "}
-          · <MoneyAmount centavos={repaid} className="font-mono" /> of{" "}
-          <MoneyAmount centavos={owedInAllCentavos} className="font-mono" />
-        </p>
+        <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-xs">
+          <p className="text-muted-foreground">
+            <span className="text-foreground font-semibold">
+              {formatPercent(share)}
+            </span>{" "}
+            paid off
+          </p>
+          <p className="text-muted-foreground">
+            Debt-free{" "}
+            <span
+              className={cn(
+                "font-semibold",
+                paidOff ? "text-foreground" : "text-destructive",
+              )}
+            >
+              {paidOff
+                ? payoffMonthLabel(today, plan.months ?? 0, "long")
+                : "not at this pace"}
+            </span>
+          </p>
+        </div>
       </div>
-      <dl className="border-border mt-6 grid grid-cols-3 gap-4 border-t pt-5">
-        <Fact
-          label="Debt-free"
-          value={
-            plan.status === "paid_off"
-              ? payoffMonthLabel(today, plan.months ?? 0)
-              : "Not yet"
-          }
-          tone={plan.status === "stalled" ? "destructive" : undefined}
-        />
-        <Fact
+
+      <dl className="border-border/70 [&>div+div]:border-border/70 mt-6 grid grid-cols-2 border-t pt-5 [&>div+div]:border-l [&>div+div]:pl-5">
+        <Stat
           label="Minimums a month"
-          value={<MoneyAmount centavos={minimumsCentavos} />}
+          value={<MoneyAmount centavos={minimumsCentavos} quietCentavos />}
         />
-        <Fact
+        <Stat
           label={`Paid in ${month}`}
-          value={<MoneyAmount centavos={paidThisMonthCentavos} />}
+          value={<MoneyAmount centavos={paidThisMonthCentavos} quietCentavos />}
           tone={paidThisMonthCentavos > 0 ? "positive" : undefined}
         />
       </dl>
-      <Actions onAdd={onAdd} />
     </MoneyHeroShell>
   );
 }

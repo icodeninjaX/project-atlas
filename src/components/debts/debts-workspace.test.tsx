@@ -128,12 +128,13 @@ describe("DebtsWorkspace", () => {
       ],
     });
 
-    const region = screen.getByRole("region", { name: "You owe" });
+    const region = screen.getByRole("region", { name: "Total debt" });
     const hero = within(region);
     expect(region).toHaveTextContent(/₱4,500\.00/);
     // ₱8,000 owed in all, ₱3,500 of it repaid, the paid debt included.
-    expect(hero.getByText(/paid off/).parentElement).toHaveTextContent(
-      "44% paid off · ₱3,500.00 of ₱8,000.00",
+    expect(hero.getByText(/paid off/)).toHaveTextContent("44% paid off");
+    expect(hero.getByText(/Debt-free/)).toHaveTextContent(
+      /Debt-free \w+ \d{4}/,
     );
     expect(hero.getByText("1 payment overdue")).toBeInTheDocument();
     expect(hero.getByText("Paid in October").nextSibling).toHaveTextContent(
@@ -153,17 +154,18 @@ describe("DebtsWorkspace", () => {
     expect(links[1]).toHaveTextContent("Small Loan");
   });
 
-  it("lists what to pay next, overdue first, each one tap from paying", async () => {
+  it("puts the most urgent bill first, then the rest, each one tap from paying", async () => {
     const user = userEvent.setup();
     renderWorkspace();
 
-    const next = within(screen.getByRole("region", { name: "Pay next" }));
-    const rows = next.getAllByRole("listitem");
-    expect(rows.map((row) => row.querySelector("p")?.textContent)).toEqual([
-      "Big Card",
-      "Small Loan",
-    ]);
-    expect(within(rows[0]!).getByText("Overdue by 2 days")).toBeInTheDocument();
+    const next = within(screen.getByRole("region", { name: "Up next" }));
+    expect(next.getByText("Overdue by 2 days")).toBeInTheDocument();
+    expect(
+      next.getByRole("button", { name: "Pay Big Card" }),
+    ).toHaveTextContent("Pay now");
+    const later = next.getAllByRole("listitem");
+    expect(later).toHaveLength(1);
+    expect(later[0]).toHaveTextContent("Small Loan");
 
     await user.click(next.getByRole("button", { name: "Pay Small Loan" }));
     const sheet = within(
@@ -186,7 +188,7 @@ describe("DebtsWorkspace", () => {
       ],
     });
 
-    const next = within(screen.getByRole("region", { name: "Pay next" }));
+    const next = within(screen.getByRole("region", { name: "Up next" }));
     expect(next.getByText("Nothing due in the next 30 days.")).toBeVisible();
     await user.click(
       next.getByRole("button", { name: "Tita Lorna, set its due date" }),
@@ -220,8 +222,8 @@ describe("DebtsWorkspace", () => {
     await user.click(plan.getByRole("button", { name: "+₱1,000" }));
 
     expect(plan.getByRole("status")).toHaveTextContent(/sooner/);
-    expect(plan.getByText(/Paying/)).toHaveTextContent(
-      "Paying ₱1,400.00 a month",
+    expect(plan.getByText("Each month").nextSibling).toHaveTextContent(
+      "₱1,400.00",
     );
   });
 

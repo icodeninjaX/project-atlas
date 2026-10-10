@@ -1,18 +1,13 @@
 "use client";
 
-import {
-  ChartLine,
-  HandCoins,
-  History,
-  PencilLine,
-  Trash2,
-} from "lucide-react";
+import { HandCoins, PencilLine, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import {
-  DashboardCardHeading,
-  dashboardCardClass,
-} from "@/components/dashboard/dashboard-card";
+  DebtSection,
+  debtRowsClass,
+  debtSurfaceClass,
+} from "@/components/debts/debt-section";
 import { DebtSheet } from "@/components/debts/debt-sheet";
 import {
   DebtStatusPill,
@@ -76,10 +71,23 @@ const peso = new Intl.NumberFormat("en-PH", {
   maximumFractionDigits: 0,
 });
 
+/** The quiet "/ mo" after a monthly figure. */
+function PerMonth() {
+  return (
+    <span className="text-muted-foreground font-sans text-xs font-medium tracking-normal">
+      {" / mo"}
+    </span>
+  );
+}
+
 function monthlyRate(annualPercent: number) {
   return `${Number((annualPercent / 12).toFixed(2))}%`;
 }
 
+/**
+ * One fact about the debt: a label and value on one line on phones, a
+ * column of its own from `sm` up.
+ */
 function Fact({
   label,
   value,
@@ -92,11 +100,13 @@ function Fact({
   tone?: "destructive" | "positive";
 }) {
   return (
-    <div className="min-w-0">
-      <dt className="text-muted-foreground text-xs">{label}</dt>
+    <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-4 py-3.5 sm:block sm:px-5 sm:py-1 sm:first:pl-0">
+      <dt className="text-muted-foreground text-[0.8125rem] sm:text-xs">
+        {label}
+      </dt>
       <dd
         className={cn(
-          "mt-1 font-mono text-base font-semibold tracking-[-0.02em] [overflow-wrap:anywhere] sm:text-lg",
+          "text-right font-mono text-[0.9375rem] font-semibold tracking-[-0.02em] [overflow-wrap:anywhere] tabular-nums sm:mt-1 sm:text-left sm:text-lg",
           tone === "destructive" && "text-destructive",
           tone === "positive" && "text-positive",
         )}
@@ -104,7 +114,16 @@ function Fact({
         {value}
       </dd>
       {note ? (
-        <dd className="text-muted-foreground mt-0.5 text-xs">{note}</dd>
+        <dd
+          className={cn(
+            "col-start-2 text-right text-xs sm:mt-0.5 sm:text-left",
+            tone === "destructive"
+              ? "text-destructive/90"
+              : "text-muted-foreground",
+          )}
+        >
+          {note}
+        </dd>
       ) : null}
     </div>
   );
@@ -138,19 +157,19 @@ function DetailHero({
 
   return (
     <MoneyHeroShell labelledBy="debt-heading" tone={tone}>
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <DebtTypeBadge type={debt.debt_type} size="lg" />
+          <DebtTypeBadge type={debt.debt_type} />
           <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">
-              {debtTypeLabel(debt.debt_type)}
-            </p>
             <h1
               id="debt-heading"
-              className="mt-0.5 text-2xl leading-tight font-semibold tracking-[-0.035em] break-words sm:text-3xl"
+              className="text-lg leading-tight font-semibold tracking-[-0.025em] break-words sm:text-xl"
             >
               {debt.creditor_name}
             </h1>
+            <p className="text-muted-foreground text-xs">
+              {debtTypeLabel(debt.debt_type)}
+            </p>
           </div>
         </div>
         <Button
@@ -158,42 +177,47 @@ function DetailHero({
           variant="secondary"
           size="sm"
           onClick={onEdit}
-          className="shrink-0 max-sm:size-11 max-sm:px-0"
+          className="shrink-0 rounded-full max-sm:size-10 max-sm:px-0"
         >
           <PencilLine className="size-4" aria-hidden="true" />
           <span className="max-sm:sr-only">Edit</span>
         </Button>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <p className="text-muted-foreground text-xs">
+      <div className="mt-7 flex flex-wrap items-center gap-2">
+        <p className="text-muted-foreground text-[0.8125rem]">
           {paid ? "Balance" : "Still owed"}
         </p>
         <DebtStatusPill status={debt.status} />
       </div>
-      <p className="mt-2">
+      <p className="mt-1.5">
         <MoneyAmount
           centavos={debt.current_balance_centavos}
           quietCentavos
-          className="font-mono text-[clamp(2.5rem,12vw,4rem)] leading-[0.95] font-semibold tracking-[-0.055em] [overflow-wrap:anywhere]"
+          className="font-mono text-[clamp(2.75rem,13vw,4.25rem)] leading-[0.95] font-semibold tracking-[-0.06em] [overflow-wrap:anywhere] tabular-nums"
         />
       </p>
-      <div className="mt-4 max-w-xl">
+      <div className="mt-6">
         <RepaidBar share={share} />
-        <p className="text-muted-foreground mt-2 text-xs">
-          <span className="text-foreground font-semibold">
-            {formatPercent(share)} paid off
-          </span>{" "}
-          · <MoneyAmount centavos={repaid} className="font-mono" /> of{" "}
-          <MoneyAmount
-            centavos={debt.original_balance_centavos}
-            className="font-mono"
-          />
+        <p className="text-muted-foreground mt-2.5 flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs">
+          <span>
+            <span className="text-foreground font-semibold">
+              {formatPercent(share)}
+            </span>{" "}
+            paid off
+          </span>
+          <span className="tabular-nums">
+            <MoneyAmount centavos={repaid} className="font-mono" /> of{" "}
+            <MoneyAmount
+              centavos={debt.original_balance_centavos}
+              className="font-mono"
+            />
+          </span>
         </p>
       </div>
 
       {paid ? null : (
-        <dl className="border-border mt-6 grid grid-cols-3 gap-4 border-t pt-5">
+        <dl className="divide-border/70 border-border/70 mt-6 grid divide-y border-t sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:pt-5">
           <Fact
             label="Next due"
             value={
@@ -204,30 +228,43 @@ function DetailHero({
           />
           <Fact
             label="Minimum"
-            value={<MoneyAmount centavos={debt.minimum_payment_centavos} />}
-            note="a month"
+            value={
+              <>
+                <MoneyAmount centavos={debt.minimum_payment_centavos} />
+                <PerMonth />
+              </>
+            }
           />
           <Fact
             label="Interest"
             value={
-              debt.interest_rate_percent > 0
-                ? monthlyRate(debt.interest_rate_percent)
-                : "None"
+              debt.interest_rate_percent > 0 ? (
+                <>
+                  {monthlyRate(debt.interest_rate_percent)}
+                  <PerMonth />
+                </>
+              ) : (
+                "None"
+              )
             }
-            note={debt.interest_rate_percent > 0 ? "a month" : undefined}
           />
         </dl>
       )}
 
       {debt.notes ? (
-        <p className="text-muted-foreground mt-5 text-xs leading-5 break-words">
+        <p className="bg-background/50 text-muted-foreground mt-5 rounded-2xl px-4 py-3 text-xs leading-5 break-words">
           {debt.notes}
         </p>
       ) : null}
 
       {paid ? null : (
         <div className="mt-6 flex [&>*]:grow sm:[&>*]:grow-0">
-          <Button type="button" size="lg" onClick={onPay}>
+          <Button
+            type="button"
+            size="lg"
+            onClick={onPay}
+            className="rounded-full px-7"
+          >
             <HandCoins className="size-4" aria-hidden="true" />
             Record payment
           </Button>
@@ -310,139 +347,137 @@ function Outlook({
     : 0;
 
   return (
-    <section
-      aria-labelledby="outlook-title"
-      data-spotlight
-      className={cn(dashboardCardClass, className)}
+    <DebtSection
+      id="outlook-title"
+      title="When it will be paid off"
+      meta="If every payment is on time"
+      className={className}
     >
-      <DashboardCardHeading
-        id="outlook-title"
-        icon={ChartLine}
-        title="When it will be paid off"
-        description="At today's rate, if every payment is on time."
-      />
-
-      <div className="mt-5 grid gap-x-6 gap-y-3 min-[26rem]:grid-cols-2">
-        <div className="min-w-0">
-          <p className="text-muted-foreground text-xs">
-            {boosted ? "With the extra" : "Paying the minimum"}
-          </p>
-          <p
-            className={cn(
-              "mt-1 font-mono text-2xl leading-none font-semibold tracking-[-0.04em]",
-              shown.status !== "paid_off" && "text-destructive text-lg",
-            )}
-          >
-            {shown.status === "paid_off"
-              ? payoffMonthLabel(today, shown.months ?? 0)
-              : "Not paid off"}
-          </p>
-          <p className="text-muted-foreground mt-1 text-xs">
-            {shown.status === "paid_off"
-              ? `In ${formatPayoffDuration(shown.months ?? 0)}`
-              : minimum > 0 || extraCentavos > 0
-                ? "Payments do not cover the interest"
-                : "Set a minimum or try an amount"}
-          </p>
+      <div data-spotlight className={cn(debtSurfaceClass, "p-5 sm:p-6")}>
+        <div className="grid gap-x-6 gap-y-3 min-[26rem]:grid-cols-2">
+          <div className="min-w-0">
+            <p className="text-muted-foreground text-xs">
+              {boosted ? "With the extra" : "Paying the minimum"}
+            </p>
+            <p
+              className={cn(
+                "mt-1 font-mono text-2xl leading-none font-semibold tracking-[-0.04em]",
+                shown.status !== "paid_off" && "text-destructive text-lg",
+              )}
+            >
+              {shown.status === "paid_off"
+                ? payoffMonthLabel(today, shown.months ?? 0)
+                : "Not paid off"}
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {shown.status === "paid_off"
+                ? `In ${formatPayoffDuration(shown.months ?? 0)}`
+                : minimum > 0 || extraCentavos > 0
+                  ? "Payments do not cover the interest"
+                  : "Set a minimum or try an amount"}
+            </p>
+          </div>
+          <div className="min-w-0">
+            <p className="text-muted-foreground text-xs">
+              Interest you will pay
+            </p>
+            <p className="mt-1 font-mono text-2xl leading-none font-semibold tracking-[-0.04em] [overflow-wrap:anywhere]">
+              {shown.status === "paid_off" ? (
+                <MoneyAmount centavos={shown.totalInterestCentavos} />
+              ) : (
+                "—"
+              )}
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className="text-muted-foreground text-xs">Interest you will pay</p>
-          <p className="mt-1 font-mono text-2xl leading-none font-semibold tracking-[-0.04em] [overflow-wrap:anywhere]">
-            {shown.status === "paid_off" ? (
-              <MoneyAmount centavos={shown.totalInterestCentavos} />
-            ) : (
-              "—"
-            )}
-          </p>
-        </div>
-      </div>
 
-      {finished.length > 0 ? (
+        {finished.length > 0 ? (
+          <div className="mt-5">
+            <PayoffCurve
+              series={series}
+              months={months}
+              today={today}
+              label="Projected balance until it is paid off"
+            />
+          </div>
+        ) : null}
+
         <div className="mt-5">
-          <PayoffCurve
-            series={series}
-            months={months}
-            today={today}
-            label="Projected balance until it is paid off"
-          />
-        </div>
-      ) : null}
-
-      <div className="mt-5">
-        <label htmlFor={id} className="text-sm font-semibold">
-          What if you pay more each month?
-        </label>
-        <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] sm:items-center">
-          <PesoInput id={id} value={extra} onValueChange={setExtra} />
-          {presets.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {presets.map((preset) => {
-                const pressed = extraCentavos === preset.centavos;
-                return (
-                  <button
-                    key={preset.label}
-                    type="button"
-                    aria-pressed={pressed}
-                    onClick={() =>
-                      setExtra(
+          <label htmlFor={id} className="text-sm font-semibold">
+            What if you pay more each month?
+          </label>
+          <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] sm:items-center">
+            <PesoInput id={id} value={extra} onValueChange={setExtra} />
+            {presets.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {presets.map((preset) => {
+                  const pressed = extraCentavos === preset.centavos;
+                  return (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      aria-pressed={pressed}
+                      onClick={() =>
+                        setExtra(
+                          pressed
+                            ? ""
+                            : formatPesoInput(
+                                centavosToPesoInput(preset.centavos),
+                              ),
+                        )
+                      }
+                      className={cn(
+                        "focus-visible:ring-ring inline-flex min-h-11 items-center rounded-full px-3.5 text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9",
                         pressed
-                          ? ""
-                          : formatPesoInput(
-                              centavosToPesoInput(preset.centavos),
-                            ),
-                      )
-                    }
-                    className={cn(
-                      "focus-visible:ring-ring inline-flex min-h-11 items-center rounded-full px-3.5 text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9",
-                      pressed
-                        ? "bg-primary/10 text-foreground ring-primary"
-                        : "bg-background/60 text-muted-foreground ring-border hover:bg-muted hover:text-foreground",
-                    )}
-                  >
-                    {preset.label}
-                    <span className="sr-only">
-                      {preset.label === "Double"
-                        ? " the minimum"
-                        : " on the minimum"}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
+                          ? "bg-primary/10 text-foreground ring-primary"
+                          : "bg-background/60 text-muted-foreground ring-border hover:bg-muted hover:text-foreground",
+                      )}
+                    >
+                      {preset.label}
+                      <span className="sr-only">
+                        {preset.label === "Double"
+                          ? " the minimum"
+                          : " on the minimum"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
+          <p role="status" className="mt-2 min-h-5 text-xs font-semibold">
+            {!boosted ? (
+              <span className="text-muted-foreground font-normal">
+                On top of the minimum. Nothing is saved.
+              </span>
+            ) : boosted.status !== "paid_off" ? (
+              <span className="text-destructive">
+                Still not enough to outpace interest
+              </span>
+            ) : base.status !== "paid_off" ? (
+              <span className="text-positive">Now it gets paid off</span>
+            ) : savedMonths > 0 || savedInterest > 0 ? (
+              <span className="text-positive">
+                {savedMonths > 0
+                  ? `${formatPayoffDuration(savedMonths)} sooner`
+                  : null}
+                {savedMonths > 0 && savedInterest > 0 ? " · " : null}
+                {savedInterest > 0 ? (
+                  <>
+                    <SensitiveValue>
+                      {peso.format(savedInterest / 100)}
+                    </SensitiveValue>{" "}
+                    less interest
+                  </>
+                ) : null}
+              </span>
+            ) : (
+              <span className="text-muted-foreground">Same finish</span>
+            )}
+          </p>
         </div>
-        <p role="status" className="mt-2 min-h-5 text-xs font-semibold">
-          {!boosted ? (
-            <span className="text-muted-foreground font-normal">
-              On top of the minimum. Nothing is saved.
-            </span>
-          ) : boosted.status !== "paid_off" ? (
-            <span className="text-destructive">
-              Still not enough to outpace interest
-            </span>
-          ) : base.status !== "paid_off" ? (
-            <span className="text-positive">Now it gets paid off</span>
-          ) : savedMonths > 0 || savedInterest > 0 ? (
-            <span className="text-positive">
-              {savedMonths > 0
-                ? `${formatPayoffDuration(savedMonths)} sooner`
-                : null}
-              {savedMonths > 0 && savedInterest > 0 ? " · " : null}
-              {savedInterest > 0 ? (
-                <>
-                  <SensitiveValue>
-                    {peso.format(savedInterest / 100)}
-                  </SensitiveValue>{" "}
-                  less interest
-                </>
-              ) : null}
-            </span>
-          ) : (
-            <span className="text-muted-foreground">Same finish</span>
-          )}
-        </p>
       </div>
-    </section>
+    </DebtSection>
   );
 }
 
@@ -464,7 +499,7 @@ function PaymentRow({
     <li
       id={`payment-${payment.id}`}
       className={cn(
-        "flex min-w-0 scroll-mt-24 items-center gap-3 px-4 py-3",
+        "flex min-w-0 scroll-mt-24 items-center gap-3 px-4 py-3.5 sm:px-5",
         highlighted && "bg-primary/[0.08]",
       )}
     >
@@ -480,8 +515,8 @@ function PaymentRow({
         </span>
       </span>
       <div className="min-w-0 flex-1">
-        <p className="font-mono text-sm font-semibold [overflow-wrap:anywhere]">
-          <MoneyAmount centavos={payment.amount_centavos} />
+        <p className="font-mono text-[0.9375rem] font-semibold tracking-[-0.02em] [overflow-wrap:anywhere] tabular-nums">
+          <MoneyAmount centavos={payment.amount_centavos} quietCentavos />
         </p>
         <p className="text-muted-foreground mt-0.5 text-xs break-words">
           {payment.payment_date === today
@@ -567,31 +602,32 @@ function PaymentHistory({
   }, [payments]);
 
   return (
-    <section
-      aria-labelledby="history-title"
-      data-spotlight
-      className={cn(dashboardCardClass, className)}
+    <DebtSection
+      id="history-title"
+      title="Payments"
+      meta={
+        payments.length > 0 ? (
+          <>
+            {payments.length} ·{" "}
+            <MoneyAmount
+              centavos={total}
+              className="text-foreground font-mono font-semibold tabular-nums"
+            />{" "}
+            in all
+          </>
+        ) : undefined
+      }
+      className={className}
     >
-      <DashboardCardHeading
-        id="history-title"
-        icon={History}
-        title="Payments"
-        description={
-          payments.length === 0 ? (
-            "None recorded yet."
-          ) : (
-            <>
-              {payments.length} {payments.length === 1 ? "payment" : "payments"}{" "}
-              · <MoneyAmount centavos={total} className="font-mono" /> in all
-            </>
-          )
-        }
-      />
-      {payments.length > 0 ? (
-        <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-4">
-          {months.map((group) => (
-            <div key={group.month}>
-              <h3 className="text-muted-foreground flex items-baseline justify-between gap-3 px-1 text-xs font-semibold">
+      <div data-spotlight className={debtSurfaceClass}>
+        {payments.length === 0 ? (
+          <p className="text-muted-foreground px-5 py-6 text-center text-sm">
+            No payments yet. Each one you record shows here.
+          </p>
+        ) : (
+          months.map((group) => (
+            <div key={group.month} className="border-border/70 [&+&]:border-t">
+              <h3 className="bg-muted/35 text-muted-foreground border-border/70 flex items-baseline justify-between gap-3 border-b px-4 py-2 text-xs font-semibold sm:px-5">
                 <span>
                   {monthHeading.format(new Date(`${group.month}-01T00:00:00Z`))}
                 </span>
@@ -600,10 +636,10 @@ function PaymentHistory({
                     (sum, payment) => sum + payment.amount_centavos,
                     0,
                   )}
-                  className="font-mono"
+                  className="font-mono tabular-nums"
                 />
               </h3>
-              <ul className="bg-background/55 ring-border/80 divide-border mt-2 divide-y overflow-hidden rounded-2xl ring-1">
+              <ul className={debtRowsClass}>
                 {group.items.map((payment) => (
                   <PaymentRow
                     key={payment.id}
@@ -615,10 +651,10 @@ function PaymentHistory({
                 ))}
               </ul>
             </div>
-          ))}
-        </div>
-      ) : null}
-    </section>
+          ))
+        )}
+      </div>
+    </DebtSection>
   );
 }
 
@@ -662,8 +698,8 @@ export function DebtDetail({
       />
       <div
         className={cn(
-          "mt-4 grid grid-cols-[minmax(0,1fr)] gap-4 sm:mt-5 sm:gap-5",
-          open && "lg:grid-cols-2 lg:items-start",
+          "grid grid-cols-[minmax(0,1fr)]",
+          open && "lg:grid-cols-2 lg:items-start lg:gap-6",
         )}
       >
         <PaymentHistory

@@ -188,34 +188,45 @@ export function DebtsWorkspace({
             overdueCount={overdueCount}
             onAdd={addDebt}
           />
-          {active.length > 0 ? (
-            <UpcomingPayments
-              debts={active}
-              today={today}
-              onPay={setPaying}
-              onEdit={editDebt}
-            />
-          ) : null}
-          <DebtList
-            debts={byUrgency(open, today)}
-            highlightId={highlightId}
-            today={today}
-          />
-          <PayoffPlanner
-            plans={plans}
-            base={base}
-            strategy={strategy}
-            onStrategyChange={chooseStrategy}
-            extra={extra}
-            onExtraChange={setExtra}
-            debts={byId}
-            today={today}
-            savedStrategy={savedStrategy}
-            onReorder={reorder}
-          />
+          {/* Phones read top to bottom; wide screens put what to pay
+              beside the plan. */}
+          <div className="lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start lg:gap-6">
+            <div className="min-w-0">
+              {active.length > 0 ? (
+                <UpcomingPayments
+                  debts={active}
+                  today={today}
+                  onPay={setPaying}
+                  onEdit={editDebt}
+                />
+              ) : null}
+              <DebtList
+                debts={byUrgency(open, today)}
+                highlightId={highlightId}
+                today={today}
+              />
+              {paid.length > 0 ? <PaidOffList debts={paid} /> : null}
+            </div>
+            <div className="min-w-0">
+              <PayoffPlanner
+                plans={plans}
+                base={base}
+                strategy={strategy}
+                onStrategyChange={chooseStrategy}
+                extra={extra}
+                onExtraChange={setExtra}
+                debts={byId}
+                today={today}
+                savedStrategy={savedStrategy}
+                onReorder={reorder}
+              />
+            </div>
+          </div>
         </>
       )}
-      {paid.length > 0 ? <PaidOffList debts={paid} /> : null}
+      {open.length === 0 && paid.length > 0 ? (
+        <PaidOffList debts={paid} />
+      ) : null}
       <DebtSheet
         open={sheet.open}
         onOpenChange={(next) => setSheet((state) => ({ ...state, open: next }))}

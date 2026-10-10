@@ -1,15 +1,15 @@
 "use client";
 
-import { CalendarClock, HandCoins } from "lucide-react";
+import { ChevronRight, HandCoins } from "lucide-react";
 import {
-  DashboardCardHeading,
-  dashboardCardClass,
-} from "@/components/dashboard/dashboard-card";
-import { DueChip } from "@/components/debts/debt-visuals";
+  DebtSection,
+  debtRowsClass,
+  debtSurfaceClass,
+} from "@/components/debts/debt-section";
 import { MoneyAmount } from "@/components/money/money-amount";
 import { Button } from "@/components/ui/button";
 import type { DebtRecord } from "@/lib/debts/debt";
-import { dueStatus } from "@/lib/debts/plan";
+import { dueStatus, type DueTone } from "@/lib/debts/plan";
 import { cn } from "@/lib/utils";
 
 /** How far ahead the list looks: about one billing cycle. */
@@ -20,10 +20,119 @@ const monthShort = new Intl.DateTimeFormat("en-PH", {
   month: "short",
 });
 
+const toneText: Record<DueTone, string> = {
+  destructive: "text-destructive",
+  caution: "text-amber-700 dark:text-amber-300",
+  neutral: "text-muted-foreground",
+};
+
+function DateTile({
+  iso,
+  tone,
+  size = "md",
+}: {
+  iso: string;
+  tone: DueTone;
+  size?: "md" | "lg";
+}) {
+  const date = new Date(`${iso}T00:00:00Z`);
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "grid shrink-0 place-items-center rounded-2xl text-center ring-1",
+        size === "lg" ? "w-14 py-2" : "w-11 py-1.5",
+        tone === "destructive"
+          ? "bg-destructive/10 text-destructive ring-destructive/25"
+          : "bg-background/70 ring-border/80",
+      )}
+    >
+      <span className="text-[0.625rem] leading-none font-semibold uppercase opacity-75">
+        {monthShort.format(date)}
+      </span>
+      <span
+        className={cn(
+          "mt-0.5 font-mono leading-none font-semibold tabular-nums",
+          size === "lg" ? "text-xl" : "text-base",
+        )}
+      >
+        {date.getUTCDate()}
+      </span>
+    </span>
+  );
+}
+
+type Upcoming = {
+  debt: DebtRecord;
+  due: NonNullable<ReturnType<typeof dueStatus>>;
+};
+
+/** The bill to pay first, with the page's one strong button. */
+function NextPayment({
+  item,
+  onPay,
+}: {
+  item: Upcoming;
+  onPay: (debt: DebtRecord) => void;
+}) {
+  const { debt, due } = item;
+  const overdue = due.tone === "destructive";
+  return (
+    <div
+      data-spotlight
+      className={cn(
+        debtSurfaceClass,
+        "p-5 sm:p-6",
+        overdue &&
+          "bg-[linear-gradient(160deg,color-mix(in_srgb,var(--destructive)_9%,transparent),transparent_55%)]",
+      )}
+    >
+      <div className="flex min-w-0 items-center gap-3.5">
+        <DateTile iso={debt.next_due_date!} tone={due.tone} size="lg" />
+        <div className="min-w-0 flex-1">
+          <p className={cn("text-xs font-semibold", toneText[due.tone])}>
+            {due.label}
+          </p>
+          <p className="mt-0.5 text-lg leading-snug font-semibold tracking-[-0.02em] break-words">
+            {debt.creditor_name}
+          </p>
+        </div>
+      </div>
+      <div className="mt-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-4">
+        <div className="min-w-0">
+          <p className="text-muted-foreground text-xs">
+            {debt.minimum_payment_centavos > 0 ? "Minimum due" : "No minimum"}
+          </p>
+          <p className="mt-0.5 font-mono text-[1.75rem] leading-none font-semibold tracking-[-0.045em] tabular-nums">
+            {debt.minimum_payment_centavos > 0 ? (
+              <MoneyAmount
+                centavos={debt.minimum_payment_centavos}
+                quietCentavos
+              />
+            ) : (
+              "—"
+            )}
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="lg"
+          aria-label={`Pay ${debt.creditor_name}`}
+          onClick={() => onPay(debt)}
+          className="rounded-full px-6 max-sm:w-full"
+        >
+          <HandCoins aria-hidden="true" className="size-4" />
+          Pay now
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 /**
- * The bills to pay next: every active debt due within a month or already
- * overdue, soonest first, each one tap from a payment. Hidden when there
- * is nothing to show.
+ * What to pay next: the most urgent bill as a card of its own, then the
+ * rest due within a month as quiet rows that open the payment form.
+ * Hidden when there is nothing to show.
  */
 export function UpcomingPayments({
   debts,
@@ -41,7 +150,7 @@ export function UpcomingPayments({
   const upcoming = debts
     .map((debt) => ({ debt, due: dueStatus(debt.next_due_date, today) }))
     .filter(
-      (item): item is { debt: DebtRecord; due: NonNullable<typeof item.due> } =>
+      (item): item is Upcoming =>
         item.due !== null && item.due.days <= UPCOMING_DAYS,
     )
     .sort((a, b) => a.due.days - b.due.days);
@@ -50,99 +159,82 @@ export function UpcomingPayments({
     (sum, item) => sum + item.debt.minimum_payment_centavos,
     0,
   );
-  const overdue = upcoming.filter((item) => item.due.days < 0).length;
   if (upcoming.length === 0 && undated.length === 0) return null;
+  const [first, ...later] = upcoming;
 
   return (
-    <section
-      aria-labelledby="debts-upcoming"
-      data-spotlight
-      className={cn(dashboardCardClass, "mt-4 sm:mt-5")}
+    <DebtSection
+      id="debts-upcoming"
+      title="Up next"
+      meta={
+        upcoming.length > 0 ? (
+          <>
+            <MoneyAmount
+              centavos={total}
+              className="text-foreground font-mono font-semibold tabular-nums"
+            />{" "}
+            due in {UPCOMING_DAYS} days
+          </>
+        ) : undefined
+      }
     >
-      <DashboardCardHeading
-        id="debts-upcoming"
-        icon={CalendarClock}
-        tone={overdue > 0 ? "attention" : "default"}
-        title="Pay next"
-        description={
-          upcoming.length === 0 ? (
-            `Nothing due in the next ${UPCOMING_DAYS} days.`
-          ) : (
-            <>
-              <MoneyAmount
-                centavos={total}
-                className="text-foreground font-mono font-semibold"
-              />{" "}
-              due in the next {UPCOMING_DAYS} days
-            </>
-          )
-        }
-      />
-      {upcoming.length > 0 ? (
-        <ul className="bg-background/55 ring-border/80 divide-border mt-5 divide-y overflow-hidden rounded-2xl ring-1">
-          {upcoming.map(({ debt, due }) => {
-            const date = new Date(`${debt.next_due_date}T00:00:00Z`);
-            return (
-              <li
-                key={debt.id}
-                className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 px-3.5 py-3 sm:flex-nowrap sm:px-4"
+      {first ? (
+        <NextPayment item={first} onPay={onPay} />
+      ) : (
+        <p
+          className={cn(
+            debtSurfaceClass,
+            "text-muted-foreground px-5 py-4 text-sm",
+          )}
+        >
+          Nothing due in the next {UPCOMING_DAYS} days.
+        </p>
+      )}
+
+      {later.length > 0 ? (
+        <ul className={cn(debtSurfaceClass, debtRowsClass, "mt-3")}>
+          {later.map(({ debt, due }) => (
+            <li key={debt.id}>
+              <button
+                type="button"
+                aria-label={`Pay ${debt.creditor_name}`}
+                onClick={() => onPay(debt)}
+                className="hover:bg-muted/50 focus-visible:ring-ring flex w-full min-w-0 items-center gap-3 px-4 py-3.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset"
               >
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "grid w-11 shrink-0 place-items-center rounded-xl py-1.5 text-center ring-1",
-                    due.tone === "destructive"
-                      ? "bg-destructive/10 text-destructive ring-destructive/25"
-                      : "bg-background/70 ring-border/80",
-                  )}
-                >
-                  <span className="text-[0.625rem] leading-none font-semibold uppercase opacity-75">
-                    {monthShort.format(date)}
+                <DateTile iso={debt.next_due_date!} tone={due.tone} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold break-words">
+                    {debt.creditor_name}
                   </span>
-                  <span className="mt-0.5 font-mono text-base leading-none font-semibold">
-                    {date.getUTCDate()}
+                  <span className={cn("block text-xs", toneText[due.tone])}>
+                    {due.relative}
                   </span>
                 </span>
-                <div className="min-w-0 flex-[1_1_8rem]">
-                  <p className="text-sm font-semibold break-words">
-                    {debt.creditor_name}
-                  </p>
-                  <p className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                    <DueChip tone={due.tone} label={due.relative} />
-                    {debt.minimum_payment_centavos > 0 ? (
-                      <span>
-                        <MoneyAmount
-                          centavos={debt.minimum_payment_centavos}
-                          className="text-foreground font-mono font-semibold"
-                        />{" "}
-                        minimum
-                      </span>
-                    ) : (
-                      <span>No minimum set</span>
-                    )}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={due.tone === "neutral" ? "secondary" : "default"}
-                  aria-label={`Pay ${debt.creditor_name}`}
-                  onClick={() => onPay(debt)}
-                  className="shrink-0 max-sm:grow"
-                >
-                  <HandCoins aria-hidden="true" className="size-4" />
-                  Pay
-                </Button>
-              </li>
-            );
-          })}
+                <span className="shrink-0 text-right">
+                  {debt.minimum_payment_centavos > 0 ? (
+                    <MoneyAmount
+                      centavos={debt.minimum_payment_centavos}
+                      quietCentavos
+                      className="block font-mono text-sm font-semibold tabular-nums"
+                    />
+                  ) : null}
+                  <span className="text-primary block text-xs font-semibold">
+                    Pay
+                  </span>
+                </span>
+                <ChevronRight
+                  aria-hidden="true"
+                  className="text-muted-foreground -mr-1 size-4 shrink-0"
+                />
+              </button>
+            </li>
+          ))}
         </ul>
       ) : null}
+
       {undated.length > 0 ? (
-        <p className="text-muted-foreground mt-4 text-xs leading-6">
-          {undated.length === 1
-            ? "1 active debt has no due date: "
-            : `${undated.length} active debts have no due date: `}
+        <p className="text-muted-foreground mt-3 px-1 text-xs leading-6">
+          No due date yet:{" "}
           {undated.map((debt, index) => (
             <span key={debt.id}>
               {index > 0 ? ", " : null}
@@ -156,9 +248,9 @@ export function UpcomingPayments({
               </button>
             </span>
           ))}
-          . Add one to see it here.
+          . Add one to get reminders here.
         </p>
       ) : null}
-    </section>
+    </DebtSection>
   );
 }
