@@ -22,7 +22,8 @@ const monthShort = new Intl.DateTimeFormat("en-PH", {
 
 /**
  * The bills to pay next: every active debt due within a month or already
- * overdue, soonest first, each one tap from a payment.
+ * overdue, soonest first, each one tap from a payment. Hidden when there
+ * is nothing to show.
  */
 export function UpcomingPayments({
   debts,
@@ -50,6 +51,7 @@ export function UpcomingPayments({
     0,
   );
   const overdue = upcoming.filter((item) => item.due.days < 0).length;
+  if (upcoming.length === 0 && undated.length === 0) return null;
 
   return (
     <section
@@ -61,7 +63,7 @@ export function UpcomingPayments({
         id="debts-upcoming"
         icon={CalendarClock}
         tone={overdue > 0 ? "attention" : "default"}
-        title="Due soon"
+        title="Pay next"
         description={
           upcoming.length === 0 ? (
             `Nothing due in the next ${UPCOMING_DAYS} days.`
@@ -71,9 +73,7 @@ export function UpcomingPayments({
                 centavos={total}
                 className="text-foreground font-mono font-semibold"
               />{" "}
-              in minimums over the next {UPCOMING_DAYS} days
-              {overdue > 0 ? `, ${overdue} of them overdue` : ""}. Paying one
-              moves it to next month.
+              due in the next {UPCOMING_DAYS} days
             </>
           )
         }

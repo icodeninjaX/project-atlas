@@ -1,343 +1,131 @@
 "use client";
 
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpRight,
-  CircleCheckBig,
-  HandCoins,
-  PencilLine,
-  Target,
-} from "lucide-react";
+import { ChevronRight, CircleCheckBig } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+import { dashboardCardClass } from "@/components/dashboard/dashboard-card";
 import {
-  dashboardCardClass,
-  dashboardTileClass,
-} from "@/components/dashboard/dashboard-card";
-import {
-  DebtStatusPill,
   DebtTypeBadge,
-  DueChip,
   RepaidBar,
   debtTypeLabel,
   formatPercent,
 } from "@/components/debts/debt-visuals";
 import { MoneyAmount } from "@/components/money/money-amount";
-import { TonePill } from "@/components/money/money-hero";
-import { Button } from "@/components/ui/button";
-import {
-  formatRate,
-  type DebtRecord,
-  type DebtStrategy,
-} from "@/lib/debts/debt";
-import {
-  STRATEGY_DETAILS,
-  dueStatus,
-  payoffMonthLabel,
-  repaidShare,
-  type DebtPayoff,
-} from "@/lib/debts/plan";
-import { formatShortDate } from "@/lib/money/history";
+import type { DebtRecord } from "@/lib/debts/debt";
+import { dueStatus, repaidShare } from "@/lib/debts/plan";
 import { cn } from "@/lib/utils";
 
-export type LastPayment = { amountCentavos: number; paymentDate: string };
+/** The one line under a debt's name: its due date, or why it has none. */
+function DebtLine({ debt, today }: { debt: DebtRecord; today: string }) {
+  if (debt.status === "paused") return <span>Paused</span>;
+  if (debt.status === "defaulted") {
+    return <span className="text-destructive font-medium">Defaulted</span>;
+  }
+  const due = dueStatus(debt.next_due_date, today);
+  if (!due) return <span>{debtTypeLabel(debt.debt_type)} · No due date</span>;
+  return (
+    <span
+      className={cn(
+        due.tone === "destructive" && "text-destructive font-medium",
+        due.tone === "caution" && "text-amber-700 dark:text-amber-300",
+      )}
+    >
+      {due.label}
+    </span>
+  );
+}
 
-function DebtCard({
+function DebtRow({
   debt,
-  rank,
-  payoff,
-  focus,
-  lastPayment,
   highlighted,
   today,
-  onEdit,
-  onPay,
-  move,
 }: {
   debt: DebtRecord;
-  rank: number;
-  payoff: DebtPayoff | undefined;
-  focus: boolean;
-  lastPayment: LastPayment | undefined;
   highlighted: boolean;
   today: string;
-  onEdit: () => void;
-  onPay: () => void;
-  /** Present in "My priority" order: moves the debt up or down one place. */
-  move?: { up: (() => void) | null; down: (() => void) | null };
 }) {
   const share = repaidShare(
     debt.original_balance_centavos,
     debt.current_balance_centavos,
   );
-  const due =
-    debt.status === "active" ? dueStatus(debt.next_due_date, today) : null;
-  const href = `/debts/${debt.id}` as Route;
 
   return (
-    <li
-      id={`debt-${debt.id}`}
-      data-spotlight
-      className={cn(
-        dashboardCardClass,
-        "flex scroll-mt-24 flex-col",
-        highlighted && "ring-primary ring-2",
-      )}
-    >
-      <div className="flex min-w-0 items-start gap-3">
-        <span className="relative shrink-0">
-          <DebtTypeBadge type={debt.debt_type} />
-          <span
-            aria-hidden="true"
-            className={cn(
-              "ring-card absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full font-mono text-[0.625rem] font-bold ring-2",
-              focus
-                ? "bg-primary-solid text-primary-solid-foreground"
-                : "bg-muted text-foreground/80",
-            )}
-          >
-            {rank}
-          </span>
-        </span>
-        <div className="min-w-0 flex-1">
-          <h3 className="text-base leading-6 font-semibold tracking-[-0.01em] break-words">
-            <Link
-              href={href}
-              className="focus-visible:after:ring-ring rounded-sm outline-none after:absolute after:inset-0 after:rounded-[inherit] after:content-[''] focus-visible:after:ring-2"
-            >
+    <li id={`debt-${debt.id}`} className="scroll-mt-24">
+      <Link
+        href={`/debts/${debt.id}` as Route}
+        className={cn(
+          "hover:bg-muted/50 focus-visible:ring-ring flex min-w-0 items-center gap-3 px-3.5 py-3.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset sm:px-4",
+          highlighted && "bg-primary/[0.08]",
+        )}
+      >
+        <DebtTypeBadge type={debt.debt_type} size="sm" />
+        <span className="min-w-0 flex-1">
+          <span className="flex min-w-0 items-baseline justify-between gap-3">
+            <span className="min-w-0 text-sm font-semibold break-words">
               {debt.creditor_name}
-            </Link>
-          </h3>
-          <p className="text-muted-foreground text-xs">
-            <span className="sr-only">Number {rank} in the plan. </span>
-            {debtTypeLabel(debt.debt_type)} ·{" "}
-            {formatRate(debt.interest_rate_percent)}
-          </p>
-        </div>
-        <div className="relative z-10 -mt-1.5 -mr-2 flex shrink-0">
-          {move ? (
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Move ${debt.creditor_name} up`}
-                disabled={!move.up}
-                onClick={move.up ?? undefined}
-              >
-                <ArrowUp aria-hidden="true" className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Move ${debt.creditor_name} down`}
-                disabled={!move.down}
-                onClick={move.down ?? undefined}
-              >
-                <ArrowDown aria-hidden="true" className="size-4" />
-              </Button>
-            </>
-          ) : null}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={`Edit ${debt.creditor_name}`}
-            onClick={onEdit}
-          >
-            <PencilLine aria-hidden="true" className="size-4" />
-          </Button>
-        </div>
-      </div>
-
-      <p className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <MoneyAmount
-          centavos={debt.current_balance_centavos}
-          quietCentavos
-          className="font-mono text-[1.625rem] leading-none font-semibold tracking-[-0.04em] [overflow-wrap:anywhere]"
+            </span>
+            <MoneyAmount
+              centavos={debt.current_balance_centavos}
+              className="shrink-0 font-mono text-sm font-semibold"
+            />
+          </span>
+          <span className="text-muted-foreground mt-0.5 flex min-w-0 items-center justify-between gap-3 text-xs">
+            <span className="min-w-0 truncate">
+              <DebtLine debt={debt} today={today} />
+            </span>
+            <span className="shrink-0">{formatPercent(share)} paid</span>
+          </span>
+          <RepaidBar share={share} size="sm" className="mt-2" />
+        </span>
+        <ChevronRight
+          aria-hidden="true"
+          className="text-muted-foreground size-4 shrink-0"
         />
-        <span className="text-muted-foreground text-xs">
-          left of{" "}
-          <MoneyAmount
-            centavos={debt.original_balance_centavos}
-            className="font-mono"
-          />
-        </span>
-      </p>
-      <RepaidBar share={share} size="sm" className="mt-3" />
-      <p className="text-muted-foreground mt-2 flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs">
-        <span>
-          <span className="text-foreground font-mono font-semibold">
-            {formatPercent(share)}
-          </span>{" "}
-          repaid
-        </span>
-        <span>
-          {payoff?.payoffMonth ? (
-            <>
-              Paid off{" "}
-              <span className="text-foreground font-mono font-semibold">
-                {payoffMonthLabel(today, payoff.payoffMonth)}
-              </span>
-            </>
-          ) : (
-            <span className="text-destructive font-medium">
-              Not paid off at this pace
-            </span>
-          )}
-        </span>
-      </p>
-
-      <div className="mt-auto pt-4">
-        <div className="flex flex-wrap gap-1.5">
-          {focus ? (
-            <span className="bg-primary/10 text-primary ring-primary/25 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.6875rem] leading-tight font-semibold ring-1">
-              <Target aria-hidden="true" className="size-3" />
-              Focus now
-            </span>
-          ) : null}
-          <DebtStatusPill status={debt.status} />
-          {due ? <DueChip tone={due.tone} label={due.label} /> : null}
-          {debt.minimum_payment_centavos > 0 ? (
-            <TonePill tone="neutral">
-              <MoneyAmount
-                centavos={debt.minimum_payment_centavos}
-                className="font-mono"
-              />{" "}
-              a month
-            </TonePill>
-          ) : (
-            <TonePill tone="neutral">No minimum</TonePill>
-          )}
-        </div>
-        <p className="text-muted-foreground border-border mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t pt-3 text-xs">
-          <span>
-            {lastPayment ? (
-              <>
-                Last paid{" "}
-                <MoneyAmount
-                  centavos={lastPayment.amountCentavos}
-                  className="text-foreground font-mono font-semibold"
-                />{" "}
-                on {formatShortDate(lastPayment.paymentDate)}
-              </>
-            ) : (
-              "No payments recorded yet"
-            )}
-          </span>
-          <span className="flex items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="text-primary inline-flex items-center gap-0.5 font-semibold"
-            >
-              Details
-              <ArrowUpRight className="size-3.5" />
-            </span>
-            <Button
-              type="button"
-              size="sm"
-              variant={
-                focus || due?.tone !== "neutral" ? "default" : "secondary"
-              }
-              aria-label={`Pay ${debt.creditor_name}`}
-              onClick={onPay}
-              className="relative z-10"
-            >
-              <HandCoins aria-hidden="true" className="size-4" />
-              Pay
-            </Button>
-          </span>
-        </p>
-      </div>
+      </Link>
     </li>
   );
 }
 
-/** The open debts as cards, in the order the plan pays them. */
+/** Every open debt as one quiet row; each opens its own page. */
 export function DebtList({
   debts,
-  payoffs,
-  strategy,
-  lastPayments,
   highlightId,
   today,
-  onEdit,
-  onPay,
-  onReorder,
 }: {
-  /** Open debts, already in plan order. */
+  /** Open debts, in the order to show them. */
   debts: DebtRecord[];
-  payoffs: ReadonlyMap<string, DebtPayoff>;
-  strategy: DebtStrategy;
-  lastPayments: ReadonlyMap<string, LastPayment>;
   highlightId: string | null;
   today: string;
-  onEdit: (debt: DebtRecord) => void;
-  onPay: (debt: DebtRecord) => void;
-  /** Saves a new "My priority" order, first to last. */
-  onReorder: (ids: string[]) => void;
 }) {
-  const reorderable = strategy === "priority" && debts.length > 1;
-  const swap = (index: number, offset: number) => () => {
-    const ids = debts.map((debt) => debt.id);
-    [ids[index], ids[index + offset]] = [ids[index + offset]!, ids[index]!];
-    onReorder(ids);
-  };
-
   return (
-    <section aria-labelledby="debts-list" className="mt-8 sm:mt-10">
-      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-        <h2
-          id="debts-list"
-          className="text-xl font-semibold tracking-[-0.025em]"
-        >
-          Open debts
+    <section
+      aria-labelledby="debts-list"
+      data-spotlight
+      className={cn(dashboardCardClass, "mt-4 sm:mt-5")}
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h2 id="debts-list" className="text-base font-semibold">
+          Your debts
         </h2>
         <p className="text-muted-foreground text-xs">
-          In {STRATEGY_DETAILS[strategy].label.toLowerCase()} order:{" "}
-          {reorderable
-            ? "use the arrows to set it"
-            : STRATEGY_DETAILS[strategy].rule.toLowerCase()}
-          .{" "}
-          <a
-            href="#plan"
-            className="text-primary focus-visible:ring-ring rounded-sm font-semibold underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:outline-none"
-          >
-            Change the order
-          </a>
+          Tap one to pay, edit, or see its history
         </p>
       </div>
-      <ol className="mt-4 grid gap-4 lg:grid-cols-2">
-        {debts.map((debt, index) => (
-          <DebtCard
+      <ul className="bg-background/55 ring-border/80 divide-border mt-4 divide-y overflow-hidden rounded-2xl ring-1">
+        {debts.map((debt) => (
+          <DebtRow
             key={debt.id}
             debt={debt}
-            rank={index + 1}
-            payoff={payoffs.get(debt.id)}
-            focus={index === 0}
-            lastPayment={lastPayments.get(debt.id)}
             highlighted={debt.id === highlightId}
             today={today}
-            onEdit={() => onEdit(debt)}
-            onPay={() => onPay(debt)}
-            move={
-              reorderable
-                ? {
-                    up: index > 0 ? swap(index, -1) : null,
-                    down: index < debts.length - 1 ? swap(index, 1) : null,
-                  }
-                : undefined
-            }
           />
         ))}
-      </ol>
+      </ul>
     </section>
   );
 }
 
-/** Debts already at zero, each with what was repaid. */
+/** Debts already at zero, folded away until asked for. */
 export function PaidOffList({ debts }: { debts: DebtRecord[] }) {
   const repaid = debts.reduce(
     (sum, debt) => sum + debt.original_balance_centavos,
@@ -345,57 +133,51 @@ export function PaidOffList({ debts }: { debts: DebtRecord[] }) {
   );
 
   return (
-    <section aria-labelledby="debts-paid" className="mt-8 sm:mt-10">
-      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-        <h2
-          id="debts-paid"
-          className="text-xl font-semibold tracking-[-0.025em]"
-        >
-          Paid off
-        </h2>
-        <p className="text-muted-foreground text-xs">
-          <MoneyAmount
-            centavos={repaid}
-            className="text-foreground font-mono font-semibold"
-          />{" "}
-          repaid across {debts.length} {debts.length === 1 ? "debt" : "debts"}
-        </p>
-      </div>
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {debts.map((debt) => (
-          <li
-            key={debt.id}
-            className={cn(
-              dashboardTileClass,
-              "relative flex items-center gap-3",
-            )}
+    <section aria-labelledby="debts-paid" className="mt-4 sm:mt-5">
+      <details className={cn(dashboardCardClass, "group")}>
+        <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-x-4 gap-y-1 [&::-webkit-details-marker]:hidden">
+          <h2
+            id="debts-paid"
+            className="flex items-center gap-2 text-base font-semibold"
           >
-            <span
+            <CircleCheckBig
               aria-hidden="true"
-              className="bg-positive/12 text-positive grid size-9 shrink-0 place-items-center rounded-xl"
-            >
-              <CircleCheckBig className="size-4" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold break-words">
-                <Link
-                  href={`/debts/${debt.id}` as Route}
-                  className="focus-visible:after:ring-ring outline-none after:absolute after:inset-0 after:rounded-[inherit] after:content-[''] focus-visible:after:ring-2"
-                >
-                  {debt.creditor_name}
-                </Link>
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {debtTypeLabel(debt.debt_type)}
-              </p>
-            </div>
-            <MoneyAmount
-              centavos={debt.original_balance_centavos}
-              className="text-muted-foreground font-mono text-xs font-semibold"
+              className="text-positive size-4"
             />
-          </li>
-        ))}
-      </ul>
+            Paid off
+          </h2>
+          <span className="text-muted-foreground flex items-center gap-1 text-xs">
+            <MoneyAmount
+              centavos={repaid}
+              className="text-foreground font-mono font-semibold"
+            />{" "}
+            across {debts.length} {debts.length === 1 ? "debt" : "debts"}
+            <ChevronRight
+              aria-hidden="true"
+              className="size-4 transition-transform group-open:rotate-90"
+            />
+          </span>
+        </summary>
+        <ul className="bg-background/55 ring-border/80 divide-border mt-4 divide-y overflow-hidden rounded-2xl ring-1">
+          {debts.map((debt) => (
+            <li key={debt.id}>
+              <Link
+                href={`/debts/${debt.id}` as Route}
+                className="hover:bg-muted/50 focus-visible:ring-ring flex min-w-0 items-center gap-3 px-3.5 py-3 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset sm:px-4"
+              >
+                <DebtTypeBadge type={debt.debt_type} size="sm" />
+                <span className="min-w-0 flex-1 text-sm font-semibold break-words">
+                  {debt.creditor_name}
+                </span>
+                <MoneyAmount
+                  centavos={debt.original_balance_centavos}
+                  className="text-muted-foreground font-mono text-xs font-semibold"
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </details>
     </section>
   );
 }

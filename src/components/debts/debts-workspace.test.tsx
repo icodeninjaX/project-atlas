@@ -108,15 +108,16 @@ function renderWorkspace({
   );
 }
 
-function openDebtNames() {
-  const list = screen.getByRole("region", { name: "Open debts" });
-  return within(list)
-    .getAllByRole("heading", { level: 3 })
-    .map((heading) => heading.textContent);
+function planOrder() {
+  const plan = within(screen.getByRole("region", { name: "Payoff plan" }));
+  return within(plan.getByRole("list", { name: "Order to pay them off" }))
+    .getAllByRole("listitem")
+    .map((item) => item.querySelector(".font-semibold:not(.sr-only)"))
+    .map((name) => name?.textContent?.replace(/^\d+\. /, ""));
 }
 
 describe("DebtsWorkspace", () => {
-  it("leads with what is owed, what is repaid, and the next payment", () => {
+  it("leads with what is owed, how much is paid, and when it ends", () => {
     renderWorkspace({
       payments: [
         {
@@ -127,59 +128,142 @@ describe("DebtsWorkspace", () => {
       ],
     });
 
-    const region = screen.getByRole("region", { name: "Total remaining" });
+    const region = screen.getByRole("region", { name: "You owe" });
     const hero = within(region);
-    // The figure splits its centavos off, so read the region's text.
-    expect(region).toHaveTextContent(/^Total remaining.*₱4,500\.00Across/);
-    // ₱8,000 borrowed in all, ₱3,500 of it repaid, the paid debt included.
-    expect(hero.getByText(/Across 2 open debts/)).toHaveTextContent(
-      "You have repaid ₱3,500.00 of the ₱8,000.00 borrowed.",
+    expect(region).toHaveTextContent(/₱4,500\.00/);
+    // ₱8,000 owed in all, ₱3,500 of it repaid, the paid debt included.
+    expect(hero.getByText(/paid off/).parentElement).toHaveTextContent(
+      "44% paid off · ₱3,500.00 of ₱8,000.00",
     );
     expect(hero.getByText("1 payment overdue")).toBeInTheDocument();
-    expect(hero.getByText("Big Card")).toBeInTheDocument();
-    expect(hero.getByText("Overdue by 2 days")).toBeInTheDocument();
-    expect(hero.getByText("1 payment recorded")).toBeInTheDocument();
+    expect(hero.getByText("Paid in October").nextSibling).toHaveTextContent(
+      "₱300.00",
+    );
   });
 
-  it("orders the debts by the chosen strategy and keeps it in the address", async () => {
+  it("lists each open debt as a row that opens its page, soonest due first", () => {
+    renderWorkspace();
+
+    const list = within(screen.getByRole("region", { name: "Your debts" }));
+    const links = list.getAllByRole("link");
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveAttribute("href", `/debts/${DEBTS[0]!.id}`);
+    expect(links[0]).toHaveTextContent("Big Card");
+    expect(links[0]).toHaveTextContent("Overdue by 2 days");
+    expect(links[1]).toHaveTextContent("Small Loan");
+  });
+
+  it("lists what to pay next, overdue first, each one tap from paying", async () => {
     const user = userEvent.setup();
     renderWorkspace();
 
-    expect(openDebtNames()).toEqual(["Big Card", "Small Loan"]);
+    const next = within(screen.getByRole("region", { name: "Pay next" }));
+    const rows = next.getAllByRole("listitem");
+    expect(rows.map((row) => row.querySelector("p")?.textContent)).toEqual([
+      "Big Card",
+      "Small Loan",
+    ]);
+    expect(within(rows[0]!).getByText("Overdue by 2 days")).toBeInTheDocument();
+
+    await user.click(next.getByRole("button", { name: "Pay Small Loan" }));
+    const sheet = within(
+      screen.getByRole("dialog", { name: "Pay Small Loan" }),
+    );
+    expect(
+      sheet.getByRole("checkbox", { name: /This pays the bill due Oct 5/ }),
+    ).toBeChecked();
+  });
+
+  it("points out active debts with no due date and opens their editor", async () => {
+    const user = userEvent.setup();
+    renderWorkspace({
+      debts: [
+        debt({
+          id: "44444444-4444-4444-8444-444444444444",
+          creditor_name: "Tita Lorna",
+          debt_type: "family",
+        }),
+      ],
+    });
+
+    const next = within(screen.getByRole("region", { name: "Pay next" }));
+    expect(next.getByText("Nothing due in the next 30 days.")).toBeVisible();
+    await user.click(
+      next.getByRole("button", { name: "Tita Lorna, set its due date" }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Edit Tita Lorna" }),
+    ).toBeInTheDocument();
+  });
+
+  it("orders the plan by the chosen strategy and keeps it in the address", async () => {
+    const user = userEvent.setup();
+    renderWorkspace();
+
+    expect(planOrder()).toEqual(["Big Card", "Small Loan"]);
 
     await user.click(screen.getByRole("radio", { name: "Snowball" }));
 
-    expect(openDebtNames()).toEqual(["Small Loan", "Big Card"]);
+    expect(planOrder()).toEqual(["Small Loan", "Big Card"]);
     expect(window.location.search).toContain("strategy=snowball");
-    expect(screen.getByText(/In snowball order/)).toBeInTheDocument();
   });
 
-  it("compares an extra monthly amount against the plan without it", async () => {
+  it("shows what an extra monthly amount changes", async () => {
     const user = userEvent.setup();
     renderWorkspace();
-    const result = within(screen.getByRole("group", { name: "Plan result" }));
+    const plan = within(screen.getByRole("region", { name: "Payoff plan" }));
 
-    expect(result.getByRole("status")).toHaveTextContent(
-      "Add an extra amount to compare",
+    expect(plan.getByRole("status")).toHaveTextContent(
+      "Try an amount to see how much sooner you finish.",
     );
 
-    await user.click(screen.getByRole("button", { name: "+₱1,000" }));
+    await user.click(plan.getByRole("button", { name: "+₱1,000" }));
 
-    expect(result.getByRole("status")).toHaveTextContent(/sooner/);
-    expect(result.getByText("Each month").nextSibling).toHaveTextContent(
-      "₱400.00becomes₱1,400.00",
+    expect(plan.getByRole("status")).toHaveTextContent(/sooner/);
+    expect(plan.getByText(/Paying/)).toHaveTextContent(
+      "Paying ₱1,400.00 a month",
     );
   });
 
-  it("lists paid-off debts apart from the plan", () => {
+  it("sets my own order with the arrows and saves it", async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn<Submit>(async () => ({
+      success: true,
+      message: "Priority order saved.",
+    }));
+    renderWorkspace({ submit });
+
+    expect(
+      screen.queryByRole("button", { name: /Move .* up/ }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "My priority" }));
+    expect(planOrder()).toEqual(["Small Loan", "Big Card"]);
+    expect(
+      screen.getByRole("button", { name: "Move Small Loan up" }),
+    ).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Move Big Card up" }));
+
+    expect(planOrder()).toEqual(["Big Card", "Small Loan"]);
+    expect(submit).toHaveBeenCalledWith("debt.reorder", expect.any(FormData));
+    expect(submit.mock.calls[0]![1].get("order")).toBe(
+      `${DEBTS[0]!.id},${DEBTS[1]!.id}`,
+    );
+  });
+
+  it("folds paid-off debts away from the open ones", () => {
     renderWorkspace();
 
     const paid = within(screen.getByRole("region", { name: "Paid off" }));
-    expect(paid.getByRole("link", { name: "Cleared Wallet" })).toHaveAttribute(
+    expect(paid.getByRole("link", { name: /Cleared Wallet/ })).toHaveAttribute(
       "href",
       `/debts/${DEBTS[2]!.id}`,
     );
-    expect(openDebtNames()).not.toContain("Cleared Wallet");
+    expect(
+      within(screen.getByRole("region", { name: "Your debts" })).queryByText(
+        "Cleared Wallet",
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it("adds a debt in a sheet and closes it once saved", async () => {
@@ -212,28 +296,15 @@ describe("DebtsWorkspace", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("edits a debt from its card", async () => {
-    const user = userEvent.setup();
-    renderWorkspace();
-
-    await user.click(screen.getByRole("button", { name: "Edit Small Loan" }));
-
-    const sheet = within(
-      screen.getByRole("dialog", { name: "Edit Small Loan" }),
-    );
-    expect(sheet.getByLabelText("Balance today in pesos")).toHaveValue(
-      "500.00",
-    );
-    expect(sheet.getByRole("radio", { name: "Personal loan" })).toBeChecked();
-  });
-
   it("marks the debt a suggestion pointed to", () => {
     const scrollIntoView = vi.fn();
     Element.prototype.scrollIntoView = scrollIntoView;
     renderWorkspace({ highlightId: DEBTS[1]!.id });
 
-    const card = screen.getByRole("link", { name: "Small Loan" }).closest("li");
-    expect(card).toHaveClass("ring-2");
+    const link = within(
+      screen.getByRole("region", { name: "Your debts" }),
+    ).getByRole("link", { name: /Small Loan/ });
+    expect(link).toHaveClass("bg-primary/[0.08]");
     expect(scrollIntoView).toHaveBeenCalled();
   });
 
@@ -245,132 +316,5 @@ describe("DebtsWorkspace", () => {
     expect(
       screen.queryByRole("region", { name: "Payoff plan" }),
     ).not.toBeInTheDocument();
-  });
-
-  it("lists what is due soon, overdue first, each one tap from paying", async () => {
-    const user = userEvent.setup();
-    renderWorkspace();
-
-    const soon = within(screen.getByRole("region", { name: "Due soon" }));
-    const rows = soon.getAllByRole("listitem");
-    expect(rows.map((row) => row.querySelector("p")?.textContent)).toEqual([
-      "Big Card",
-      "Small Loan",
-    ]);
-    expect(within(rows[0]!).getByText("Overdue by 2 days")).toBeInTheDocument();
-
-    await user.click(soon.getByRole("button", { name: "Pay Small Loan" }));
-    const sheet = within(
-      screen.getByRole("dialog", { name: "Pay Small Loan" }),
-    );
-    expect(
-      sheet.getByRole("checkbox", { name: /This pays the bill due Oct 5/ }),
-    ).toBeChecked();
-  });
-
-  it("points out active debts with no due date", () => {
-    renderWorkspace({
-      debts: [
-        debt({
-          id: "44444444-4444-4444-8444-444444444444",
-          creditor_name: "Tita Lorna",
-          debt_type: "family",
-        }),
-      ],
-    });
-
-    const soon = within(screen.getByRole("region", { name: "Due soon" }));
-    expect(soon.getByText("Nothing due in the next 30 days.")).toBeVisible();
-    expect(
-      soon.getByRole("button", { name: "Tita Lorna, set its due date" }),
-    ).toBeInTheDocument();
-  });
-
-  it("pays a debt from its card", async () => {
-    const user = userEvent.setup();
-    renderWorkspace();
-    const list = within(screen.getByRole("region", { name: "Open debts" }));
-
-    await user.click(list.getByRole("button", { name: "Pay Big Card" }));
-
-    expect(
-      screen.getByRole("dialog", { name: "Pay Big Card" }),
-    ).toBeInTheDocument();
-  });
-
-  it("sets my priority order with the arrows and saves it", async () => {
-    const user = userEvent.setup();
-    const submit = vi.fn<Submit>(async () => ({
-      success: true,
-      message: "Priority order saved.",
-    }));
-    renderWorkspace({ submit });
-
-    await user.click(screen.getByRole("radio", { name: "My priority" }));
-    expect(openDebtNames()).toEqual(["Small Loan", "Big Card"]);
-    expect(
-      screen.getByRole("button", { name: "Move Small Loan up" }),
-    ).toBeDisabled();
-
-    await user.click(screen.getByRole("button", { name: "Move Big Card up" }));
-
-    expect(openDebtNames()).toEqual(["Big Card", "Small Loan"]);
-    expect(submit).toHaveBeenCalledWith("debt.reorder", expect.any(FormData));
-    expect(submit.mock.calls[0]![1].get("order")).toBe(
-      `${DEBTS[0]!.id},${DEBTS[1]!.id}`,
-    );
-  });
-
-  it("deletes a debt from its editor after a confirmation", async () => {
-    const user = userEvent.setup();
-    const submit = vi.fn<Submit>(async () => ({
-      success: true,
-      message: "Debt deleted.",
-    }));
-    renderWorkspace({ submit });
-
-    await user.click(screen.getByRole("button", { name: "Edit Small Loan" }));
-    const sheet = within(
-      screen.getByRole("dialog", { name: "Edit Small Loan" }),
-    );
-    await user.click(sheet.getByRole("button", { name: "Delete" }));
-    expect(sheet.getByRole("alert")).toHaveTextContent("Delete Small Loan?");
-    expect(submit).not.toHaveBeenCalled();
-
-    await user.click(sheet.getByRole("button", { name: "Delete debt" }));
-
-    expect(submit).toHaveBeenCalledWith("debt.delete", expect.any(FormData));
-    expect(submit.mock.calls[0]![1].get("debtId")).toBe(DEBTS[1]!.id);
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  });
-
-  it("edits the balance, a monthly rate, and the status", async () => {
-    const user = userEvent.setup();
-    const submit = vi.fn<Submit>(async () => ({
-      success: true,
-      message: "Debt updated.",
-    }));
-    renderWorkspace({ submit });
-
-    await user.click(screen.getByRole("button", { name: "Edit Big Card" }));
-    const sheet = within(screen.getByRole("dialog", { name: "Edit Big Card" }));
-    expect(
-      sheet.getByText(/you have paid stays in the history/),
-    ).toHaveTextContent("The ₱2,000.00 you have paid stays in the history.");
-    expect(sheet.getByText(/Repeats monthly on day 30/)).toBeInTheDocument();
-
-    const rate = sheet.getByLabelText("Interest rate percent");
-    await user.clear(rate);
-    await user.type(rate, "3");
-    await user.click(sheet.getByRole("radio", { name: "/mo" }));
-    expect(sheet.getByText("That is 36% a year.")).toBeInTheDocument();
-    await user.click(sheet.getByRole("radio", { name: /Paused/ }));
-    await user.click(sheet.getByRole("button", { name: "Save changes" }));
-
-    const formData = submit.mock.calls[0]![1];
-    expect(formData.get("currentBalance")).toBe("4,000.00");
-    expect(formData.get("interestRatePercent")).toBe("3");
-    expect(formData.get("interestRateUnit")).toBe("month");
-    expect(formData.get("status")).toBe("paused");
   });
 });
