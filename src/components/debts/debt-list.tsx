@@ -1,6 +1,14 @@
 "use client";
 
-import { ArrowUpRight, CircleCheckBig, PencilLine, Target } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpRight,
+  CircleCheckBig,
+  HandCoins,
+  PencilLine,
+  Target,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import {
@@ -18,7 +26,11 @@ import {
 import { MoneyAmount } from "@/components/money/money-amount";
 import { TonePill } from "@/components/money/money-hero";
 import { Button } from "@/components/ui/button";
-import type { DebtRecord, DebtStrategy } from "@/lib/debts/debt";
+import {
+  formatRate,
+  type DebtRecord,
+  type DebtStrategy,
+} from "@/lib/debts/debt";
 import {
   STRATEGY_DETAILS,
   dueStatus,
@@ -31,10 +43,6 @@ import { cn } from "@/lib/utils";
 
 export type LastPayment = { amountCentavos: number; paymentDate: string };
 
-function formatRate(percent: number) {
-  return `${Number(percent.toFixed(2))}% a year`;
-}
-
 function DebtCard({
   debt,
   rank,
@@ -44,6 +52,8 @@ function DebtCard({
   highlighted,
   today,
   onEdit,
+  onPay,
+  move,
 }: {
   debt: DebtRecord;
   rank: number;
@@ -53,6 +63,9 @@ function DebtCard({
   highlighted: boolean;
   today: string;
   onEdit: () => void;
+  onPay: () => void;
+  /** Present in "My priority" order: moves the debt up or down one place. */
+  move?: { up: (() => void) | null; down: (() => void) | null };
 }) {
   const share = repaidShare(
     debt.original_balance_centavos,
@@ -102,16 +115,41 @@ function DebtCard({
             {formatRate(debt.interest_rate_percent)}
           </p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={`Edit ${debt.creditor_name}`}
-          onClick={onEdit}
-          className="relative z-10 -mt-1.5 -mr-2 shrink-0"
-        >
-          <PencilLine aria-hidden="true" className="size-4" />
-        </Button>
+        <div className="relative z-10 -mt-1.5 -mr-2 flex shrink-0">
+          {move ? (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Move ${debt.creditor_name} up`}
+                disabled={!move.up}
+                onClick={move.up ?? undefined}
+              >
+                <ArrowUp aria-hidden="true" className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Move ${debt.creditor_name} down`}
+                disabled={!move.down}
+                onClick={move.down ?? undefined}
+              >
+                <ArrowDown aria-hidden="true" className="size-4" />
+              </Button>
+            </>
+          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={`Edit ${debt.creditor_name}`}
+            onClick={onEdit}
+          >
+            <PencilLine aria-hidden="true" className="size-4" />
+          </Button>
+        </div>
       </div>
 
       <p className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -189,12 +227,27 @@ function DebtCard({
               "No payments recorded yet"
             )}
           </span>
-          <span
-            aria-hidden="true"
-            className="text-primary inline-flex items-center gap-0.5 font-semibold"
-          >
-            Details
-            <ArrowUpRight className="size-3.5" />
+          <span className="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="text-primary inline-flex items-center gap-0.5 font-semibold"
+            >
+              Details
+              <ArrowUpRight className="size-3.5" />
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant={
+                focus || due?.tone !== "neutral" ? "default" : "secondary"
+              }
+              aria-label={`Pay ${debt.creditor_name}`}
+              onClick={onPay}
+              className="relative z-10"
+            >
+              <HandCoins aria-hidden="true" className="size-4" />
+              Pay
+            </Button>
           </span>
         </p>
       </div>
@@ -211,6 +264,8 @@ export function DebtList({
   highlightId,
   today,
   onEdit,
+  onPay,
+  onReorder,
 }: {
   /** Open debts, already in plan order. */
   debts: DebtRecord[];
@@ -220,7 +275,17 @@ export function DebtList({
   highlightId: string | null;
   today: string;
   onEdit: (debt: DebtRecord) => void;
+  onPay: (debt: DebtRecord) => void;
+  /** Saves a new "My priority" order, first to last. */
+  onReorder: (ids: string[]) => void;
 }) {
+  const reorderable = strategy === "priority" && debts.length > 1;
+  const swap = (index: number, offset: number) => () => {
+    const ids = debts.map((debt) => debt.id);
+    [ids[index], ids[index + offset]] = [ids[index + offset]!, ids[index]!];
+    onReorder(ids);
+  };
+
   return (
     <section aria-labelledby="debts-list" className="mt-8 sm:mt-10">
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
@@ -232,7 +297,16 @@ export function DebtList({
         </h2>
         <p className="text-muted-foreground text-xs">
           In {STRATEGY_DETAILS[strategy].label.toLowerCase()} order:{" "}
-          {STRATEGY_DETAILS[strategy].rule.toLowerCase()}
+          {reorderable
+            ? "use the arrows to set it"
+            : STRATEGY_DETAILS[strategy].rule.toLowerCase()}
+          .{" "}
+          <a
+            href="#plan"
+            className="text-primary focus-visible:ring-ring rounded-sm font-semibold underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+          >
+            Change the order
+          </a>
         </p>
       </div>
       <ol className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -247,6 +321,15 @@ export function DebtList({
             highlighted={debt.id === highlightId}
             today={today}
             onEdit={() => onEdit(debt)}
+            onPay={() => onPay(debt)}
+            move={
+              reorderable
+                ? {
+                    up: index > 0 ? swap(index, -1) : null,
+                    down: index < debts.length - 1 ? swap(index, 1) : null,
+                  }
+                : undefined
+            }
           />
         ))}
       </ol>

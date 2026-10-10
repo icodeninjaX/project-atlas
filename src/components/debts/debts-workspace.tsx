@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { SpotlightArea } from "@/components/dashboard/spotlight-area";
 import {
   DebtList,
@@ -14,7 +15,11 @@ import {
   type NextDue,
 } from "@/components/debts/debts-hero";
 import { DebtsMethod } from "@/components/debts/debts-method";
+import type { PaymentAccount } from "@/components/debts/payment-form";
+import { PaymentSheet } from "@/components/debts/payment-sheet";
 import { PayoffPlanner } from "@/components/debts/payoff-planner";
+import { UpcomingPayments } from "@/components/debts/upcoming-payments";
+import { useOfflineSync } from "@/components/offline/offline-mutation";
 import type { DebtRecord, DebtStrategy } from "@/lib/debts/debt";
 import {
   STRATEGIES,
@@ -35,19 +40,23 @@ export type DebtPaymentLite = {
 type SheetState = { open: boolean; debt: DebtRecord | null };
 
 /**
- * The debts page body: what is owed, a plan to clear it, each open debt in
- * the plan's order, and what is already paid off. The order and any extra
+ * The debts page body, in the order a person needs it: what is owed, what
+ * is due soon, each open debt with a way to pay it, the plan that orders
+ * them, and what is already paid off. The plan's order and any extra
  * amount stay in this tab; the order is also kept in the address.
  */
 export function DebtsWorkspace({
-  debts,
+  debts: savedDebts,
   payments,
+  accounts = [],
   today,
   initialStrategy,
   savedStrategy,
   highlightId,
 }: {
   debts: DebtRecord[];
+  /** Open accounts a payment can be logged from. */
+  accounts?: PaymentAccount[];
   /** Recent payments, newest first. */
   payments: DebtPaymentLite[];
   /** YYYY-MM-DD in Manila. */
@@ -59,6 +68,21 @@ export function DebtsWorkspace({
   const [strategy, setStrategy] = useState(initialStrategy);
   const [extra, setExtra] = useState("");
   const [sheet, setSheet] = useState<SheetState>({ open: false, debt: null });
+  const [paying, setPaying] = useState<DebtRecord | null>(null);
+  const { submit } = useOfflineSync();
+  // A new "My priority" order shows at once, until the saved debts return.
+  const [reordered, setReordered] = useState<{
+    source: DebtRecord[];
+    ids: string[];
+  } | null>(null);
+  const debts = useMemo(() => {
+    if (reordered?.source !== savedDebts) return savedDebts;
+    const rank = new Map(reordered.ids.map((id, index) => [id, index + 1]));
+    return savedDebts.map((debt) => ({
+      ...debt,
+      priority: rank.get(debt.id) ?? debt.priority,
+    }));
+  }, [reordered, savedDebts]);
 
   const open = useMemo(
     () => debts.filter((debt) => debt.status !== "paid"),
@@ -125,6 +149,16 @@ export function DebtsWorkspace({
   };
   const addDebt = () => setSheet({ open: true, debt: null });
   const editDebt = (debt: DebtRecord) => setSheet({ open: true, debt });
+  const reorder = async (ids: string[]) => {
+    setReordered({ source: savedDebts, ids });
+    const formData = new FormData();
+    formData.set("order", ids.join(","));
+    const result = await submit("debt.reorder", formData);
+    if (!result.success) {
+      toast.error(result.message);
+      setReordered(null);
+    }
+  };
 
   const month = today.slice(0, 7);
   const thisMonth = payments.filter((payment) =>
@@ -183,6 +217,25 @@ export function DebtsWorkspace({
             overdueCount={dues.filter((item) => item.due!.days < 0).length}
             onAdd={addDebt}
           />
+          {active.length > 0 ? (
+            <UpcomingPayments
+              debts={active}
+              today={today}
+              onPay={setPaying}
+              onEdit={editDebt}
+            />
+          ) : null}
+          <DebtList
+            debts={ordered}
+            payoffs={payoffs}
+            strategy={strategy}
+            lastPayments={lastPayments}
+            highlightId={highlightId}
+            today={today}
+            onEdit={editDebt}
+            onPay={setPaying}
+            onReorder={reorder}
+          />
           <PayoffPlanner
             plans={plans}
             base={base}
@@ -194,15 +247,6 @@ export function DebtsWorkspace({
             debts={byId}
             today={today}
           />
-          <DebtList
-            debts={ordered}
-            payoffs={payoffs}
-            strategy={strategy}
-            lastPayments={lastPayments}
-            highlightId={highlightId}
-            today={today}
-            onEdit={editDebt}
-          />
         </>
       )}
       {paid.length > 0 ? <PaidOffList debts={paid} /> : null}
@@ -211,6 +255,14 @@ export function DebtsWorkspace({
         open={sheet.open}
         onOpenChange={(next) => setSheet((state) => ({ ...state, open: next }))}
         debt={sheet.debt}
+        today={today}
+      />
+      <PaymentSheet
+        debt={paying}
+        onOpenChange={(next) => {
+          if (!next) setPaying(null);
+        }}
+        accounts={accounts}
         today={today}
       />
     </SpotlightArea>

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  annualRatePercent,
+  formatRate,
   orderDebts,
   projectDebtPayoff,
   recalculateDebtBalance,
@@ -75,5 +77,18 @@ describe("debt calculations", () => {
         monthlyPaymentCentavos: 10_000,
       }).paidOff,
     ).toBe(false);
+  });
+});
+
+describe("interest rates", () => {
+  it("stores a monthly rate as twelve months of it", () => {
+    expect(annualRatePercent(3, "month")).toBe(36);
+    expect(annualRatePercent(1.75, "month")).toBe(21);
+    expect(annualRatePercent(24, "year")).toBe(24);
+  });
+
+  it("reads a rate by the month and by the year", () => {
+    expect(formatRate(36)).toBe("3% a month · 36% a year");
+    expect(formatRate(0)).toBe("No interest");
   });
 });

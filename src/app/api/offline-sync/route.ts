@@ -7,8 +7,10 @@ import {
 } from "@/lib/career/actions";
 import {
   createDebtAction,
+  deleteDebtAction,
   deleteDebtPaymentAction,
   recordDebtPaymentAction,
+  reorderDebtsAction,
   updateDebtAction,
 } from "@/lib/debts/actions";
 import {
@@ -159,6 +161,10 @@ async function executeMutation(
       return createDebtAction(blankState, formData);
     case "debt.update":
       return updateDebtAction(blankState, formData);
+    case "debt.delete":
+      return deleteDebtAction(formData);
+    case "debt.reorder":
+      return reorderDebtsAction(formData);
     case "debtPayment.create":
       return recordDebtPaymentAction(blankState, formData);
     case "debtPayment.delete":

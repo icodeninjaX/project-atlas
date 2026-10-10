@@ -9,7 +9,10 @@ import {
   type DebtRecord,
 } from "@/lib/debts/debt";
 import { manilaTodayIsoDate } from "@/lib/dates/dates";
-import { loadDebtPagePayments } from "@/lib/debts/payments";
+import {
+  loadDebtPagePayments,
+  loadPaymentAccounts,
+} from "@/lib/debts/payments";
 import { createClient } from "@/lib/supabase/server";
 import { PageShell } from "@/components/shared/page-shell";
 
@@ -23,12 +26,13 @@ export default async function DebtsPage({
   const query = await searchParams;
   const supabase = await createClient();
   const today = manilaTodayIsoDate();
-  const [debtsResult, preferencesResult] = supabase
+  const [debtsResult, preferencesResult, accountsResult] = supabase
     ? await Promise.all([
         supabase.from("debts").select(DEBT_COLUMNS).order("priority"),
         supabase.from("user_preferences").select("debt_strategy").maybeSingle(),
+        loadPaymentAccounts(supabase),
       ])
-    : [{ data: [] }, { data: null }];
+    : [{ data: [] }, { data: null }, []];
   const savedStrategy = resolveDebtStrategy(
     undefined,
     preferencesResult.data?.debt_strategy,
@@ -64,6 +68,7 @@ export default async function DebtsPage({
           amountCentavos: Number(payment.amount_centavos),
           paymentDate: payment.payment_date,
         }))}
+        accounts={accountsResult}
         today={today}
         initialStrategy={resolveDebtStrategy(query.strategy, savedStrategy)}
         savedStrategy={savedStrategy}

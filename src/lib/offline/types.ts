@@ -27,6 +27,8 @@ export const offlineMutationTypes = [
   "application.setStage",
   "debt.create",
   "debt.update",
+  "debt.delete",
+  "debt.reorder",
   "debtPayment.create",
   "debtPayment.delete",
   "review.save",

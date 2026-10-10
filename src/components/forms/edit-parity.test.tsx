@@ -78,7 +78,12 @@ describe("edit form parity", () => {
 
     render(<DebtForm debt={debt} />);
 
-    expect(screen.getByLabelText("Due day")).toHaveValue(15);
+    expect(screen.getByLabelText("Balance today in pesos")).toHaveValue(
+      "375.00",
+    );
+    expect(screen.getByLabelText("Next due date")).toHaveValue("2026-08-15");
+    expect(screen.getByText(/Repeats monthly on day 15/)).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Active/ })).toBeChecked();
     expect(screen.getByLabelText("Notes")).toHaveValue(debt.notes);
   });
 

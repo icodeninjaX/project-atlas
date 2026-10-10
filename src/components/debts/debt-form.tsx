@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, Percent } from "lucide-react";
+import { Calculator, Percent, Trash2 } from "lucide-react";
 import { useActionState, useId, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { DEBT_TYPE_OPTIONS } from "@/components/debts/debt-visuals";
@@ -11,7 +11,13 @@ import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { DebtActionState } from "@/lib/debts/actions";
-import { projectDebtPayoff, type DebtRecord } from "@/lib/debts/debt";
+import {
+  annualRatePercent,
+  projectDebtPayoff,
+  type DebtRecord,
+  type RateUnit,
+} from "@/lib/debts/debt";
+import { dueDayFor } from "@/lib/debts/schedule";
 import { formatPayoffDuration, payoffMonthLabel } from "@/lib/debts/plan";
 import { formatPesoInput, parsePesoInput } from "@/lib/money/history";
 import { centavosToPesoInput } from "@/lib/money/money";
@@ -48,6 +54,20 @@ function Section({
 }
 
 const fieldLabel = "text-muted-foreground text-xs font-medium";
+
+const STATUS_OPTIONS = [
+  { value: "active", label: "Active", hint: "Paying it every month." },
+  {
+    value: "paused",
+    label: "Paused",
+    hint: "On hold; no minimum is planned for it.",
+  },
+  {
+    value: "defaulted",
+    label: "Defaulted",
+    hint: "Behind and not paying; flagged red.",
+  },
+] as const;
 
 /** What the entered terms add up to, before anything is saved. */
 function Estimate({
@@ -124,6 +144,7 @@ export function DebtForm({
   autoFocus = false,
   onCancel,
   onSaved,
+  onDeleted,
 }: {
   debt?: DebtRecord;
   /** YYYY-MM-DD in Manila; names the payoff month in the estimate. */
@@ -131,17 +152,22 @@ export function DebtForm({
   autoFocus?: boolean;
   onCancel?: () => void;
   onSaved?: () => void;
+  onDeleted?: () => void;
 }) {
   const id = useId();
   const { submit } = useOfflineSync();
   const editing = Boolean(debt);
   const form = useRef<HTMLFormElement>(null);
-  const [original, setOriginal] = useState(
-    debt ? toInput(debt.original_balance_centavos) : "",
-  );
-  const [current, setCurrent] = useState(
+  const [balance, setBalance] = useState(
     debt ? toInput(debt.current_balance_centavos) : "",
   );
+  const [dueDate, setDueDate] = useState(debt?.next_due_date ?? "");
+  const [status, setStatus] = useState(
+    debt && debt.status !== "paid" ? debt.status : "active",
+  );
+  const [rateUnit, setRateUnit] = useState<RateUnit>("year");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [minimum, setMinimum] = useState(
     debt && debt.minimum_payment_centavos > 0
       ? toInput(debt.minimum_payment_centavos)
@@ -164,9 +190,10 @@ export function DebtForm({
       toast.success(result.message);
       if (!editing) {
         form.current?.reset();
-        setOriginal("");
+        setBalance("");
         setMinimum("");
         setRate("");
+        setDueDate("");
       }
       onSaved?.();
       return result;
@@ -174,11 +201,31 @@ export function DebtForm({
     initial,
   );
 
-  const ratePercent = Number(rate);
+  const ratePercent = annualRatePercent(Number(rate), rateUnit);
   const ids = {
-    original: `${id}-original`,
-    current: `${id}-current`,
+    balance: `${id}-balance`,
     minimum: `${id}-minimum`,
+  };
+  const balanceCentavos = parsePesoInput(balance);
+  const paidSoFar = debt
+    ? debt.original_balance_centavos - debt.current_balance_centavos
+    : 0;
+  const dueDay = dueDate ? dueDayFor(dueDate, debt?.due_day ?? null) : null;
+
+  const deleteDebt = async () => {
+    if (!debt) return;
+    setDeleting(true);
+    const formData = new FormData();
+    formData.set("debtId", debt.id);
+    const result = await submit("debt.delete", formData);
+    setDeleting(false);
+    if (!result.success) {
+      toast.error(result.message);
+      setConfirmingDelete(false);
+      return;
+    }
+    toast.success(result.message);
+    onDeleted?.();
   };
 
   return (
@@ -189,18 +236,6 @@ export function DebtForm({
       className="grid min-w-0 gap-7"
     >
       {debt && <input type="hidden" name="debtId" value={debt.id} />}
-      {debt ? (
-        <input
-          type="hidden"
-          name="status"
-          // A paid debt given a balance again is active again.
-          value={
-            debt.status === "paid" && (parsePesoInput(current) ?? 0) > 0
-              ? "active"
-              : debt.status
-          }
-        />
-      ) : null}
 
       <Section step={1} title="Who it is owed to">
         <label className={fieldLabel}>
@@ -243,39 +278,50 @@ export function DebtForm({
         </fieldset>
       </Section>
 
-      <Section step={2} title="Balance and terms">
+      <Section step={2} title="What you owe">
         <div className="grid gap-3 min-[26rem]:grid-cols-2">
-          <div className="min-w-0">
-            <label htmlFor={ids.original} className={fieldLabel}>
-              {debt ? "Original balance" : "Amount owed"}
+          <div className="min-w-0 min-[26rem]:col-span-2">
+            <label htmlFor={ids.balance} className={fieldLabel}>
+              {debt ? "Balance today" : "Amount owed today"}
             </label>
             <div className="mt-1.5">
               <PesoInput
-                id={ids.original}
-                name="originalBalance"
-                value={original}
-                onValueChange={setOriginal}
-                ariaLabel="Original balance in pesos"
+                id={ids.balance}
+                name={debt ? "currentBalance" : "balance"}
+                value={balance}
+                onValueChange={setBalance}
+                ariaLabel={
+                  debt ? "Balance today in pesos" : "Amount owed in pesos"
+                }
+                describedBy={`${ids.balance}-hint`}
                 placeholder="50,000.00"
               />
             </div>
+            <p
+              id={`${ids.balance}-hint`}
+              className="text-muted-foreground mt-1 text-[0.6875rem] leading-4"
+            >
+              {debt ? (
+                <>
+                  Interest, fees, or a new statement changed it? Enter
+                  today&apos;s balance.
+                  {paidSoFar > 0 ? (
+                    <>
+                      {" "}
+                      The{" "}
+                      <MoneyAmount
+                        centavos={paidSoFar}
+                        className="font-mono"
+                      />{" "}
+                      you have paid stays in the history.
+                    </>
+                  ) : null}
+                </>
+              ) : (
+                "What you would need to pay to clear it now. Payments you record bring it down."
+              )}
+            </p>
           </div>
-          {debt ? (
-            <div className="min-w-0">
-              <label htmlFor={ids.current} className={fieldLabel}>
-                Current balance
-              </label>
-              <div className="mt-1.5">
-                <PesoInput
-                  id={ids.current}
-                  name="currentBalance"
-                  value={current}
-                  onValueChange={setCurrent}
-                  ariaLabel="Current balance in pesos"
-                />
-              </div>
-            </div>
-          ) : null}
           <div className="min-w-0">
             <label htmlFor={ids.minimum} className={fieldLabel}>
               Minimum payment a month
@@ -291,72 +337,88 @@ export function DebtForm({
               />
             </div>
           </div>
-          <label className={cn(fieldLabel, "min-w-0")}>
-            Annual interest rate
-            <span className="relative mt-1.5 block">
-              <Input
-                name="interestRatePercent"
-                type="number"
-                min="0"
-                max="1000"
-                step="0.0001"
-                inputMode="decimal"
-                value={rate}
-                onChange={(event) => setRate(event.target.value)}
-                placeholder="0"
-                aria-label="Annual interest rate percent"
-                className="[appearance:textfield] pr-9 text-right font-mono font-semibold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              />
-              <Percent
-                aria-hidden="true"
-                className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-3.5 -translate-y-1/2"
-              />
-            </span>
-          </label>
+          <div className="min-w-0">
+            <label htmlFor={`${id}-rate`} className={fieldLabel}>
+              Interest rate
+            </label>
+            <div className="mt-1.5 flex gap-1.5">
+              <span className="relative block min-w-0 flex-1">
+                <Input
+                  id={`${id}-rate`}
+                  name="interestRatePercent"
+                  type="number"
+                  min="0"
+                  max={rateUnit === "month" ? "83" : "1000"}
+                  step="0.0001"
+                  inputMode="decimal"
+                  value={rate}
+                  onChange={(event) => setRate(event.target.value)}
+                  placeholder="0"
+                  aria-label="Interest rate percent"
+                  aria-describedby={`${id}-rate-hint`}
+                  className="[appearance:textfield] pr-9 text-right font-mono font-semibold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                <Percent
+                  aria-hidden="true"
+                  className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-3.5 -translate-y-1/2"
+                />
+              </span>
+              <span
+                role="radiogroup"
+                aria-label="Rate is per"
+                className="bg-muted/60 ring-border inline-flex shrink-0 rounded-xl p-1 ring-1"
+              >
+                {(["month", "year"] as const).map((unit) => (
+                  <label key={unit} className="relative">
+                    <input
+                      type="radio"
+                      name="interestRateUnit"
+                      value={unit}
+                      checked={rateUnit === unit}
+                      onChange={() => setRateUnit(unit)}
+                      className="peer sr-only"
+                    />
+                    <span className="text-muted-foreground peer-checked:bg-background peer-checked:text-foreground peer-focus-visible:ring-ring flex h-full min-h-9 cursor-pointer items-center rounded-lg px-2.5 text-xs font-semibold peer-checked:shadow-sm peer-focus-visible:ring-2">
+                      /{unit === "month" ? "mo" : "yr"}
+                    </span>
+                  </label>
+                ))}
+              </span>
+            </div>
+            <p
+              id={`${id}-rate-hint`}
+              className="text-muted-foreground mt-1 text-[0.6875rem] leading-4"
+            >
+              {Number(rate) > 0 && Number.isFinite(ratePercent)
+                ? rateUnit === "month"
+                  ? `That is ${Number(ratePercent.toFixed(2))}% a year.`
+                  : `That is about ${Number((ratePercent / 12).toFixed(2))}% a month.`
+                : "Lenders often quote it by the month, like 3% a month."}
+            </p>
+          </div>
         </div>
       </Section>
 
-      <Section step={3} title="Schedule">
+      <Section step={3} title="When it is due">
         <div className="grid gap-3 min-[26rem]:grid-cols-2">
           <label className={cn(fieldLabel, "min-w-0")}>
             Next due date
             <Input
               name="nextDueDate"
               type="date"
-              defaultValue={debt?.next_due_date ?? ""}
+              value={dueDate}
+              onChange={(event) => setDueDate(event.target.value)}
               aria-label="Next due date"
-              className="mt-1.5"
-            />
-          </label>
-          <label className={cn(fieldLabel, "min-w-0")}>
-            Due day of month
-            <Input
-              name="dueDay"
-              type="number"
-              min="1"
-              max="31"
-              defaultValue={debt?.due_day ?? ""}
-              placeholder="e.g. 15"
-              aria-label="Due day"
-              className="mt-1.5"
-            />
-          </label>
-          <label className={cn(fieldLabel, "min-w-0")}>
-            Priority order
-            <Input
-              name="priority"
-              type="number"
-              min="1"
-              defaultValue={debt?.priority ?? 1}
-              aria-label="Priority order"
-              aria-describedby={`${id}-priority-hint`}
+              aria-describedby={`${id}-due-hint`}
               className="mt-1.5"
             />
             <span
-              id={`${id}-priority-hint`}
+              id={`${id}-due-hint`}
               className="mt-1 block text-[0.6875rem] leading-4"
             >
-              1 comes first in “My priority”.
+              {dueDay
+                ? `Repeats monthly on day ${dueDay}. Paying the bill moves it to the next month.`
+                : "Leave it empty if there is no fixed due date."}
             </span>
           </label>
           <label className={cn(fieldLabel, "min-w-0")}>
@@ -370,20 +432,96 @@ export function DebtForm({
               className="mt-1.5"
             />
           </label>
-          {editing ? null : (
+          {debt ? (
+            <fieldset className="min-w-0 min-[26rem]:col-span-2">
+              <legend className={fieldLabel}>Status</legend>
+              <div className="mt-1.5 grid gap-2 min-[30rem]:grid-cols-3">
+                {STATUS_OPTIONS.map((option) => (
+                  <label key={option.value} className="min-w-0">
+                    <input
+                      type="radio"
+                      name="status"
+                      value={option.value}
+                      checked={status === option.value}
+                      onChange={() => setStatus(option.value)}
+                      className="peer sr-only"
+                    />
+                    <span className="border-border bg-card text-muted-foreground hover:bg-muted peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-foreground peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background flex h-full cursor-pointer flex-col rounded-xl border px-3 py-2.5 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2">
+                      <span className="text-xs font-semibold">
+                        {option.label}
+                      </span>
+                      <span className="mt-0.5 text-[0.6875rem] leading-4 font-normal">
+                        {option.hint}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {balanceCentavos === 0 ? (
+                <p className="text-positive mt-1.5 text-[0.6875rem] leading-4 font-semibold">
+                  A balance of zero saves it as paid off.
+                </p>
+              ) : null}
+            </fieldset>
+          ) : (
             <RelatedGoalField className="min-[26rem]:col-span-2" />
           )}
         </div>
       </Section>
 
       <Estimate
-        balanceCentavos={parsePesoInput(debt ? current : original)}
+        balanceCentavos={balanceCentavos}
         minimumCentavos={parsePesoInput(minimum) ?? 0}
         ratePercent={Number.isFinite(ratePercent) ? ratePercent : 0}
         today={today}
       />
 
+      {debt && confirmingDelete ? (
+        <div
+          role="alert"
+          className="bg-destructive/[0.06] ring-destructive/25 rounded-2xl p-3.5 ring-1"
+        >
+          <p className="text-sm font-semibold">Delete {debt.creditor_name}?</p>
+          <p className="text-muted-foreground mt-1 text-xs leading-5">
+            Its payment history goes with it. Expenses already logged in Money
+            stay, since that money really left your accounts. This cannot be
+            undone.
+          </p>
+          <div className="mt-3 flex flex-wrap justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setConfirmingDelete(false)}
+            >
+              Keep it
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              pending={deleting}
+              pendingLabel="Deleting…"
+              onClick={deleteDebt}
+            >
+              Delete debt
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap justify-end gap-2 [&>*]:grow min-[26rem]:[&>*]:grow-0">
+        {debt && !confirmingDelete ? (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setConfirmingDelete(true)}
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive min-[26rem]:mr-auto"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+            Delete
+          </Button>
+        ) : null}
         {onCancel ? (
           <Button type="button" variant="secondary" onClick={onCancel}>
             Cancel

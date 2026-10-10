@@ -7,6 +7,7 @@ import {
   PencilLine,
   Trash2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState } from "react";
 import {
   DashboardCardHeading,
@@ -21,7 +22,10 @@ import {
   debtTypeLabel,
   formatPercent,
 } from "@/components/debts/debt-visuals";
-import { PaymentForm } from "@/components/debts/payment-form";
+import {
+  PaymentForm,
+  type PaymentAccount,
+} from "@/components/debts/payment-form";
 import { PayoffCurve, type CurveSeries } from "@/components/debts/payoff-curve";
 import { MoneyAmount } from "@/components/money/money-amount";
 import { PesoInput } from "@/components/money/money-fields";
@@ -59,6 +63,10 @@ export type DebtPaymentRecord = {
   amount_centavos: number;
   payment_date: string;
   notes: string | null;
+  /** The account it was logged from in Money, if it still has a name. */
+  account_name?: string | null;
+  /** Whether it was also logged in Money as an expense. */
+  logged?: boolean;
 };
 
 const monthHeading = new Intl.DateTimeFormat("en-PH", {
@@ -578,6 +586,7 @@ function PaymentRow({
           {payment.payment_date === today
             ? "Today"
             : formatShortDate(payment.payment_date)}
+          {payment.account_name ? ` · from ${payment.account_name}` : ""}
           {payment.notes ? ` · ${payment.notes}` : ""}
         </p>
       </div>
@@ -591,6 +600,11 @@ function PaymentRow({
         >
           <input type="hidden" name="paymentId" value={payment.id} />
           <input type="hidden" name="debtId" value={debtId} />
+          {payment.logged ? (
+            <span className="text-muted-foreground mr-1 hidden text-[0.6875rem] leading-4 min-[26rem]:inline">
+              Its Money expense goes too.
+            </span>
+          ) : null}
           <Button
             type="button"
             variant="ghost"
@@ -722,6 +736,7 @@ export function DebtDetail({
   payments,
   today,
   highlightPaymentId,
+  accounts = [],
 }: {
   debt: DebtRecord;
   /** Newest first. */
@@ -729,7 +744,10 @@ export function DebtDetail({
   /** YYYY-MM-DD in Manila. */
   today: string;
   highlightPaymentId: string | null;
+  /** Open accounts a payment can be logged from. */
+  accounts?: PaymentAccount[];
 }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const base = useMemo(
     () =>
@@ -784,6 +802,11 @@ export function DebtDetail({
                 today={today}
                 balanceCentavos={debt.current_balance_centavos}
                 minimumCentavos={debt.minimum_payment_centavos}
+                nextDueDate={
+                  debt.status === "active" ? debt.next_due_date : null
+                }
+                dueDay={debt.due_day}
+                accounts={accounts}
               />
             </div>
           </section>
@@ -809,6 +832,7 @@ export function DebtDetail({
         onOpenChange={setEditing}
         debt={debt}
         today={today}
+        onDeleted={() => router.replace("/debts")}
       />
     </>
   );

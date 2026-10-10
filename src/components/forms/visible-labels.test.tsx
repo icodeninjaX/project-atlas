@@ -168,13 +168,11 @@ describe("primary create forms", () => {
       "Family",
       "Other",
     ]);
-    expectVisibleLabel("Original balance in pesos");
+    expectVisibleLabel("Amount owed in pesos");
     expectVisibleLabel("Minimum payment in pesos");
-    expectVisibleLabel("Annual interest rate percent");
+    expectVisibleLabel("Interest rate percent");
     expectVisibleLabel("Next due date");
-    expectVisibleLabel("Due day");
     expectVisibleLabel("Notes");
-    expectVisibleLabel("Priority order");
   });
 
   it("uses visible labels for the essential career fields", () => {

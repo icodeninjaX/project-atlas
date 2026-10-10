@@ -52,3 +52,29 @@ export async function loadDebtPagePayments(
   const earlier = latest.filter((row) => row.payment_date < monthStart);
   return [...later, ...monthRows, ...earlier];
 }
+
+export type PaymentAccountRow = {
+  id: string;
+  name: string;
+  account_type: string;
+  provider_id: string | null;
+  current_balance_centavos: number;
+};
+
+/** Open accounts a debt payment can be logged from, by name. */
+export async function loadPaymentAccounts(
+  supabase: Supabase,
+): Promise<PaymentAccountRow[]> {
+  const { data } = await supabase
+    .from("financial_account_balances")
+    .select("id,name,account_type,provider_id,current_balance_centavos")
+    .eq("is_archived", false)
+    .order("name");
+  return (data ?? []).map((account) => ({
+    id: account.id as string,
+    name: account.name as string,
+    account_type: account.account_type as string,
+    provider_id: (account.provider_id as string | null) ?? null,
+    current_balance_centavos: Number(account.current_balance_centavos),
+  }));
+}
