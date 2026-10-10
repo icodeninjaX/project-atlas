@@ -1,85 +1,28 @@
-import {
-  ArrowDown,
-  CalendarClock,
-  Landmark,
-  PartyPopper,
-  Plus,
-} from "lucide-react";
+import { Landmark, PartyPopper, Plus } from "lucide-react";
 import type { ReactNode } from "react";
-import {
-  DueChip,
-  RepaidBar,
-  formatPercent,
-} from "@/components/debts/debt-visuals";
+import { RepaidBar, formatPercent } from "@/components/debts/debt-visuals";
 import { MoneyAmount } from "@/components/money/money-amount";
 import {
-  HeroStat,
   MoneyHeroShell,
   TonePill,
   type HeroTone,
 } from "@/components/money/money-hero";
 import { Button } from "@/components/ui/button";
-import type { DebtStrategy } from "@/lib/debts/debt";
-import {
-  STRATEGY_DETAILS,
-  formatPayoffDuration,
-  payoffMonthLabel,
-  type DueTone,
-  type PayoffPlan,
-} from "@/lib/debts/plan";
+import { payoffMonthLabel, type PayoffPlan } from "@/lib/debts/plan";
 import { cn } from "@/lib/utils";
-
-export type NextDue = {
-  creditorName: string;
-  tone: DueTone;
-  label: string;
-};
 
 const monthName = new Intl.DateTimeFormat("en-PH", {
   timeZone: "UTC",
   month: "long",
 });
 
-function Figure({ centavos, warm }: { centavos: number; warm: boolean }) {
-  return (
-    <p className="mt-4">
-      <MoneyAmount
-        centavos={centavos}
-        quietCentavos
-        className={cn(
-          // A dimmed child would leave the clipped gradient, so the
-          // centavos keep full opacity and stay quiet by size alone.
-          "bg-gradient-to-br bg-clip-text pb-[0.06em] font-mono text-[clamp(2.5rem,12.5vw,4.75rem)] leading-[0.95] font-semibold tracking-[-0.055em] [overflow-wrap:anywhere] text-transparent [&_span]:opacity-100",
-          warm
-            ? "from-destructive to-destructive/75"
-            : "from-foreground via-foreground to-foreground/55",
-        )}
-      />
-    </p>
-  );
-}
-
-function Actions({
-  onAdd,
-  planHref,
-}: {
-  onAdd: () => void;
-  planHref?: string;
-}) {
+function Actions({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="mt-6 flex flex-wrap gap-2 [&>*]:grow sm:[&>*]:grow-0">
       <Button type="button" onClick={onAdd}>
         <Plus className="size-4" aria-hidden="true" />
         Add debt
       </Button>
-      {planHref ? (
-        <Button asChild variant="secondary">
-          <a href={planHref}>
-            <ArrowDown className="size-4" aria-hidden="true" />
-            See the payoff plan
-          </a>
-        </Button>
-      ) : null}
     </div>
   );
 }
@@ -87,11 +30,7 @@ function Actions({
 function heroStatus(
   plan: PayoffPlan,
   overdue: number,
-  today: string,
-): { tone: HeroTone; label: string } {
-  if (plan.status === "stalled") {
-    return { tone: "destructive", label: "Not shrinking at this pace" };
-  }
+): { tone: HeroTone; label: string } | null {
   if (overdue > 0) {
     return {
       tone: "destructive",
@@ -99,178 +38,137 @@ function heroStatus(
         overdue === 1 ? "1 payment overdue" : `${overdue} payments overdue`,
     };
   }
-  return {
-    tone: "positive",
-    label: `Debt-free by ${payoffMonthLabel(today, plan.months ?? 0)}`,
-  };
+  if (plan.status === "stalled") {
+    return { tone: "destructive", label: "Not shrinking at this pace" };
+  }
+  return null;
 }
 
-/** The debts page lead: what is owed, how much is repaid, and when it ends. */
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: ReactNode;
+  tone?: "positive";
+}) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-muted-foreground text-xs">{label}</dt>
+      <dd
+        className={cn(
+          "mt-1 font-mono text-lg leading-tight font-semibold tracking-[-0.03em] [overflow-wrap:anywhere] tabular-nums",
+          tone === "positive" && "text-positive",
+        )}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+/**
+ * The debts page lead: one figure, how far along it is, when it ends, and
+ * two quiet numbers for the month. Adding a debt is a small action here;
+ * paying is the page's main one.
+ */
 export function DebtsHero({
   plan,
-  strategy,
   today,
-  openCount,
-  activeCount,
   remainingCentavos,
-  borrowedCentavos,
-  repaidCentavos,
+  owedInAllCentavos,
   minimumsCentavos,
-  interestThisMonthCentavos,
   paidThisMonthCentavos,
-  paymentsThisMonth,
-  nextDue,
   overdueCount,
   onAdd,
 }: {
   plan: PayoffPlan;
-  strategy: DebtStrategy;
   /** YYYY-MM-DD in Manila. */
   today: string;
-  openCount: number;
-  activeCount: number;
   remainingCentavos: number;
-  /** Everything ever borrowed across the debts listed, paid ones too. */
-  borrowedCentavos: number;
-  repaidCentavos: number;
+  /** Everything owed across the debts listed, paid ones too. */
+  owedInAllCentavos: number;
   minimumsCentavos: number;
-  interestThisMonthCentavos: number;
   paidThisMonthCentavos: number;
-  paymentsThisMonth: number;
-  nextDue: NextDue | null;
   overdueCount: number;
   onAdd: () => void;
 }) {
-  const status = heroStatus(plan, overdueCount, today);
-  const share = borrowedCentavos > 0 ? repaidCentavos / borrowedCentavos : 0;
+  const status = heroStatus(plan, overdueCount);
+  const repaid = owedInAllCentavos - remainingCentavos;
+  const share = owedInAllCentavos > 0 ? repaid / owedInAllCentavos : 0;
   const month = monthName.format(new Date(`${today.slice(0, 7)}-01T00:00:00Z`));
+  const paidOff = plan.status === "paid_off";
 
   return (
-    <MoneyHeroShell labelledBy="debts-heading" tone={status.tone}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <MoneyHeroShell labelledBy="debts-heading" tone={status?.tone ?? "neutral"}>
+      <div className="flex items-center justify-between gap-3">
         <h2
           id="debts-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-muted-foreground text-[0.8125rem] font-medium"
         >
-          Total remaining
+          Total debt
         </h2>
-        <TonePill tone={status.tone}>{status.label}</TonePill>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={onAdd}
+          className="-my-1 rounded-full"
+        >
+          <Plus className="size-3.5" aria-hidden="true" />
+          Add debt
+        </Button>
       </div>
+      <p className="mt-2">
+        <MoneyAmount
+          centavos={remainingCentavos}
+          quietCentavos
+          className="font-mono text-[clamp(2.75rem,13vw,4.5rem)] leading-[0.95] font-semibold tracking-[-0.06em] [overflow-wrap:anywhere] tabular-nums"
+        />
+      </p>
+      {status ? (
+        <TonePill tone={status.tone} className="mt-3">
+          {status.label}
+        </TonePill>
+      ) : null}
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start lg:gap-12">
-        <div className="min-w-0">
-          <Figure
-            centavos={remainingCentavos}
-            warm={plan.status === "stalled"}
-          />
-          <p className="text-muted-foreground mt-4 max-w-xl text-sm leading-6 sm:text-[0.9375rem]">
-            Across {openCount} open {openCount === 1 ? "debt" : "debts"}. You
-            have repaid{" "}
-            <MoneyAmount
-              centavos={repaidCentavos}
-              className="text-foreground font-mono font-semibold"
-            />{" "}
-            of the{" "}
-            <MoneyAmount centavos={borrowedCentavos} className="font-mono" />{" "}
-            borrowed.
+      <div className="mt-6">
+        <RepaidBar share={share} />
+        <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-xs">
+          <p className="text-muted-foreground">
+            <span className="text-foreground font-semibold">
+              {formatPercent(share)}
+            </span>{" "}
+            paid off
           </p>
-
-          <div className="mt-5">
-            <RepaidBar share={share} />
-            <p className="text-muted-foreground mt-2 text-xs">
-              <span className="text-foreground font-mono font-semibold">
-                {formatPercent(share)}
-              </span>{" "}
-              of everything borrowed is repaid
-            </p>
-          </div>
-
-          {nextDue ? (
-            <div
+          <p className="text-muted-foreground">
+            Debt-free{" "}
+            <span
               className={cn(
-                "mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl p-3.5 ring-1",
-                nextDue.tone === "destructive"
-                  ? "bg-destructive/[0.06] ring-destructive/25"
-                  : "bg-background/55 ring-border/80",
+                "font-semibold",
+                paidOff ? "text-foreground" : "text-destructive",
               )}
             >
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "grid size-9 shrink-0 place-items-center rounded-xl",
-                  nextDue.tone === "destructive"
-                    ? "bg-destructive/12 text-destructive"
-                    : "bg-primary/10 text-primary",
-                )}
-              >
-                <CalendarClock className="size-4" />
-              </span>
-              <p className="min-w-0 flex-[1_1_9rem]">
-                <span className="text-muted-foreground block text-xs">
-                  Next payment
-                </span>
-                <span className="block text-sm font-semibold break-words">
-                  {nextDue.creditorName}
-                </span>
-              </p>
-              <DueChip tone={nextDue.tone} label={nextDue.label} />
-            </div>
-          ) : null}
-
-          <Actions onAdd={onAdd} planHref="#plan" />
+              {paidOff
+                ? payoffMonthLabel(today, plan.months ?? 0, "long")
+                : "not at this pace"}
+            </span>
+          </p>
         </div>
-
-        <dl className="max-sm:border-border grid grid-cols-2 gap-x-6 gap-y-5 max-sm:border-t max-sm:pt-5 sm:gap-3 @max-[17rem]:grid-cols-1">
-          <HeroStat
-            label="Debt-free"
-            value={
-              plan.status === "paid_off"
-                ? payoffMonthLabel(today, plan.months ?? 0)
-                : "Not yet"
-            }
-            tone={plan.status === "stalled" ? "destructive" : undefined}
-            note={
-              plan.status === "paid_off" ? (
-                `In ${formatPayoffDuration(plan.months ?? 0)}, ${STRATEGY_DETAILS[strategy].label.toLowerCase()} order`
-              ) : (
-                <span className="text-destructive font-medium">
-                  Payments do not outpace interest
-                </span>
-              )
-            }
-          />
-          <HeroStat
-            label="Monthly minimums"
-            value={<MoneyAmount centavos={minimumsCentavos} />}
-            note={
-              activeCount === 1
-                ? "Across 1 active debt"
-                : `Across ${activeCount} active debts`
-            }
-          />
-          <HeroStat
-            label="Interest this month"
-            value={<MoneyAmount centavos={interestThisMonthCentavos} />}
-            note={
-              interestThisMonthCentavos > 0
-                ? "At today's balances and rates"
-                : "Interest-free at today's rates"
-            }
-          />
-          <HeroStat
-            label={`Paid in ${month}`}
-            value={<MoneyAmount centavos={paidThisMonthCentavos} />}
-            tone={paidThisMonthCentavos > 0 ? "positive" : undefined}
-            note={
-              paymentsThisMonth === 0
-                ? "No payments recorded yet"
-                : paymentsThisMonth === 1
-                  ? "1 payment recorded"
-                  : `${paymentsThisMonth} payments recorded`
-            }
-          />
-        </dl>
       </div>
+
+      <dl className="border-border/70 [&>div+div]:border-border/70 mt-6 grid grid-cols-2 border-t pt-5 [&>div+div]:border-l [&>div+div]:pl-5">
+        <Stat
+          label="Minimums a month"
+          value={<MoneyAmount centavos={minimumsCentavos} quietCentavos />}
+        />
+        <Stat
+          label={`Paid in ${month}`}
+          value={<MoneyAmount centavos={paidThisMonthCentavos} quietCentavos />}
+          tone={paidThisMonthCentavos > 0 ? "positive" : undefined}
+        />
+      </dl>
     </MoneyHeroShell>
   );
 }

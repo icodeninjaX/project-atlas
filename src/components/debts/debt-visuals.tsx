@@ -4,14 +4,10 @@ import {
   CreditCard,
   HandCoins,
   HeartHandshake,
-  ListOrdered,
-  Mountain,
   Smartphone,
-  Snowflake,
   type LucideIcon,
 } from "lucide-react";
 import { TonePill } from "@/components/money/money-hero";
-import type { DebtStrategy } from "@/lib/debts/debt";
 import type { DueTone } from "@/lib/debts/plan";
 import { cn } from "@/lib/utils";
 import styles from "./debts.module.css";
@@ -28,12 +24,6 @@ export const DEBT_TYPE_OPTIONS = [
   label: string;
   icon: LucideIcon;
 }>;
-
-export const STRATEGY_ICONS: Record<DebtStrategy, LucideIcon> = {
-  avalanche: Mountain,
-  snowball: Snowflake,
-  priority: ListOrdered,
-};
 
 function debtTypeOption(type: string) {
   return (

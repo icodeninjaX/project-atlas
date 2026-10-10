@@ -71,8 +71,13 @@ test.describe("authenticated ATLAS workflows", () => {
     await form.getByLabel("Minimum payment in pesos").fill("100.00");
     await syncClick(page, form.getByRole("button", { name: "Add debt" }));
     await page.getByRole("link", { name: creditor }).click();
-    await page.getByLabel("Payment amount in pesos").fill("250.00");
-    await syncClick(page, page.getByRole("button", { name: "Record payment" }));
+    await page.getByRole("button", { name: "Record payment" }).click();
+    const sheet = page.getByRole("dialog", { name: `Pay ${creditor}` });
+    await sheet.getByLabel("Payment amount in pesos").fill("250.00");
+    await syncClick(
+      page,
+      sheet.getByRole("button", { name: "Record payment" }),
+    );
     // The balance leads the debt's hero, which is named by the creditor.
     await expect(
       page.getByRole("region", { name: creditor }).getByText("₱750.00"),

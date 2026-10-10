@@ -1,15 +1,14 @@
 "use client";
 
-import { ArrowRight, Route, Sparkles, X } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, X } from "lucide-react";
+import Link from "next/link";
 import { Fragment, useId, type ReactNode } from "react";
-import {
-  DashboardCardHeading,
-  dashboardCardClass,
-} from "@/components/dashboard/dashboard-card";
-import { STRATEGY_ICONS } from "@/components/debts/debt-visuals";
+import { DebtSection, debtSurfaceClass } from "@/components/debts/debt-section";
+import { PayoffCurve, type CurveSeries } from "@/components/debts/payoff-curve";
 import { MoneyAmount } from "@/components/money/money-amount";
 import { PesoInput } from "@/components/money/money-fields";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
+import { Button } from "@/components/ui/button";
 import type { DebtRecord, DebtStrategy } from "@/lib/debts/debt";
 import {
   STRATEGIES,
@@ -20,141 +19,34 @@ import {
 } from "@/lib/debts/plan";
 import { formatPesoInput, parsePesoInput } from "@/lib/money/history";
 import { cn } from "@/lib/utils";
-import styles from "./debts.module.css";
 
 const EXTRA_PRESETS = [500, 1_000, 2_500, 5_000];
+
+/** Each order in a couple of plain words. */
+const CHOICES: Record<DebtStrategy, string> = {
+  avalanche: "Highest rate",
+  snowball: "Smallest",
+  priority: "My order",
+};
+
+const EXPLAIN: Record<DebtStrategy, string> = {
+  avalanche: "Pays the highest-interest debt first (avalanche).",
+  snowball: "Clears the smallest balance first for quick wins (snowball).",
+  priority: "Pays in the order you set below.",
+};
+
+const RULES = [
+  "Every active debt gets its minimum each month. Any extra goes to the debt at the top of the order.",
+  "When a debt is cleared, its payment moves on to the next one, so the monthly total stays the same.",
+  "Interest compounds monthly at today's rates, with no new borrowing.",
+  "Paused and defaulted debts get no minimum, only money the plan frees up.",
+];
 
 const peso = new Intl.NumberFormat("en-PH", {
   style: "currency",
   currency: "PHP",
   maximumFractionDigits: 0,
 });
-
-function StrategyOption({
-  strategy,
-  plan,
-  checked,
-  best,
-  today,
-  onSelect,
-}: {
-  strategy: DebtStrategy;
-  plan: PayoffPlan;
-  checked: boolean;
-  best: boolean;
-  today: string;
-  onSelect: () => void;
-}) {
-  const id = useId();
-  const Icon = STRATEGY_ICONS[strategy];
-  const { label, rule } = STRATEGY_DETAILS[strategy];
-  const paidOff = plan.status === "paid_off";
-
-  return (
-    <label className="relative min-w-0">
-      <input
-        type="radio"
-        name="payoff-strategy"
-        value={strategy}
-        checked={checked}
-        onChange={onSelect}
-        aria-label={label}
-        aria-describedby={`${id}-detail`}
-        className="peer sr-only"
-      />
-      <span className="bg-background/55 ring-border/80 hover:bg-muted/60 peer-checked:bg-primary/[0.07] peer-checked:ring-primary peer-focus-visible:ring-ring peer-checked:[&_[data-mark]]:bg-primary-solid peer-checked:[&_[data-mark]]:text-primary-solid-foreground flex h-full cursor-pointer flex-col rounded-2xl p-3.5 ring-1 transition-[background-color,box-shadow] peer-checked:ring-2 peer-focus-visible:ring-2 sm:p-4">
-        <span className="flex min-w-0 items-center gap-3">
-          <span
-            data-mark
-            aria-hidden="true"
-            className="bg-muted text-foreground/80 grid size-9 shrink-0 place-items-center rounded-xl transition-colors"
-          >
-            <Icon className="size-4" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="text-sm font-semibold">{label}</span>
-              {best ? (
-                <span className="bg-positive/10 text-positive ring-positive/25 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold ring-1">
-                  <Sparkles aria-hidden="true" className="size-3" />
-                  Least interest
-                </span>
-              ) : null}
-            </span>
-            <span
-              aria-hidden="true"
-              className="text-muted-foreground block text-xs"
-            >
-              {rule}
-            </span>
-          </span>
-        </span>
-        <span id={`${id}-detail`} className="mt-auto flex flex-col">
-          <span className="sr-only">{rule}. </span>
-          <span className="border-border mt-3 grid grid-cols-2 gap-2 border-t pt-3">
-            <span className="min-w-0">
-              <span className="text-muted-foreground block text-[0.6875rem]">
-                Debt-free
-              </span>
-              <span
-                className={cn(
-                  "block font-mono text-sm font-semibold",
-                  !paidOff && "text-destructive",
-                )}
-              >
-                {paidOff
-                  ? payoffMonthLabel(today, plan.months ?? 0)
-                  : "Not yet"}
-                <span className="sr-only">,</span>
-              </span>
-            </span>
-            <span className="min-w-0">
-              <span className="text-muted-foreground block text-[0.6875rem]">
-                Interest
-              </span>
-              <span className="block font-mono text-sm font-semibold [overflow-wrap:anywhere]">
-                {paidOff ? (
-                  <MoneyAmount centavos={plan.totalInterestCentavos} />
-                ) : (
-                  "Keeps growing"
-                )}
-              </span>
-            </span>
-          </span>
-        </span>
-      </span>
-    </label>
-  );
-}
-
-function Row({
-  label,
-  before,
-  after,
-}: {
-  label: string;
-  before?: ReactNode;
-  after: ReactNode;
-}) {
-  return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 border-b py-2.5 last:border-b-0">
-      <dt className="text-muted-foreground text-xs">{label}</dt>
-      <dd className="flex flex-wrap items-baseline justify-end gap-x-1.5 font-mono text-sm">
-        {before ? (
-          <>
-            <span className="text-muted-foreground text-xs">{before}</span>
-            <ArrowRight
-              aria-hidden="true"
-              className="text-muted-foreground size-3 self-center"
-            />
-            <span className="sr-only">becomes</span>
-          </>
-        ) : null}
-        <span className="font-semibold">{after}</span>
-      </dd>
-    </div>
-  );
-}
 
 /** Whole pesos, hidden in privacy mode. */
 function Pesos({ centavos }: { centavos: number }) {
@@ -200,232 +92,37 @@ function extraDelta(
     : { tone: "neutral", content: "Same finish" };
 }
 
-function RolloverNote({
-  base,
-  minimumsOnly,
-  today,
-}: {
-  base: PayoffPlan;
-  minimumsOnly: PayoffPlan;
-  today: string;
-}) {
-  if (base.status !== "paid_off") {
-    return (
-      <>
-        The minimums do not outpace interest on every debt. Raise a minimum or
-        add an extra amount until a debt-free date appears.
-      </>
-    );
-  }
-  if (minimumsOnly.status !== "paid_off") {
-    return (
-      <>
-        Paying each minimum alone would never clear them all. Rolling each
-        cleared payment on to the next debt does.
-      </>
-    );
-  }
-  const months = (minimumsOnly.months ?? 0) - (base.months ?? 0);
-  const saved = minimumsOnly.totalInterestCentavos - base.totalInterestCentavos;
-  if (months <= 0 && saved <= 0) {
-    return <>Each debt clears on its own minimum about as fast.</>;
-  }
-  return (
-    <>
-      Paying only each minimum would finish in{" "}
-      {payoffMonthLabel(today, minimumsOnly.months ?? 0)}. Rolling each cleared
-      payment forward saves{" "}
-      <span className="text-foreground font-semibold">
-        {joinParts(
-          [
-            months > 0 ? formatPayoffDuration(months) : null,
-            saved > 0 ? (
-              <>
-                <Pesos centavos={saved} /> in interest
-              </>
-            ) : null,
-          ].filter(Boolean),
-          " and ",
-        )}
-      </span>
-      .
-    </>
-  );
-}
-
-/** Each debt's span on one shared time line, in the order it is paid. */
-function PayoffRoute({
-  plan,
-  debts,
-  today,
-}: {
-  plan: PayoffPlan;
-  debts: ReadonlyMap<string, DebtRecord>;
-  today: string;
-}) {
-  // A plan that never finishes has no time line to draw, only an order.
-  const timed = plan.status === "paid_off";
-  const span = Math.max(plan.months ?? 1, 1);
-  const share = (month: number) => Math.min(month / span, 1) * 100;
-  const middle = Math.round(span / 2);
-
-  return (
-    <div className="mt-7">
-      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
-        <h3 className="text-sm font-semibold">Order of payoff</h3>
-        <ul
-          className={cn(
-            "text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-xs",
-            !timed && "hidden",
-          )}
-        >
-          <li className="flex items-center gap-1.5">
-            <span
-              aria-hidden="true"
-              className={cn("h-2 w-4 rounded-full", styles.minimum)}
-            />
-            Minimum only
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span
-              aria-hidden="true"
-              className="h-2 w-4 rounded-full bg-gradient-to-r from-sky-400 to-[var(--primary)]"
-            />
-            Focus: extra and freed-up payments
-          </li>
-        </ul>
-      </div>
-      <ol className="mt-4 grid gap-4">
-        {plan.debts.map((item, index) => {
-          const debt = debts.get(item.id);
-          if (!debt) return null;
-          const end = item.payoffMonth;
-          const focusStart =
-            item.focusMonth !== null ? item.focusMonth - 1 : null;
-          return (
-            <li
-              key={item.id}
-              className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3"
-            >
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "grid size-7 place-items-center rounded-full font-mono text-xs font-bold",
-                  index === 0
-                    ? "bg-primary-solid text-primary-solid-foreground"
-                    : "bg-muted text-foreground/80",
-                )}
-              >
-                {index + 1}
-              </span>
-              <div className="min-w-0">
-                <p className="flex flex-wrap items-baseline justify-between gap-x-3">
-                  <span className="text-sm font-semibold break-words">
-                    <span className="sr-only">{index + 1}. </span>
-                    {debt.creditor_name}
-                  </span>
-                  <span
-                    className={cn(
-                      "text-xs",
-                      end === null
-                        ? "text-destructive font-medium"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {end === null ? (
-                      "Not paid off at this pace"
-                    ) : (
-                      <>
-                        Paid off{" "}
-                        <span className="text-foreground font-mono font-semibold">
-                          {payoffMonthLabel(today, end)}
-                        </span>
-                      </>
-                    )}
-                  </span>
-                </p>
-                <div
-                  aria-hidden="true"
-                  className={cn(
-                    "bg-foreground/[0.05] relative mt-2 h-2.5 overflow-hidden rounded-full",
-                    !timed && "hidden",
-                  )}
-                >
-                  {/* Minimum-only stretch, then the focus stretch. */}
-                  <span
-                    className={cn(
-                      "absolute inset-y-0 left-0",
-                      styles.minimum,
-                      styles.slide,
-                    )}
-                    style={{
-                      width: `${share(focusStart ?? end ?? span)}%`,
-                    }}
-                  />
-                  {focusStart !== null ? (
-                    <span
-                      className={cn(
-                        "absolute inset-y-0 rounded-full bg-gradient-to-r from-sky-400 to-[var(--primary)]",
-                        styles.slide,
-                      )}
-                      style={{
-                        left: `${share(focusStart)}%`,
-                        width: `${share((end ?? span) - focusStart)}%`,
-                      }}
-                    />
-                  ) : null}
-                </div>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-      <div
-        aria-hidden="true"
-        className={cn(
-          "text-muted-foreground mt-2.5 ml-10 flex justify-between gap-2 font-mono text-[0.6875rem]",
-          !timed && "hidden",
-        )}
-      >
-        <span>Now</span>
-        {span >= 6 ? (
-          <span className="max-[359px]:hidden">
-            {payoffMonthLabel(today, middle)}
-          </span>
-        ) : null}
-        <span>{payoffMonthLabel(today, span)}</span>
-      </div>
-    </div>
-  );
-}
-
 /**
- * Compares the three payoff orders on the same budget, tries an extra
- * monthly amount, and draws the order debts are cleared in.
+ * The payoff plan, one decision at a time: which debt to pay first, when
+ * that makes you debt-free, what paying a little more does, and the order
+ * the debts clear in. In "My own order" the order can be rearranged here.
  */
 export function PayoffPlanner({
   plans,
   base,
-  minimumsOnly,
   strategy,
   onStrategyChange,
   extra,
   onExtraChange,
   debts,
   today,
+  savedStrategy,
+  onReorder,
 }: {
   /** Each strategy with the extra amount. */
   plans: Record<DebtStrategy, PayoffPlan>;
   /** The chosen strategy without the extra. */
   base: PayoffPlan;
-  /** Each debt on its own minimum, with no rollover. */
-  minimumsOnly: PayoffPlan;
   strategy: DebtStrategy;
   onStrategyChange: (strategy: DebtStrategy) => void;
   extra: string;
   onExtraChange: (value: string) => void;
   debts: ReadonlyMap<string, DebtRecord>;
   today: string;
+  /** The order the page opens in, from Settings. */
+  savedStrategy: DebtStrategy;
+  /** Saves a new "My own order", first to last. */
+  onReorder: (ids: string[]) => void;
 }) {
   const extraId = useId();
   const plan = plans[strategy];
@@ -440,197 +137,316 @@ export function PayoffPlanner({
   const tied = finished.every(
     (item) => plans[item].totalInterestCentavos === leastInterest,
   );
+  const best = tied
+    ? null
+    : (finished.find(
+        (item) => plans[item].totalInterestCentavos === leastInterest,
+      ) ?? null);
   const delta = hasExtra ? extraDelta(base, plan) : null;
   const paidOff = plan.status === "paid_off";
+  const order = plan.debts.filter((item) => debts.has(item.id));
+  const reorderable = strategy === "priority" && order.length > 1;
+  const move = (index: number, offset: number) => () => {
+    const ids = order.map((item) => item.id);
+    [ids[index], ids[index + offset]] = [ids[index + offset]!, ids[index]!];
+    onReorder(ids);
+  };
+
+  const series: CurveSeries[] = [];
+  if (base.status === "paid_off" || hasExtra) {
+    series.push({
+      key: "base",
+      label: hasExtra ? "Without the extra" : "Total owed",
+      balances: base.balances,
+      color: hasExtra
+        ? "color-mix(in srgb, var(--muted-foreground) 70%, transparent)"
+        : "var(--primary)",
+    });
+  }
+  if (hasExtra) {
+    series.push({
+      key: "extra",
+      label: `With ${peso.format(extraCentavos / 100)} more`,
+      balances: plan.balances,
+      color: "var(--primary)",
+    });
+  }
+  const curveMonths = Math.max(
+    ...[base, plan]
+      .filter((item) => item.status === "paid_off")
+      .map((item) => item.months ?? 0),
+    1,
+  );
+  const drawable = base.status === "paid_off" || paidOff;
 
   return (
-    <section
-      id="plan"
-      aria-labelledby="plan-title"
-      data-spotlight
-      className={cn(dashboardCardClass, "mt-8 scroll-mt-24 sm:mt-10")}
+    <DebtSection
+      id="plan-title"
+      title="Payoff plan"
+      meta="An estimate; nothing is saved"
+      className="scroll-mt-24"
     >
-      <DashboardCardHeading
-        id="plan-title"
-        icon={Route}
-        title="Payoff plan"
-        description="The same monthly budget, ordered three ways. Nothing here is saved or paid."
-      />
-
-      <fieldset className="mt-5 min-w-0">
-        <legend className="sr-only">Payoff order</legend>
-        <div className="grid gap-2.5 sm:grid-cols-3">
-          {STRATEGIES.map((item) => (
-            <StrategyOption
-              key={item}
-              strategy={item}
-              plan={plans[item]}
-              checked={item === strategy}
-              best={
-                !tied &&
-                plans[item].status === "paid_off" &&
-                plans[item].totalInterestCentavos === leastInterest
-              }
-              today={today}
-              onSelect={() => onStrategyChange(item)}
-            />
-          ))}
-        </div>
-      </fieldset>
-
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,0.85fr)] lg:items-start">
-        <div className="bg-background/55 ring-border/80 min-w-0 rounded-2xl p-4 ring-1">
-          <label htmlFor={extraId} className="text-sm font-semibold">
-            Extra each month
-          </label>
-          <p
-            id={`${extraId}-hint`}
-            className="text-muted-foreground mt-0.5 text-xs leading-5"
-          >
-            On top of the minimums, to the focus debt first. Try what you could
-            spare.
-          </p>
-          <div className="mt-3">
-            <PesoInput
-              id={extraId}
-              value={extra}
-              onValueChange={onExtraChange}
-              describedBy={`${extraId}-hint`}
-              large
-            />
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {EXTRA_PRESETS.map((pesos) => {
-              const pressed = extraCentavos === pesos * 100;
-              return (
-                <button
-                  key={pesos}
-                  type="button"
-                  aria-pressed={pressed}
-                  onClick={() => onExtraChange(formatPesoInput(String(pesos)))}
-                  className={cn(
-                    "focus-visible:ring-ring inline-flex min-h-11 items-center rounded-full px-3.5 font-mono text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9",
-                    pressed
-                      ? "bg-primary/10 text-foreground ring-primary"
-                      : "bg-background/60 text-muted-foreground ring-border hover:bg-muted hover:text-foreground",
-                  )}
-                >
-                  +{peso.format(pesos)}
-                </button>
-              );
-            })}
-            {hasExtra ? (
-              <button
-                type="button"
-                onClick={() => onExtraChange("")}
-                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
-              >
-                <X aria-hidden="true" className="size-3.5" />
-                No extra
-              </button>
-            ) : null}
-          </div>
-          <p className="text-muted-foreground border-border mt-4 border-t pt-3 text-xs leading-5">
-            <MoneyAmount
-              centavos={plan.monthlyBudgetCentavos}
-              className="text-foreground font-mono font-semibold"
-            />{" "}
-            a month in all
-            {hasExtra ? (
-              <>
-                :{" "}
-                <MoneyAmount
-                  centavos={plan.monthlyBudgetCentavos - extraCentavos}
-                  className="font-mono"
-                />{" "}
-                in minimums and{" "}
-                <MoneyAmount centavos={extraCentavos} className="font-mono" />{" "}
-                extra.
-              </>
-            ) : (
-              ", the active minimums."
-            )}{" "}
-            When a debt is cleared, its payment moves on to the next.
-          </p>
-        </div>
-
+      <div
+        id="plan"
+        data-spotlight
+        className={cn(debtSurfaceClass, "p-5 sm:p-6")}
+      >
         <div
           role="group"
           aria-label="Plan result"
-          className="bg-background/55 ring-border/80 min-w-0 rounded-[1.25rem] p-4 ring-1 min-[360px]:p-5 lg:sticky lg:top-24"
+          className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3"
         >
-          <p className="text-primary text-xs font-semibold">
-            Debt-free, {STRATEGY_DETAILS[strategy].label.toLowerCase()} order
-          </p>
-          <p
-            className={cn(
-              "mt-1.5 font-mono leading-none font-semibold tracking-[-0.05em]",
-              paidOff ? "text-[2rem]" : "text-destructive text-xl",
-            )}
-          >
-            {paidOff
-              ? payoffMonthLabel(today, plan.months ?? 0, "long")
-              : "Not at this pace"}
-          </p>
-          <p className="text-muted-foreground mt-2 text-xs">
-            {paidOff
-              ? `In ${formatPayoffDuration(plan.months ?? 0)}`
-              : "Payments do not outpace interest"}
-          </p>
-          <p role="status" className="mt-3">
-            <span
+          <div className="min-w-0">
+            <p className="text-muted-foreground text-xs">Debt-free by</p>
+            <p
               className={cn(
-                "inline-block max-w-full rounded-full px-2.5 py-1 text-xs font-semibold ring-1",
-                delta?.tone === "positive" &&
-                  "bg-positive/10 text-positive ring-positive/25",
-                delta?.tone === "destructive" &&
-                  "bg-destructive/10 text-destructive ring-destructive/25",
-                (!delta || delta.tone === "neutral") &&
-                  "bg-background/60 text-muted-foreground ring-border",
+                "mt-1 leading-none font-semibold tracking-[-0.045em]",
+                paidOff
+                  ? "text-[clamp(2rem,9vw,2.75rem)]"
+                  : "text-destructive text-2xl",
               )}
             >
-              {delta?.content ?? "Add an extra amount to compare"}
-            </span>
-          </p>
-          <dl className="mt-4">
-            <Row
-              label="Each month"
-              before={
-                hasExtra ? (
-                  <MoneyAmount centavos={base.monthlyBudgetCentavos} />
-                ) : undefined
-              }
-              after={<MoneyAmount centavos={plan.monthlyBudgetCentavos} />}
-            />
-            {paidOff ? (
-              <>
-                <Row
-                  label="Interest to pay"
-                  before={
-                    hasExtra && base.status === "paid_off" ? (
-                      <MoneyAmount centavos={base.totalInterestCentavos} />
-                    ) : undefined
-                  }
-                  after={<MoneyAmount centavos={plan.totalInterestCentavos} />}
-                />
-                <Row
-                  label="Total to pay"
-                  after={<MoneyAmount centavos={plan.totalPaidCentavos} />}
-                />
-              </>
-            ) : null}
+              {paidOff
+                ? payoffMonthLabel(today, plan.months ?? 0, "long")
+                : "Not at this pace"}
+            </p>
+            <p className="text-muted-foreground mt-2 text-xs">
+              {paidOff
+                ? `In ${formatPayoffDuration(plan.months ?? 0)}`
+                : "Payments do not outpace interest"}
+            </p>
+          </div>
+          <dl className="grid grid-cols-2 gap-x-6 sm:text-right">
+            <div>
+              <dt className="text-muted-foreground text-xs">Interest</dt>
+              <dd className="mt-0.5 font-mono text-sm font-semibold tabular-nums">
+                {paidOff ? (
+                  <MoneyAmount centavos={plan.totalInterestCentavos} />
+                ) : (
+                  "—"
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground text-xs">Each month</dt>
+              <dd className="mt-0.5 font-mono text-sm font-semibold tabular-nums">
+                <span className="sr-only">Paying </span>
+                <MoneyAmount centavos={plan.monthlyBudgetCentavos} />
+              </dd>
+            </div>
           </dl>
-          <p className="bg-primary/[0.06] ring-primary/20 text-muted-foreground mt-4 rounded-2xl p-3.5 text-xs leading-5 ring-1">
-            <RolloverNote
-              base={base}
-              minimumsOnly={minimumsOnly}
-              today={today}
-            />
-          </p>
         </div>
-      </div>
 
-      <PayoffRoute plan={plan} debts={debts} today={today} />
-    </section>
+        {drawable ? (
+          <div className="mt-5">
+            <PayoffCurve
+              series={series}
+              months={curveMonths}
+              today={today}
+              label="Total owed, month by month, until debt-free"
+            />
+          </div>
+        ) : null}
+
+        <div className="border-border/70 mt-6 border-t pt-5">
+          <fieldset className="min-w-0">
+            <legend className="text-sm font-semibold">
+              Which to pay first
+            </legend>
+            <div className="bg-muted/60 mt-2.5 grid grid-cols-3 gap-1 rounded-full p-1">
+              {STRATEGIES.map((item) => (
+                <label key={item} className="min-w-0">
+                  <input
+                    type="radio"
+                    name="payoff-strategy"
+                    value={item}
+                    checked={item === strategy}
+                    onChange={() => onStrategyChange(item)}
+                    aria-label={STRATEGY_DETAILS[item].label}
+                    className="peer sr-only"
+                  />
+                  <span className="text-muted-foreground peer-checked:bg-background peer-checked:text-foreground peer-focus-visible:ring-ring flex min-h-10 cursor-pointer items-center justify-center rounded-full px-2 text-center text-xs font-semibold transition-all peer-checked:shadow-[0_1px_3px_rgb(7_10_15/0.18)] peer-focus-visible:ring-2">
+                    {CHOICES[item]}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="text-muted-foreground mt-2.5 text-xs leading-5">
+              {EXPLAIN[strategy]}{" "}
+              {best === strategy ? (
+                <span className="text-positive font-semibold">
+                  Costs the least interest.
+                </span>
+              ) : best ? (
+                `${CHOICES[best]} would cost less interest.`
+              ) : null}
+            </p>
+          </fieldset>
+
+          <div className="mt-6">
+            <label htmlFor={extraId} className="text-sm font-semibold">
+              Pay extra each month
+            </label>
+            <div className="mt-2.5 grid gap-2.5">
+              <PesoInput
+                id={extraId}
+                value={extra}
+                onValueChange={onExtraChange}
+                ariaLabel="Extra each month in pesos"
+              />
+              <div className="grid grid-cols-4 gap-2">
+                {EXTRA_PRESETS.map((pesos) => {
+                  const pressed = extraCentavos === pesos * 100;
+                  return (
+                    <button
+                      key={pesos}
+                      type="button"
+                      aria-pressed={pressed}
+                      onClick={() =>
+                        onExtraChange(formatPesoInput(String(pesos)))
+                      }
+                      className={cn(
+                        "focus-visible:ring-ring inline-flex min-h-10 items-center justify-center rounded-full px-2 font-mono text-xs font-semibold tabular-nums transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                        pressed
+                          ? "bg-primary-solid text-primary-solid-foreground"
+                          : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
+                    >
+                      +{peso.format(pesos)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="mt-2.5 flex min-h-5 items-start justify-between gap-3">
+              <p role="status" className="text-xs font-semibold">
+                {delta ? (
+                  <span
+                    className={cn(
+                      delta.tone === "positive" && "text-positive",
+                      delta.tone === "destructive" && "text-destructive",
+                      delta.tone === "neutral" && "text-muted-foreground",
+                    )}
+                  >
+                    {delta.content}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground font-normal">
+                    Try an amount to see how much sooner you finish.
+                  </span>
+                )}
+              </p>
+              {hasExtra ? (
+                <button
+                  type="button"
+                  onClick={() => onExtraChange("")}
+                  aria-label="Clear the extra amount"
+                  className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -my-2 inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full px-2 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  <X aria-hidden="true" className="size-3.5" />
+                  Clear
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-border/70 mt-5 border-t pt-5">
+          <h3 id={`${extraId}-order`} className="text-sm font-semibold">
+            Order to pay them off
+          </h3>
+          <ol aria-labelledby={`${extraId}-order`} className="mt-3 grid gap-3">
+            {order.map((item, index) => {
+              const debt = debts.get(item.id)!;
+              return (
+                <li key={item.id} className="flex min-w-0 items-center gap-3">
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "grid size-7 shrink-0 place-items-center rounded-full font-mono text-xs font-bold tabular-nums",
+                      index === 0
+                        ? "bg-primary-solid text-primary-solid-foreground shadow-[0_0_0_4px_color-mix(in_srgb,var(--primary)_18%,transparent)]"
+                        : "bg-muted text-foreground/80",
+                    )}
+                  >
+                    {index + 1}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold break-words">
+                      <span className="sr-only">{index + 1}. </span>
+                      {debt.creditor_name}
+                    </span>
+                    <span
+                      className={cn(
+                        "block text-xs",
+                        item.payoffMonth === null
+                          ? "text-destructive font-medium"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {item.payoffMonth === null
+                        ? "Not paid off at this pace"
+                        : `Cleared ${payoffMonthLabel(today, item.payoffMonth)}`}
+                      {index === 0 ? " · extra goes here" : ""}
+                    </span>
+                  </span>
+                  {reorderable ? (
+                    <span className="-mr-2 flex shrink-0">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Move ${debt.creditor_name} up`}
+                        disabled={index === 0}
+                        onClick={move(index, -1)}
+                      >
+                        <ArrowUp aria-hidden="true" className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Move ${debt.creditor_name} down`}
+                        disabled={index === order.length - 1}
+                        onClick={move(index, 1)}
+                      >
+                        <ArrowDown aria-hidden="true" className="size-4" />
+                      </Button>
+                    </span>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ol>
+          {reorderable ? (
+            <p className="text-muted-foreground mt-3 text-xs">
+              Use the arrows to set your own order.
+            </p>
+          ) : null}
+        </div>
+
+        <details className="group border-border/70 mt-5 border-t pt-4">
+          <summary className="text-muted-foreground hover:text-foreground inline-flex min-h-11 cursor-pointer items-center text-xs font-semibold sm:min-h-0">
+            How this is worked out
+          </summary>
+          <ul className="text-muted-foreground mt-3 grid list-disc gap-1.5 pl-4 text-xs leading-5">
+            {RULES.map((rule) => (
+              <li key={rule}>{rule}</li>
+            ))}
+            <li>Estimates from what you entered, not guarantees.</li>
+          </ul>
+          <p className="text-muted-foreground mt-3 text-xs">
+            This page opens with {CHOICES[savedStrategy].toLowerCase()} first.{" "}
+            <Link
+              href="/settings"
+              className="text-primary focus-visible:ring-ring inline-flex items-center gap-1 rounded-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
+            >
+              Change it in Settings
+              <ArrowRight aria-hidden="true" className="size-3" />
+            </Link>
+          </p>
+        </details>
+      </div>
+    </DebtSection>
   );
 }
