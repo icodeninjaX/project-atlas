@@ -308,7 +308,7 @@ function RouteBar({
       </div>
       <ul
         aria-label="Route timing"
-        className="text-muted-foreground mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] leading-4"
+        className="text-muted-foreground mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[0.6875rem] leading-4"
       >
         {schedule.stops.map(({ item }, index) => (
           <li
@@ -379,11 +379,11 @@ function RouteStops({
                       stopTone[index + 1] ?? stopTone[2],
                     )}
                   />
-                  <span className="text-primary text-[11px] font-bold tracking-[0.12em]">
+                  <span className="text-primary text-[0.6875rem] font-bold tracking-[0.12em]">
                     {item.position}
                   </span>
                   {startsAt ? (
-                    <span className="text-muted-foreground text-[11px] font-medium">
+                    <span className="text-muted-foreground text-[0.6875rem] font-medium">
                       · {formatManilaTime(startsAt)}
                     </span>
                   ) : null}
@@ -484,7 +484,7 @@ export function DaylineCommand({
                 until={schedule?.stops[0]?.endsAt}
               />
             </div>
-            <h3 className="mt-5 max-w-2xl min-w-0 text-[1.5rem] leading-[1.12] font-semibold tracking-[-0.04em] text-balance break-words min-[360px]:text-[1.625rem] sm:text-[2.125rem] lg:text-[2.5rem]">
+            <h3 className="mt-5 max-w-2xl min-w-0 text-2xl leading-[1.12] font-semibold tracking-[-0.04em] text-balance break-words min-[360px]:text-[1.625rem] sm:text-[2.125rem] lg:text-[2.5rem]">
               {current.title}
             </h3>
             <div className="mt-4 max-w-2xl min-w-0">

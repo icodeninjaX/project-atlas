@@ -340,7 +340,7 @@ function MilestoneActionDialog({
             <>
               <header className="border-border bg-card/95 sticky top-0 z-10 flex items-start justify-between gap-4 border-b px-5 py-4 backdrop-blur-sm">
                 <div className="min-w-0 flex-1">
-                  <p className="text-muted-foreground mb-1 text-[11px] font-semibold">
+                  <p className="text-muted-foreground mb-1 text-[0.6875rem] font-semibold">
                     Milestone
                   </p>
                   <Dialog.Title className="text-foreground text-lg leading-tight font-semibold tracking-tight">
@@ -349,7 +349,7 @@ function MilestoneActionDialog({
                   <Dialog.Description className="sr-only">
                     Read milestone details and learning notes.
                   </Dialog.Description>
-                  <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[11px]">
+                  <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[0.6875rem]">
                     <div className="flex items-center gap-1.5">
                       {milestone.completed_at ? (
                         <Check
@@ -477,7 +477,7 @@ function MilestoneActionDialog({
                     />
                     <p
                       id={descriptionHelpId}
-                      className="text-muted-foreground mt-1 text-[10px] font-normal"
+                      className="text-muted-foreground mt-1 text-[0.625rem] font-normal"
                     >
                       You can come back and add to these notes before completing
                       the milestone.
@@ -598,7 +598,7 @@ export function MilestoneList({
             Milestones
           </p>
           <span
-            className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 font-mono text-[10px]"
+            className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 font-mono text-[0.625rem]"
             aria-label={`${milestones.length} ${milestones.length === 1 ? "milestone" : "milestones"}`}
           >
             {milestones.length}
@@ -606,7 +606,7 @@ export function MilestoneList({
           {actionMode && (
             <span
               aria-live="polite"
-              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${actionMode === "remove" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
+              className={`rounded-full px-2 py-0.5 text-[0.625rem] font-semibold ${actionMode === "remove" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
             >
               {actionMode === "edit" ? "Editing" : "Removing"}
             </span>
@@ -671,7 +671,7 @@ export function MilestoneList({
                         actionButtonRef.current = event.currentTarget;
                         setDialogState({ mode: "view", milestone });
                       }}
-                      className={`hover:text-foreground focus-visible:ring-ring block max-w-full rounded text-left text-[13px] leading-5 outline-none hover:underline focus-visible:ring-2 sm:text-xs ${milestone.completed_at ? "text-muted-foreground decoration-muted-foreground/60 line-through" : ""}`}
+                      className={`hover:text-foreground focus-visible:ring-ring block max-w-full rounded text-left text-[0.8125rem] leading-5 outline-none hover:underline focus-visible:ring-2 sm:text-xs ${milestone.completed_at ? "text-muted-foreground decoration-muted-foreground/60 line-through" : ""}`}
                     >
                       {milestone.title}
                     </button>
@@ -679,7 +679,7 @@ export function MilestoneList({
                   {milestone.target_date && !milestone.completed_at ? (
                     <time
                       dateTime={milestone.target_date}
-                      className="text-muted-foreground shrink-0 font-mono text-[10px] tabular-nums"
+                      className="text-muted-foreground shrink-0 font-mono text-[0.625rem] tabular-nums"
                     >
                       {formatCalendarDate(milestone.target_date).replace(
                         /, \d{4}$/,
@@ -769,7 +769,7 @@ export function MilestoneList({
             />
             <p
               id={`add-milestone-description-help-${goalId}`}
-              className="text-muted-foreground mt-1 text-[10px]"
+              className="text-muted-foreground mt-1 text-[0.625rem]"
             >
               Add context now or keep building these notes as you make progress.
             </p>

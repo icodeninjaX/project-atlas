@@ -88,7 +88,7 @@ export function CareerWorkspace({
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Opportunity pipeline"
+        eyebrow="Applications"
         icon={BriefcaseBusiness}
         title="Career"
         description={

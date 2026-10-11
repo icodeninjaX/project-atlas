@@ -148,7 +148,7 @@ function sortApplications(
 const toolbarControlClass =
   "bg-background/70 ring-border/80 hover:bg-background focus-visible:ring-ring min-h-11 rounded-full text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-10";
 
-const legendClass = "text-muted-foreground text-[11px] font-semibold";
+const legendClass = "text-muted-foreground text-[0.6875rem] font-semibold";
 
 function ApplicationCard({
   application,
@@ -258,7 +258,7 @@ function ApplicationCard({
         {place || applied ? (
           <p
             className={cn(
-              "text-muted-foreground mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs lg:text-[11px]",
+              "text-muted-foreground mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs lg:text-[0.6875rem]",
               !place && "max-lg:hidden",
             )}
           >
@@ -288,7 +288,7 @@ function ApplicationCard({
         >
           <p
             className={cn(
-              "text-[11px] font-semibold",
+              "text-[0.6875rem] font-semibold",
               overdue
                 ? "text-red-700 dark:text-red-300"
                 : "text-muted-foreground",
@@ -722,7 +722,7 @@ export function CareerKanban({
               role="dialog"
               aria-modal={isMobileViewport || undefined}
               aria-labelledby="career-board-customization-title"
-              className="bg-card ring-border motion-safe:max-lg:animate-analyst-sheet lg:bg-background/60 absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto rounded-t-[1.75rem] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 lg:relative lg:inset-auto lg:mt-2 lg:max-h-none lg:overflow-visible lg:rounded-[1.125rem] lg:p-4 lg:shadow-none"
+              className="bg-card ring-border motion-safe:max-lg:animate-analyst-sheet lg:bg-background/60 absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto rounded-t-[1.75rem] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 lg:relative lg:inset-auto lg:mt-2 lg:max-h-none lg:overflow-visible lg:rounded-[1.25rem] lg:p-4 lg:shadow-none"
             >
               <div
                 className="bg-muted-foreground/25 mx-auto mb-4 h-1 w-10 rounded-full lg:hidden"
@@ -1010,11 +1010,11 @@ export function CareerKanban({
                   if (application) moveApplication(application, stage);
                 }}
                 className={cn(
-                  "lg:bg-card/45 lg:ring-border/70 relative w-full min-w-0 flex-col transition-[background-color,box-shadow] lg:flex lg:w-[300px] lg:shrink-0 lg:rounded-[1.375rem] lg:p-2 lg:ring-1 lg:backdrop-blur",
+                  "lg:bg-card/45 lg:ring-border/70 relative w-full min-w-0 flex-col transition-[background-color,box-shadow] lg:flex lg:w-[300px] lg:shrink-0 lg:rounded-[1.5rem] lg:p-2 lg:ring-1 lg:backdrop-blur",
                   selected ? "flex" : "hidden",
                   !selected && "lg:flex",
                   dropping &&
-                    "lg:bg-primary/[0.06] ring-primary/45 lg:ring-primary/45 rounded-[1.375rem] ring-2 lg:ring-2",
+                    "lg:bg-primary/[0.06] ring-primary/45 lg:ring-primary/45 rounded-[1.5rem] ring-2 lg:ring-2",
                 )}
               >
                 <span
@@ -1046,7 +1046,7 @@ export function CareerKanban({
                   </div>
                   {overdueInStage > 0 ? (
                     <span
-                      className="text-destructive inline-flex items-center gap-1 text-[11px] font-semibold"
+                      className="text-destructive inline-flex items-center gap-1 text-[0.6875rem] font-semibold"
                       title={`${overdueInStage} overdue`}
                     >
                       <AlarmClock className="size-3.5" aria-hidden="true" />
@@ -1113,7 +1113,7 @@ export function CareerKanban({
                               setQuery("");
                               setAttentionOnly(false);
                             }}
-                            className="text-primary hover:bg-primary/10 focus-visible:ring-ring mt-2 min-h-9 rounded-full px-3 text-[11px] font-semibold focus-visible:ring-2 focus-visible:outline-none"
+                            className="text-primary hover:bg-primary/10 focus-visible:ring-ring mt-2 min-h-9 rounded-full px-3 text-[0.6875rem] font-semibold focus-visible:ring-2 focus-visible:outline-none"
                           >
                             Clear filters
                           </button>

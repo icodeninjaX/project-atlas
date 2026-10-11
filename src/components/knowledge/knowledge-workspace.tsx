@@ -355,7 +355,7 @@ export function KnowledgeWorkspace({
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Learning system"
+        eyebrow="Spaced review"
         icon={GraduationCap}
         title="Knowledge"
         description="Capture what you learn, explain it in your own words, and let spaced reviews make it stick."

@@ -176,7 +176,7 @@ export default async function ActivityPage({
 
       <div className="mt-6 flex items-center justify-between gap-4">
         <p className="text-sm font-semibold">Recent changes</p>
-        <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-1 font-mono text-[10px]">
+        <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-1 font-mono text-[0.625rem]">
           {total} {total === 1 ? "event" : "events"}
         </span>
       </div>
@@ -275,7 +275,7 @@ export default async function ActivityPage({
                     </div>
                     <time
                       dateTime={item.created_at}
-                      className="text-muted-foreground shrink-0 text-right font-mono text-[10px] leading-4"
+                      className="text-muted-foreground shrink-0 text-right font-mono text-[0.625rem] leading-4"
                     >
                       {new Date(item.created_at).toLocaleString("en-PH", {
                         timeZone: "Asia/Manila",

@@ -303,7 +303,7 @@ function AccountCreateForm({
         <section aria-labelledby="account-preview-title">
           <p
             id="account-preview-title"
-            className="text-muted-foreground text-[13px] font-semibold"
+            className="text-muted-foreground text-[0.8125rem] font-semibold"
           >
             Card preview
           </p>

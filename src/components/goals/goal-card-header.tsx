@@ -64,7 +64,7 @@ function GoalAreaBadge({ area }: { area: string }) {
   return (
     <span
       aria-label={`Goal category: ${areaLabel}`}
-      className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${goalAreaBadgeStyles[area] ?? fallbackGoalAreaBadgeStyle}`}
+      className={`rounded-full border px-2 py-0.5 text-[0.6875rem] font-semibold ${goalAreaBadgeStyles[area] ?? fallbackGoalAreaBadgeStyle}`}
     >
       {areaLabel}
     </span>
@@ -114,7 +114,7 @@ function GoalStatusPill({ status }: { status: string }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${pill.className}`}
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.625rem] font-semibold ${pill.className}`}
     >
       <Icon className="size-3" aria-hidden="true" />
       {pill.label}
@@ -152,7 +152,7 @@ function GoalDeadline({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ${tone}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] font-medium ${tone}`}
     >
       <CalendarDays className="size-3.5" aria-hidden="true" />
       Target {formatCalendarDate(targetDate)}
@@ -330,7 +330,7 @@ export function GoalCardHeader({
         </div>
       </div>
       {goal.success_definition ? (
-        <p className="text-muted-foreground border-border mt-4 border-l-2 pl-3 text-[13px] leading-6">
+        <p className="text-muted-foreground border-border mt-4 border-l-2 pl-3 text-[0.8125rem] leading-6">
           {goal.success_definition}
         </p>
       ) : null}
@@ -344,7 +344,7 @@ export function GoalCardHeader({
             />
           ) : null}
           {goal.target_amount_centavos ? (
-            <span className="bg-muted/70 text-muted-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium">
+            <span className="bg-muted/70 text-muted-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] font-medium">
               <PiggyBank className="size-3.5" aria-hidden="true" />
               <SensitiveValue>
                 {formatCentavos(goal.saved_amount_centavos ?? 0)}

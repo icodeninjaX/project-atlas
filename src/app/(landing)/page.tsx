@@ -119,7 +119,7 @@ const intelligence = [
   {
     icon: FileSearch,
     title: "Grounded Analyst",
-    body: "Ask across money, tasks, goals and reviews. Every claim cites the records behind it. No evidence, no answer.",
+    body: "Ask across money, tasks, goals and reviews. Every claim cites the records behind it, and it says so when the records can’t answer.",
   },
   {
     icon: ArrowUpRight,
@@ -360,7 +360,7 @@ export default function LandingPage() {
               Goals that move <Serif>when you do.</Serif>
             </>
           }
-          body="Progress is earned by milestones, not guessed with a slider. Rich milestone notes, category colours and related tasks keep the big picture tied to this week’s work."
+          body="Progress moves when you finish a milestone, so the percentage always means something. Rich milestone notes, category colours and related tasks keep the big picture tied to this week’s work."
           points={[
             "Milestone-driven progress",
             "Linked tasks, debts, applications and notes",

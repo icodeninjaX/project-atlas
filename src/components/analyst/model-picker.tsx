@@ -75,7 +75,7 @@ function PoolMeter({ status }: { status: PoolStatus[FreePool] | undefined }) {
           style={{ width: `${Math.max(percent, 2)}%` }}
         />
       </span>
-      <span className="text-muted-foreground text-[11px] tabular-nums">
+      <span className="text-muted-foreground text-[0.6875rem] tabular-nums">
         {percent}%
       </span>
     </span>
@@ -249,7 +249,7 @@ export function ModelPicker({
             <Dialog.Title className="text-sm font-semibold tracking-[-0.01em]">
               Explain with
             </Dialog.Title>
-            <p className="text-muted-foreground text-[11px]">
+            <p className="text-muted-foreground text-[0.6875rem]">
               {usage === "unavailable"
                 ? "Today's usage is unavailable"
                 : `Free daily tokens${resetLabel ? ` · resets ${resetLabel}` : ""}`}
@@ -276,7 +276,7 @@ export function ModelPicker({
                     >
                       {group.title}
                     </p>
-                    <span className="text-muted-foreground/80 text-[11px]">
+                    <span className="text-muted-foreground/80 text-[0.6875rem]">
                       {compactTokens(
                         pools?.[group.pool].dailyTokens ??
                           FREE_POOL_DAILY_TOKENS[group.pool],
@@ -331,7 +331,7 @@ export function ModelPicker({
                             <span className="flex items-center gap-1.5 text-sm font-medium">
                               {option.label}
                               {option.id === AI_MODELS.analyst && (
-                                <span className="bg-muted text-muted-foreground rounded-full px-1.5 py-px text-[10px] font-semibold">
+                                <span className="bg-muted text-muted-foreground rounded-full px-1.5 py-px text-[0.625rem] font-semibold">
                                   Default
                                 </span>
                               )}
@@ -357,7 +357,7 @@ export function ModelPicker({
               );
             })}
           </div>
-          <p className="text-muted-foreground px-3 pt-3 pb-1.5 text-[11px] leading-4">
+          <p className="text-muted-foreground px-3 pt-3 pb-1.5 text-[0.6875rem] leading-4">
             {usage === "ready" &&
             (pools?.small.syncedAt || pools?.large.syncedAt)
               ? "Usage includes OpenAI’s own count, refreshed every few minutes. "

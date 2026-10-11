@@ -25,7 +25,8 @@ export const selectClass =
 export const fieldLabelClass = "text-foreground/90 text-xs font-semibold";
 
 /** A small help line below a field. */
-export const fieldHelpClass = "text-muted-foreground text-[11px] leading-4";
+export const fieldHelpClass =
+  "text-muted-foreground text-[0.6875rem] leading-4";
 
 /**
  * The icon in a section's or row's corner: a soft tile with a highlight on
@@ -45,12 +46,10 @@ export function IconTile({
       aria-hidden="true"
       className={cn(
         "relative grid shrink-0 place-items-center ring-1 ring-inset",
-        "shadow-[inset_0_1px_0_rgb(255_255_255/0.18)]",
         size === "md" ? "size-11 rounded-2xl" : "size-9 rounded-xl",
-        tone === "primary" &&
-          "from-primary/22 to-primary/6 text-primary ring-primary/20 bg-gradient-to-br",
+        tone === "primary" && "bg-primary/12 text-primary ring-primary/20",
         tone === "danger" &&
-          "from-destructive/20 to-destructive/5 text-destructive ring-destructive/25 bg-gradient-to-br",
+          "bg-destructive/12 text-destructive ring-destructive/25",
         tone === "muted" && "bg-muted/80 text-muted-foreground ring-border/80",
       )}
     >
@@ -110,7 +109,7 @@ export function SettingsSection({
           >
             {title}
           </h2>
-          <p className="text-muted-foreground mt-1 max-w-xl text-[13px] leading-5 text-pretty">
+          <p className="text-muted-foreground mt-1 max-w-xl text-[0.8125rem] leading-5 text-pretty">
             {description}
           </p>
         </div>
@@ -297,7 +296,7 @@ export function SwitchField({
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-medium">{label}</span>
         {detail ? (
-          <span className="text-muted-foreground mt-0.5 block text-[11px] leading-4">
+          <span className="text-muted-foreground mt-0.5 block text-[0.6875rem] leading-4">
             {detail}
           </span>
         ) : null}

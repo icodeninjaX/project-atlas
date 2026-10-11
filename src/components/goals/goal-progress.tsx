@@ -36,7 +36,7 @@ export function GoalProgress({
         : `${completedMilestones} of ${totalMilestones} milestones completed`;
 
   return (
-    <div className="border-border/60 from-muted/60 to-muted/20 mt-5 flex items-center gap-4 rounded-2xl border bg-gradient-to-br p-3.5 sm:gap-5 sm:p-4">
+    <div className="border-border/60 bg-muted/40 mt-5 flex items-center gap-4 rounded-2xl border p-3.5 sm:gap-5 sm:p-4">
       <div
         role="progressbar"
         aria-label={`Progress for ${goalTitle}`}
@@ -82,7 +82,7 @@ export function GoalProgress({
               pathLength={100}
               strokeDasharray={`${progressPercent} 100`}
               stroke={`url(#${gradientId})`}
-              className="transition-[stroke-dasharray] duration-700 ease-out motion-reduce:transition-none"
+              className="transition-[stroke-dasharray] duration-500 ease-out motion-reduce:transition-none"
             />
           ) : null}
         </svg>
@@ -91,10 +91,10 @@ export function GoalProgress({
         </span>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-muted-foreground text-[11px] font-semibold">
+        <p className="text-muted-foreground text-[0.6875rem] font-semibold">
           Progress
         </p>
-        <p className="text-foreground mt-1 text-[13px] leading-5 font-medium">
+        <p className="text-foreground mt-1 text-[0.8125rem] leading-5 font-medium">
           {progressDescription}
         </p>
         {totalMilestones > 0 && totalMilestones <= maxSegments ? (

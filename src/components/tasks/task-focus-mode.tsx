@@ -333,7 +333,7 @@ function FocusTimer({
           </div>
 
           <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 pt-[max(0.875rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-3 pl-[max(1rem,env(safe-area-inset-left))] sm:p-6">
-            <div className="flex items-center gap-2 font-mono text-[11px] font-semibold text-blue-200">
+            <div className="flex items-center gap-2 font-mono text-[0.6875rem] font-semibold text-blue-200">
               <span className="relative flex size-2">
                 {running && (
                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-blue-300 opacity-75" />
@@ -372,7 +372,7 @@ function FocusTimer({
           </header>
 
           <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto overscroll-contain pt-2 pr-[max(1rem,env(safe-area-inset-right))] pb-3 pl-[max(1rem,env(safe-area-inset-left))] text-center sm:px-10 sm:py-4 [@media(max-height:680px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <Dialog.Description className="font-mono text-[11px] text-blue-200">
+            <Dialog.Description className="font-mono text-[0.6875rem] text-blue-200">
               {scheduledLabel ?? "Start when you are ready"}
             </Dialog.Description>
             <Dialog.Title className="mt-2 max-w-2xl text-[clamp(1.35rem,6.5vw,2.25rem)] leading-tight font-semibold tracking-[-0.04em] text-balance sm:mt-3 sm:text-4xl">
@@ -436,7 +436,7 @@ function FocusTimer({
               </div>
             </div>
 
-            <div className="mt-[clamp(0.875rem,3dvh,2rem)] w-full max-w-80 rounded-[1.4rem] border border-white/10 bg-white/[0.06] p-2 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+            <div className="mt-[clamp(0.875rem,3dvh,2rem)] w-full max-w-80 rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-2 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                 {running ? (
                   <Button

@@ -134,7 +134,7 @@ export function SettingsSectionNav({
           <span
             aria-hidden="true"
             className={cn(
-              "font-mono text-[10px] tabular-nums",
+              "font-mono text-[0.625rem] tabular-nums",
               current ? "text-foreground" : "text-muted-foreground",
             )}
           >

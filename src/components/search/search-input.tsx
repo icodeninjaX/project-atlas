@@ -75,7 +75,7 @@ export function SearchInput({
           />
           <kbd
             aria-hidden="true"
-            className="border-border bg-muted text-muted-foreground pointer-events-none absolute top-3.5 right-3 hidden rounded border px-1.5 font-mono text-[10px] sm:block"
+            className="border-border bg-muted text-muted-foreground pointer-events-none absolute top-3.5 right-3 hidden rounded border px-1.5 font-mono text-[0.625rem] sm:block"
           >
             /
           </kbd>

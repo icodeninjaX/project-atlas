@@ -19,7 +19,7 @@ export default async function LoginPage({
 
   return (
     <AuthCard
-      eyebrow="Welcome back"
+      eyebrow="Log in"
       title="Continue your route."
       description="Log in to see today’s priorities and the numbers behind them."
       footer={

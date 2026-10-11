@@ -51,27 +51,27 @@ type Tone = {
  */
 const tones = {
   rose: {
-    tile: "from-rose-500/22 to-rose-500/5 text-rose-700 ring-rose-500/25 dark:text-rose-300",
+    tile: "bg-rose-500/12 text-rose-700 ring-rose-500/25 dark:text-rose-300",
     dot: "bg-rose-500",
     chip: "bg-rose-500/10 text-rose-700 ring-rose-500/25 dark:text-rose-300",
   },
   emerald: {
-    tile: "from-emerald-500/22 to-emerald-500/5 text-emerald-700 ring-emerald-500/25 dark:text-emerald-300",
+    tile: "bg-emerald-500/12 text-emerald-700 ring-emerald-500/25 dark:text-emerald-300",
     dot: "bg-emerald-500",
     chip: "bg-emerald-500/10 text-emerald-700 ring-emerald-500/25 dark:text-emerald-300",
   },
   sky: {
-    tile: "from-sky-500/22 to-sky-500/5 text-sky-700 ring-sky-500/25 dark:text-sky-300",
+    tile: "bg-sky-500/12 text-sky-700 ring-sky-500/25 dark:text-sky-300",
     dot: "bg-sky-500",
     chip: "bg-sky-500/10 text-sky-700 ring-sky-500/25 dark:text-sky-300",
   },
   violet: {
-    tile: "from-violet-500/22 to-violet-500/5 text-violet-700 ring-violet-500/25 dark:text-violet-300",
+    tile: "bg-violet-500/12 text-violet-700 ring-violet-500/25 dark:text-violet-300",
     dot: "bg-violet-500",
     chip: "bg-violet-500/10 text-violet-700 ring-violet-500/25 dark:text-violet-300",
   },
   amber: {
-    tile: "from-amber-500/22 to-amber-500/5 text-amber-700 ring-amber-500/25 dark:text-amber-300",
+    tile: "bg-amber-500/12 text-amber-700 ring-amber-500/25 dark:text-amber-300",
     dot: "bg-amber-500",
     chip: "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300",
   },
@@ -122,13 +122,13 @@ export const understoodKinds = [
   },
   {
     label: "Tasks and reschedules",
-    example: "Call Acme tomorrow · move it to Friday",
+    example: "Call Mika tomorrow · move it to Friday",
     icon: ClipboardCheck,
     tone: tones.sky,
   },
   {
     label: "Career applications",
-    example: "Applied to Product Designer at Acme",
+    example: "Applied to Product Designer at Canva",
     icon: BriefcaseBusiness,
     tone: tones.violet,
   },
@@ -154,8 +154,7 @@ export function KindTile({
     <span
       aria-hidden="true"
       className={cn(
-        "relative grid shrink-0 place-items-center bg-gradient-to-br ring-1 ring-inset",
-        "shadow-[inset_0_1px_0_rgb(255_255_255/0.18)]",
+        "relative grid shrink-0 place-items-center ring-1 ring-inset",
         size === "md" ? "size-11 rounded-2xl" : "size-9 rounded-xl",
         tone.tile,
       )}

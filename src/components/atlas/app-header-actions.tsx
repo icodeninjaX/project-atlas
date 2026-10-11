@@ -114,7 +114,7 @@ export function AppHeaderActions({
                 {initialFor(displayName)}
               </span>
               <div className="min-w-0">
-                <p className="text-muted-foreground text-[11px]">
+                <p className="text-muted-foreground text-[0.6875rem]">
                   Signed in as
                 </p>
                 <p className="truncate text-sm font-semibold">{name}</p>

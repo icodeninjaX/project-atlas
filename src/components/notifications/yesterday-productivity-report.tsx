@@ -83,7 +83,7 @@ export function YesterdayProductivityReport({
 
             <header className="relative flex items-start justify-between gap-4">
               <div>
-                <p className="text-primary font-mono text-[11px] font-semibold">
+                <p className="text-primary font-mono text-[0.6875rem] font-semibold">
                   Yesterday
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">

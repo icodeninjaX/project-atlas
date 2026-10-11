@@ -106,6 +106,56 @@ the reason. **Clear** = ATLAS never had it.
   wash with initials in the same hue. There are still eight hues, so each
   company keeps a stable color, with no violet or fuchsia.
 
+## Round 3: app-level tells
+
+The first two passes followed landing-page catalogs. This pass used sources
+about whole apps: microcopy, states, emails, component defaults and motion.
+
+### More sources
+
+- SaaS UI Design, [SaaS UI looks AI-generated? 7 fixes](https://www.saasui.design/blog/saas-ui-looks-ai-generated)
+- VibeMole, [How to avoid building apps that look vibe coded](https://vibemole.com/resources/avoid-vibecoded-app-design)
+- Is My App Slop, [Design tips to make your vibe-coded app look real](https://ismyappslop.com/resources/design-tips-to-make-your-vibe-coded-app)
+- Axon Build, [How to tell if an app was vibe coded](https://axonbuild.com/blog/how-to-tell-if-an-app-was-vibe-coded/)
+- DEV Community, [Your vibe-coded app looks ugly](https://dev.to/kiwibreaksme/your-vibe-coded-app-looks-ugly-heres-what-i-did-about-it-2nb4)
+- Claude Skills, [AI writing detection](https://claudeskills.info/skills/mike-coulbourn/claude-vibes/ai-writing-detection/)
+
+### Checklist
+
+| Tell                                                          | ATLAS before                                                                                    | Status                                                                                                                                                                 |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stock auth emails                                             | Supabase's default "Confirm your signup" emails                                                 | **Fixed**: branded confirmation, recovery and email-change templates in `supabase/templates/`, wired in `config.toml`, with hosted setup steps in `docs/deployment.md` |
+| Tutorial placeholder names ("Acme")                           | Capture examples and the career form placeholder                                                | **Fixed**: local examples (Canva, Globe Telecom, "call Mika") that match the landing demo                                                                              |
+| Generic microcopy ("Welcome back", "…successfully")           | Login eyebrow, password-change message                                                          | **Fixed**: "Log in", "Password changed." Errors already name what failed, and empty states teach the next step                                                         |
+| Title Case headings                                           | "Your Day, Mapped." on Today                                                                    | **Fixed**: "Your day, mapped."                                                                                                                                         |
+| Formula phrases ("at a glance", "in one place", "Ready to…?") | Today, History, Settings, launch screen                                                         | **Fixed**: rewritten to say what is there                                                                                                                              |
+| Slogan contrasts ("not X, Y" used for punch)                  | Reviews prompt, two landing lines                                                               | **Fixed**. **Kept** where "X, not Y" is a precise disclaimer ("associations, not causes", "estimates, not guarantees")                                                 |
+| Repeated kicker labels                                        | "Insight engine", "Learning system", "Opportunity pipeline", "ATLAS Graph"                      | **Fixed**: factual descriptors ("Changes and risks", "Spaced review", "Applications", "Goals / Connections")                                                           |
+| Vague page descriptions                                       | Reviews ("a quiet place to notice…"), Timeline ("…shaping your life")                           | **Fixed**: say what the page holds                                                                                                                                     |
+| Glossy gradient icon tiles                                    | Analyst, Capture and Settings tiles faded hue → transparent with a white inset highlight        | **Fixed**: one flat tinted tile everywhere                                                                                                                             |
+| Glowing gradient chat UI                                      | Analyst send button and question bubbles glowed blue                                            | **Fixed**: solid primary with the standard button shadow                                                                                                               |
+| Off-scale values                                              | Radii at 18, 22 and 22.4px; the same type size written as px and rem                            | **Fixed**: snapped to the 12–32px radius scale; one unit per size                                                                                                      |
+| Long entrance motion                                          | Chart bars and meters took 800–1100ms                                                           | **Fixed**: 400–700ms, still transform-only and reduced-motion aware                                                                                                    |
+| Floating chat bubble                                          | None. The phone-only "+" buttons are native create actions above the bottom nav                 | **Clear**                                                                                                                                                              |
+| Default chart styling                                         | Charts use theme tokens and custom tooltips                                                     | **Clear**                                                                                                                                                              |
+| Identical KPI tiles                                           | Today's situation tiles already differ (urgent state, progress ring, payday context)            | **Clear**                                                                                                                                                              |
+| Missing empty, loading and error states                       | Skeletons, specific empty states with actions, an error page that says records were not changed | **Clear**                                                                                                                                                              |
+| Default title, favicon, metadata                              | Per-page titles, custom icons, OG image, manifest                                               | **Clear**                                                                                                                                                              |
+| Console errors                                                | None on the pages rendered for this pass                                                        | **Clear**                                                                                                                                                              |
+
+### Deliberately kept
+
+- **The same hero shape on every module** (big figure, label, supporting
+  tiles). Sources call "every screen is a dashboard" a tell, but each hero
+  answers that module's own question, and the hero is the core of the
+  premium design.
+- **Inset tiles inside cards.** They are flat, sunken wells with a hairline
+  ring, not stacked shadowed cards.
+- **Landing mono labels and the Manila coordinates.** These are part of the
+  landing's editorial system and sense of place, not the app's.
+- **The "Debt Payment" category name.** It is stored data that code matches
+  by name, so renaming it needs a data migration.
+
 ## Evidence
 
 Same component, same data, dark theme, HEAD on the left and this pass on the
@@ -121,3 +171,9 @@ light, and the landing "problem" chapter without the stat row.
 ![Section labels](vibe-code-audit/04-section-labels-before-after.jpg)
 ![Company marks](vibe-code-audit/05-company-marks-dark-light.jpg)
 ![Landing problem chapter](vibe-code-audit/06-landing-fracture-after.jpg)
+
+Round 3: flat icon tiles, the login screen, and the branded auth emails.
+
+![Flat icon tiles](vibe-code-audit/07-flat-icon-tiles.jpg)
+![Login](vibe-code-audit/08-login.jpg)
+![Auth emails](vibe-code-audit/09-auth-emails.jpg)

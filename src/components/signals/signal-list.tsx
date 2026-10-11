@@ -113,7 +113,7 @@ export function SignalList({ signals }: { signals: Signal[] }) {
             attentionSignals.length > 0 && "border-border border-t",
           )}
         >
-          <p className="bg-muted/35 text-muted-foreground px-3 py-2 text-[13px] leading-4 font-semibold sm:px-4">
+          <p className="bg-muted/35 text-muted-foreground px-3 py-2 text-[0.8125rem] leading-4 font-semibold sm:px-4">
             {quieterLabel}
           </p>
           <ol aria-label={quieterLabel} className="divide-border divide-y">

@@ -27,7 +27,7 @@ export function TimelineScreen({
         eyebrow="Your history"
         icon={CalendarRange}
         title="Life timeline"
-        description="A chronological record of the choices, progress, and money movement shaping your life."
+        description="Everything you recorded, in order: tasks finished, money moved, goals reached and decisions made."
         aside={
           <PageHeadingLink href="/settings/activity" icon={History}>
             Activity history

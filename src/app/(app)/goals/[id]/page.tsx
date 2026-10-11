@@ -46,7 +46,7 @@ export default async function GoalRelationshipsPage({
       <BackLink href="/goals">All goals</BackLink>
       <PageHeading
         icon={Goal}
-        eyebrow="ATLAS Graph"
+        eyebrow="Goals / Connections"
         title={goal.title}
         description="Direct relationships connected to this goal."
       />

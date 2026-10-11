@@ -192,7 +192,7 @@ export function ReminderSettings({
             className="bg-card/70 sm:min-w-52"
           />
         </div>
-        <p className="text-muted-foreground relative mt-4 flex items-center gap-2 text-[11px]">
+        <p className="text-muted-foreground relative mt-4 flex items-center gap-2 text-[0.6875rem]">
           <Smartphone aria-hidden="true" className="size-3.5" />
           This device: {deviceSubscribed ? "subscribed" : "not subscribed"}
         </p>

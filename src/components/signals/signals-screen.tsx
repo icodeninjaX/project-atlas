@@ -29,7 +29,7 @@ function signalCount(count: number) {
 function Header({ checkedAt }: { checkedAt: string | null }) {
   return (
     <PageHeading
-      eyebrow="Insight engine"
+      eyebrow="Changes and risks"
       icon={Radar}
       title="Signals"
       description="Meaningful changes, risks, deadlines, and improvements detected from your ATLAS records. Every signal shows the facts behind it."

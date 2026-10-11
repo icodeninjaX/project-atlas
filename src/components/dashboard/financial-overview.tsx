@@ -97,7 +97,9 @@ function CashFlow({
     <div className={dashboardTileClass}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
         <p className="text-xs font-semibold">{monthName} so far</p>
-        <p className="text-muted-foreground text-[11px]">Transfers excluded</p>
+        <p className="text-muted-foreground text-[0.6875rem]">
+          Transfers excluded
+        </p>
       </div>
       {flow.empty ? (
         <p className="text-muted-foreground mt-3 text-xs leading-5">
@@ -130,7 +132,7 @@ function CashFlow({
             />{" "}
             {flow.netCentavos >= 0 ? "kept so far" : "more out than in"}
             {flow.netCentavos > 0 && incomeCentavos > 0 ? (
-              <span className="bg-positive/10 text-positive ml-2 inline-flex rounded-full px-2 py-0.5 text-[11px] leading-4 font-semibold whitespace-nowrap">
+              <span className="bg-positive/10 text-positive ml-2 inline-flex rounded-full px-2 py-0.5 text-[0.6875rem] leading-4 font-semibold whitespace-nowrap">
                 {Math.round((flow.netCentavos / incomeCentavos) * 100)}% of
                 income
               </span>
@@ -226,7 +228,7 @@ export function FinancialOverview({
               Across active accounts
             </span>
             {payday ? (
-              <span className="bg-positive/10 text-positive ring-positive/20 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] leading-none font-semibold ring-1">
+              <span className="bg-positive/10 text-positive ring-positive/20 inline-flex items-center rounded-full px-2.5 py-1 text-[0.6875rem] leading-none font-semibold ring-1">
                 {payday}
               </span>
             ) : null}

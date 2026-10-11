@@ -73,7 +73,7 @@ describe("security settings actions", () => {
       changePasswordAction({ success: false, message: "" }, formData),
     ).resolves.toEqual({
       success: true,
-      message: "Password changed successfully.",
+      message: "Password changed.",
     });
     expect(mocks.verifyPassword).toHaveBeenCalledWith(
       "kai@example.com",

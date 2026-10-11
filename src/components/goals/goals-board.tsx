@@ -59,7 +59,7 @@ function SummaryStat({
 }) {
   return (
     <div className="border-border/70 bg-card/80 min-w-0 rounded-2xl border p-3 sm:p-4">
-      <dt className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold sm:text-xs">
+      <dt className="text-muted-foreground flex items-center gap-1.5 text-[0.6875rem] font-semibold sm:text-xs">
         <Icon className="text-primary size-3.5 shrink-0" aria-hidden="true" />
         <span className="truncate">{label}</span>
       </dt>
@@ -67,7 +67,7 @@ function SummaryStat({
         <span className="block truncate font-mono text-xl leading-none font-semibold tracking-tight tabular-nums sm:text-[1.75rem]">
           {value}
         </span>
-        <span className="text-muted-foreground mt-1.5 block truncate text-[11px] sm:text-xs">
+        <span className="text-muted-foreground mt-1.5 block truncate text-[0.6875rem] sm:text-xs">
           {detail}
         </span>
       </dd>
@@ -137,7 +137,7 @@ export function GoalsBoard({
   return (
     <PageShell>
       <GoalCreatePanel
-        eyebrow="Direction"
+        eyebrow="Milestone progress"
         title="Goals"
         description="Progress updates automatically as you complete, reopen, or add milestones."
         summary={

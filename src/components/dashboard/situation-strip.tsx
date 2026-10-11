@@ -94,7 +94,7 @@ export function SituationStrip({ items }: { items: SituationItem[] }) {
           Situation
         </h2>
         <p className="text-muted-foreground hidden text-xs sm:block">
-          The rest of your system, at a glance
+          Money, tasks, career and goals
         </p>
       </div>
       {/* Columns follow the strip's width in rem, so large text gets fewer,

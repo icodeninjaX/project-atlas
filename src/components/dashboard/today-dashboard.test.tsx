@@ -77,7 +77,7 @@ describe("TodayDashboard", () => {
     expect(screen.getByText("Good afternoon")).toBeInTheDocument();
     expect(screen.getByText("Thursday, October 1")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { level: 1, name: "Your Day, Mapped." }),
+      screen.getByRole("heading", { level: 1, name: "Your day, mapped." }),
     ).toBeInTheDocument();
   });
 

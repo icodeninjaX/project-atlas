@@ -119,7 +119,7 @@ export function GratitudeCard({
               className={`max-w-xl font-serif ${
                 compact
                   ? "text-foreground text-lg leading-7 sm:text-xl sm:leading-8 lg:text-2xl lg:leading-[1.4] dark:text-[#eef3fa]"
-                  : "text-lg leading-6 text-[#f8fafc] sm:text-2xl sm:leading-[1.45] lg:text-[1.7rem] lg:leading-[1.35]"
+                  : "text-lg leading-6 text-[#f8fafc] sm:text-2xl sm:leading-[1.45] lg:text-[1.75rem] lg:leading-[1.35]"
               }`}
             >
               “{quote.message}”

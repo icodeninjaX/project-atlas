@@ -99,7 +99,7 @@ export async function changePasswordAction(
     };
   }
 
-  return { success: true, message: "Password changed successfully." };
+  return { success: true, message: "Password changed." };
 }
 
 export async function changeEmailAction(

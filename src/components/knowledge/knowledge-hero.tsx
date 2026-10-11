@@ -373,7 +373,7 @@ export function KnowledgeHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="knowledge-queue-heading"
-          className="text-primary text-[13px] font-semibold"
+          className="text-primary text-[0.8125rem] font-semibold"
         >
           Review queue
         </h2>
@@ -494,7 +494,7 @@ export function KnowledgeEmptyHero({ onAdd }: { onAdd: () => void }) {
     <HeroShell>
       <h2
         id="knowledge-queue-heading"
-        className="text-primary text-[13px] font-semibold"
+        className="text-primary text-[0.8125rem] font-semibold"
       >
         Review queue
       </h2>

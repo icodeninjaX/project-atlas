@@ -166,7 +166,7 @@ function SeriesGlance({ series }: { series: HistorySeries[] }) {
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <h3 className={eyebrowClass}>Series at a glance</h3>
+        <h3 className={eyebrowClass}>Every series</h3>
         <ul
           aria-label="Legend"
           className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[0.6875rem]"
@@ -294,7 +294,7 @@ export function HistoryHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="history-window-heading"
-          className="text-primary text-[13px] font-semibold"
+          className="text-primary text-[0.8125rem] font-semibold"
         >
           In this window
         </h2>
@@ -346,7 +346,7 @@ export function HistoryEmptyHero() {
     <HeroShell labelledBy="history-window-heading">
       <h2
         id="history-window-heading"
-        className="text-primary text-[13px] font-semibold"
+        className="text-primary text-[0.8125rem] font-semibold"
       >
         Your history
       </h2>

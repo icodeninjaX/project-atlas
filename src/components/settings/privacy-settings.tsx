@@ -19,7 +19,7 @@ export function PrivacySettings() {
           setting is local to this browser.
           <span
             aria-hidden="true"
-            className="bg-muted/80 text-foreground/80 ml-1.5 inline-flex rounded-md px-1.5 align-middle font-mono text-[11px]"
+            className="bg-muted/80 text-foreground/80 ml-1.5 inline-flex rounded-md px-1.5 align-middle font-mono text-[0.6875rem]"
           >
             {hidden ? "₱ ••••••" : "₱ 48,250.00"}
           </span>

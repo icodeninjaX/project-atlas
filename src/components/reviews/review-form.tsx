@@ -420,7 +420,7 @@ export function ReviewForm({
         <Step
           number={3}
           title="Choose next week’s focus"
-          note="One direction, not ten demands. It greets you here next week."
+          note="Pick one thing to steer by. It greets you here next week."
           className="from-primary/[0.06] bg-gradient-to-b to-transparent"
         >
           <Prompt
