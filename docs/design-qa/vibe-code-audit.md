@@ -212,6 +212,71 @@ so new screens start from them.
   column counts: established controls.
 - The stacked-card shadow on phones: it separates overlapping account cards.
 
+## Round 5: every surface a page opens
+
+Round 4 fixed what a page shows when it loads. This pass opened everything
+connected to each page: sheets, dialogs, menus, forms, focus and review
+modes, empty, loading and error states, toasts, the daily report, the launch
+splash, the sign-in screens and the landing page. 49 surfaces were
+screenshotted on `main` and again after the changes.
+
+### What was still there
+
+The template had moved into the layers people open less often:
+
+- Floating layers with their own styling each: four scrim colors, sheets
+  with square bottom corners, a 120px dialog shadow, menus in hard-coded
+  slate and white with heavy shadows, frosted sticky headers.
+- Forms built like onboarding wizards: numbered step circles, an icon tile
+  on every section, each group in its own bordered box, 4px glowing focus
+  rings, pill-shaped chips and date inputs, tinted selected tiles with a
+  glowing icon.
+- Celebration and gamification: a daily "A productive day, recorded."
+  modal with a zero-padded count and a "momentum" bar, a party-popper for
+  paid-off debts, streak flames, a session-complete medallion, "quick wins".
+- Decorative light where it had survived: Focus mode's glow orbs and
+  blue-to-violet timer ring, gradient hairlines in Settings, Capture,
+  Analyst and Timeline, sky-to-blue progress fills, an endless radar sweep,
+  a gradient-washed toast, a glowing 4.5-second launch splash.
+- Template copy: slogan titles ("Where your money lives", "Find your way
+  back.", "Build your starting map."), descriptor kickers ("Guide",
+  "Pulse", "Route interrupted"), chat-style taglines ("Let's find the next
+  move."), and developer copy that named Supabase, VAPID and service roles.
+- A chatbot landing state in Analyst: "What would you like to understand?"
+  over six rainbow starter cards, a model picker selling "Flagship depth".
+
+### Changes
+
+| Area             | Before                                                                 | After                                                                                     |
+| ---------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Floating layers  | Four scrims, mixed radii and shadows, slate menus, frosted headers     | One scrim, 16px on every floating corner, neutral elevation, token menus, solid headers   |
+| Forms            | Step circles, section icon tiles, boxed groups, 4px glows, pill chips  | Plain 14px group headings, labels above fields, 2px focus ring, 12px chips, ring-only selection |
+| Confirms         | Five destructive-confirm styles, two native `confirm()` popups         | One muted well with "Keep it" and the destructive action; Radix dialogs                   |
+| Page titles      | Slogans on Money, Debts, Capture, Analyst, Timeline, History, auth     | The page's name; descriptions are one factual sentence; Today greets by first name       |
+| Empty states     | 26–34px slogan titles, concentric rings, "how it works" tile rows      | 16px factual title, one line, one action, a neutral tile                                  |
+| Daily report     | Celebration modal with nested frames, "01", decorative circle, meter   | Compact dialog: date, "1 task completed yesterday", Done                                   |
+| Focus mode       | Night-sky background, glow orbs, gradient ring, glass dock, slogan     | Page background and tokens, solid ring, standard buttons; follows the theme               |
+| Analyst          | Chatbot prompt, rainbow starter cards, tinted insight stripes, shimmer | One list of suggested questions, neutral wells, plain skeleton, factual model hints       |
+| Lists            | One card per signal, event, envelope, day of transfers                 | One card per group with dividers and date sub-headers                                     |
+| Toasts           | Gradient wash, blue border, logo spinning into a check                 | One flat card for every type; the icon carries the color                                  |
+| Launch splash    | 4.5s spin, pulse, 3D letters, green glow, chat taglines                | A short fade of the mark and wordmark on the theme background                             |
+| Copy             | "Supabase is not configured.", "Add VAPID and cron secrets…"           | "Sign-in isn't available right now. Try again later."                                     |
+| Landing          | Glowing CTA and bullets, glass cards, film grain, serif accent in 9 h2s, feature-card bento, logo chips | Flat 16px cards, serif accent on the hero only, hairline-divided lists, plain provider sentence |
+
+The floating-layer, form and control rules are now in
+`.superdesign/design-system.md` under "Component patterns" and "Floating
+layers".
+
+### Deliberately kept
+
+- Status pills (stage, severity, "Checked", "Recommended") and the Signals
+  severity edge: they are states.
+- The capture card numbering: it shows the order "Confirm all" saves in.
+- The landing WebGL stage with its single light, the hero's serif accent,
+  the mono chapter labels and the Manila coordinates.
+- Provider-colored wallet cards and the round FAB and quick actions.
+- Before/after arrows inside balance previews: they show data.
+
 ## Evidence
 
 Same component, same data, dark theme, HEAD on the left and this pass on the

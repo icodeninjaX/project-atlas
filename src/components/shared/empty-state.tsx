@@ -6,19 +6,23 @@ export function EmptyState({
   title,
   description,
   action,
+  headingLevel = 2,
 }: {
   icon: LucideIcon;
   title: string;
   description: string;
   action?: ReactNode;
+  /** Use 3 when the empty state sits inside a section that has its own h2. */
+  headingLevel?: 2 | 3;
 }) {
+  const Heading = headingLevel === 3 ? "h3" : "h2";
   return (
     <div className="border-border bg-card/40 grid min-h-44 place-items-center rounded-2xl border border-dashed p-6 text-center sm:min-h-52 sm:p-8">
       <div className="max-w-sm">
         <div className="bg-muted/60 text-muted-foreground mx-auto grid size-9 place-items-center rounded-lg">
           <Icon className="size-4" aria-hidden="true" />
         </div>
-        <h2 className="mt-4 text-base font-semibold">{title}</h2>
+        <Heading className="mt-4 text-base font-semibold">{title}</Heading>
         <p className="text-muted-foreground mt-2 text-sm leading-6">
           {description}
         </p>
