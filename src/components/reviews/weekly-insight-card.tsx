@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { ChevronRight, History, Info, Sparkles, Timer } from "lucide-react";
+import { ChevronRight, Info, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import {
   ClaimText,
   evidenceDisplayValue,
 } from "@/components/analyst/evidence-display";
-import { glassCardClass, tileClass } from "@/components/reviews/review-visuals";
+import {
+  ReviewSection,
+  glassCardClass,
+} from "@/components/reviews/review-visuals";
+import { Disclosure } from "@/components/shared/disclosure";
 import type { GroundedClaim } from "@/lib/analyst/freeform/answer";
 import type { ToolEvidence } from "@/lib/analyst/tools/contracts";
 import { setWeeklyInsightAutoAction } from "@/lib/reviews/insight-actions";
@@ -42,25 +46,16 @@ async function requestInsight(body: Record<string, unknown>) {
 
 const claimKinds: Record<
   GroundedClaim["kind"],
-  { label: string; tone: string }
+  { label: string; dot: string }
 > = {
-  observation: {
-    label: "What the records show",
-    tone: "bg-primary/10 text-primary ring-primary/20",
-  },
-  interpretation: {
-    label: "What it may mean",
-    tone: "bg-violet-500/10 text-violet-700 ring-violet-500/20 dark:text-violet-300",
-  },
-  suggestion: {
-    label: "Worth a look",
-    tone: "bg-positive/10 text-positive ring-positive/20",
-  },
+  observation: { label: "What the records show", dot: "bg-primary" },
+  interpretation: { label: "What it may mean", dot: "bg-violet-500" },
+  suggestion: { label: "Worth a look", dot: "bg-positive" },
 };
 
 /** A consent checkbox that reads as one tappable row. */
 const consentClass =
-  "bg-card/50 ring-border/70 has-[:checked]:bg-primary/[0.05] has-[:checked]:ring-primary/30 has-[:focus-visible]:ring-ring mt-3 flex cursor-pointer items-start gap-3 rounded-xl p-3 text-xs leading-5 ring-1 transition-colors has-[:focus-visible]:ring-2";
+  "bg-background/50 ring-border/70 has-[:checked]:bg-primary/[0.05] has-[:checked]:ring-primary/30 has-[:focus-visible]:ring-ring text-muted-foreground mt-3 flex cursor-pointer items-start gap-3 rounded-xl p-3 text-xs leading-5 ring-1 transition-colors has-[:focus-visible]:ring-2";
 
 const consentInputClass =
   "mt-0.5 size-4 shrink-0 cursor-pointer accent-[var(--primary-solid)] focus-visible:outline-none";
@@ -80,23 +75,19 @@ function InsightResultView({
         </p>
       )}
       {result.claims?.length ? (
-        <ul className="space-y-2.5">
+        <ul className="space-y-4">
           {result.claims.map((claim, index) => {
             const kind = claimKinds[claim.kind] ?? claimKinds.observation;
             return (
-              <li
-                key={index}
-                className="bg-card/70 ring-border/60 rounded-xl p-3 ring-1 sm:p-3.5"
-              >
-                <span
-                  className={cn(
-                    "inline-flex rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold ring-1",
-                    kind.tone,
-                  )}
-                >
+              <li key={index} className="min-w-0">
+                <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+                  <span
+                    aria-hidden="true"
+                    className={cn("size-1.5 shrink-0 rounded-full", kind.dot)}
+                  />
                   {kind.label}
                 </span>
-                <p className="mt-2 text-sm leading-6">
+                <p className="mt-1 text-sm leading-6">
                   <ClaimText text={claim.text} />
                 </p>
               </li>
@@ -113,7 +104,7 @@ function InsightResultView({
             />
             {label} ({result.evidence.length})
           </summary>
-          <ul className="divide-border/60 bg-card/50 ring-border/60 mt-1 divide-y rounded-xl text-xs ring-1">
+          <ul className="divide-border/60 bg-background/50 ring-border/60 mt-1 divide-y rounded-xl text-xs ring-1">
             {result.evidence.map((item) => (
               <li
                 key={item.id}
@@ -148,19 +139,8 @@ function InsightResultView({
   );
 }
 
-function TileHeading({
-  icon: Icon,
-  children,
-}: {
-  icon: typeof Sparkles;
-  children: React.ReactNode;
-}) {
-  return (
-    <h3 className="flex items-center gap-2 text-sm font-semibold">
-      <Icon aria-hidden="true" className="text-primary size-4" />
-      {children}
-    </h3>
-  );
+function RowHeading({ children }: { children: React.ReactNode }) {
+  return <h3 className="text-sm font-semibold">{children}</h3>;
 }
 
 /** Last week's stored insight, prepared automatically once opted in. */
@@ -211,7 +191,7 @@ function LastWeekInsight({
 
   return (
     <div>
-      <TileHeading icon={History}>Last week</TileHeading>
+      <RowHeading>Last week</RowHeading>
       {result ? (
         <InsightResultView result={result} label="Last week's facts" />
       ) : pending ? (
@@ -225,27 +205,41 @@ function LastWeekInsight({
           </div>
         </div>
       ) : !enabled ? (
-        <p className="text-muted-foreground mt-1.5 text-xs leading-5">
-          Get a checked note on last week automatically the first time you open
-          Weekly reviews each week. It uses one Analyst request per week.
+        <p className="text-muted-foreground mt-1 text-xs leading-5">
+          Get a checked note on last week, ready the first time you open Weekly
+          reviews each week. It uses one Analyst request per week.
         </p>
       ) : null}
-      <label className={consentClass}>
-        <input
-          type="checkbox"
-          checked={enabled}
-          disabled={saving}
-          onChange={(event) => toggle(event.target.checked)}
-          className={consentInputClass}
-        />
-        <span>
-          Prepare last week’s insight automatically. Last week’s totals are sent
-          to OpenAI (GPT-4o mini) under your organization’s data-sharing
-          settings at most once per week (one request, plus one automatic
-          correction if the first answer fails ATLAS’s checks); a failed attempt
-          is not retried until the next week.
-        </span>
-      </label>
+      {enabled ? (
+        <p className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-2 text-xs">
+          Prepared automatically each week.
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => toggle(false)}
+            className="text-foreground hover:text-primary focus-visible:ring-ring -mx-1 inline-flex min-h-11 items-center rounded-md px-1 font-semibold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50 sm:min-h-8"
+          >
+            Turn off
+          </button>
+        </p>
+      ) : (
+        <label className={consentClass}>
+          <input
+            type="checkbox"
+            checked={false}
+            disabled={saving}
+            onChange={(event) => toggle(event.target.checked)}
+            className={consentInputClass}
+          />
+          <span>
+            Prepare last week’s insight automatically. Last week’s totals are
+            sent to OpenAI (GPT-4o mini) under your organization’s data-sharing
+            settings at most once per week (one request, plus one automatic
+            correction if the first answer fails ATLAS’s checks); a failed
+            attempt is not retried until the next week.
+          </span>
+        </label>
+      )}
       {error && (
         <p role="alert" className="text-destructive mt-2 text-sm">
           {error}
@@ -281,69 +275,61 @@ export function WeeklyInsightCard({
   }
 
   return (
-    <section
-      aria-labelledby="weekly-insight-heading"
-      data-spotlight
-      className={cn(glassCardClass, "p-4 min-[360px]:p-5 sm:p-6")}
+    <ReviewSection
+      id="weekly-insight-heading"
+      title="What changed"
+      meta="Optional · from your records"
     >
-      <div className="flex min-w-0 items-start gap-3">
-        <span className="bg-primary/10 text-primary ring-primary/15 grid size-10 shrink-0 place-items-center rounded-xl ring-1 @max-[16rem]:hidden">
-          <Sparkles aria-hidden="true" className="size-[1.125rem]" />
-        </span>
-        <div className="min-w-0">
-          <h2
-            id="weekly-insight-heading"
-            className="text-base font-semibold tracking-[-0.01em]"
-          >
-            What changed this week
-          </h2>
-          <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-            Compares spending, income, debt payments and completed tasks with
-            the week before. Every figure is checked against ATLAS records. Uses
-            your Analyst allowance.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-5 grid gap-3 lg:grid-cols-2 lg:items-start">
-        <div className={cn(tileClass, "p-4 sm:p-5")}>
+      <div
+        data-spotlight
+        className={cn(glassCardClass, "divide-border/70 divide-y")}
+      >
+        <div className="p-4 sm:p-6">
           <LastWeekInsight autoEnabled={autoEnabled} stored={lastWeek} />
         </div>
 
-        <div className={cn(tileClass, "p-4 sm:p-5")}>
-          <TileHeading icon={Timer}>This week so far</TileHeading>
-          <p className="text-muted-foreground mt-1.5 text-xs leading-5">
-            Compares this week so far with the same days last week.
-          </p>
-          <label className={consentClass}>
-            <input
-              type="checkbox"
-              checked={acknowledged}
-              onChange={(event) => setAcknowledged(event.target.checked)}
-              className={consentInputClass}
-            />
-            <span>
-              These weekly totals are sent to OpenAI (GPT-4o mini) for this
-              request under your organization’s data-sharing settings.
-            </span>
-          </label>
-          <Button
-            type="button"
-            className="mt-4 w-full sm:w-auto"
-            onClick={generate}
-            disabled={pending || !acknowledged}
+        <div className="p-2 sm:p-3">
+          <Disclosure
+            label="Check this week so far"
+            summary="Compare with the same days last week"
+            className="[&>button]:hover:bg-muted/50 [&>button]:bg-transparent [&>div]:px-2 [&>div]:pb-3 sm:[&>div]:px-3"
           >
-            <Sparkles aria-hidden="true" className="size-4" />
-            {pending ? "Checking this week…" : "Generate insight"}
-          </Button>
-          {error && (
-            <p role="alert" className="text-destructive mt-3 text-sm">
-              {error}
+            <p className="text-muted-foreground text-xs leading-5">
+              Compares spending, income, debt payments and completed tasks with
+              the same days last week. Uses your Analyst allowance.
             </p>
-          )}
-          {result && <InsightResultView result={result} label="Weekly facts" />}
+            <label className={consentClass}>
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(event) => setAcknowledged(event.target.checked)}
+                className={consentInputClass}
+              />
+              <span>
+                These weekly totals are sent to OpenAI (GPT-4o mini) for this
+                request under your organization’s data-sharing settings.
+              </span>
+            </label>
+            <Button
+              type="button"
+              className="mt-4 w-full sm:w-auto"
+              onClick={generate}
+              disabled={pending || !acknowledged}
+            >
+              <Sparkles aria-hidden="true" className="size-4" />
+              {pending ? "Checking this week…" : "Generate insight"}
+            </Button>
+            {error && (
+              <p role="alert" className="text-destructive mt-3 text-sm">
+                {error}
+              </p>
+            )}
+            {result && (
+              <InsightResultView result={result} label="Weekly facts" />
+            )}
+          </Disclosure>
         </div>
       </div>
-    </section>
+    </ReviewSection>
   );
 }

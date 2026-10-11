@@ -112,6 +112,8 @@ export type ThisWeekStatus = {
   label: string;
   /** One sentence under the week's title. */
   sentence: string;
+  /** What the button that opens the review says. */
+  action: string;
 };
 
 /** Where this week's review stands, in words. */
@@ -138,6 +140,7 @@ export function thisWeekStatus({
       tone: "positive",
       label: "Submitted",
       sentence: `This week is reviewed, with ${prompts}. You can still add to it before the week closes.`,
+      action: "Edit your review",
     };
   }
   if (hasDraft) {
@@ -145,6 +148,7 @@ export function thisWeekStatus({
       tone: "primary",
       label: "Draft saved",
       sentence: `A draft is waiting, with ${prompts}. ${closes}`,
+      action: "Continue your review",
     };
   }
   if (dayIndex >= 4) {
@@ -152,12 +156,14 @@ export function thisWeekStatus({
       tone: "primary",
       label: "Ready to reflect",
       sentence: `The weekend is a good moment to look back. ${closes}`,
+      action: "Start your review",
     };
   }
   return {
     tone: "neutral",
     label: "Not started",
     sentence: `The week is still unfolding. Jot a note any time. ${closes}`,
+    action: "Start your review",
   };
 }
 

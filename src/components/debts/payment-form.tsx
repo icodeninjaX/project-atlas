@@ -13,7 +13,7 @@ import { AccountLogo } from "@/components/money/account-visuals";
 import { MoneyAmount } from "@/components/money/money-amount";
 import { DateField, PesoInput } from "@/components/money/money-fields";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
-import { Disclosure } from "@/components/debts/debt-disclosure";
+import { Disclosure } from "@/components/shared/disclosure";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { DebtActionState } from "@/lib/debts/actions";

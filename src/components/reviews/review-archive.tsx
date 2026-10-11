@@ -4,25 +4,24 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpenCheck,
-  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
   Compass,
   Flame,
-  LineChart,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import {
   HeroShell,
-  ScoreMeter,
-  ScoreRing,
+  ReviewSection,
+  ScoreFigure,
   StatusPill,
-  eyebrowClass,
   glassCardClass,
   promptMeta,
   scoreTones,
-  tileClass,
   type ScoreKind,
 } from "@/components/reviews/review-visuals";
+import { Disclosure } from "@/components/shared/disclosure";
 import {
   compactReviewWeekLabel,
   manilaDateLabel,
@@ -34,7 +33,6 @@ import {
   formatAverage,
   promptKeys,
   reviewHeadline,
-  reviewSummary,
   type ArchiveSummary,
   type ReviewArchiveItem,
 } from "@/lib/reviews/view";
@@ -53,12 +51,6 @@ const ReviewTrend = dynamic(
   },
 );
 
-const archiveEntryDate = new Intl.DateTimeFormat("en-PH", {
-  timeZone: "Asia/Manila",
-  month: "short",
-  day: "numeric",
-});
-
 const scoreKinds: ScoreKind[] = ["overall", "energy", "stress"];
 
 function scoreOf(review: ReviewArchiveItem, kind: ScoreKind) {
@@ -76,17 +68,12 @@ function ArchiveHero({
   summary: ArchiveSummary;
   streak: string | null;
 }) {
-  const averages: Array<[ScoreKind, number | null]> = [
-    ["overall", summary.averages.overall],
-    ["energy", summary.averages.energy],
-    ["stress", summary.averages.stress],
-  ];
   return (
     <HeroShell labelledBy="archive-heading">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="archive-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-muted-foreground text-[0.8125rem] font-medium"
         >
           Your weeks, remembered
         </h2>
@@ -101,144 +88,98 @@ function ArchiveHero({
         )}
       </div>
 
-      <div className="mt-5 grid gap-7 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-end lg:gap-x-12">
-        <div className="min-w-0">
-          <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="from-foreground via-foreground to-foreground/55 bg-gradient-to-br bg-clip-text pb-[0.06em] text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.06em] text-transparent">
-              {summary.weeks}
-            </span>
-            <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
-              {summary.weeks === 1 ? "week reflected" : "weeks reflected"}
-            </span>
-          </p>
-          <p className="text-foreground mt-4 max-w-xl text-sm leading-6 font-semibold sm:text-[0.9375rem]">
-            {archiveSentence(summary)}
-          </p>
-          <p className="text-muted-foreground mt-1.5 max-w-xl text-sm leading-6">
-            Return to the honest parts—not only the scores—and notice how your
-            focus, energy, and choices have changed.
-          </p>
-        </div>
+      <p className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="from-foreground via-foreground to-foreground/55 bg-gradient-to-br bg-clip-text pb-[0.06em] text-[clamp(3rem,15vw,4.5rem)] leading-[0.95] font-semibold tracking-[-0.06em] text-transparent">
+          {summary.weeks}
+        </span>
+        <span className="text-muted-foreground text-lg font-medium tracking-[-0.02em] sm:text-xl">
+          {summary.weeks === 1 ? "week reflected" : "weeks reflected"}
+        </span>
+      </p>
+      <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-6 sm:text-[0.9375rem]">
+        {archiveSentence(summary)}
+      </p>
 
-        <dl className="grid grid-cols-3 gap-2 sm:gap-3 @max-[18rem]:grid-cols-1">
-          {averages.map(([kind, value]) => (
-            <div key={kind} className={cn(tileClass, "p-3 sm:p-4")}>
-              <dt className="text-muted-foreground flex items-center gap-1.5 text-xs leading-4 font-medium">
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "size-2 shrink-0 rounded-full",
-                    scoreTones[kind].dot,
-                  )}
-                />
-                <span className="min-w-0 truncate">
-                  {scoreTones[kind].label}
-                </span>
-              </dt>
-              <dd className="mt-2 text-2xl leading-none font-semibold tracking-[-0.03em] sm:text-[1.75rem]">
-                {formatAverage(value)}
-                <span className="sr-only"> average out of 10</span>
-              </dd>
-              <dd className="mt-3">
-                <ScoreMeter
-                  kind={kind}
-                  score={value === null ? null : Math.round(value)}
-                />
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
+      <dl className="border-border/70 [&>div+div]:border-border/70 mt-6 grid grid-cols-3 border-t pt-5 sm:max-w-md [&>div+div]:border-l [&>div+div]:pl-4 sm:[&>div+div]:pl-5">
+        {scoreKinds.map((kind) => (
+          <div key={kind} className="min-w-0">
+            <dt className="text-muted-foreground flex items-center gap-1.5 text-xs">
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "size-1.5 shrink-0 rounded-full",
+                  scoreTones[kind].dot,
+                )}
+              />
+              <span className="min-w-0 truncate">{scoreTones[kind].label}</span>
+            </dt>
+            <dd className="mt-1 font-mono text-lg leading-tight font-semibold tracking-[-0.03em] tabular-nums">
+              {formatAverage(summary.averages[kind])}
+              <span className="sr-only"> average out of 10</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
     </HeroShell>
   );
 }
 
-function WeekCard({
+function WeekRow({
   review,
   selected,
   onSelect,
-  buttonRef,
 }: {
   review: ReviewArchiveItem;
   selected: boolean;
   onSelect: () => void;
-  buttonRef: (button: HTMLButtonElement | null) => void;
 }) {
   return (
-    <button
-      ref={buttonRef}
-      id={`review-week-${review.id}`}
-      type="button"
-      aria-pressed={selected}
-      onClick={onSelect}
-      className={cn(
-        "group focus-visible:ring-ring relative w-[min(80vw,18rem)] shrink-0 snap-center overflow-hidden rounded-2xl p-4 text-left ring-1 transition-[background-color,box-shadow] focus-visible:ring-2 focus-visible:outline-none xl:w-full",
-        selected
-          ? "bg-primary/[0.08] ring-primary/45 shadow-[0_14px_34px_-22px_var(--primary-solid)]"
-          : "bg-card/80 ring-border/80 hover:bg-card hover:ring-primary/30",
-      )}
-    >
-      {selected ? (
-        <span
-          aria-hidden="true"
-          className="bg-primary absolute inset-y-4 left-0 w-[3px] rounded-r-full"
-        />
-      ) : null}
-      <span className="flex items-start justify-between gap-3">
-        <span className="min-w-0">
-          <span className="flex flex-wrap items-center gap-2">
-            <time
-              dateTime={review.weekStart}
-              className="dark:text-primary font-mono text-[0.6875rem] font-semibold tracking-[0.12em] text-blue-700 uppercase"
-            >
+    <li>
+      <button
+        id={`review-week-${review.id}`}
+        type="button"
+        aria-pressed={selected}
+        onClick={onSelect}
+        className={cn(
+          "focus-visible:ring-ring relative flex min-h-16 w-full items-center gap-3 px-4 py-3.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
+          selected ? "xl:bg-primary/[0.07]" : "hover:bg-muted/40",
+        )}
+      >
+        {selected ? (
+          <span
+            aria-hidden="true"
+            className="bg-primary absolute inset-y-3 left-0 hidden w-[3px] rounded-r-full xl:block"
+          />
+        ) : null}
+        <span className="min-w-0 flex-1">
+          <span className="text-muted-foreground flex items-center gap-2 text-xs">
+            <time dateTime={review.weekStart}>
               {compactReviewWeekLabel(review.weekStart)}
             </time>
             {review.completedAt ? null : (
-              <span className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
+              <span className="bg-muted rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
                 Draft
               </span>
             )}
           </span>
-          <span className="mt-2 line-clamp-2 block text-sm leading-5 font-semibold tracking-[-0.01em]">
+          <span className="mt-0.5 line-clamp-2 block text-sm leading-5 font-semibold tracking-[-0.01em]">
             {reviewHeadline(review)}
           </span>
         </span>
-        <ScoreRing
-          kind="overall"
-          score={review.overallScore}
-          className="size-10 shrink-0"
-          figureClassName="text-[0.8125rem]"
+        <span className="shrink-0 text-right">
+          <span className="block font-mono text-base leading-none font-semibold tabular-nums">
+            {review.overallScore ?? "—"}
+          </span>
+          <span className="text-muted-foreground mt-1 block text-[0.625rem]">
+            {review.overallScore === null ? "No score" : "Overall"}
+          </span>
+        </span>
+        <ChevronRight
+          aria-hidden="true"
+          className="text-muted-foreground size-4 shrink-0 xl:hidden"
         />
-      </span>
-      <span className="text-muted-foreground mt-2 line-clamp-2 block text-xs leading-5">
-        {reviewSummary(review)}
-      </span>
-      <span className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem]">
-        <span className="flex items-center gap-1.5">
-          <span
-            aria-hidden="true"
-            className={cn("size-1.5 rounded-full", scoreTones.energy.dot)}
-          />
-          Energy {review.energyScore ?? "—"}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span
-            aria-hidden="true"
-            className={cn("size-1.5 rounded-full", scoreTones.stress.dot)}
-          />
-          Stress {review.stressScore ?? "—"}
-        </span>
-        {review.reflectedAt ? (
-          <time
-            dateTime={review.reflectedAt}
-            className="ml-auto flex items-center gap-1"
-          >
-            <CalendarDays aria-hidden="true" className="size-3" />
-            {archiveEntryDate.format(new Date(review.reflectedAt))}
-          </time>
-        ) : null}
-      </span>
-    </button>
+      </button>
+    </li>
   );
 }
 
@@ -261,6 +202,8 @@ function JournalPage({
     (key) => key !== "nextWeekFocus" && review[key]?.trim(),
   );
   const blank = promptKeys.filter((key) => !review[key]?.trim());
+  const pager =
+    "text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35 sm:min-h-9";
 
   return (
     <article
@@ -268,15 +211,15 @@ function JournalPage({
       aria-live="polite"
       aria-label={`Review for ${reviewWeekLabel(review.weekStart)}`}
     >
-      <header className="border-border/70 relative isolate border-b px-5 pt-6 pb-6 sm:px-8 sm:pt-8">
+      <header className="border-border/70 relative isolate border-b px-5 pt-6 pb-5 sm:px-8 sm:pt-7">
         <div
           aria-hidden="true"
-          className="from-primary/[0.09] pointer-events-none absolute inset-x-0 top-0 -z-10 h-44 bg-gradient-to-b to-transparent"
+          className="from-primary/[0.08] pointer-events-none absolute inset-x-0 top-0 -z-10 h-40 bg-gradient-to-b to-transparent"
         />
         <div className="flex flex-wrap items-center gap-2">
           <time
             dateTime={review.weekStart}
-            className="text-primary font-mono text-[0.6875rem] font-semibold tracking-[0.14em] uppercase"
+            className="text-muted-foreground text-[0.8125rem] font-medium"
           >
             {reviewWeekLabel(review.weekStart)}
           </time>
@@ -285,76 +228,46 @@ function JournalPage({
           </StatusPill>
         </div>
         {focus ? (
-          <p className={cn(eyebrowClass, "mt-5 flex items-center gap-1.5")}>
-            <Compass aria-hidden="true" className="text-primary size-3.5" />
+          <p className="text-primary mt-5 flex items-center gap-1.5 text-xs font-semibold">
+            <Compass aria-hidden="true" className="size-3.5" />
             Chose to focus on
           </p>
         ) : null}
         <h2
           className={cn(
-            "text-[1.625rem] leading-[1.15] font-semibold tracking-[-0.035em] text-balance sm:text-[2rem]",
-            focus ? "mt-2" : "mt-4",
+            "text-[1.5rem] leading-[1.15] font-semibold tracking-[-0.03em] text-balance break-words sm:text-[1.875rem]",
+            focus ? "mt-1.5" : "mt-4",
           )}
         >
           {reviewHeadline(review)}
         </h2>
+        <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+          {scoreKinds.map((kind) => (
+            <ScoreFigure key={kind} kind={kind} score={scoreOf(review, kind)} />
+          ))}
+        </p>
         {review.reflectedAt ? (
-          <p className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs">
-            <CalendarDays aria-hidden="true" className="size-3.5" />
-            Latest reflection added
-            <time
-              dateTime={review.reflectedAt}
-              className="text-foreground font-medium"
-            >
+          <p className="text-muted-foreground mt-3 text-xs">
+            Last written{" "}
+            <time dateTime={review.reflectedAt}>
               {manilaDateLabel(review.reflectedAt)}
             </time>
           </p>
         ) : null}
-
-        <dl className="mt-6 grid max-w-lg grid-cols-3 gap-2 sm:gap-3">
-          {scoreKinds.map((kind) => (
-            <div
-              key={kind}
-              className={cn(
-                tileClass,
-                // Phones stack the ring over its label; three tiles side by
-                // side leave no room for the label beside the ring.
-                "flex flex-col-reverse items-center gap-1.5 p-2.5 text-center sm:flex-row-reverse sm:justify-end sm:gap-3 sm:p-3 sm:text-left",
-              )}
-            >
-              <dt className="text-muted-foreground min-w-0 text-xs leading-4 font-medium">
-                {scoreTones[kind].label}
-              </dt>
-              <dd className="shrink-0">
-                <ScoreRing
-                  kind={kind}
-                  score={scoreOf(review, kind)}
-                  className="size-10 sm:size-11"
-                />
-              </dd>
-            </div>
-          ))}
-        </dl>
       </header>
 
       {shown.length ? (
-        <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-6">
-          {shown.map((key) => {
-            const { icon: Icon, title } = promptMeta[key];
-            return (
-              <div key={key} className={cn(tileClass, "p-4 sm:p-5")}>
-                <h3 className="text-muted-foreground flex items-center gap-2 text-[0.6875rem] font-semibold tracking-[0.1em] uppercase">
-                  <span className="bg-primary/10 text-primary ring-primary/15 grid size-7 shrink-0 place-items-center rounded-lg ring-1">
-                    <Icon aria-hidden="true" className="size-3.5" />
-                  </span>
-                  {title}
-                </h3>
-                <p className="mt-3 text-sm leading-6 break-words whitespace-pre-line">
-                  {review[key]}
-                </p>
-              </div>
-            );
-          })}
+        <div className="divide-border/60 divide-y px-5 sm:px-8">
+          {shown.map((key) => (
+            <section key={key} className="py-5">
+              <h3 className="text-muted-foreground text-xs font-medium">
+                {promptMeta[key].title}
+              </h3>
+              <p className="mt-1.5 text-[0.9375rem] leading-7 break-words whitespace-pre-line">
+                {review[key]}
+              </p>
+            </section>
+          ))}
         </div>
       ) : (
         <p className="text-muted-foreground px-5 py-6 text-sm sm:px-8">
@@ -363,7 +276,7 @@ function JournalPage({
       )}
 
       {blank.length ? (
-        <p className="text-muted-foreground px-5 pb-5 text-xs leading-5 sm:px-8">
+        <p className="text-muted-foreground border-border/60 border-t px-5 py-4 text-xs leading-5 sm:px-8">
           <span className="text-foreground font-medium">Left blank:</span>{" "}
           {blank.map((key) => promptMeta[key].title).join(" · ")}
         </p>
@@ -374,7 +287,7 @@ function JournalPage({
           type="button"
           disabled={position === total}
           onClick={onOlder}
-          className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35 sm:min-h-9"
+          className={pager}
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
           Older
@@ -386,7 +299,7 @@ function JournalPage({
           type="button"
           disabled={position === 1}
           onClick={onNewer}
-          className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35 sm:min-h-9"
+          className={pager}
         >
           Newer
           <ArrowRight aria-hidden="true" className="size-4" />
@@ -398,53 +311,44 @@ function JournalPage({
 
 function RhythmTable({ reviews }: { reviews: ReviewArchiveItem[] }) {
   return (
-    <details className="group mt-4">
-      <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-full text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 [&::-webkit-details-marker]:hidden">
-        <ArrowRight
-          aria-hidden="true"
-          className="size-3.5 transition-transform group-open:rotate-90"
-        />
-        View scores as a table
-      </summary>
-      <div className="mt-2 overflow-x-auto">
-        <table className="w-full min-w-[18rem] text-left text-xs">
-          <caption className="sr-only">Weekly scores out of 10</caption>
-          <thead className="text-muted-foreground">
-            <tr className="border-border/70 border-b">
-              <th scope="col" className="py-2 pr-3 font-medium">
-                Week
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[18rem] text-left text-xs">
+        <caption className="sr-only">Weekly scores out of 10</caption>
+        <thead className="text-muted-foreground">
+          <tr className="border-border/70 border-b">
+            <th scope="col" className="py-2 pr-3 font-medium">
+              Week
+            </th>
+            {scoreKinds.map((kind) => (
+              <th
+                key={kind}
+                scope="col"
+                className="py-2 pr-3 text-right font-medium"
+              >
+                {scoreTones[kind].label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {reviews.map((review) => (
+            <tr key={review.id} className="border-border/50 border-b">
+              <th scope="row" className="py-2 pr-3 font-medium">
+                {compactReviewWeekLabel(review.weekStart)}
               </th>
               {scoreKinds.map((kind) => (
-                <th
+                <td
                   key={kind}
-                  scope="col"
-                  className="py-2 pr-3 text-right font-medium"
+                  className="py-2 pr-3 text-right font-mono tabular-nums"
                 >
-                  {scoreTones[kind].label}
-                </th>
+                  {scoreOf(review, kind) ?? "—"}
+                </td>
               ))}
             </tr>
-          </thead>
-          <tbody>
-            {reviews.map((review) => (
-              <tr key={review.id} className="border-border/50 border-b">
-                <th scope="row" className="py-2 pr-3 font-medium">
-                  {compactReviewWeekLabel(review.weekStart)}
-                </th>
-                {scoreKinds.map((kind) => (
-                  <td
-                    key={kind}
-                    className="py-2 pr-3 text-right font-mono tabular-nums"
-                  >
-                    {scoreOf(review, kind) ?? "—"}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </details>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -464,48 +368,27 @@ function ArchiveEmpty() {
           </h2>
           <p className="text-muted-foreground mt-3 text-sm leading-6">
             Submit this week’s review and it becomes the first page here. Each
-            week keeps your notes, your scores, and the one direction you chose
-            for the week after.
+            week keeps your notes, your scores, and the one focus you chose for
+            the week after.
           </p>
         </div>
       </div>
-      <ol
-        aria-label="What each page keeps"
-        className="mt-8 grid grid-cols-[repeat(auto-fill,minmax(min(100%,10rem),1fr))] gap-3"
-      >
-        {promptKeys.map((key, index) => {
-          const { icon: Icon, title } = promptMeta[key];
-          return (
-            <li
-              key={key}
-              className={cn(
-                tileClass,
-                "flex min-w-0 items-center gap-2.5 px-3 py-2.5",
-              )}
-            >
-              <Icon
-                aria-hidden="true"
-                className="text-primary size-4 shrink-0"
-              />
-              <span className="min-w-0 text-xs font-medium">
-                <span className="text-muted-foreground mr-1 font-mono">
-                  {index + 1}
-                </span>
-                {title}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
     </HeroShell>
   );
 }
 
+/**
+ * Past reviews: a list of weeks and the week being read. Phones show one
+ * at a time (the list, then the page with a way back); wide screens show
+ * both side by side.
+ */
 export function ReviewArchive({
   reviews,
   active,
   selectedId,
   onSelect,
+  reading,
+  onReadingChange,
   streak = null,
 }: {
   /** Newest first. */
@@ -513,19 +396,15 @@ export function ReviewArchive({
   active: boolean;
   selectedId: string | null;
   onSelect: (reviewId: string) => void;
+  /** On phones, whether a week's page is open instead of the list. */
+  reading: boolean;
+  onReadingChange: (reading: boolean) => void;
   streak?: string | null;
 }) {
+  const reader = useRef<HTMLDivElement>(null);
   const found = reviews.findIndex((review) => review.id === selectedId);
   const selectedIndex = found >= 0 ? found : 0;
   const selected = reviews[selectedIndex];
-  const weekButtons = useRef<Array<HTMLButtonElement | null>>([]);
-
-  useEffect(() => {
-    const button = weekButtons.current[selectedIndex];
-    if (typeof button?.scrollIntoView === "function") {
-      button.scrollIntoView({ block: "nearest", inline: "center" });
-    }
-  }, [selectedIndex]);
 
   if (!selected) return <ArchiveEmpty />;
 
@@ -541,77 +420,84 @@ export function ReviewArchive({
     const review = reviews[index];
     if (review) onSelect(review.id);
   };
+  const open = (index: number) => {
+    select(index);
+    onReadingChange(true);
+    // On phones the page replaces the list; start at its top.
+    if (window.matchMedia?.("(min-width: 80rem)").matches) return;
+    window.requestAnimationFrame(() =>
+      reader.current?.scrollIntoView?.({ block: "start" }),
+    );
+  };
+  const backToList = () => {
+    onReadingChange(false);
+    window.requestAnimationFrame(() =>
+      document
+        .getElementById(`review-week-${selected.id}`)
+        ?.scrollIntoView?.({ block: "center" }),
+    );
+  };
 
   return (
-    <div>
+    <div className="space-y-8 sm:space-y-10">
       <ArchiveHero summary={summary} streak={streak} />
 
-      <div className="mt-6 grid gap-5 xl:grid-cols-[20rem_minmax(0,1fr)] xl:items-start">
-        <aside className="min-w-0" aria-labelledby="past-weeks-heading">
-          <div className="flex items-end justify-between gap-3 px-1">
-            <div>
-              <p className={eyebrowClass}>Past weeks</p>
-              <h2
-                id="past-weeks-heading"
-                className="mt-1 text-base font-semibold tracking-[-0.01em]"
-              >
-                Choose a reflection
-              </h2>
-            </div>
-            <p className="text-muted-foreground flex items-center gap-1 text-[0.6875rem] xl:hidden">
-              Swipe
-              <ArrowRight aria-hidden="true" className="size-3" />
-            </p>
-          </div>
-
-          <div className="-mx-4 mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto px-4 py-1 sm:-mx-6 sm:px-6 xl:mx-0 xl:flex-col xl:gap-2.5 xl:overflow-visible xl:px-0 [&::-webkit-scrollbar]:hidden">
+      <div className="grid gap-8 xl:grid-cols-[20rem_minmax(0,1fr)] xl:items-start xl:gap-6">
+        <ReviewSection
+          id="past-weeks-heading"
+          title="All weeks"
+          meta="Newest first"
+          className={cn(reading && "max-xl:hidden")}
+        >
+          <ul
+            className={cn(
+              glassCardClass,
+              "divide-border/70 divide-y overflow-hidden",
+            )}
+          >
             {reviews.map((review, index) => (
-              <WeekCard
+              <WeekRow
                 key={review.id}
                 review={review}
                 selected={index === selectedIndex}
-                onSelect={() => select(index)}
-                buttonRef={(button) => {
-                  weekButtons.current[index] = button;
-                }}
+                onSelect={() => open(index)}
               />
             ))}
-          </div>
-        </aside>
+          </ul>
+        </ReviewSection>
 
-        <JournalPage
-          review={selected}
-          position={selectedIndex + 1}
-          total={reviews.length}
-          onOlder={() => select(selectedIndex + 1)}
-          onNewer={() => select(selectedIndex - 1)}
-        />
+        <div
+          ref={reader}
+          className={cn(
+            "min-w-0 scroll-mt-36 sm:scroll-mt-8",
+            !reading && "max-xl:hidden",
+          )}
+        >
+          <button
+            type="button"
+            onClick={backToList}
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mb-2 -ml-2 inline-flex min-h-11 items-center gap-1 rounded-full px-2 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none xl:hidden"
+          >
+            <ChevronLeft aria-hidden="true" className="size-4" />
+            All weeks
+          </button>
+          <JournalPage
+            review={selected}
+            position={selectedIndex + 1}
+            total={reviews.length}
+            onOlder={() => select(selectedIndex + 1)}
+            onNewer={() => select(selectedIndex - 1)}
+          />
+        </div>
       </div>
 
       {active && trend.length > 1 ? (
-        <section
-          data-spotlight
-          className={cn(glassCardClass, "mt-6 p-5 sm:p-6")}
-          aria-labelledby="archive-trend-heading"
+        <ReviewSection
+          id="archive-trend-heading"
+          title="How your weeks felt"
+          meta="Tap a week to open it"
         >
-          <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
-            <div className="flex min-w-0 items-start gap-3">
-              <span className="bg-primary/10 text-primary ring-primary/15 grid size-10 shrink-0 place-items-center rounded-xl ring-1 @max-[16rem]:hidden">
-                <LineChart aria-hidden="true" className="size-[1.125rem]" />
-              </span>
-              <div className="min-w-0">
-                <h2
-                  id="archive-trend-heading"
-                  className="text-base font-semibold tracking-[-0.01em]"
-                >
-                  Your review rhythm
-                </h2>
-                <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-                  Scores add context; your words carry the meaning. Select a
-                  week on the chart to open it.
-                </p>
-              </div>
-            </div>
+          <div data-spotlight className={cn(glassCardClass, "p-4 sm:p-6")}>
             <ul
               aria-label="Chart legend"
               className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs"
@@ -638,16 +524,27 @@ export function ReviewArchive({
                 </li>
               ))}
             </ul>
+            <div className="mt-4">
+              <ReviewTrend
+                data={trend}
+                selectedId={selected.id}
+                onSelect={(reviewId) => {
+                  const index = reviews.findIndex(
+                    (review) => review.id === reviewId,
+                  );
+                  if (index >= 0) open(index);
+                }}
+              />
+            </div>
+            <Disclosure
+              label="Scores as a table"
+              variant="row"
+              className="mt-4"
+            >
+              <RhythmTable reviews={reviews} />
+            </Disclosure>
           </div>
-          <div className="mt-5">
-            <ReviewTrend
-              data={trend}
-              selectedId={selected.id}
-              onSelect={onSelect}
-            />
-          </div>
-          <RhythmTable reviews={reviews} />
-        </section>
+        </ReviewSection>
       ) : null}
     </div>
   );

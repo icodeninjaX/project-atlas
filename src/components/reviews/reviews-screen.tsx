@@ -6,7 +6,6 @@ import {
   WeeklyInsightCard,
   type InsightResult,
 } from "@/components/reviews/weekly-insight-card";
-import { reviewWeekLabel } from "@/lib/dates/dates";
 import {
   lastWeekCompass,
   promptsWritten,
@@ -92,27 +91,29 @@ export function ReviewsScreen({
         highlightReviewId={highlightReviewId}
         streak={streak}
         currentContent={
-          <div className="space-y-5 sm:space-y-6">
+          <div className="space-y-8 sm:space-y-10">
             <WeekHero
               weekStart={weekStart}
-              dayIndex={dayIndex}
               status={status}
               streak={streak}
               compass={lastWeekCompass(reviews, weekStart)}
               facts={facts}
             />
-            <WeeklyInsightCard
-              autoEnabled={insight.autoEnabled}
-              lastWeek={insight.lastWeek}
-            />
-            <ReviewForm
-              weekStart={weekStart}
-              weekLabel={reviewWeekLabel(weekStart)}
-              entryTimestamp={nowIso}
-              lastSavedAt={savedAt}
-              submitted={submitted}
-              initial={current ? fields : undefined}
-            />
+            {/* Wide screens keep the insights beside the review, so the
+                writing column stays a comfortable width. */}
+            <div className="grid gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start lg:gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
+              <ReviewForm
+                weekStart={weekStart}
+                entryTimestamp={nowIso}
+                lastSavedAt={savedAt}
+                submitted={submitted}
+                initial={current ? fields : undefined}
+              />
+              <WeeklyInsightCard
+                autoEnabled={insight.autoEnabled}
+                lastWeek={insight.lastWeek}
+              />
+            </div>
           </div>
         }
       />

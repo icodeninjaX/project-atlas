@@ -117,8 +117,36 @@ describe("ReviewWorkspace", () => {
       within(selectedReview).getByText("Sunday, August 9, 2026"),
     ).toBeVisible();
     expect(
+      within(selectedReview).getByText("Overall").parentElement,
+    ).toHaveTextContent("Overall7 out of 10");
+    expect(
       screen.getByRole("button", { name: /Keep the momentum simple/ }),
     ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("shows phones the list first, then one week with a way back", async () => {
+    const user = userEvent.setup();
+    render(
+      <ReviewWorkspace
+        reviews={reviews}
+        initialView="archive"
+        currentContent={<p>Current review form</p>}
+      />,
+    );
+
+    const list = screen.getByRole("region", { name: "All weeks" });
+    const reader = screen.getByRole("article").parentElement!;
+    expect(list).not.toHaveClass("max-xl:hidden");
+    expect(reader).toHaveClass("max-xl:hidden");
+
+    await user.click(
+      screen.getByRole("button", { name: /Keep the momentum simple/ }),
+    );
+    expect(list).toHaveClass("max-xl:hidden");
+    expect(reader).not.toHaveClass("max-xl:hidden");
+
+    await user.click(screen.getByRole("button", { name: "All weeks" }));
+    expect(list).not.toHaveClass("max-xl:hidden");
   });
 
   it("names the prompts a week left blank instead of repeating them", async () => {

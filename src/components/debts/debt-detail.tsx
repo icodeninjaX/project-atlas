@@ -8,7 +8,7 @@ import {
   debtRowsClass,
   debtSurfaceClass,
 } from "@/components/debts/debt-section";
-import { Disclosure } from "@/components/debts/debt-disclosure";
+import { Disclosure } from "@/components/shared/disclosure";
 import { DebtSheet } from "@/components/debts/debt-sheet";
 import {
   DebtStatusPill,

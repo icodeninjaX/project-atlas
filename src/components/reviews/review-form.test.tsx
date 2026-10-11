@@ -51,33 +51,32 @@ describe("ReviewForm", () => {
     expect(screen.getByText("Energy came and went")).toBeVisible();
   });
 
-  it("moves through one focused prompt at a time on mobile", async () => {
+  it("asks three prompts up front and folds the rest behind More", async () => {
     const user = userEvent.setup();
     render(
       <ReviewForm
         weekStart="2026-08-24"
         entryTimestamp="2026-08-25T05:00:00.000Z"
+        initial={{ moneyReflection: "Groceries came in under budget." }}
       />,
     );
 
-    const firstPrompt = screen.getByRole("textbox", {
-      name: "What went well?",
-    });
-    const secondPrompt = screen.getByRole("textbox", {
-      name: "What was difficult?",
-    });
-
-    expect(firstPrompt.closest("section")).not.toHaveClass("hidden");
-    expect(secondPrompt.closest("section")).toHaveClass("hidden");
-
-    await user.click(screen.getByRole("button", { name: "Next" }));
-
-    expect(firstPrompt.closest("section")).toHaveClass("hidden");
-    expect(secondPrompt.closest("section")).not.toHaveClass("hidden");
     expect(
-      screen.getByRole("button", {
-        name: "Prompt 2: What was difficult?",
-      }),
-    ).toHaveAttribute("aria-current", "step");
+      screen.getByRole("textbox", { name: "What went well?" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("textbox", { name: "What matters most next week?" }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("textbox", { name: "What happened financially?" }),
+    ).not.toBeInTheDocument();
+
+    const more = screen.getByRole("button", { name: /More to reflect on/ });
+    expect(more).toHaveTextContent("1 of 3 written");
+    await user.click(more);
+
+    expect(
+      screen.getByRole("textbox", { name: "What happened financially?" }),
+    ).toHaveValue("Groceries came in under budget.");
   });
 });

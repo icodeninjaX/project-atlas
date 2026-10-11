@@ -8,9 +8,8 @@ import {
   WalletCards,
   type LucideIcon,
 } from "lucide-react";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
-import todayStyles from "@/components/dashboard/today.module.css";
 import type { PromptKey, StatusTone } from "@/lib/reviews/view";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +73,7 @@ export const promptMeta: Record<
     icon: Compass,
     question: "What matters most next week?",
     title: "Next week’s compass",
-    hint: "Choose one direction, not ten demands. It greets you here next week.",
+    hint: "Name one thing, in a few words.",
     placeholder:
       "If one thing deserves your best attention next week, what is it?…",
   },
@@ -210,99 +209,65 @@ export const tileClass =
   "bg-background/55 ring-border/80 min-w-0 rounded-2xl ring-1";
 
 /**
- * A score out of ten as ten short segments. Decorative: the figure beside
- * it carries the value.
+ * A section of the reviews page: a short title above its surface, with an
+ * optional note at the right, so the card holds content and nothing else.
  */
-export function ScoreMeter({
-  score,
-  kind,
+export function ReviewSection({
+  id,
+  title,
+  meta,
   className,
+  children,
 }: {
-  score: number | null;
-  kind: ScoreKind;
+  id: string;
+  title: string;
+  meta?: ReactNode;
   className?: string;
+  children: ReactNode;
 }) {
-  const tone = scoreTones[kind];
   return (
-    <span
-      aria-hidden="true"
-      className={cn("grid grid-cols-10 gap-[3px]", className)}
-    >
-      {Array.from({ length: 10 }, (_, index) => (
-        <span
-          key={index}
-          className={cn(
-            "h-1.5 rounded-full transition-colors duration-200",
-            score !== null && index < score ? tone.fill : tone.track,
-          )}
-        />
-      ))}
-    </span>
+    <section aria-labelledby={id} className={cn("min-w-0", className)}>
+      <div className="mb-3 flex min-w-0 items-baseline justify-between gap-3 px-1">
+        <h2
+          id={id}
+          className="text-[0.9375rem] font-semibold tracking-[-0.01em]"
+        >
+          {title}
+        </h2>
+        {meta ? (
+          <p className="text-muted-foreground min-w-0 text-right text-xs">
+            {meta}
+          </p>
+        ) : null}
+      </div>
+      {children}
+    </section>
   );
 }
 
-const RING_RADIUS = 15.5;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-
-/**
- * A score out of ten as a ring with the figure in its middle. The ring is
- * decorative; the figure carries the value.
- */
-export function ScoreRing({
-  score,
+/** A score out of ten as a figure with its color dot, or a dash. */
+export function ScoreFigure({
   kind,
+  score,
   className,
-  figureClassName,
 }: {
-  score: number | null;
   kind: ScoreKind;
+  score: number | null;
   className?: string;
-  figureClassName?: string;
 }) {
   const tone = scoreTones[kind];
-  const share = score === null ? 0 : score / 10;
   return (
-    <span className={cn("relative grid size-11 place-items-center", className)}>
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 36 36"
-        className="absolute inset-0 size-full -rotate-90"
-      >
-        <circle
-          cx="18"
-          cy="18"
-          r={RING_RADIUS}
-          fill="none"
-          strokeWidth="3"
-          className={cn(tone.stroke, "opacity-20")}
-        />
-        {share > 0 ? (
-          <circle
-            cx="18"
-            cy="18"
-            r={RING_RADIUS}
-            fill="none"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeDasharray={RING_CIRCUMFERENCE}
-            strokeDashoffset={RING_CIRCUMFERENCE * (1 - share)}
-            className={cn(tone.stroke, todayStyles.draw)}
-            style={{ "--ring-from": RING_CIRCUMFERENCE } as CSSProperties}
-          />
-        ) : null}
-      </svg>
+    <span className={cn("inline-flex items-center gap-1.5", className)}>
       <span
-        className={cn(
-          "relative font-mono text-sm font-semibold tracking-[-0.02em]",
-          figureClassName,
-        )}
-      >
+        aria-hidden="true"
+        className={cn("size-1.5 shrink-0 rounded-full", tone.dot)}
+      />
+      <span className="text-muted-foreground">{tone.label}</span>
+      <span className="text-foreground font-mono font-semibold tabular-nums">
         {score ?? "—"}
-        {score === null ? (
-          <span className="sr-only">, not scored</span>
-        ) : (
-          <span className="sr-only"> out of 10</span>
-        )}
+        <span className="sr-only">
+          {score === null ? ", not scored" : " out of 10"}
+        </span>
       </span>
     </span>
   );
