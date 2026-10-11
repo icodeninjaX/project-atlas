@@ -1,6 +1,5 @@
 import {
   ArrowDownRight,
-  ArrowRight,
   ArrowUpRight,
   ChevronDown,
   ScanSearch,
@@ -8,7 +7,6 @@ import {
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import todayStyles from "@/components/dashboard/today.module.css";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import type { Signal } from "@/lib/signals/engine";
@@ -91,10 +89,8 @@ function VersusFacts({
                   <span
                     aria-hidden="true"
                     className={cn(
-                      "inline-flex items-center gap-0.5 rounded-full px-1.5 py-px font-mono text-[0.6875rem] font-semibold ring-1",
-                      tone.soft,
+                      "inline-flex items-center gap-0.5 font-mono text-xs font-semibold tabular-nums",
                       tone.text,
-                      tone.ring,
                     )}
                   >
                     <ChangeIcon className="size-3" />
@@ -220,9 +216,9 @@ function SignalFacts({ signal }: { signal: Signal }) {
 }
 
 /**
- * One signal: its area and severity, what changed, the figures behind it
- * (charted where they make a comparison or a share), why ATLAS raised it,
- * and where to act on it.
+ * One signal, as a row of its group's card: its area and severity, what
+ * changed, the figures behind it (charted where they make a comparison or a
+ * share), why ATLAS raised it, and where to act on it.
  */
 export function SignalCard({ signal }: { signal: Signal }) {
   const tone = severityTones[signal.severity];
@@ -236,54 +232,35 @@ export function SignalCard({ signal }: { signal: Signal }) {
     <article
       id={anchor}
       aria-labelledby={`${anchor}-title`}
-      className={cn(
-        surfaceClass,
-        "bg-card/90 target:ring-primary/45 @container relative isolate min-w-0 scroll-mt-24 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] target:ring-2",
-      )}
+      className="target:ring-primary/45 @container relative min-w-0 scroll-mt-24 target:ring-2 target:ring-inset"
     >
       {urgent ? (
-        <>
-          <span
-            aria-hidden="true"
-            className={cn(
-              "absolute inset-y-5 left-0 w-[3px] rounded-r-full",
-              tone.edge,
-            )}
-          />
-          <span
-            aria-hidden="true"
-            className={cn(
-              "pointer-events-none absolute inset-y-0 left-0 -z-10 w-2/3 bg-gradient-to-r to-transparent",
-              signal.severity === "critical"
-                ? "from-destructive/[0.07]"
-                : "from-amber-500/[0.06]",
-            )}
-          />
-        </>
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute inset-y-5 left-0 w-[3px] rounded-r-full",
+            tone.edge,
+          )}
+        />
       ) : null}
 
       {/*
-        Narrow cards stack everything under the heading; from 30rem the body
+        Narrow rows stack everything under the heading; from 30rem the body
         lines up with the title; from 46rem the figures take a column of
         their own beside the words.
       */}
       <div
         className={cn(
-          "grid grid-cols-[2.5rem_minmax(0,1fr)] gap-x-3.5 p-4 min-[360px]:p-5 @[30rem]:grid-cols-[2.75rem_minmax(0,1fr)] @[30rem]:gap-x-4 @[30rem]:p-6",
+          "grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-3.5 p-4 min-[360px]:p-5 @[30rem]:gap-x-4 @[30rem]:p-6",
           hasFacts &&
-            "@[46rem]:grid-cols-[2.75rem_minmax(0,1fr)_minmax(0,17rem)] @[46rem]:gap-x-6",
+            "@[46rem]:grid-cols-[2.25rem_minmax(0,1fr)_minmax(0,17rem)] @[46rem]:gap-x-6",
         )}
       >
         <span
           aria-hidden="true"
-          className={cn(
-            "grid size-10 place-items-center rounded-xl ring-1 @[30rem]:size-11",
-            tone.soft,
-            tone.text,
-            tone.ring,
-          )}
+          className="bg-muted/60 text-muted-foreground grid size-9 place-items-center rounded-lg"
         >
-          <AreaIcon className="size-[1.125rem]" />
+          <AreaIcon className="size-4" />
         </span>
         <div className="min-w-0 self-center">
           <p className="flex flex-wrap items-center gap-x-2 text-xs leading-5 font-semibold">
@@ -315,30 +292,26 @@ export function SignalCard({ signal }: { signal: Signal }) {
           </div>
         ) : null}
 
-        <div className="border-border/70 col-span-2 mt-4 flex min-w-0 flex-wrap items-start justify-between gap-x-3 border-t pt-1.5 @[30rem]:col-span-1 @[30rem]:col-start-2 @[46rem]:self-end">
+        <div className="col-span-2 mt-3 flex min-w-0 flex-wrap items-start justify-between gap-x-3 @[30rem]:col-span-1 @[30rem]:col-start-2 @[46rem]:self-end">
           <details className="group/why min-w-0 flex-1 basis-52">
-            <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -ml-2 flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 [&::-webkit-details-marker]:hidden">
+            <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -ml-1 flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 rounded-lg px-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 [&::-webkit-details-marker]:hidden">
               <ScanSearch aria-hidden="true" className="size-3.5" />
               Why am I seeing this?
               <ChevronDown
                 aria-hidden="true"
-                className="size-3.5 transition-transform group-open/why:rotate-180"
+                className="size-3.5 transition-transform group-open/why:rotate-180 motion-reduce:transition-none"
               />
             </summary>
-            <p className="bg-muted/45 ring-border/60 text-muted-foreground mt-1 mb-2.5 max-w-2xl rounded-xl px-3.5 py-3 text-xs leading-5 ring-1">
+            <p className="bg-muted/40 text-muted-foreground mt-1 mb-2.5 max-w-2xl rounded-xl px-3.5 py-3 text-xs leading-5">
               <MaybeSensitive signal={signal}>{signal.reason}</MaybeSensitive>
             </p>
           </details>
           <Link
             href={signal.href as Route}
-            className="text-primary hover:bg-primary/10 focus-visible:ring-ring group/act -mr-2 inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
+            className="text-primary focus-visible:ring-ring -mr-1 inline-flex min-h-11 shrink-0 items-center rounded-lg px-1 text-xs font-semibold underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
           >
             {signalActionLabels[signal.type]}
             <span className="sr-only">: {signal.title}</span>
-            <ArrowRight
-              aria-hidden="true"
-              className="size-3.5 transition-transform group-hover/act:translate-x-0.5 motion-reduce:transition-none"
-            />
           </Link>
         </div>
       </div>

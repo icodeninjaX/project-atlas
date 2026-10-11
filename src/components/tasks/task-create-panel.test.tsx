@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { TaskCreatePanel } from "./task-create-panel";
 import { TaskCreateTrigger } from "./task-create-trigger";
@@ -22,9 +28,12 @@ describe("TaskCreatePanel", () => {
     expect(screen.queryByLabelText("Task title")).not.toBeInTheDocument();
 
     const heading = screen.getByRole("heading", { name: "Tasks" });
-    const addTaskButton = screen.getByRole("button", { name: "Add task" });
+    const header = heading.closest("header")!;
+    const addTaskButton = within(header).getByRole("button", {
+      name: "Add task",
+    });
 
-    expect(heading.closest("header")).toContainElement(addTaskButton);
+    expect(header).toContainElement(addTaskButton);
     fireEvent.click(addTaskButton);
 
     expect(screen.getByLabelText("Task title")).toHaveFocus();
@@ -45,7 +54,8 @@ describe("TaskCreatePanel", () => {
       </>,
     );
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Add task" })[1]!);
+    // The page heading, the phone button, then the empty state's own.
+    fireEvent.click(screen.getAllByRole("button", { name: "Add task" })[2]!);
 
     expect(screen.getByLabelText("Task title")).toHaveFocus();
   });
@@ -64,7 +74,11 @@ describe("TaskCreatePanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(screen.queryByLabelText("Task title")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add task" })).toBeVisible();
+    expect(
+      within(screen.getByRole("banner")).getByRole("button", {
+        name: "Add task",
+      }),
+    ).toBeVisible();
   });
 
   it("keeps advanced task planning collapsed until it is requested", () => {
@@ -80,15 +94,18 @@ describe("TaskCreatePanel", () => {
 });
 
 describe("TaskCreatePanel on phones", () => {
-  it("offers a floating New task button that opens and focuses capture", () => {
+  it("offers a floating Add task button that opens and focuses capture", () => {
     renderPanel();
 
-    fireEvent.click(screen.getByRole("button", { name: "New task" }));
+    // The floating button sits outside the page heading and the form.
+    const floatingButtons = () =>
+      screen
+        .getAllByRole("button", { name: "Add task" })
+        .filter((button) => !button.closest("header, form"));
+    fireEvent.click(floatingButtons()[0]!);
 
     expect(screen.getByLabelText("Task title")).toHaveFocus();
-    expect(
-      screen.queryByRole("button", { name: "New task" }),
-    ).not.toBeInTheDocument();
+    expect(floatingButtons()).toHaveLength(0);
   });
 
   it("closes the form with Escape", () => {

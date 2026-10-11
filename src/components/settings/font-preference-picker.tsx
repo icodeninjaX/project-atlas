@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw, Type } from "lucide-react";
+import { Type } from "lucide-react";
 import { useSyncExternalStore } from "react";
 import {
   fieldHelpClass,
@@ -82,7 +82,7 @@ export function FontPreferencePicker() {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <Type className="text-primary size-4" aria-hidden="true" />
+            <Type className="text-muted-foreground size-4" aria-hidden="true" />
             <h3 className="text-sm font-semibold">App font</h3>
           </div>
           <p className="text-muted-foreground mt-1 text-xs leading-5">
@@ -97,7 +97,6 @@ export function FontPreferencePicker() {
           onClick={() => applyFont(DEFAULT_FONT_PREFERENCE)}
           className="shrink-0"
         >
-          <RotateCcw className="size-3.5" aria-hidden="true" />
           Reset font
         </Button>
       </div>
@@ -135,27 +134,21 @@ export function FontPreferencePicker() {
 
         <div
           aria-live="polite"
-          className="bg-background/55 relative overflow-hidden rounded-xl p-4 sm:p-5"
+          className="bg-background/55 rounded-xl p-4 sm:p-5"
           style={{ fontFamily: `var(${selected.cssVariable})` }}
         >
-          <span
-            aria-hidden="true"
-            className="text-primary/[0.09] pointer-events-none absolute -top-6 -right-1 text-[7.5rem] leading-none font-semibold tracking-[-0.06em] select-none"
-          >
-            Aa
-          </span>
           <p className="text-muted-foreground text-xs font-medium">
-            {selected.category}
+            {selected.label} · {selected.category}
           </p>
-          <p className="relative mt-2 text-xl leading-7 font-semibold tracking-[-0.02em] text-balance">
-            {selected.label} · Plan clearly, move intentionally.
+          <p className="mt-2 text-lg leading-7 font-semibold tracking-[-0.02em] text-balance">
+            Pay ₱2,450 to BPI by Friday · 3 tasks today
           </p>
-          <p className="text-muted-foreground relative mt-1.5 text-xs leading-5">
+          <p className="text-muted-foreground mt-1.5 text-xs leading-5">
             {selected.description}
           </p>
           <p
             aria-hidden="true"
-            className="text-muted-foreground/80 relative mt-3 truncate text-sm tracking-wide"
+            className="text-muted-foreground/80 mt-3 truncate text-sm tracking-wide"
           >
             ABCDEFGHIJ abcdefghij 0123456789
           </p>

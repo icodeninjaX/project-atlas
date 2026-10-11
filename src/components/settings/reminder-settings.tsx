@@ -4,22 +4,22 @@ import {
   Bell,
   BellOff,
   CalendarCheck,
-  Clock3,
   HandCoins,
   ListChecks,
-  Moon,
   Smartphone,
-  Sunrise,
   WalletCards,
 } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import {
   FormFeedback,
+  IconTile,
   SettingsGroup,
   StatusChip,
   SwitchField,
+  fieldLabelClass,
 } from "@/components/settings/settings-chrome";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   removePushSubscriptionAction,
   savePushSubscriptionAction,
@@ -79,7 +79,7 @@ export function ReminderSettings({
         ) {
           return {
             success: false,
-            message: "Push reminders are not configured for this deployment.",
+            message: "Reminders aren't available on this server.",
           };
         }
         const permission = await Notification.requestPermission();
@@ -151,26 +151,16 @@ export function ReminderSettings({
 
   return (
     <form action={formAction} className="space-y-7">
-      <div className="bg-background/55 relative overflow-hidden rounded-xl p-4 sm:p-5">
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="bg-background/55 rounded-xl p-4 sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <span
-              aria-hidden="true"
-              className={
-                preferences.remindersEnabled
-                  ? "bg-primary-solid text-primary-solid-foreground grid size-10 shrink-0 place-items-center rounded-2xl"
-                  : "bg-muted text-muted-foreground grid size-10 shrink-0 place-items-center rounded-2xl"
-              }
-            >
-              {preferences.remindersEnabled ? (
-                <Bell className="size-4" />
-              ) : (
-                <BellOff className="size-4" />
-              )}
-            </span>
+            <IconTile
+              icon={preferences.remindersEnabled ? Bell : BellOff}
+              size="sm"
+            />
             <div className="min-w-0">
               <p className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-                ATLAS phone notifications
+                Push notifications
                 <StatusChip
                   tone={preferences.remindersEnabled ? "positive" : "neutral"}
                 >
@@ -189,26 +179,25 @@ export function ReminderSettings({
             label="Enable reminders"
             defaultChecked={preferences.remindersEnabled}
             disabled={!configured}
-            className="bg-card/70 sm:min-w-52"
+            className="sm:min-w-48"
           />
         </div>
-        <p className="text-muted-foreground relative mt-4 flex items-center gap-2 text-[0.6875rem]">
+        <p className="text-muted-foreground mt-3 flex items-center gap-2 text-xs">
           <Smartphone aria-hidden="true" className="size-3.5" />
           This device: {deviceSubscribed ? "subscribed" : "not subscribed"}
         </p>
       </div>
 
       {!configured && (
-        <p className="bg-muted/60 ring-border/80 text-muted-foreground rounded-xl px-3 py-2.5 text-xs leading-5 ring-1">
-          Not configured. Add VAPID and cron secrets to this deployment to
-          enable browser delivery.
+        <p className="text-muted-foreground text-xs leading-5">
+          Reminders aren&apos;t available on this server.
         </p>
       )}
 
       <fieldset className="min-w-0">
         <legend className="sr-only">Include</legend>
         <SettingsGroup title="Include" titleIsLegend>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-x-8 sm:grid-cols-2">
             {kinds.map(({ name, label, icon: Icon, checked }) => (
               <SwitchField
                 key={name}
@@ -231,34 +220,34 @@ export function ReminderSettings({
 
       <fieldset className="min-w-0">
         <legend className="sr-only">Quiet hours</legend>
-        <SettingsGroup title="Quiet hours" icon={Clock3} titleIsLegend>
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            <label className="bg-background/55 ring-border/80 focus-within:ring-ring block rounded-2xl p-3 ring-1 focus-within:ring-2 sm:p-3.5">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
-                <Moon aria-hidden="true" className="size-3.5" />
+        <SettingsGroup title="Quiet hours" titleIsLegend>
+          <div className="grid max-w-md grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label htmlFor="quiet-hours-start" className={fieldLabelClass}>
                 Starts
-              </span>
-              <input
+              </label>
+              <Input
+                id="quiet-hours-start"
                 type="time"
                 name="quietHoursStart"
                 defaultValue={preferences.quietHoursStart.slice(0, 5)}
                 required
-                className="mt-1 w-full bg-transparent font-mono text-xl font-semibold tabular-nums outline-none sm:text-2xl"
+                className="font-mono"
               />
-            </label>
-            <label className="bg-background/55 ring-border/80 focus-within:ring-ring block rounded-2xl p-3 ring-1 focus-within:ring-2 sm:p-3.5">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
-                <Sunrise aria-hidden="true" className="size-3.5" />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="quiet-hours-end" className={fieldLabelClass}>
                 Ends
-              </span>
-              <input
+              </label>
+              <Input
+                id="quiet-hours-end"
                 type="time"
                 name="quietHoursEnd"
                 defaultValue={preferences.quietHoursEnd.slice(0, 5)}
                 required
-                className="mt-1 w-full bg-transparent font-mono text-xl font-semibold tabular-nums outline-none sm:text-2xl"
+                className="font-mono"
               />
-            </label>
+            </div>
           </div>
         </SettingsGroup>
       </fieldset>

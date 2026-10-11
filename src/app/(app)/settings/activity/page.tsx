@@ -1,18 +1,18 @@
-import {
-  ArrowLeft,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  History,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, History } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeading } from "@/components/shared/page-heading";
+import {
+  cardClass,
+  fieldLabelClass,
+  selectClass,
+} from "@/components/settings/settings-chrome";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { isCalendarDate } from "@/lib/dates/dates";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { PageShell } from "@/components/shared/page-shell";
 
@@ -57,6 +57,39 @@ function pageHref({
 function readableLabel(value: unknown) {
   const words = String(value || "Activity").replaceAll("_", " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+const manilaDayKey = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Manila",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+const manilaDayLabel = new Intl.DateTimeFormat("en-PH", {
+  timeZone: "Asia/Manila",
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+const manilaTime = new Intl.DateTimeFormat("en-PH", {
+  timeZone: "Asia/Manila",
+  timeStyle: "short",
+});
+
+/** Events grouped by their Manila calendar day, keeping the newest first. */
+function groupByDay<T extends { created_at: string }>(items: T[]) {
+  const days: Array<{ key: string; label: string; items: T[] }> = [];
+  for (const item of items) {
+    const date = new Date(item.created_at);
+    const key = manilaDayKey.format(date);
+    const last = days.at(-1);
+    if (last?.key === key) last.items.push(item);
+    else days.push({ key, label: manilaDayLabel.format(date), items: [item] });
+  }
+  return days;
 }
 
 export default async function ActivityPage({
@@ -116,16 +149,10 @@ export default async function ActivityPage({
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
-              <Link href="/timeline">
-                <History className="size-4" />
-                Open timeline
-              </Link>
+              <Link href="/timeline">Open timeline</Link>
             </Button>
             <Button asChild variant="secondary">
-              <Link href="/settings">
-                <ArrowLeft className="size-4" />
-                Back to settings
-              </Link>
+              <Link href="/settings">Back to settings</Link>
             </Button>
           </div>
         }
@@ -133,14 +160,20 @@ export default async function ActivityPage({
 
       <form
         method="get"
-        className="border-border bg-card mt-6 grid gap-3 rounded-2xl border p-4 sm:grid-cols-2 lg:grid-cols-[minmax(180px,1fr)_160px_160px_auto]"
+        className={cn(
+          cardClass,
+          "mt-6 grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[minmax(180px,1fr)_160px_160px_auto]",
+        )}
       >
-        <label className="text-muted-foreground text-xs">
-          Activity type
+        <div className="space-y-1.5">
+          <label htmlFor="activity-type" className={fieldLabelClass}>
+            Activity type
+          </label>
           <select
+            id="activity-type"
             name="type"
             defaultValue={type}
-            className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+            className={selectClass}
           >
             {entityTypes.map(([value, label]) => (
               <option key={value || "all"} value={value}>
@@ -148,36 +181,34 @@ export default async function ActivityPage({
               </option>
             ))}
           </select>
-        </label>
-        <label className="text-muted-foreground text-xs">
-          From
-          <input
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="activity-from" className={fieldLabelClass}>
+            From
+          </label>
+          <Input
+            id="activity-from"
             name="from"
             type="date"
             defaultValue={from}
-            className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
           />
-        </label>
-        <label className="text-muted-foreground text-xs">
-          To
-          <input
-            name="to"
-            type="date"
-            defaultValue={to}
-            className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
-          />
-        </label>
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="activity-to" className={fieldLabelClass}>
+            To
+          </label>
+          <Input id="activity-to" name="to" type="date" defaultValue={to} />
+        </div>
         <Button type="submit" className="self-end">
-          <Filter className="size-4" />
           Apply filters
         </Button>
       </form>
 
-      <div className="mt-6 flex items-center justify-between gap-4">
-        <p className="text-sm font-semibold">Recent changes</p>
-        <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-1 font-mono text-[0.625rem]">
+      <div className="mt-6 flex items-baseline justify-between gap-4">
+        <h2 className="text-base font-semibold">Recent changes</h2>
+        <p className="text-muted-foreground font-mono text-xs">
           {total} {total === 1 ? "event" : "events"}
-        </span>
+        </p>
       </div>
 
       {totalPages > 1 && (
@@ -229,64 +260,68 @@ export default async function ActivityPage({
 
       <div className="mt-3">
         {activity.length === 0 ? (
-          <div className="border-border grid min-h-64 place-items-center rounded-2xl border border-dashed p-6 text-center">
-            <div className="max-w-sm">
-              <span className="bg-muted/60 text-foreground/75 mx-auto grid size-12 place-items-center rounded-lg">
-                <History className="size-5" />
-              </span>
-              <p className="mt-4 text-sm font-semibold">
-                {filtered
-                  ? "No activity matches these filters"
-                  : "No activity yet"}
-              </p>
-              <p className="text-muted-foreground mt-2 text-xs leading-5">
-                {filtered
-                  ? from && to && from > to
-                    ? "The From date is after the To date. Swap them to see that range."
-                    : "Try another activity type or a wider date range."
-                  : "Completed tasks, knowledge reviews, debt payments, career stage changes, goal updates, and submitted reviews will appear here."}
-              </p>
-              <Button asChild size="sm" className="mt-5">
+          <EmptyState
+            icon={History}
+            title={
+              filtered ? "No activity matches these filters" : "No activity yet"
+            }
+            description={
+              filtered
+                ? from && to && from > to
+                  ? "The From date is after the To date. Swap them to see that range."
+                  : "Try another activity type or a wider date range."
+                : "Completed tasks, knowledge reviews, debt payments, career stage changes, goal updates, and submitted reviews will appear here."
+            }
+            action={
+              <Button asChild size="sm" variant="secondary">
                 {filtered ? (
                   <Link href="/settings/activity">Clear filters</Link>
                 ) : (
                   <Link href="/dashboard">Return to Today</Link>
                 )}
               </Button>
-            </div>
-          </div>
+            }
+          />
         ) : (
-          <ol aria-label="Activity events" className="space-y-2">
-            {activity.map((item) => (
-              <li key={item.id}>
-                <Card>
-                  <CardContent className="flex items-start gap-3 p-3.5 sm:items-center sm:p-4">
-                    <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg">
-                      <CheckCircle2 className="size-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold">
-                        {readableLabel(item.action)}
-                      </p>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        {readableLabel(item.entity_type)}
-                      </p>
-                    </div>
-                    <time
-                      dateTime={item.created_at}
-                      className="text-muted-foreground shrink-0 text-right font-mono text-[0.625rem] leading-4"
+          <div className={cn(cardClass, "overflow-hidden")}>
+            {groupByDay(activity).map((day) => (
+              <section
+                key={day.key}
+                aria-label={day.label}
+                className="border-border/70 border-t first:border-t-0"
+              >
+                <h3 className="bg-muted/30 text-muted-foreground px-4 py-2 text-xs font-semibold sm:px-5">
+                  {day.label}
+                </h3>
+                <ol
+                  aria-label={`Activity events, ${day.label}`}
+                  className="divide-border/70 border-border/70 divide-y border-t"
+                >
+                  {day.items.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex items-start gap-3 px-4 py-3 sm:items-center sm:px-5"
                     >
-                      {new Date(item.created_at).toLocaleString("en-PH", {
-                        timeZone: "Asia/Manila",
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
-                    </time>
-                  </CardContent>
-                </Card>
-              </li>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold">
+                          {readableLabel(item.action)}
+                        </p>
+                        <p className="text-muted-foreground mt-0.5 text-xs">
+                          {readableLabel(item.entity_type)}
+                        </p>
+                      </div>
+                      <time
+                        dateTime={item.created_at}
+                        className="text-muted-foreground shrink-0 text-right font-mono text-xs"
+                      >
+                        {manilaTime.format(new Date(item.created_at))}
+                      </time>
+                    </li>
+                  ))}
+                </ol>
+              </section>
             ))}
-          </ol>
+          </div>
         )}
       </div>
     </PageShell>

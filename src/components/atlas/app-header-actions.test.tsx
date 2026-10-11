@@ -27,7 +27,7 @@ vi.mock("@/components/offline/sync-status", () => ({
 }));
 
 vi.mock("@/components/privacy/privacy-toggle", () => ({
-  PrivacyToggle: () => <button type="button">Hide sensitive values</button>,
+  PrivacyToggle: () => <button type="button">Hide amounts</button>,
 }));
 
 vi.mock("@/components/ui/tooltip", () => ({
@@ -61,7 +61,7 @@ describe("AppHeaderActions", () => {
       controls.getByRole("button", { name: "Use light theme" }),
     ).toBeInTheDocument();
     expect(
-      controls.getByRole("button", { name: "Hide sensitive values" }),
+      controls.getByRole("button", { name: "Hide amounts" }),
     ).toBeInTheDocument();
     expect(
       controls.getByRole("button", { name: "Log out this device" }),

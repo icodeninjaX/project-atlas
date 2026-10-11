@@ -1,26 +1,17 @@
 "use client";
 
-import {
-  BellRing,
-  Database,
-  Fingerprint,
-  HardDrive,
-  Palette,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useScrollStrip } from "@/components/shared/scroll-strip";
 import { cn } from "@/lib/utils";
 
 export const settingsSections = [
-  { id: "profile", label: "Profile", icon: UserRound },
-  { id: "appearance", label: "Appearance", icon: Palette },
-  { id: "security", label: "Security", icon: Fingerprint },
-  { id: "offline", label: "Offline", icon: HardDrive },
-  { id: "reminders", label: "Reminders", icon: BellRing },
-  { id: "data", label: "Data", icon: Database },
-  { id: "account", label: "Account", icon: ShieldCheck },
+  { id: "profile", label: "Profile" },
+  { id: "appearance", label: "Appearance" },
+  { id: "security", label: "Security" },
+  { id: "offline", label: "Offline" },
+  { id: "reminders", label: "Reminders" },
+  { id: "data", label: "Data" },
+  { id: "account", label: "Account" },
 ] as const;
 
 export type SettingsSectionId = (typeof settingsSections)[number]["id"];
@@ -75,8 +66,8 @@ function useActiveSection() {
 }
 
 /**
- * Jump links for the long Settings page: a sticky chip strip below `lg`, and a
- * vertical "On this page" list inside the desktop sidebar.
+ * Jump links for the long Settings page: sticky underline tabs below `lg`,
+ * and a vertical "On this page" list inside the desktop sidebar.
  */
 export function SettingsSectionNav({
   variant,
@@ -91,7 +82,7 @@ export function SettingsSectionNav({
     centerActive: variant === "strip",
   });
 
-  const links = settingsSections.map(({ id, label, icon: Icon }, index) => {
+  const links = settingsSections.map(({ id, label }) => {
     const current = active === id;
     return (
       <a
@@ -100,16 +91,18 @@ export function SettingsSectionNav({
         aria-current={current ? "true" : undefined}
         onClick={() => setActive(id)}
         className={cn(
-          "focus-visible:ring-ring group relative inline-flex shrink-0 items-center gap-2 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none",
-          variant === "strip" && "min-h-10 rounded-full px-3.5 ring-1",
+          "focus-visible:ring-ring relative inline-flex shrink-0 items-center transition-colors focus-visible:ring-2 focus-visible:outline-none",
+          variant === "strip" &&
+            "min-h-11 text-[0.8125rem] font-medium sm:min-h-10",
           variant === "strip" &&
             (current
-              ? "bg-primary-solid text-primary-solid-foreground ring-primary-solid"
-              : "bg-card/70 text-muted-foreground ring-border/80 hover:text-foreground hover:bg-card"),
-          variant === "sidebar" && "min-h-10 w-full rounded-xl px-2.5",
+              ? "text-foreground shadow-[inset_0_-2px_0_var(--foreground)]"
+              : "text-muted-foreground hover:text-foreground"),
+          variant === "sidebar" &&
+            "min-h-10 w-full rounded-xl px-2.5 text-sm font-medium",
           variant === "sidebar" &&
             (current
-              ? "bg-primary/10 text-foreground"
+              ? "text-foreground"
               : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"),
         )}
       >
@@ -117,30 +110,12 @@ export function SettingsSectionNav({
           <span
             aria-hidden="true"
             className={cn(
-              "bg-primary absolute top-2 bottom-2 -left-3 w-[3px] rounded-full transition-opacity",
+              "bg-foreground absolute top-2 bottom-2 -left-3 w-[3px] rounded-full transition-opacity",
               current ? "opacity-100" : "opacity-0",
             )}
           />
         ) : null}
-        <Icon
-          aria-hidden="true"
-          className={cn(
-            "size-3.5 shrink-0",
-            variant === "sidebar" && (current ? "text-primary" : ""),
-          )}
-        />
-        <span className="flex-1">{label}</span>
-        {variant === "sidebar" ? (
-          <span
-            aria-hidden="true"
-            className={cn(
-              "font-mono text-[0.625rem] tabular-nums",
-              current ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            {String(index + 1).padStart(2, "0")}
-          </span>
-        ) : null}
+        {label}
       </a>
     );
   });
@@ -157,7 +132,7 @@ export function SettingsSectionNav({
     <nav
       ref={stripRef}
       aria-label="Settings sections"
-      className="bg-background/80 sticky top-[calc(4rem+env(safe-area-inset-top))] z-20 -mx-4 mt-6 flex [scrollbar-width:none] gap-1.5 overflow-x-auto [mask-image:linear-gradient(to_right,transparent,black_1rem,black_calc(100%-1rem),transparent)] px-4 py-2.5 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden"
+      className="bg-background sticky top-[calc(4rem+env(safe-area-inset-top))] z-20 -mx-4 mt-6 flex [scrollbar-width:none] gap-6 overflow-x-auto px-4 shadow-[inset_0_-1px_0_var(--border)] sm:-mx-6 sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden"
     >
       {links}
     </nav>

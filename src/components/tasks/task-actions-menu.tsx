@@ -6,9 +6,11 @@ import { useEffect, useId, useRef, useState } from "react";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { TaskEditForm } from "@/components/tasks/task-edit-form";
 import { TaskFocusMode } from "@/components/tasks/task-focus-mode";
+import { taskMenuItemClass } from "@/components/tasks/task-menu";
 import { Button } from "@/components/ui/button";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import type { ScheduledTaskSlot } from "@/lib/tasks/task-time";
+import { cn } from "@/lib/utils";
 
 type Task = {
   id: string;
@@ -76,10 +78,11 @@ export function TaskActionsMenu({
   };
 
   const editorTitle = editorMode === "reminder" ? "Set reminder" : "Edit task";
+  // Only the reminder needs a note: when the notification goes out.
   const editorDescription =
     editorMode === "reminder"
-      ? "Choose the date and exact time. ATLAS notifies subscribed devices when reminders are enabled."
-      : "Update the task details, schedule, priority, or focus time.";
+      ? "Choose the date and exact time. Devices you subscribed get a notification when reminders are on."
+      : null;
 
   const moveMenuFocus = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
@@ -125,7 +128,6 @@ export function TaskActionsMenu({
           aria-haspopup="menu"
           aria-controls={menuId}
           onClick={() => setMenuOpen((open) => !open)}
-          className="size-10 rounded-full"
         >
           <MoreHorizontal className="size-5" aria-hidden="true" />
         </Button>
@@ -136,7 +138,7 @@ export function TaskActionsMenu({
           aria-label={`Actions for ${task.title}`}
           hidden={!menuOpen}
           onKeyDown={moveMenuFocus}
-          className="absolute top-9 right-0 z-30 w-52 rounded-2xl border border-slate-300 bg-white p-1.5 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/10 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:shadow-[0_20px_55px_rgba(0,0,0,0.75)] dark:ring-white/10"
+          className="bg-card text-card-foreground absolute top-full right-0 z-30 mt-1 w-52 rounded-xl border p-1 shadow-lg"
         >
           {task.status !== "completed" && task.status !== "cancelled" && (
             <TaskFocusMode
@@ -155,9 +157,12 @@ export function TaskActionsMenu({
             variant="ghost"
             role="menuitem"
             onClick={() => openEditor("reminder")}
-            className="w-full justify-start text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-white"
+            className={taskMenuItemClass}
           >
-            <AlarmClock className="size-4" aria-hidden="true" />
+            <AlarmClock
+              className="text-muted-foreground size-4"
+              aria-hidden="true"
+            />
             Set reminder
           </Button>
           <Button
@@ -165,12 +170,15 @@ export function TaskActionsMenu({
             variant="ghost"
             role="menuitem"
             onClick={() => openEditor("edit")}
-            className="w-full justify-start text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-white"
+            className={taskMenuItemClass}
           >
-            <Pencil className="size-4" aria-hidden="true" />
+            <Pencil
+              className="text-muted-foreground size-4"
+              aria-hidden="true"
+            />
             Edit task
           </Button>
-          <div className="border-border my-1 border-t" />
+          <div role="separator" className="bg-border mx-1 my-1 h-px" />
           <OfflineMutationForm
             mutation="task.delete"
             onResult={(result) => {
@@ -182,7 +190,10 @@ export function TaskActionsMenu({
               variant="ghost"
               role="menuitem"
               pendingLabel="Deleting…"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive w-full justify-start"
+              className={cn(
+                taskMenuItemClass,
+                "text-destructive hover:text-destructive",
+              )}
             >
               <Trash2 className="size-4" aria-hidden="true" />
               Delete task
@@ -192,9 +203,10 @@ export function TaskActionsMenu({
       </div>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]" />
         <Dialog.Content
           ref={editorContentRef}
+          {...(editorDescription ? {} : { "aria-describedby": undefined })}
           onOpenAutoFocus={(event) => {
             event.preventDefault();
             const fieldName =
@@ -203,16 +215,18 @@ export function TaskActionsMenu({
               ?.querySelector<HTMLInputElement>(`[name="${fieldName}"]`)
               ?.focus();
           }}
-          className="border-border bg-card text-card-foreground fixed right-0 bottom-0 left-0 z-50 max-h-[88dvh] overflow-y-auto rounded-t-2xl border border-b-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(90vw,640px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border"
+          className="border-border bg-background text-foreground fixed right-0 bottom-0 left-0 z-50 max-h-[88dvh] overflow-y-auto rounded-t-2xl border border-b-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(90vw,640px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border sm:p-6"
         >
           <div className="flex items-start justify-between gap-4">
-            <div>
-              <Dialog.Title className="text-base font-semibold">
+            <div className="min-w-0">
+              <Dialog.Title className="text-xl font-semibold tracking-[-0.025em]">
                 {editorTitle}
               </Dialog.Title>
-              <Dialog.Description className="text-muted-foreground mt-1 text-xs leading-5">
-                {editorDescription}
-              </Dialog.Description>
+              {editorDescription ? (
+                <Dialog.Description className="text-muted-foreground mt-1 text-sm leading-5">
+                  {editorDescription}
+                </Dialog.Description>
+              ) : null}
             </div>
             <Dialog.Close asChild>
               <Button
@@ -227,7 +241,11 @@ export function TaskActionsMenu({
             </Dialog.Close>
           </div>
           {editorMode && (
-            <TaskEditForm task={task} scheduledTasks={scheduledTasks} />
+            <TaskEditForm
+              task={task}
+              scheduledTasks={scheduledTasks}
+              onCancel={() => setEditorMode(null)}
+            />
           )}
         </Dialog.Content>
       </Dialog.Portal>

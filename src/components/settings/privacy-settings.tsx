@@ -5,26 +5,15 @@ import { usePrivacyMode } from "@/components/privacy/privacy-provider";
 import { SettingRow } from "@/components/settings/settings-chrome";
 import { Button } from "@/components/ui/button";
 
-export function PrivacySettings() {
+export function PrivacySettings({ className }: { className?: string }) {
   const { hidden, setHidden } = usePrivacyMode();
 
   return (
     <SettingRow
       icon={hidden ? EyeOff : Eye}
-      tone={hidden ? "primary" : "muted"}
-      title="Sensitive values"
-      detail={
-        <>
-          Mask balances, spending, debt, and salary figures on this device. The
-          setting is local to this browser.
-          <span
-            aria-hidden="true"
-            className="bg-muted/80 text-foreground/80 ml-1.5 inline-flex rounded-md px-1.5 align-middle font-mono text-[0.6875rem]"
-          >
-            {hidden ? "₱ ••••••" : "₱ 48,250.00"}
-          </span>
-        </>
-      }
+      title="Sensitive amounts"
+      detail="Mask balances, spending, debt, and salary figures on this device. The setting is local to this browser."
+      className={className}
     >
       <Button
         type="button"
@@ -33,8 +22,7 @@ export function PrivacySettings() {
         aria-pressed={hidden}
         onClick={() => setHidden(!hidden)}
       >
-        {hidden ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-        {hidden ? "Values hidden" : "Hide values"}
+        {hidden ? "Amounts hidden" : "Hide amounts"}
       </Button>
     </SettingRow>
   );

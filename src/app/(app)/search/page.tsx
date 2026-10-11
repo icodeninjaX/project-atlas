@@ -1,10 +1,11 @@
-import { ArrowUpRight, Search } from "lucide-react";
+import { Search, SearchX } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { SearchInput } from "@/components/search/search-input";
 import { getSearchGoalContext, searchResultGraphKey } from "@/lib/graph/server";
 import { createClient } from "@/lib/supabase/server";
 import { formatWeekOfTitle, isCalendarDate } from "@/lib/dates/dates";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeading } from "@/components/shared/page-heading";
 import { PageShell } from "@/components/shared/page-shell";
 
@@ -82,26 +83,19 @@ export default async function SearchPage({
 
       <div className="mt-8">
         {query.length < 2 ? (
-          <div className="border-border grid min-h-60 place-items-center rounded-2xl border border-dashed text-center">
-            <div>
-              <Search className="text-primary mx-auto size-6" />
-              <p className="mt-4 text-sm font-semibold">
-                Find anything you have mapped.
-              </p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Type at least two characters. Use Tab and Enter to open a
-                result.
-              </p>
-            </div>
-          </div>
+          <EmptyState
+            icon={Search}
+            title="Search your records"
+            description="Type at least two characters. Use Tab and Enter to open a result."
+          />
         ) : results.length === 0 ? (
-          <p
-            role="status"
-            className="border-border bg-card text-muted-foreground rounded-2xl border p-8 text-center text-sm"
-          >
-            No results matched “{query}”. Try a company, task, creditor,
-            merchant, or phrase.
-          </p>
+          <div role="status">
+            <EmptyState
+              icon={SearchX}
+              title="No results"
+              description={`Nothing matched “${query}”. Try a company, task, creditor, merchant, or phrase.`}
+            />
+          </div>
         ) : (
           <div className="space-y-8">
             {Object.entries(grouped).map(([group, items]) => (
@@ -117,9 +111,9 @@ export default async function SearchPage({
                     <Link
                       key={`${group}-${result.entity_id}`}
                       href={result.entity_path as Route}
-                      className="border-border hover:bg-muted focus-visible:ring-ring flex items-center gap-4 border-b p-4 last:border-b-0 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+                      className="border-border hover:bg-muted focus-visible:ring-ring block border-b p-4 last:border-b-0 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
                     >
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0">
                         <p className="truncate text-sm font-semibold">
                           {formatWeekOfTitle(result.title)}
                         </p>
@@ -134,7 +128,7 @@ export default async function SearchPage({
                             result.entity_id,
                           ) ?? "",
                         ) ? (
-                          <p className="text-primary mt-1 truncate text-xs">
+                          <p className="text-muted-foreground mt-1 truncate text-xs">
                             Related to goal ·{" "}
                             {
                               goalContext.get(
@@ -147,7 +141,6 @@ export default async function SearchPage({
                           </p>
                         ) : null}
                       </div>
-                      <ArrowUpRight className="text-muted-foreground size-4 shrink-0" />
                     </Link>
                   ))}
                 </div>

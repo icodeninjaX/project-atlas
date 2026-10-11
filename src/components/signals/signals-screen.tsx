@@ -1,17 +1,16 @@
-import { Radar, RadioTower, SearchX } from "lucide-react";
+import { Radar, SearchX } from "lucide-react";
 import Link from "next/link";
-import { surfaceClass } from "@/components/dashboard/dashboard-card";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import type { Signal } from "@/lib/signals/engine";
 import {
   groupSignals,
-  hasSignalFilters,
   matchesSignalFilters,
   type SignalFilters,
 } from "@/lib/signals/view";
 import { cn } from "@/lib/utils";
 import { SignalCard } from "./signal-card";
-import { SignalsEmptyHero, SignalsHero } from "./signals-hero";
+import { SignalsEmptyHero, SignalsHero, cardClass } from "./signals-hero";
 import { SignalsToolbar } from "./signals-toolbar";
 import { PageHeading } from "@/components/shared/page-heading";
 import { PageShell } from "@/components/shared/page-shell";
@@ -30,66 +29,50 @@ function Header({ checkedAt }: { checkedAt: string | null }) {
   return (
     <PageHeading
       title="Signals"
-      description="Meaningful changes, risks, deadlines, and improvements detected from your ATLAS records. Every signal shows the facts behind it."
-      aside={
+      meta={
         checkedAt ? (
-          <p className="bg-card/60 text-muted-foreground ring-border/80 inline-flex min-h-9 items-center gap-2 self-start rounded-full px-4 text-xs font-medium ring-1">
-            <span
-              aria-hidden="true"
-              className="bg-positive size-2 shrink-0 rounded-full"
-            />
-            <span>
-              Checked{" "}
-              <time
-                dateTime={checkedAt}
-                className="text-foreground font-mono font-semibold"
-              >
-                {checkedTime.format(new Date(checkedAt))}
-              </time>
-            </span>
-          </p>
+          <>
+            Checked{" "}
+            <time dateTime={checkedAt} className="font-mono">
+              {checkedTime.format(new Date(checkedAt))}
+            </time>
+          </>
         ) : undefined
       }
+      description="Meaningful changes, risks, deadlines, and improvements detected from your ATLAS records. Every signal shows the facts behind it."
     />
   );
 }
 
-function SignalFeed({
-  signals,
-  filtered,
-}: {
-  signals: readonly Signal[];
-  filtered: boolean;
-}) {
+function SignalFeed({ signals }: { signals: readonly Signal[] }) {
   const groups = groupSignals(signals);
   return (
     <>
-      <div className="mt-8 space-y-10 sm:mt-10 sm:space-y-12">
+      <div className="mt-8 space-y-8 sm:mt-10 sm:space-y-10">
         {groups.map((group) => {
           const headingId = `signals-${group.id}`;
           return (
             <section key={group.id} aria-labelledby={headingId}>
-              <div className="flex flex-wrap items-end gap-x-4 gap-y-1 px-1">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-1">
                 <h2
                   id={headingId}
-                  className="text-[1.375rem] leading-none font-semibold tracking-[-0.035em] sm:text-2xl"
+                  className="text-base leading-6 font-semibold"
                 >
                   {group.label}
                 </h2>
-                <span
-                  aria-hidden="true"
-                  className="from-border mb-1.5 h-px min-w-6 flex-1 bg-gradient-to-r to-transparent"
-                />
-                <p className="text-muted-foreground mb-px shrink-0 font-mono text-[0.6875rem]">
+                <p className="text-muted-foreground shrink-0 font-mono text-xs">
                   {signalCount(group.signals.length)}
                 </p>
               </div>
-              <p className="text-muted-foreground mt-1.5 px-1 text-xs leading-5">
+              <p className="text-muted-foreground mt-0.5 px-1 text-xs leading-5">
                 {group.detail}
               </p>
               <ol
                 aria-label={group.label}
-                className="mt-4 space-y-3 sm:mt-5 sm:space-y-4"
+                className={cn(
+                  cardClass,
+                  "divide-border/70 mt-3 divide-y overflow-hidden",
+                )}
               >
                 {group.signals.map((signal) => (
                   <li key={signal.id}>
@@ -102,72 +85,40 @@ function SignalFeed({
         })}
       </div>
 
-      <div className="mt-12 flex flex-col items-center px-4 text-center">
-        <span
-          aria-hidden="true"
-          className="from-border h-10 w-px bg-gradient-to-b to-transparent"
-        />
-        <span className="bg-card/80 ring-border/80 text-primary mt-2 grid size-9 place-items-center rounded-full ring-1">
-          <RadioTower aria-hidden="true" className="size-4" />
-        </span>
-        <p className="mt-3 text-sm font-semibold">
-          {filtered
-            ? "That’s every signal in this view"
-            : "That’s everything ATLAS found"}
-        </p>
-        <p className="text-muted-foreground mt-1 max-w-sm text-xs leading-5">
-          Signals are recalculated from your records each time you open this
-          page. Nothing is changed.
-        </p>
-      </div>
+      <p className="text-muted-foreground mt-8 px-1 text-center text-xs leading-5">
+        Signals are recalculated from your records each time you open this page.
+        Nothing is changed.
+      </p>
     </>
   );
 }
 
 function NoMatches() {
   return (
-    <div className="bg-card/60 mt-8 grid min-h-64 place-items-center rounded-2xl border border-dashed p-6 text-center">
-      <div className="max-w-sm">
-        <span className="bg-muted/70 ring-border/80 text-muted-foreground mx-auto grid size-11 place-items-center rounded-2xl ring-1">
-          <SearchX aria-hidden="true" className="size-5" />
-        </span>
-        <p className="mt-4 text-sm font-semibold">
-          No signals match this view.
-        </p>
-        <p className="text-muted-foreground mt-2 text-xs leading-5">
-          Nothing in this area or severity stands out right now. The rest of
-          your signals are a tap away.
-        </p>
-        <Button asChild variant="secondary" size="sm" className="mt-5">
-          <Link href="/signals">Clear filters</Link>
-        </Button>
-      </div>
+    <div className="mt-8">
+      <EmptyState
+        icon={SearchX}
+        title="No signals match this view"
+        description="Nothing in this area or severity stands out right now. The rest of your signals are a tap away."
+        action={
+          <Button asChild variant="secondary" size="sm">
+            <Link href="/signals">Clear filters</Link>
+          </Button>
+        }
+      />
     </div>
   );
 }
 
 function Unavailable() {
   return (
-    <section
-      aria-labelledby="signals-unavailable"
-      className={cn(
-        surfaceClass,
-        "bg-card/90 relative mt-6 grid min-h-64 place-items-center rounded-2xl p-6 text-center shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
-      )}
-    >
-      <div className="max-w-sm">
-        <span className="bg-muted/70 ring-border/80 text-muted-foreground mx-auto grid size-11 place-items-center rounded-2xl ring-1">
-          <Radar aria-hidden="true" className="size-5" />
-        </span>
-        <h2 id="signals-unavailable" className="mt-4 text-sm font-semibold">
-          Signals are unavailable.
-        </h2>
-        <p className="text-muted-foreground mt-2 text-xs leading-5">
-          ATLAS could not safely calculate signals from the current source
-          records. No records were changed.
-        </p>
-      </div>
-    </section>
+    <div className="mt-6 sm:mt-8">
+      <EmptyState
+        icon={Radar}
+        title="Signals are unavailable"
+        description="ATLAS could not safely calculate signals from the current source records. No records were changed."
+      />
+    </div>
   );
 }
 
@@ -199,10 +150,7 @@ export function SignalsScreen({
           <SignalsHero signals={signals} filters={filters} />
           <SignalsToolbar signals={signals} filters={filters} />
           {visible.length > 0 ? (
-            <SignalFeed
-              signals={visible}
-              filtered={hasSignalFilters(filters)}
-            />
+            <SignalFeed signals={visible} />
           ) : (
             <NoMatches />
           )}

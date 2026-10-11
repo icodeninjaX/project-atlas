@@ -43,7 +43,7 @@ async function verifiedPasswordClient(currentPassword: string) {
   const supabase = await createClient();
   if (!supabase) {
     return {
-      error: "Connect Supabase before changing account security.",
+      error: "Account security can't be changed right now. Try again later.",
       supabase: null,
     };
   }
@@ -57,7 +57,8 @@ async function verifiedPasswordClient(currentPassword: string) {
 
   if (!(await hasRequiredAssurance(supabase))) {
     return {
-      error: "Complete MFA verification before changing account security.",
+      error:
+        "Sign in with two-step verification before changing account security.",
       supabase: null,
     };
   }
@@ -135,7 +136,7 @@ export async function changeEmailAction(
   return {
     success: true,
     message:
-      "Email change requested. Follow the confirmation links Supabase sends before the address changes.",
+      "Email change requested. Follow the confirmation links we email you before the address changes.",
   };
 }
 
@@ -158,14 +159,16 @@ export async function deleteAccountAction(
   if (!admin) {
     return {
       success: false,
-      message:
-        "Account deletion is unavailable until the server service role is configured.",
+      message: "Account deletion isn't available on this server.",
     };
   }
 
   const supabase = await createClient();
   if (!supabase) {
-    return { success: false, message: "Supabase is not configured." };
+    return {
+      success: false,
+      message: "Your account can't be deleted right now. Try again later.",
+    };
   }
   const {
     data: { user },
@@ -177,7 +180,8 @@ export async function deleteAccountAction(
   if (!(await hasRequiredAssurance(supabase))) {
     return {
       success: false,
-      message: "Complete MFA verification before deleting your account.",
+      message:
+        "Sign in with two-step verification before deleting your account.",
     };
   }
   if (!(await verifyCurrentPassword(user.email, values.data.currentPassword))) {

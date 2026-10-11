@@ -1,4 +1,4 @@
-import { Filter, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import { CollapsibleFilters } from "@/components/shared/collapsible-filters";
@@ -17,19 +17,23 @@ import {
 } from "@/lib/timeline/view";
 import { cn } from "@/lib/utils";
 
-const fieldClass =
-  "border-border bg-background/70 mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm";
+/** A label above its control, as on every ATLAS form. */
+const labelClass = "grid min-w-0 gap-1.5 text-sm font-medium";
 
-/** A pill strip that scrolls sideways on phones. */
+/** A raw input that matches `Input`, focus ring included. */
+const fieldClass =
+  "border-border bg-background/70 focus-visible:border-ring focus-visible:ring-ring/40 min-h-11 w-full rounded-xl border px-3 text-base font-normal outline-none focus-visible:ring-2 sm:text-sm";
+
+/** A segmented strip that scrolls sideways on phones. */
 const stripClass =
-  "bg-muted/50 ring-border/80 flex min-w-0 [scrollbar-width:none] gap-1 overflow-x-auto rounded-full p-1 ring-1 [&::-webkit-scrollbar]:hidden";
+  "bg-muted/50 ring-border/80 flex min-w-0 [scrollbar-width:none] gap-1 overflow-x-auto rounded-xl p-1 ring-1 [&::-webkit-scrollbar]:hidden";
 
 const pillClass =
-  "focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8 sm:px-3";
+  "focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8 sm:px-3";
 
 function pillState(active: boolean) {
   return active
-    ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)] dark:bg-white/[0.11]"
+    ? "bg-card text-foreground ring-border dark:bg-muted shadow-[0_1px_2px_rgb(7_10_15/0.08)] ring-1"
     : "text-muted-foreground hover:bg-card/60 hover:text-foreground";
 }
 
@@ -149,10 +153,13 @@ function ActiveFilter({
       <Link
         href={href as never}
         aria-label={name}
-        className="bg-primary/10 ring-primary/20 hover:bg-primary/15 dark:text-primary focus-visible:ring-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full pr-2 pl-3 text-xs font-semibold text-blue-700 ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8"
+        className="bg-muted text-foreground hover:bg-muted/70 focus-visible:ring-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-xl pr-2 pl-3 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8"
       >
         <span className="truncate">{label}</span>
-        <X aria-hidden="true" className="size-3.5 shrink-0" />
+        <X
+          aria-hidden="true"
+          className="text-muted-foreground size-3.5 shrink-0"
+        />
       </Link>
     </li>
   );
@@ -206,7 +213,7 @@ function ActiveFilters({
       </ul>
       <Link
         href="/timeline"
-        className="text-primary hover:bg-primary/10 focus-visible:ring-ring inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:ml-auto sm:min-h-8"
+        className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center rounded-md px-1 text-xs font-semibold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none sm:ml-auto sm:min-h-8"
       >
         Clear all
       </Link>
@@ -215,7 +222,7 @@ function ActiveFilters({
 }
 
 /**
- * Search, dates, module, and range, as one glass bar. Module and range are
+ * Search, dates, module, and range, in one bar. Module and range are
  * links, so they apply at once; search and custom dates apply on submit.
  */
 export function TimelineToolbar({
@@ -241,9 +248,9 @@ export function TimelineToolbar({
           <input type="hidden" name="module" value={filters.module} />
         ) : null}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_9.5rem_9.5rem_auto]">
-          <label className="text-muted-foreground text-xs sm:col-span-2 lg:col-span-1">
+          <label className={cn(labelClass, "sm:col-span-2 lg:col-span-1")}>
             Search timeline
-            <span className="relative mt-1.5 block">
+            <span className="relative block">
               <Search
                 aria-hidden="true"
                 className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
@@ -253,7 +260,7 @@ export function TimelineToolbar({
                 defaultValue={filters.query}
                 maxLength={120}
                 placeholder="Search titles and notes"
-                className="border-border bg-background/70 min-h-11 w-full rounded-xl border py-2 pr-3 pl-10 text-sm"
+                className={cn(fieldClass, "py-2 pr-3 pl-10")}
               />
             </span>
           </label>
@@ -264,12 +271,11 @@ export function TimelineToolbar({
                 type="submit"
                 className="flex-1 self-end sm:col-span-2 lg:col-span-1"
               >
-                <Filter aria-hidden="true" className="size-4" />
                 Apply
               </Button>
             }
           >
-            <label className="text-muted-foreground text-xs">
+            <label className={labelClass}>
               From
               <input
                 name="from"
@@ -278,7 +284,7 @@ export function TimelineToolbar({
                 className={fieldClass}
               />
             </label>
-            <label className="text-muted-foreground text-xs">
+            <label className={labelClass}>
               To
               <input
                 name="to"

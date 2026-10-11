@@ -1,10 +1,4 @@
-import {
-  AlarmClock,
-  Clock3,
-  Hourglass,
-  Sun,
-  type LucideIcon,
-} from "lucide-react";
+import { Sun } from "lucide-react";
 import { formatTaskTime } from "@/lib/tasks/task-time";
 import {
   formatTaskMinutes,
@@ -57,16 +51,17 @@ function ProgressRing({ done, total }: { done: number; total: number }) {
             strokeDashoffset={RING_CIRCUMFERENCE * (1 - ratio)}
             className={cn(
               "transition-[stroke-dashoffset] duration-500 ease-out motion-reduce:transition-none",
-              finished
-                ? "stroke-green-600 dark:stroke-green-500"
-                : "stroke-primary",
+              finished ? "stroke-positive" : "stroke-primary",
             )}
           />
         ) : null}
       </svg>
       {/* An empty day is open, not 0% done. */}
       {total === 0 ? (
-        <Sun className="text-primary size-6 sm:size-8" aria-hidden="true" />
+        <Sun
+          className="text-muted-foreground size-6 sm:size-8"
+          aria-hidden="true"
+        />
       ) : (
         <p className="font-mono text-base leading-none font-semibold tracking-[-0.03em] sm:text-2xl">
           {percent}
@@ -80,12 +75,10 @@ function ProgressRing({ done, total }: { done: number; total: number }) {
 }
 
 function PlanStat({
-  icon: Icon,
   label,
   value,
   tone = "default",
 }: {
-  icon: LucideIcon;
   label: string;
   value: string;
   tone?: "default" | "attention";
@@ -93,18 +86,8 @@ function PlanStat({
   return (
     // Phones show plain stats; a box inside the card would only add noise.
     <div className="bg-background/60 min-w-0 rounded-xl p-3.5 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:p-0 sm:p-4">
-      <dt className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium sm:gap-2">
-        <span
-          className={cn(
-            "grid size-5 shrink-0 place-items-center rounded-full max-[359px]:hidden sm:size-6",
-            tone === "attention"
-              ? "bg-destructive/12 text-destructive"
-              : "bg-primary/10 text-primary",
-          )}
-        >
-          <Icon className="size-3 sm:size-3.5" aria-hidden="true" />
-        </span>
-        <span className="min-w-0 truncate">{label}</span>
+      <dt className="text-muted-foreground truncate text-xs font-medium">
+        {label}
       </dt>
       <dd
         className={cn(
@@ -143,7 +126,7 @@ export function TaskOverview({
   return (
     <section
       aria-labelledby="today-plan-title"
-      className="border-border bg-card relative mt-6 overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.1)] sm:mt-7"
+      className="border-border bg-card relative mt-6 overflow-hidden rounded-2xl border sm:mt-7"
     >
       <div className="relative grid gap-5 p-5 sm:gap-6 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:items-center lg:gap-10">
         <div className="flex min-w-0 items-center gap-4 sm:gap-6">
@@ -155,7 +138,7 @@ export function TaskOverview({
             >
               Today’s plan
             </h2>
-            <p className="mt-2 text-[clamp(1.75rem,8vw,2.75rem)] leading-none font-semibold tracking-[-0.025em] sm:mt-2.5">
+            <p className="mt-2 text-2xl leading-none font-semibold tracking-[-0.02em] sm:mt-2.5 sm:text-[1.75rem]">
               {headline}
             </p>
             <p className="text-muted-foreground mt-2 text-sm">{detail}</p>
@@ -163,7 +146,6 @@ export function TaskOverview({
         </div>
         <dl className="max-sm:border-border grid grid-cols-[repeat(auto-fit,minmax(min(100%,4.5rem),1fr))] gap-3 max-sm:gap-x-3 max-sm:gap-y-4 max-sm:border-t max-sm:pt-4 sm:grid-cols-3">
           <PlanStat
-            icon={Hourglass}
             label="Time left"
             value={
               minutesLeft > 0
@@ -172,12 +154,10 @@ export function TaskOverview({
             }
           />
           <PlanStat
-            icon={Clock3}
             label="Next up"
             value={nextTime ? formatTaskTime(nextTime) : "—"}
           />
           <PlanStat
-            icon={AlarmClock}
             label="Overdue"
             value={String(overdueCount)}
             tone={overdueCount > 0 ? "attention" : "default"}

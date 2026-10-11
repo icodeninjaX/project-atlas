@@ -2,7 +2,6 @@ import { X } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import { ScrollStrip } from "@/components/shared/scroll-strip";
 import { signalCategories, type Signal } from "@/lib/signals/engine";
 import {
@@ -14,23 +13,24 @@ import {
   type SignalFilters,
 } from "@/lib/signals/view";
 import { cn } from "@/lib/utils";
+import { cardClass } from "./signals-hero";
 import { categoryTone, severityTones } from "./signal-tone";
 
-/** A pill strip that scrolls sideways when it runs out of room. */
+/** A segmented strip that scrolls sideways when it runs out of room. */
 const stripClass =
-  "bg-muted/50 ring-border/80 min-w-0 justify-self-start max-w-full [scrollbar-width:none] overflow-x-auto rounded-full p-1 ring-1 [&::-webkit-scrollbar]:hidden";
+  "bg-muted/60 min-w-0 justify-self-start max-w-full [scrollbar-width:none] overflow-x-auto rounded-xl p-1 [&::-webkit-scrollbar]:hidden";
 
 /** Names each strip from `sm`; phones rely on the strips' own names. */
 const rowLabelClass =
   "text-muted-foreground pl-2 text-xs font-semibold max-sm:hidden";
 
 const pillClass =
-  "focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:min-h-8 sm:px-3";
+  "focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:min-h-8 sm:px-3";
 
 function pillState(active: boolean) {
   return active
-    ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)] dark:bg-white/[0.11]"
-    : "text-muted-foreground hover:bg-card/60 hover:text-foreground";
+    ? "bg-background text-foreground shadow-sm"
+    : "text-muted-foreground hover:text-foreground";
 }
 
 function signalCount(count: number) {
@@ -82,7 +82,7 @@ function ActiveFilter({ href, label }: { href: string; label: string }) {
       <Link
         href={href as Route}
         aria-label={`Remove filter: ${label}`}
-        className="bg-primary/10 ring-primary/20 hover:bg-primary/15 dark:text-primary focus-visible:ring-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full pr-2 pl-3 text-xs font-semibold text-blue-700 ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8"
+        className="bg-muted/60 text-foreground hover:bg-muted focus-visible:ring-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-xl pr-2 pl-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8"
       >
         <span className="truncate">{label}</span>
         <X aria-hidden="true" className="size-3.5 shrink-0" />
@@ -92,8 +92,8 @@ function ActiveFilter({ href, label }: { href: string; label: string }) {
 }
 
 /**
- * Area and severity as one glass bar of pills, each with what it would
- * show. Pills are links, so a filter applies in one tap and the address
+ * Area and severity as one bar of segmented filters, each with what it
+ * would show. Pills are links, so a filter applies in one tap and the address
  * keeps it; filters in force show beneath as chips that remove them.
  */
 export function SignalsToolbar({
@@ -109,8 +109,8 @@ export function SignalsToolbar({
     <div className="mt-6 sm:mt-8">
       <div
         className={cn(
-          surfaceClass,
-          "bg-card/85 relative grid gap-2 rounded-2xl p-2.5 shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:items-center sm:gap-x-3 sm:p-3",
+          cardClass,
+          "grid gap-2 p-2.5 sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:items-center sm:gap-x-3 sm:p-3",
         )}
       >
         <p aria-hidden="true" className={rowLabelClass}>
@@ -204,7 +204,7 @@ export function SignalsToolbar({
           </ul>
           <Link
             href="/signals"
-            className="text-primary hover:bg-primary/10 focus-visible:ring-ring inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:ml-auto sm:min-h-8"
+            className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center rounded-lg px-1 text-xs font-semibold underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:outline-none sm:ml-auto sm:min-h-8"
           >
             Clear all
           </Link>

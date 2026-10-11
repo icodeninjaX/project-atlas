@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, Clock3 } from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,51 +55,45 @@ export function TaskTimeRecommendations({
   const extraConflictCount = availability.conflicts.length - 2;
 
   return (
-    <div
-      className={cn(
-        "border-primary/25 bg-card overflow-hidden rounded-2xl border",
-        className,
-      )}
-    >
-      <div className="bg-primary/[0.06] border-primary/15 flex items-start justify-between gap-3 border-b px-3.5 py-3 sm:px-4">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg">
-            <CalendarClock className="size-[18px]" aria-hidden="true" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold">Schedule conflict</p>
-            <p
-              role="status"
-              aria-live="polite"
-              className="text-muted-foreground mt-0.5 text-xs leading-5"
-            >
-              <span className="sr-only">{formatTaskTime(scheduledTime)}</span>{" "}
-              Overlaps {conflictingTitles}
-              {extraConflictCount > 0
-                ? ` and ${extraConflictCount} more task${extraConflictCount === 1 ? "" : "s"}`
-                : ""}
-              .
-            </p>
-          </div>
+    <div className={cn("bg-muted/40 rounded-xl p-3.5 sm:p-4", className)}>
+      <div className="flex items-start gap-2.5">
+        <CalendarClock
+          className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-300"
+          aria-hidden="true"
+        />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold">
+            <span className="text-amber-700 dark:text-amber-300">
+              Schedule conflict
+            </span>{" "}
+            <span className="text-muted-foreground font-mono text-xs font-medium">
+              · {formatTaskTime(scheduledTime)}
+            </span>
+          </p>
+          <p
+            role="status"
+            aria-live="polite"
+            className="text-muted-foreground mt-0.5 text-xs leading-5"
+          >
+            <span className="sr-only">{formatTaskTime(scheduledTime)}</span>{" "}
+            Overlaps {conflictingTitles}
+            {extraConflictCount > 0
+              ? ` and ${extraConflictCount} more task${extraConflictCount === 1 ? "" : "s"}`
+              : ""}
+            .
+          </p>
         </div>
-        <span className="border-primary/20 bg-background text-primary shrink-0 rounded-full border px-2.5 py-1 font-mono text-[0.6875rem] font-semibold">
-          {formatTaskTime(scheduledTime)}
-        </span>
       </div>
 
       {availability.recommendations.length > 0 ? (
-        <div className="px-3.5 py-3.5 sm:px-4 sm:py-4">
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold">Available times</p>
-              <p className="text-muted-foreground mt-0.5 text-[0.6875rem] leading-4">
-                Nearest openings that fit this task.
-              </p>
-            </div>
-            <span className="bg-muted text-muted-foreground shrink-0 rounded-full px-2.5 py-1 font-mono text-[0.625rem] font-medium">
+        <div className="mt-4">
+          <p className="text-sm font-semibold">Available times</p>
+          <p className="text-muted-foreground mt-0.5 text-xs leading-5">
+            Nearest openings that fit this task ·{" "}
+            <span className="font-mono">
               {availability.durationMinutes} min
             </span>
-          </div>
+          </p>
           <div
             className="-mx-3.5 mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-2 overflow-x-auto px-3.5 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 md:grid-cols-4 [&::-webkit-scrollbar]:hidden"
             aria-label="Recommended available times"
@@ -112,19 +106,15 @@ export function TaskTimeRecommendations({
                 size="sm"
                 onClick={() => onSelectTime(time)}
                 aria-label={`Use ${formatTaskTime(time)}`}
-                className="hover:border-primary/35 hover:bg-primary/10 min-w-[7.75rem] snap-start justify-start gap-2.5 px-3 sm:min-w-0"
+                className="min-w-[6.5rem] snap-start font-mono sm:min-w-0"
               >
-                <Clock3
-                  className="text-primary size-3.5 shrink-0"
-                  aria-hidden="true"
-                />
-                <span>{formatTaskTime(time)}</span>
+                {formatTaskTime(time)}
               </Button>
             ))}
           </div>
         </div>
       ) : (
-        <div className="px-3.5 py-3.5 sm:px-4 sm:py-4">
+        <div className="mt-4">
           <p className="text-sm font-semibold">No open slot found</p>
           <p className="text-muted-foreground mt-1 text-xs leading-5">
             No other {availability.durationMinutes}-minute opening fits on this

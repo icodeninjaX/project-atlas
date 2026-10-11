@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { surfaceClass } from "@/components/dashboard/dashboard-card";
+import { cardClass } from "@/components/history/history-chrome";
 import type { MetricGrain } from "@/lib/history/metrics";
 import {
   historyGrains,
@@ -9,16 +9,15 @@ import {
 } from "@/lib/history/view";
 import { cn } from "@/lib/utils";
 
-const stripClass =
-  "bg-muted/50 ring-border/80 flex min-w-0 gap-1 rounded-full p-1 ring-1";
+const stripClass = "bg-muted/60 flex min-w-0 gap-1 rounded-xl p-1";
 
 const pillClass =
-  "focus-visible:ring-ring inline-flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-full px-2 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8 sm:flex-none sm:px-3.5";
+  "focus-visible:ring-ring inline-flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-lg px-2 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8 sm:flex-none sm:px-3.5";
 
 function pillState(active: boolean) {
   return active
-    ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)] dark:bg-white/[0.11]"
-    : "text-muted-foreground hover:bg-card/60 hover:text-foreground";
+    ? "bg-background text-foreground shadow-sm"
+    : "text-muted-foreground hover:text-foreground";
 }
 
 const grainLabels: Record<MetricGrain, string> = {
@@ -63,8 +62,8 @@ function Strip({
 }
 
 /**
- * Grouping and lookback as one glass bar of links, so each applies in one
- * tap and the address always says what is in view.
+ * Grouping and lookback as one bar of links, so each applies in one tap and
+ * the address always says what is in view.
  */
 export function HistoryToolbar({
   grain,
@@ -76,8 +75,8 @@ export function HistoryToolbar({
   return (
     <div
       className={cn(
-        surfaceClass,
-        "bg-card/85 relative mt-6 flex flex-col gap-3 rounded-2xl p-3 shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6 sm:p-3.5 sm:pl-5",
+        cardClass,
+        "mt-6 flex flex-col gap-3 p-3 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6 sm:p-3.5 sm:pl-5",
       )}
     >
       <Strip label="Group by">

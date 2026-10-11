@@ -32,7 +32,7 @@ describe("TaskActionsMenu", () => {
       name: "Actions for Write proposal",
     });
     expect(menu).toBeVisible();
-    expect(menu).toHaveClass("bg-white", "dark:bg-slate-800");
+    expect(menu).toHaveClass("bg-card", "rounded-xl", "shadow-lg");
     const focusItem = screen.getByRole("menuitem", {
       name: "Focus on Write proposal",
     });

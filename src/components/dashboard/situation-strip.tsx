@@ -1,7 +1,5 @@
-import { ArrowUpRight } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import type { CSSProperties } from "react";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { cn } from "@/lib/utils";
 import styles from "./today.module.css";
@@ -13,56 +11,12 @@ export type SituationItem = {
   href: Route;
   sensitive?: boolean;
   urgent?: boolean;
-  /**
-   * A small progress ring (0–1) in the corner. It is decoration: the value
-   * or detail must say the same thing in words.
-   */
-  meter?: number;
 };
 
-function clampShare(value: number) {
-  return Math.min(Math.max(value, 0), 1);
-}
-
-const RING_RADIUS = 15;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-
-/** A small progress ring; decoration, since the detail carries the figure. */
-function MeterRing({ value }: { value: number }) {
-  const share = clampShare(value);
-
-  return (
-    <svg
-      viewBox="0 0 36 36"
-      aria-hidden="true"
-      className="size-9 shrink-0 -rotate-90"
-    >
-      <circle
-        cx="18"
-        cy="18"
-        r={RING_RADIUS}
-        fill="none"
-        strokeWidth="3.5"
-        className="stroke-primary/15"
-      />
-      {share > 0 ? (
-        <circle
-          cx="18"
-          cy="18"
-          r={RING_RADIUS}
-          fill="none"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          strokeDasharray={RING_CIRCUMFERENCE}
-          strokeDashoffset={RING_CIRCUMFERENCE * (1 - share)}
-          className={cn(styles.draw, "stroke-primary")}
-          style={{ "--ring-from": RING_CIRCUMFERENCE } as CSSProperties}
-        />
-      ) : null}
-    </svg>
-  );
-}
-
+/**
+ * One area per cell of a single strip, split by hairlines: the gap between
+ * the cells shows the border color behind them.
+ */
 export function SituationStrip({ items }: { items: SituationItem[] }) {
   return (
     <section
@@ -81,8 +35,13 @@ export function SituationStrip({ items }: { items: SituationItem[] }) {
         </p>
       </div>
       {/* Columns follow the strip's width in rem, so large text gets fewer,
-          wider tiles while a 320 px phone still gets two. */}
-      <div className="grid grid-cols-1 gap-2.5 min-[360px]:gap-3 @[17rem]:grid-cols-2 @[56rem]:grid-cols-4">
+          wider cells while a 320 px phone still gets two. */}
+      <div
+        className={cn(
+          styles.edge,
+          "bg-border relative grid grid-cols-1 gap-px overflow-hidden rounded-2xl @[17rem]:grid-cols-2 @[56rem]:grid-cols-4",
+        )}
+      >
         {items.map((item) => {
           const value = item.sensitive ? (
             <SensitiveValue>{item.value}</SensitiveValue>
@@ -94,23 +53,10 @@ export function SituationStrip({ items }: { items: SituationItem[] }) {
             <Link
               key={item.label}
               href={item.href}
-              className={cn(
-                "group bg-card/90 focus-visible:ring-ring relative isolate flex min-w-0 flex-col overflow-hidden rounded-2xl p-3.5 shadow-[0_1px_2px_rgb(7_10_15/0.04)] transition-[box-shadow,transform] focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none min-[360px]:p-4 sm:p-5 @[17rem]:min-h-24",
-                item.urgent ? "ring-destructive/30 ring-1" : styles.edge,
-              )}
+              className="bg-card hover:bg-muted/40 focus-visible:ring-ring flex min-w-0 flex-col p-3.5 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset motion-reduce:transition-none min-[360px]:p-4 sm:p-5 @[17rem]:min-h-24"
             >
-              <span className="flex min-w-0 items-start justify-between gap-2">
-                <span className="text-muted-foreground min-w-0 text-xs leading-4 font-medium break-words">
-                  {item.label}
-                </span>
-                {item.meter != null ? (
-                  <MeterRing value={item.meter} />
-                ) : (
-                  <ArrowUpRight
-                    aria-hidden="true"
-                    className="text-muted-foreground group-hover:text-primary size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none max-sm:hidden"
-                  />
-                )}
+              <span className="text-muted-foreground min-w-0 text-xs leading-4 font-medium break-words">
+                {item.label}
               </span>
               <span
                 className={cn(

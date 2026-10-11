@@ -124,12 +124,12 @@ describe("TimelineWorkspace", () => {
     expect(within(hero).getByText("+₱50,000.00")).toBeInTheDocument();
     expect(within(hero).getByText("−₱125.50")).toBeInTheDocument();
     expect(within(hero).getByText("+₱49,874.50")).toBeInTheDocument();
-    const mix = within(hero).getByRole("list", { name: "Moments by module" });
+    const mix = within(hero).getByRole("list", { name: "Events by module" });
     expect(within(mix).getByText("Money").parentElement).toHaveTextContent(
       "Money2",
     );
     expect(within(hero).getByText(/Busiest day:/)).toHaveTextContent(
-      "Busiest day: Fri, Oct 2 · 1 moment",
+      "Busiest day: Fri, Oct 2 · 1 event",
     );
   });
 
@@ -181,7 +181,7 @@ describe("TimelineWorkspace", () => {
     expect(screen.getByText("8/10")).toBeInTheDocument();
   });
 
-  it("loads older moments into the same view and says when it has them all", async () => {
+  it("loads older events into the same view and says when it has them all", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ events: [portfolio], nextCursor: null }),
@@ -198,10 +198,8 @@ describe("TimelineWorkspace", () => {
     );
 
     expect(screen.getByText("Filtered view")).toBeInTheDocument();
-    expect(screen.getByText(/Counting the moments loaded/)).toBeInTheDocument();
-    await user.click(
-      screen.getByRole("button", { name: "Load older moments" }),
-    );
+    expect(screen.getByText(/Counting the events loaded/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Load older events" }));
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/timeline?module=money&cursor=cursor-1",
@@ -211,12 +209,12 @@ describe("TimelineWorkspace", () => {
       await screen.findByRole("heading", { name: "Finish portfolio" }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Load older moments" }),
+      screen.queryByRole("button", { name: "Load older events" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText("That’s every moment that matches."),
+      screen.getByText("That’s every event that matches."),
     ).toBeInTheDocument();
-    expect(screen.getByText("Loaded 1 older moment.")).toBeInTheDocument();
+    expect(screen.getByText("Loaded 1 older event.")).toBeInTheDocument();
   });
 
   it("explains how to start an empty timeline, and offers a way out of an empty filter", () => {
@@ -251,7 +249,7 @@ describe("TimelineWorkspace", () => {
       />,
     );
     expect(screen.getByText("Toolbar")).toBeInTheDocument();
-    expect(screen.getByText("No moments match")).toBeInTheDocument();
+    expect(screen.getByText("No events match")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Clear filters" })).toHaveAttribute(
       "href",
       "/timeline",

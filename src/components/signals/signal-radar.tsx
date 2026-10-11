@@ -9,7 +9,6 @@ import {
 } from "@/lib/signals/view";
 import { cn } from "@/lib/utils";
 import { severityTones } from "./signal-tone";
-import styles from "./signals.module.css";
 
 const SIZE = 240;
 const CENTER = SIZE / 2;
@@ -37,10 +36,10 @@ function sectorPath(centerAngle: number) {
 }
 
 /**
- * Every signal as a blip on a radar: each area owns a slice, and the more
- * urgent a signal, the nearer the center. It is decoration (the hero and
- * the feed say the same in words), so it is hidden from assistive
- * technology; filtered-out blips dim, and the filtered area lights up.
+ * Every signal as a dot on a static radar chart: each area owns a slice,
+ * and the more urgent a signal, the nearer the center. The hero and the
+ * feed say the same in words, so it is hidden from assistive technology;
+ * filtered-out dots dim, and the filtered area is shaded.
  */
 export function SignalRadar({
   signals,
@@ -59,21 +58,16 @@ export function SignalRadar({
 
   return (
     <div aria-hidden="true" className={cn("relative aspect-square", className)}>
-      <div
-        className={cn(
-          "absolute inset-[13.333%] [mask-image:radial-gradient(closest-side,black_96%,transparent)]",
-          styles.sweep,
-        )}
-      />
       <svg
         viewBox={`0 0 ${SIZE} ${SIZE}`}
-        className="relative size-full overflow-visible"
+        className="size-full overflow-visible"
       >
         <circle
           cx={CENTER}
           cy={CENTER}
           r={RADIUS}
-          className="fill-primary/[0.035] stroke-border"
+          fill="none"
+          className="stroke-border"
           strokeWidth="1"
         />
         {[0.25, 0.5, 0.75].map((share) => (
@@ -141,20 +135,6 @@ export function SignalRadar({
           return (
             <g key={signal.id} opacity={dim ? 0.22 : 1}>
               <title>{`${severityLabels[signal.severity]} · ${signal.title}`}</title>
-              {signal.severity === "critical" && !dim ? (
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r="5"
-                  className={cn(tone.fill, styles.ping)}
-                />
-              ) : null}
-              <circle
-                cx={cx}
-                cy={cy}
-                r="10"
-                className={cn(tone.fill, "opacity-[0.16]")}
-              />
               <circle
                 cx={cx}
                 cy={cy}
@@ -166,14 +146,11 @@ export function SignalRadar({
           );
         })}
 
-        <circle cx={CENTER} cy={CENTER} r="2.5" className="fill-primary" />
         <circle
           cx={CENTER}
           cy={CENTER}
-          r="6"
-          fill="none"
-          className="stroke-primary/40"
-          strokeWidth="1"
+          r="2"
+          className="fill-muted-foreground/60"
         />
       </svg>
     </div>

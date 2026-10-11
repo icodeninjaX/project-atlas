@@ -467,10 +467,6 @@ html[data-launch-seen] .atlas-launch-screen {
   place-items: center;
 }
 
-.atlas-task-success-logo {
-  display: none;
-}
-
 .atlas-task-success-check {
   position: absolute;
   inset: 0;

@@ -131,7 +131,7 @@ describe("SignalsScreen", () => {
       <SignalsScreen signals={all} filters={noFilters} checkedAt={checkedAt} />,
     );
 
-    const hero = screen.getByRole("region", { name: "Pulse" });
+    const hero = screen.getByRole("region", { name: "Summary" });
     expect(within(hero).getByText("2")).toBeInTheDocument();
     expect(within(hero).getByText("need attention")).toBeInTheDocument();
     expect(within(hero).getByText("Act now")).toBeInTheDocument();
@@ -161,11 +161,9 @@ describe("SignalsScreen", () => {
         { name: "Strong task execution" },
       ),
     ).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Updates" })).toBeInTheDocument();
     expect(
-      screen.getByRole("list", { name: "Worth knowing" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("That’s everything ATLAS found"),
+      screen.getByText(/Signals are recalculated from your records/),
     ).toBeInTheDocument();
   });
 
@@ -201,7 +199,7 @@ describe("SignalsScreen", () => {
       screen.getByRole("link", { name: "Remove filter: Money" }),
     ).toHaveAttribute("href", "/signals");
     expect(
-      screen.getByText("That’s every signal in this view"),
+      screen.getByText(/Signals are recalculated from your records/),
     ).toBeInTheDocument();
   });
 
@@ -213,7 +211,7 @@ describe("SignalsScreen", () => {
         checkedAt={checkedAt}
       />,
     );
-    expect(screen.getByText("No signals match this view.")).toBeInTheDocument();
+    expect(screen.getByText("No signals match this view")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Clear filters" })).toHaveAttribute(
       "href",
       "/signals",
@@ -245,7 +243,7 @@ describe("SignalsScreen", () => {
         checkedAt={checkedAt}
       />,
     );
-    expect(screen.getByText("Signals are unavailable.")).toBeInTheDocument();
+    expect(screen.getByText("Signals are unavailable")).toBeInTheDocument();
     expect(screen.queryByText(/Checked/)).not.toBeInTheDocument();
   });
 });

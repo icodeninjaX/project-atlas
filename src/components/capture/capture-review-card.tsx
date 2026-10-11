@@ -6,8 +6,6 @@ import {
   CircleCheck,
   CircleSlash,
   CircleX,
-  Quote,
-  X,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -20,8 +18,8 @@ import {
   captureKind,
   chipTones,
   confidenceTone,
+  cardClass,
   fieldLabelClass,
-  glassCardClass,
   inputClass,
   selectClass,
 } from "./capture-chrome";
@@ -36,9 +34,8 @@ function unique<T>(values: T[], check: (value: T) => boolean) {
 
 function SourceSnippet({ children }: { children: ReactNode }) {
   return (
-    <span className="text-muted-foreground mt-1.5 flex min-w-0 items-start gap-1 text-[0.6875rem] leading-4 font-normal">
-      <Quote aria-hidden="true" className="mt-px size-3 shrink-0 opacity-70" />
-      <span className="min-w-0 break-words">Source: “{children}”</span>
+    <span className="text-muted-foreground mt-1.5 block min-w-0 text-xs leading-4 font-normal break-words">
+      Source: “{children}”
     </span>
   );
 }
@@ -114,9 +111,24 @@ function SelectField({
 const fieldGrid = "grid gap-x-4 gap-y-4 @md:grid-cols-2";
 
 const resultView = {
-  saved: { word: "Saved", icon: CircleCheck, tone: chipTones.positive },
-  rejected: { word: "Rejected", icon: CircleSlash, tone: chipTones.neutral },
-  failed: { word: "Not saved", icon: CircleX, tone: chipTones.danger },
+  saved: {
+    word: "Saved",
+    icon: CircleCheck,
+    tone: chipTones.positive,
+    glyph: "text-positive",
+  },
+  rejected: {
+    word: "Rejected",
+    icon: CircleSlash,
+    tone: chipTones.neutral,
+    glyph: "text-muted-foreground",
+  },
+  failed: {
+    word: "Not saved",
+    icon: CircleX,
+    tone: chipTones.danger,
+    glyph: "text-destructive",
+  },
 } as const;
 
 export function CaptureCard({
@@ -171,19 +183,12 @@ export function CaptureCard({
     <article
       aria-labelledby={titleId}
       className={cn(
-        glassCardClass,
-        "overflow-hidden transition-[opacity,box-shadow] duration-300",
+        cardClass,
+        "overflow-hidden transition-[opacity,box-shadow] duration-200",
         result?.status === "rejected" && "opacity-75",
         result?.status === "saved" && "ring-positive/25 ring-1",
       )}
     >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "absolute inset-y-5 left-0 w-[3px] rounded-r-full",
-          result?.status === "saved" ? "bg-positive" : kind.tone.dot,
-        )}
-      />
       <header className="flex items-start gap-3.5 p-4 pb-0 min-[360px]:p-5 min-[360px]:pb-0 sm:gap-4 sm:p-6 sm:pb-0">
         <KindTile icon={kind.icon} tone={kind.tone} />
         <div className="min-w-0 flex-1">
@@ -224,10 +229,10 @@ export function CaptureCard({
 
       <div className="space-y-4 p-4 min-[360px]:p-5 sm:p-6">
         {proposal.warnings.length > 0 && !result && (
-          <div className="flex gap-3 rounded-2xl bg-amber-500/[0.07] p-3.5 text-sm ring-1 ring-amber-500/25">
+          <div className="bg-background/55 flex gap-3 rounded-xl p-3.5 text-sm">
             <AlertTriangle
               aria-hidden="true"
-              className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-300"
+              className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-300"
             />
             <ul className="min-w-0 space-y-1 leading-5">
               {proposal.warnings.map((warning) => (
@@ -508,7 +513,7 @@ export function CaptureCard({
               </div>
             )}
             {item.source && (money || proposal.date) && (
-              <label className="bg-background/55 ring-border/80 hover:ring-primary/35 has-[:checked]:bg-primary/[0.06] has-[:checked]:ring-primary/30 has-[:focus-visible]:ring-ring flex cursor-pointer items-start gap-3 rounded-2xl p-3.5 text-sm leading-5 ring-1 transition-colors has-[:focus-visible]:ring-2">
+              <label className="bg-background/55 hover:bg-muted/50 has-[:focus-visible]:ring-ring flex cursor-pointer items-start gap-3 rounded-xl p-3.5 text-sm leading-5 transition-colors has-[:focus-visible]:ring-2">
                 <input
                   type="checkbox"
                   name="reviewedSource"
@@ -529,7 +534,6 @@ export function CaptureCard({
                 disabled={busy}
                 onClick={onReject}
               >
-                <X aria-hidden="true" className="size-4" />
                 Reject
               </Button>
               <Button type="submit" disabled={busy}>
@@ -542,14 +546,11 @@ export function CaptureCard({
         {result && outcome && (
           <p
             role="status"
-            className={cn(
-              "flex items-start gap-2 rounded-2xl px-3.5 py-3 text-sm leading-5 ring-1",
-              outcome.tone,
-            )}
+            className="bg-background/55 flex items-start gap-2 rounded-xl px-3.5 py-3 text-sm leading-5"
           >
             <outcome.icon
               aria-hidden="true"
-              className="mt-0.5 size-4 shrink-0"
+              className={cn("mt-0.5 size-4 shrink-0", outcome.glyph)}
             />
             <span className="min-w-0">
               {outcome.word}: {result.message}

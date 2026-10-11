@@ -1,10 +1,10 @@
-import { ChevronDown, ArrowUpRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   CoverageChip,
+  cardClass,
   eyebrowClass,
-  glassCardClass,
 } from "@/components/history/history-chrome";
 import styles from "@/components/history/history.module.css";
 import { MetricChart } from "@/components/history/metric-chart";
@@ -90,7 +90,7 @@ function Ledger({
           <caption className="sr-only">
             {definition.label} by {grainWord(grain)}
           </caption>
-          <thead className="bg-muted/80 text-muted-foreground sticky top-0 text-[0.6875rem] font-semibold tracking-[0.06em] uppercase backdrop-blur">
+          <thead className="bg-muted text-muted-foreground sticky top-0 text-[0.6875rem] font-semibold tracking-[0.06em] uppercase">
             <tr>
               <th scope="col" className="px-3 py-2">
                 Period
@@ -182,40 +182,29 @@ export function MetricCard({
     <section
       id={`series-${series.metric}`}
       aria-labelledby={headingId}
-      className={cn(glassCardClass, "scroll-mt-24 p-4 min-[360px]:p-5 sm:p-6")}
+      className={cn(cardClass, "scroll-mt-24 p-4 min-[360px]:p-5 sm:p-6")}
     >
-      <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-2">
-        <div className="flex min-w-0 flex-1 basis-[14rem] items-start gap-3">
-          <span
-            aria-hidden="true"
-            className={cn(
-              "grid size-10 shrink-0 place-items-center rounded-xl ring-1 @max-[16rem]:hidden",
-              tone.soft,
-              tone.text,
-              tone.ring,
-            )}
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1">
+        <div className="min-w-0 flex-1 basis-[14rem]">
+          <h3
+            id={headingId}
+            className="flex items-center gap-2 text-base leading-6 font-semibold tracking-[-0.01em]"
           >
-            <Icon className="size-[1.125rem]" />
-          </span>
-          <div className="min-w-0">
-            <h3
-              id={headingId}
-              className="text-base leading-6 font-semibold tracking-[-0.01em]"
-            >
-              {definition.label}
-            </h3>
-            <p className="text-muted-foreground mt-0.5 text-xs leading-5 break-words">
-              {definition.source}
-            </p>
-          </div>
+            <Icon
+              aria-hidden="true"
+              className={cn("size-4 shrink-0", tone.text)}
+            />
+            {definition.label}
+          </h3>
+          <p className="text-muted-foreground mt-0.5 text-xs leading-5 break-words">
+            {definition.source}
+          </p>
         </div>
         <Link
           href={definition.href}
-          aria-label={`View source in ${tone.place}`}
-          className="text-muted-foreground hover:bg-primary/10 hover:text-primary ring-border/80 focus-visible:ring-ring -mt-0.5 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full px-3 text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8"
+          className="text-primary focus-visible:ring-ring -mt-2.5 inline-flex min-h-11 shrink-0 items-center rounded-lg px-1 text-xs font-medium underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:outline-none sm:-mt-1.5 sm:min-h-9"
         >
-          {tone.place}
-          <ArrowUpRight aria-hidden="true" className="size-3.5" />
+          View in {tone.place}
         </Link>
       </div>
 

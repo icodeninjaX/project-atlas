@@ -1,4 +1,4 @@
-import { ArrowRight, type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import styles from "./today.module.css";
 
 /**
- * A light-catching hairline edge. Hosts must be positioned.
+ * A uniform hairline edge. Hosts must be positioned.
  * Outlines elsewhere use `ring-*` because the unlayered
  * `* { border-color }` rule in globals.css overrides `border-*` colors.
  */
@@ -62,9 +62,9 @@ export function DashboardCardHeading({
       {action ? (
         <Link
           href={action.href}
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
         >
-          {action.label} <ArrowRight aria-hidden="true" className="size-3" />
+          {action.label}
         </Link>
       ) : null}
     </div>

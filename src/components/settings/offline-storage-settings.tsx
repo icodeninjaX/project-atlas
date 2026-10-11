@@ -1,25 +1,14 @@
 "use client";
 
-import {
-  Cloud,
-  CloudOff,
-  DatabaseZap,
-  HardDrive,
-  History,
-  ListRestart,
-  RefreshCw,
-  Trash2,
-} from "lucide-react";
+import { DatabaseZap, History } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
-import {
-  SettingRow,
-  StatusChip,
-  tileClass,
-} from "@/components/settings/settings-chrome";
+import { SettingRow, StatusChip } from "@/components/settings/settings-chrome";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+const cellClass = "bg-card min-w-0 px-3.5 py-3";
 
 function formatBytes(value: number | undefined) {
   if (!value) return "0 MB";
@@ -57,33 +46,25 @@ export function OfflineStorageSettings() {
 
   return (
     <div className="space-y-6">
-      <dl className="grid gap-2.5 sm:grid-cols-3">
-        <div className={tileClass}>
-          <dt className="text-muted-foreground flex items-center gap-2 text-xs">
-            {online ? (
-              <Cloud aria-hidden="true" className="size-3.5" />
-            ) : (
-              <CloudOff aria-hidden="true" className="size-3.5" />
-            )}
-            Connection
-          </dt>
-          <dd className="mt-2.5">
+      <dl className="bg-border grid gap-px overflow-hidden rounded-xl sm:grid-cols-3">
+        <div className={cellClass}>
+          <dt className="text-muted-foreground text-xs">Connection</dt>
+          <dd className="mt-2">
             <StatusChip tone={online ? "positive" : "caution"}>
               {online ? "Online" : "Offline"}
             </StatusChip>
           </dd>
         </div>
-        <div className={tileClass}>
-          <dt className="text-muted-foreground flex items-center gap-2 text-xs">
-            <ListRestart aria-hidden="true" className="size-3.5" />
-            Sync queue
-          </dt>
-          <dd className="mt-2 flex items-baseline gap-1.5 text-sm font-semibold">
-            <span className="font-mono text-xl tabular-nums">{pending}</span>
+        <div className={cellClass}>
+          <dt className="text-muted-foreground text-xs">Sync queue</dt>
+          <dd className="mt-2 flex items-baseline gap-1.5 text-sm">
+            <span className="font-mono font-semibold tabular-nums">
+              {pending}
+            </span>
             pending ·
             <span
               className={cn(
-                "font-mono text-xl tabular-nums",
+                "font-mono font-semibold tabular-nums",
                 blocked > 0 && "text-destructive",
               )}
             >
@@ -92,11 +73,8 @@ export function OfflineStorageSettings() {
             blocked
           </dd>
         </div>
-        <div className={tileClass}>
-          <dt className="text-muted-foreground flex items-center gap-2 text-xs">
-            <HardDrive aria-hidden="true" className="size-3.5" />
-            Browser storage
-          </dt>
+        <div className={cellClass}>
+          <dt className="text-muted-foreground text-xs">Browser storage</dt>
           <dd className="mt-2 text-sm font-semibold">
             {estimate
               ? `${formatBytes(estimate.usage)} of ${formatBytes(estimate.quota)}`
@@ -106,7 +84,7 @@ export function OfflineStorageSettings() {
               className="bg-muted mt-2.5 block h-1.5 overflow-hidden rounded-full"
             >
               <span
-                className="bg-primary block h-full rounded-full transition-[width] duration-700"
+                className="bg-primary block h-full rounded-full transition-[width] duration-200"
                 style={{
                   width: `${Math.max(usedShare * 100, estimate ? 2 : 0)}%`,
                 }}
@@ -137,7 +115,6 @@ export function OfflineStorageSettings() {
               })
             }
           >
-            <RefreshCw className="size-4" />
             Sync now
           </Button>
         </SettingRow>
@@ -177,7 +154,6 @@ export function OfflineStorageSettings() {
               });
             }}
           >
-            <Trash2 className="size-4" />
             Clear page cache
           </Button>
         </SettingRow>

@@ -73,7 +73,7 @@ export function AppHeaderActions({
         <Button asChild size="sm">
           <Link href="/tasks?create=true">
             <Plus className="size-4" />
-            Quick task
+            Add task
           </Link>
         </Button>
       </div>

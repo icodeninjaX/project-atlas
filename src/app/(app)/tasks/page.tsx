@@ -48,35 +48,32 @@ const emptyViews: Record<
 > = {
   today: {
     icon: Sun,
-    title: "Nothing is due today.",
-    description:
-      "Capture a task now, or keep the day open for what matters most.",
+    title: "Nothing due today",
+    description: "Tasks scheduled for today appear here.",
     action: { label: "Add task", href: "/tasks?create=true" },
   },
   overdue: {
     icon: AlarmClock,
-    title: "Nothing is overdue.",
-    description: "You are clear to focus on today’s work.",
+    title: "Nothing overdue",
+    description: "Unfinished tasks from earlier days appear here.",
     action: { label: "Open Today", href: "/tasks?view=today" },
   },
   upcoming: {
     icon: CalendarDays,
-    title: "Nothing is planned ahead.",
-    description:
-      "Add a task with a date when you are ready to protect the time.",
+    title: "Nothing planned ahead",
+    description: "Tasks with a later date appear here.",
     action: { label: "Add task", href: "/tasks?create=true" },
   },
   inbox: {
     icon: Inbox,
-    title: "Your inbox is clear.",
-    description:
-      "Capture loose thoughts here before they compete with today’s plan.",
+    title: "Inbox is empty",
+    description: "Tasks without a date appear here.",
     action: { label: "Add task", href: "/tasks?create=true" },
   },
   completed: {
     icon: CircleCheck,
-    title: "No completed tasks yet.",
-    description: "Finish a task and ATLAS will keep the record here.",
+    title: "No completed tasks yet",
+    description: "Tasks you finish appear here.",
     action: { label: "Open Today", href: "/tasks?view=today" },
   },
 };
@@ -231,7 +228,6 @@ export default async function TasksPage({
       <TaskCreatePanel
         meta={manilaDateLabel(now)}
         title="Tasks"
-        description="Capture quickly. Keep today small enough to finish."
         defaultPriority={taskDefaults?.default_task_priority ?? "medium"}
         defaultEstimatedMinutes={
           taskDefaults?.default_task_estimated_minutes ?? null

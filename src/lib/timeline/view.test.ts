@@ -147,8 +147,8 @@ describe("summarizeTimeline", () => {
       tone: "positive",
       label: "Active today",
     });
-    expect(status("2026-10-01").label).toBe("Last moment yesterday");
-    expect(status("2026-09-27").label).toBe("Last moment 5 days ago");
+    expect(status("2026-10-01").label).toBe("Last event yesterday");
+    expect(status("2026-09-27").label).toBe("Last event 5 days ago");
     expect(status("2026-09-20")).toEqual({
       tone: "caution",
       label: "Quiet for 12 days",

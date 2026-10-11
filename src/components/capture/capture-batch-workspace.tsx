@@ -3,25 +3,15 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import {
   ArrowLeftRight,
-  ArrowUpRight,
-  AudioLines,
   BookOpen,
   BriefcaseBusiness,
-  Check,
   CheckCheck,
   ClipboardCheck,
-  Cpu,
-  FileText,
   FileUp,
-  Image as ImageIcon,
   Landmark,
   Lock,
-  Mail,
-  PenLine,
   ReceiptText,
-  RotateCcw,
   ScanText,
-  ShieldCheck,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -40,9 +30,9 @@ import { MAX_CAPTURE_FILE_BYTES } from "@/lib/capture/media";
 import {
   Chip,
   KindTile,
+  cardClass,
   chipTones,
-  eyebrowClass,
-  glassCardClass,
+  fieldLabelClass,
   selectClass,
   understoodKinds,
 } from "./capture-chrome";
@@ -79,62 +69,6 @@ function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-const steps = [
-  { key: "describe", label: "Describe", icon: PenLine },
-  { key: "review", label: "Review", icon: ScanText },
-  { key: "done", label: "Saved", icon: CheckCheck },
-] as const;
-
-/** Where the capture stands: describing, reviewing, or every card handled. */
-function CaptureSteps({ stage }: { stage: (typeof steps)[number]["key"] }) {
-  const current = steps.findIndex((step) => step.key === stage);
-  return (
-    <ol
-      aria-label="Capture progress"
-      className="bg-card/60 ring-border/70 flex items-center gap-1 rounded-full p-1 ring-1 sm:gap-1.5"
-    >
-      {steps.map(({ key, label, icon: Icon }, index) => {
-        const done = index < current;
-        const active = index === current;
-        return (
-          <li
-            key={key}
-            aria-current={active ? "step" : undefined}
-            className="flex min-w-0 flex-1 items-center gap-1 sm:flex-none sm:gap-1.5"
-          >
-            <span
-              className={cn(
-                "flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors sm:px-3.5",
-                active &&
-                  "bg-primary-solid text-primary-solid-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.14)]",
-                done && "text-positive",
-                !active && !done && "text-muted-foreground",
-              )}
-            >
-              {done ? (
-                <Check aria-hidden="true" className="size-3.5 shrink-0" />
-              ) : (
-                <Icon aria-hidden="true" className="size-3.5 shrink-0" />
-              )}
-              <span className="truncate">{label}</span>
-              {done && <span className="sr-only"> (done)</span>}
-            </span>
-            {index < steps.length - 1 && (
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "hidden h-px w-5 sm:block",
-                  done ? "bg-positive/50" : "bg-border",
-                )}
-              />
-            )}
-          </li>
-        );
-      })}
-    </ol>
-  );
 }
 
 export function CaptureBatchWorkspace({
@@ -205,8 +139,6 @@ export function CaptureBatchWorkspace({
   const rejectedCount = handled.filter(
     (item) => results[item.id!]?.status === "rejected",
   ).length;
-  const stage =
-    items.length === 0 ? "describe" : pending.length > 0 ? "review" : "done";
   const kind = source?.kind === "email" ? "email" : textKind;
   const overLimit = text.length > MAX_TEXT;
 
@@ -364,37 +296,23 @@ export function CaptureBatchWorkspace({
   return (
     <div className="mt-6 grid items-start gap-6 sm:mt-8 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-8">
       <div className="min-w-0 space-y-5 sm:space-y-6">
-        <CaptureSteps stage={stage} />
-
         <form
           action={action}
           aria-label="Capture"
-          className={cn(
-            glassCardClass,
-            "bg-card isolate overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
-          )}
+          className={cn(cardClass, "bg-card isolate overflow-hidden")}
         >
           <div className="space-y-5 p-4 min-[360px]:p-5 sm:p-7">
             <div className="flex flex-col gap-4 @lg:flex-row @lg:items-start @lg:justify-between">
-              <div className="flex min-w-0 items-start gap-3.5">
-                <span
-                  aria-hidden="true"
-                  className="bg-muted/60 text-foreground/75 relative grid size-9 shrink-0 place-items-center rounded-lg"
+              <div className="min-w-0">
+                <label
+                  htmlFor="capture-text"
+                  className="block text-base leading-6 font-semibold tracking-[-0.01em]"
                 >
-                  <PenLine className="size-[1.15rem]" />
-                </span>
-                <div className="min-w-0">
-                  <p className={eyebrowClass}>01 · Describe</p>
-                  <label
-                    htmlFor="capture-text"
-                    className="mt-0.5 block text-[1.0625rem] leading-6 font-semibold tracking-[-0.02em] sm:text-lg"
-                  >
-                    What happened?
-                  </label>
-                  <p className="text-muted-foreground mt-0.5 text-[0.8125rem] leading-5">
-                    Up to five actions, in your own words.
-                  </p>
-                </div>
+                  What happened?
+                </label>
+                <p className="text-muted-foreground mt-0.5 text-[0.8125rem] leading-5">
+                  Up to five actions, in your own words.
+                </p>
               </div>
               <div
                 role="group"
@@ -403,23 +321,22 @@ export function CaptureBatchWorkspace({
               >
                 {(
                   [
-                    { value: "typed", label: "Typed or pasted", icon: PenLine },
-                    { value: "email", label: "Copied email", icon: Mail },
+                    { value: "typed", label: "Typed or pasted" },
+                    { value: "email", label: "Copied email" },
                   ] as const
-                ).map(({ value, label, icon: Icon }) => (
+                ).map(({ value, label }) => (
                   <button
                     key={value}
                     type="button"
                     aria-pressed={kind === value}
                     onClick={() => chooseKind(value)}
                     className={cn(
-                      "focus-visible:ring-ring flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                      "focus-visible:ring-ring flex min-h-9 items-center justify-center rounded-lg px-3 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
                       kind === value
                         ? "bg-card text-foreground ring-border/80 shadow-[0_1px_2px_rgb(7_10_15/0.08)] ring-1"
                         : "text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    <Icon aria-hidden="true" className="size-3.5" />
                     {label}
                   </button>
                 ))}
@@ -427,11 +344,11 @@ export function CaptureBatchWorkspace({
             </div>
 
             {source && (
-              <div className="bg-primary/[0.06] ring-primary/20 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-2xl px-3.5 py-2.5 text-sm ring-1">
+              <div className="bg-background/55 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-xl px-3.5 py-2.5 text-sm">
                 <p className="flex min-w-0 items-center gap-2">
                   <ScanText
                     aria-hidden="true"
-                    className="text-primary size-4 shrink-0"
+                    className="text-muted-foreground size-4 shrink-0"
                   />
                   <span className="min-w-0 truncate">
                     Source: {source.label} · {source.method}
@@ -439,7 +356,7 @@ export function CaptureBatchWorkspace({
                 </p>
                 <button
                   type="button"
-                  className="text-primary focus-visible:ring-ring inline-flex min-h-9 items-center gap-1 rounded-lg px-1 text-xs font-semibold hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                  className="text-primary focus-visible:ring-ring inline-flex min-h-9 items-center rounded-lg px-1 text-xs font-semibold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
                   onClick={() => {
                     setText("");
                     setSource(null);
@@ -448,13 +365,12 @@ export function CaptureBatchWorkspace({
                     setVisibleBatch(state.batchId);
                   }}
                 >
-                  <X aria-hidden="true" className="size-3.5" />
                   Remove source and text
                 </button>
               </div>
             )}
 
-            <div className="bg-background/60 ring-border/80 focus-within:ring-ring/70 hover:ring-primary/30 rounded-2xl ring-1 transition-[box-shadow,background-color] focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,var(--primary)_12%,transparent)]">
+            <div className="bg-background/60 ring-border/80 focus-within:ring-ring/50 rounded-xl ring-1 transition-[box-shadow] focus-within:ring-2">
               {source && (
                 <p className="text-muted-foreground px-4 pt-3 text-xs">
                   Review and correct extracted text before previewing.
@@ -518,30 +434,29 @@ export function CaptureBatchWorkspace({
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={cn(eyebrowClass, "mr-1")}>Try</span>
-              {examples.map((example) => (
-                <button
-                  key={example}
-                  type="button"
-                  onClick={() => addExample(example)}
-                  className="bg-background/55 ring-border/80 text-foreground/85 hover:ring-primary/40 hover:bg-primary/[0.06] focus-visible:ring-ring max-w-full truncate rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                >
-                  {example}
-                </button>
-              ))}
+            <div>
+              <p className="text-muted-foreground text-xs font-medium">
+                Examples
+              </p>
+              <ul className="-mx-3 mt-1 grid">
+                {examples.map((example) => (
+                  <li key={example} className="min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => addExample(example)}
+                      className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring flex min-h-10 w-full min-w-0 items-center rounded-xl px-3 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                    >
+                      <span className="truncate">{example}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
 
             <div className="space-y-2.5">
-              <div className="flex items-center gap-3">
-                <label htmlFor="capture-file" className={eyebrowClass}>
-                  Photo, document, or voice note
-                </label>
-                <span
-                  aria-hidden="true"
-                  className="from-border h-px min-w-6 flex-1 bg-gradient-to-r to-transparent"
-                />
-              </div>
+              <label htmlFor="capture-file" className={fieldLabelClass}>
+                Photo, document, or voice note
+              </label>
               {/* The native input stays for labels, forms and the mobile
                   Camera/Files sheet; the drop zone below is what people use. */}
               <input
@@ -556,8 +471,8 @@ export function CaptureBatchWorkspace({
               />
               <div className="flex flex-col gap-2 @md:flex-row @md:items-stretch">
                 {chosenFile ? (
-                  <div className="bg-background/60 ring-primary/25 flex min-w-0 flex-1 items-center gap-3 rounded-2xl p-3 ring-1">
-                    <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg">
+                  <div className="bg-background/55 flex min-w-0 flex-1 items-center gap-3 rounded-xl p-3">
+                    <span className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg">
                       <FileUp aria-hidden="true" className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">
@@ -607,24 +522,14 @@ export function CaptureBatchWorkspace({
                       syncChosenFile();
                     }}
                     className={cn(
-                      "group border-border bg-background/40 hover:border-primary/60 hover:bg-primary/[0.04] focus-visible:ring-ring flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-dashed p-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none",
-                      dragging && "border-primary bg-primary/[0.06]",
+                      "border-border bg-background/40 hover:bg-muted/40 focus-visible:ring-ring flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-dashed p-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                      dragging && "bg-muted/50 ring-primary/50 ring-2",
                     )}
                   >
-                    <span
+                    <FileUp
                       aria-hidden="true"
-                      className="flex shrink-0 -space-x-2"
-                    >
-                      {[ImageIcon, FileText, AudioLines].map((Icon, i) => (
-                        <span
-                          key={i}
-                          className="bg-card text-primary ring-border/80 grid size-9 place-items-center rounded-xl ring-1 transition-transform motion-reduce:transition-none"
-                          style={{ transitionDelay: `${i * 40}ms` }}
-                        >
-                          <Icon className="size-4" />
-                        </span>
-                      ))}
-                    </span>
+                      className="text-muted-foreground ml-1 size-5 shrink-0"
+                    />
                     <span className="min-w-0">
                       <span className="block text-sm font-semibold">
                         Choose a file
@@ -643,9 +548,8 @@ export function CaptureBatchWorkspace({
                   variant={chosenFile ? "default" : "secondary"}
                   disabled={!chosenFile || extracting || interpreting}
                   onClick={extractFile}
-                  className="@md:h-auto @md:min-h-16 @md:rounded-2xl"
+                  className="@md:h-auto @md:min-h-16"
                 >
-                  <ScanText aria-hidden="true" className="size-4" />
                   {extracting ? "Reading file…" : "Extract text"}
                 </Button>
               </div>
@@ -668,11 +572,7 @@ export function CaptureBatchWorkspace({
           <div className="border-border/70 bg-background/30 space-y-3 border-t p-4 min-[360px]:p-5 sm:px-7">
             <div className="flex flex-col gap-3 @md:flex-row @md:items-end @md:justify-between">
               <div className="min-w-0 @md:w-72">
-                <label
-                  htmlFor="capture-model"
-                  className="text-foreground/85 flex items-center gap-1.5 text-xs font-semibold"
-                >
-                  <Cpu aria-hidden="true" className="text-primary size-3.5" />
+                <label htmlFor="capture-model" className={fieldLabelClass}>
                   AI model
                 </label>
                 <select
@@ -698,7 +598,6 @@ export function CaptureBatchWorkspace({
                 disabled={overLimit}
                 pending={interpreting}
                 pendingLabel="Interpreting…"
-                className="rounded-2xl"
               >
                 <ScanText aria-hidden="true" className="size-4" />
                 Preview actions
@@ -732,18 +631,13 @@ export function CaptureBatchWorkspace({
           >
             <div
               className={cn(
-                glassCardClass,
+                cardClass,
                 "overflow-hidden p-4 min-[360px]:p-5 sm:p-6",
               )}
             >
-              <div
-                aria-hidden="true"
-                className="via-primary/45 pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
-              />
               <div className="flex flex-col gap-4 @xl:flex-row @xl:items-start @xl:justify-between">
                 <div className="min-w-0">
-                  <p className={eyebrowClass}>02 · Review</p>
-                  <h2 className="mt-0.5 text-[1.0625rem] leading-6 font-semibold tracking-[-0.02em] sm:text-lg">
+                  <h2 className="text-base leading-6 font-semibold tracking-[-0.01em]">
                     Review all {items.length} proposals
                   </h2>
                   <p className="text-muted-foreground mt-1 max-w-xl text-[0.8125rem] leading-5 text-pretty">
@@ -753,7 +647,7 @@ export function CaptureBatchWorkspace({
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-1.5">
-                  <Chip className={chipTones.primary}>
+                  <Chip className={chipTones.neutral}>
                     {pending.length} to review
                   </Chip>
                   {savedCount > 0 && (
@@ -779,7 +673,7 @@ export function CaptureBatchWorkspace({
                     <span
                       key={item.id ?? `${index}-unsupported`}
                       className={cn(
-                        "flex-1 rounded-full transition-colors duration-500",
+                        "flex-1 rounded-full transition-colors duration-200",
                         !item.id && "bg-muted",
                         item.id && !status && "bg-primary/25",
                         status === "saved" && "bg-positive",
@@ -804,17 +698,9 @@ export function CaptureBatchWorkspace({
                   </Button>
                 ) : (
                   <Button type="button" variant="secondary" onClick={startOver}>
-                    <RotateCcw aria-hidden="true" className="size-4" />
                     Capture something else
                   </Button>
                 )}
-                <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
-                  <ShieldCheck
-                    aria-hidden="true"
-                    className="text-primary size-3.5 shrink-0"
-                  />
-                  Nothing is saved until you confirm.
-                </span>
               </div>
               {summary && (
                 <p
@@ -848,12 +734,11 @@ export function CaptureBatchWorkspace({
       >
         <section
           aria-labelledby="capture-understands"
-          className={cn(glassCardClass, "p-4 min-[360px]:p-5")}
+          className={cn(cardClass, "p-4 min-[360px]:p-5")}
         >
-          <p className={eyebrowClass}>Guide</p>
           <h2
             id="capture-understands"
-            className="mt-0.5 text-[0.9375rem] font-semibold tracking-[-0.01em]"
+            className="text-[0.9375rem] font-semibold tracking-[-0.01em]"
           >
             What Capture understands
           </h2>
@@ -870,34 +755,19 @@ export function CaptureBatchWorkspace({
               </li>
             ))}
           </ul>
-          <div className="border-border/70 mt-4 space-y-2 border-t pt-4">
-            {[
-              "Nothing saves until you confirm each card.",
-              "Every field stays editable before saving.",
-              "Original files are never stored.",
-            ].map((line) => (
-              <p
-                key={line}
-                className="text-muted-foreground flex items-start gap-2 text-xs leading-4"
-              >
-                <Check
-                  aria-hidden="true"
-                  className="text-positive mt-px size-3.5 shrink-0"
-                />
-                {line}
-              </p>
-            ))}
-          </div>
+          <p className="border-border/70 text-muted-foreground mt-4 border-t pt-4 text-xs leading-5">
+            Nothing saves until you confirm each card, and every field stays
+            editable until then. Original files are never stored.
+          </p>
         </section>
 
         <section
           aria-labelledby="capture-manual"
-          className={cn(glassCardClass, "p-4 min-[360px]:p-5")}
+          className={cn(cardClass, "p-4 min-[360px]:p-5")}
         >
-          <p className={eyebrowClass}>Prefer a form?</p>
           <h2
             id="capture-manual"
-            className="mt-0.5 text-[0.9375rem] font-semibold tracking-[-0.01em]"
+            className="text-[0.9375rem] font-semibold tracking-[-0.01em]"
           >
             Use a manual form
           </h2>
@@ -906,17 +776,13 @@ export function CaptureBatchWorkspace({
               <Link
                 key={href}
                 href={href}
-                className="group bg-background/55 ring-border/80 hover:ring-primary/40 hover:bg-primary/[0.05] focus-visible:ring-ring flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="bg-background/55 hover:bg-muted focus-visible:ring-ring flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
                 <Icon
                   aria-hidden="true"
-                  className="text-primary size-4 shrink-0"
+                  className="text-muted-foreground size-4 shrink-0"
                 />
                 <span className="min-w-0 flex-1 truncate">{label}</span>
-                <ArrowUpRight
-                  aria-hidden="true"
-                  className="text-muted-foreground size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-                />
               </Link>
             ))}
           </div>

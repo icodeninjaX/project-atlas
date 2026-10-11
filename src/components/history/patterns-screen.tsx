@@ -1,4 +1,4 @@
-import { Check, CloudOff, History, LogIn, ShieldCheck } from "lucide-react";
+import { CloudOff, History, Info, LogIn } from "lucide-react";
 import { DashboardCardHeading } from "@/components/dashboard/dashboard-card";
 import { FindingCard } from "@/components/history/finding-card";
 import {
@@ -7,8 +7,8 @@ import {
   HistoryMessage,
   SectionHeading,
   StatusPill,
+  cardClass,
   eyebrowClass,
-  glassCardClass,
 } from "@/components/history/history-chrome";
 import {
   PairGlyph,
@@ -78,11 +78,16 @@ function ScanHero({
               </span>
             </p>
           ) : (
-            <p className="text-[1.625rem] leading-tight font-semibold tracking-[-0.03em] text-balance sm:text-[1.875rem]">
+            <p className="text-base leading-6 font-semibold">
               No reliable pattern to show yet
             </p>
           )}
-          <p className="mt-4 max-w-xl text-sm leading-6 sm:text-[0.9375rem]">
+          <p
+            className={cn(
+              "max-w-xl text-sm leading-6 sm:text-[0.9375rem]",
+              found ? "mt-4" : "mt-1",
+            )}
+          >
             <span className="text-foreground font-semibold">
               {formatPeriodLabel(window.from, window.through)}
             </span>
@@ -179,31 +184,17 @@ function PatternsMethod({ version }: { version: string }) {
   return (
     <section
       aria-labelledby="patterns-method"
-      className={cn(
-        glassCardClass,
-        "mt-10 p-4 min-[360px]:p-5 sm:mt-12 sm:p-6",
-      )}
+      className={cn(cardClass, "mt-10 p-4 min-[360px]:p-5 sm:mt-12 sm:p-6")}
     >
       <DashboardCardHeading
         id="patterns-method"
-        icon={ShieldCheck}
+        icon={Info}
         title="How the scan decides"
         description={`Each of the ${ASSOCIATION_TESTS} pairs must pass every check. The test compares changes, not levels, and checks each month for outlier influence.`}
       />
-      <ul className="mt-5 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+      <ul className="text-muted-foreground mt-4 list-disc space-y-1.5 pl-4 text-xs leading-5 marker:text-current">
         {RULES.map((rule) => (
-          <li
-            key={rule}
-            className="text-muted-foreground flex gap-2.5 text-xs leading-5"
-          >
-            <span
-              aria-hidden="true"
-              className="bg-positive/12 text-positive mt-0.5 grid size-4 shrink-0 place-items-center rounded-full"
-            >
-              <Check className="size-2.5" strokeWidth={3} />
-            </span>
-            {rule}
-          </li>
+          <li key={rule}>{rule}</li>
         ))}
       </ul>
       <p className="text-muted-foreground mt-5 border-t pt-4 text-xs leading-5">

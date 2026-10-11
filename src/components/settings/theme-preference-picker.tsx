@@ -40,20 +40,17 @@ export function ThemePreferencePicker() {
               aria-pressed={selected}
               onClick={() => setTheme(value)}
               className={cn(
-                "focus-visible:ring-ring group flex flex-col gap-2.5 rounded-2xl p-2 text-left ring-1 transition-[background-color,box-shadow] focus-visible:ring-2 focus-visible:outline-none sm:p-2.5",
+                "focus-visible:ring-ring flex flex-col gap-2.5 rounded-xl p-2 text-left transition-shadow focus-visible:ring-2 focus-visible:outline-none sm:p-2.5",
                 selected
-                  ? "bg-primary/[0.07] ring-primary/60"
-                  : "bg-background/55 ring-border/80 hover:ring-primary/35",
+                  ? "ring-primary ring-2"
+                  : "ring-border/80 hover:ring-foreground/25 ring-1",
               )}
             >
               <ThemePreview value={value} />
               <span className="flex items-center gap-1.5 px-0.5 pb-0.5">
                 <Icon
                   aria-hidden="true"
-                  className={cn(
-                    "size-3.5 shrink-0",
-                    selected ? "text-primary" : "text-muted-foreground",
-                  )}
+                  className="text-muted-foreground size-3.5 shrink-0"
                 />
                 <span className="min-w-0 flex-1 truncate text-xs font-semibold sm:text-sm">
                   {label}
@@ -89,7 +86,7 @@ function ThemePreview({ value }: { value: (typeof themes)[number]["value"] }) {
     return (
       <span
         aria-hidden="true"
-        className="relative block aspect-[16/10] overflow-hidden rounded-xl ring-1 ring-black/10"
+        className="ring-border relative block aspect-[16/10] overflow-hidden rounded-lg ring-1"
       >
         <span className="absolute inset-0 [clip-path:polygon(0_0,100%_0,0_100%)]">
           <MiniWindow mode="light" />
@@ -103,69 +100,63 @@ function ThemePreview({ value }: { value: (typeof themes)[number]["value"] }) {
   return (
     <span
       aria-hidden="true"
-      className="relative block aspect-[16/10] overflow-hidden rounded-xl ring-1 ring-black/10"
+      className="ring-border relative block aspect-[16/10] overflow-hidden rounded-lg ring-1"
     >
       <MiniWindow mode={value} />
     </span>
   );
 }
 
+/**
+ * The theme's own palette, so each preview shows that theme whichever one
+ * is active: background, card, muted lines, foreground, and primary.
+ */
+const palettes = {
+  light: {
+    background: "bg-[#f4f7fb]",
+    card: "bg-[#ffffff] ring-1 ring-[#dce3ed]",
+    line: "bg-[#e9eef6]",
+    text: "bg-[#111827]/75",
+    primary: "bg-[#2867e8]",
+  },
+  dark: {
+    background: "bg-[#070a0f]",
+    card: "bg-[#0e131c] ring-1 ring-[#202a39]",
+    line: "bg-[#182131]",
+    text: "bg-[#f4f7fb]/75",
+    primary: "bg-[#84afff]",
+  },
+} as const;
+
 function MiniWindow({ mode }: { mode: "light" | "dark" }) {
-  const dark = mode === "dark";
+  const palette = palettes[mode];
   return (
     <span
       className={cn(
         "absolute inset-0 flex gap-[6%] p-[7%]",
-        dark ? "bg-[#0b0f17]" : "bg-[#f4f6fa]",
+        palette.background,
       )}
     >
       <span className="flex w-[22%] flex-col gap-[14%]">
-        <span className="h-[10%] w-3/4 rounded-full bg-[#3b82f6]" />
-        <span
-          className={cn(
-            "h-[7%] rounded-full",
-            dark ? "bg-white/15" : "bg-black/10",
-          )}
-        />
-        <span
-          className={cn(
-            "h-[7%] w-5/6 rounded-full",
-            dark ? "bg-white/10" : "bg-black/[0.07]",
-          )}
-        />
-        <span
-          className={cn(
-            "h-[7%] w-2/3 rounded-full",
-            dark ? "bg-white/10" : "bg-black/[0.07]",
-          )}
-        />
+        <span className={cn("h-[10%] w-3/4 rounded-full", palette.primary)} />
+        <span className={cn("h-[7%] rounded-full", palette.line)} />
+        <span className={cn("h-[7%] w-5/6 rounded-full", palette.line)} />
+        <span className={cn("h-[7%] w-2/3 rounded-full", palette.line)} />
       </span>
       <span
         className={cn(
           "flex flex-1 flex-col gap-[10%] rounded-[6px] p-[8%]",
-          dark
-            ? "bg-[#141a25] shadow-[inset_0_1px_0_rgb(255_255_255/0.06)]"
-            : "bg-white shadow-[0_1px_3px_rgb(7_10_15/0.12)]",
+          palette.card,
         )}
       >
-        <span
-          className={cn(
-            "h-[12%] w-1/2 rounded-full",
-            dark ? "bg-white/70" : "bg-[#0b0f17]/75",
-          )}
-        />
-        <span
-          className={cn(
-            "h-[8%] w-5/6 rounded-full",
-            dark ? "bg-white/15" : "bg-black/10",
-          )}
-        />
+        <span className={cn("h-[12%] w-1/2 rounded-full", palette.text)} />
+        <span className={cn("h-[8%] w-5/6 rounded-full", palette.line)} />
         <span className="mt-auto flex h-[34%] items-end gap-[6%]">
           {[45, 70, 55, 90, 65].map((height) => (
             <span
               key={height}
-              className="flex-1 rounded-[2px] bg-[#3b82f6]"
-              style={{ height: `${height}%`, opacity: 0.35 + height / 160 }}
+              className={cn("flex-1 rounded-[2px]", palette.primary)}
+              style={{ height: `${height}%` }}
             />
           ))}
         </span>

@@ -15,23 +15,9 @@
     color-mix(in srgb, currentColor 26%, transparent);
 }
 
-/*
- * A recorded bucket: the series color deepening toward the baseline, with a
- * bright cap. Layers, not box-shadow, so ring and shadow utilities still
- * apply.
- */
+/* A recorded bucket: a flat fill in the series color. */
 .solid {
-  background:
-    linear-gradient(
-      to bottom,
-      color-mix(in srgb, #fff 30%, currentColor) 0 1.5px,
-      transparent 1.5px
-    ),
-    linear-gradient(
-      to top,
-      color-mix(in srgb, currentColor 48%, transparent),
-      currentColor
-    );
+  background: currentColor;
 }
 
 /* A bucket with no history: a dashed stub on the baseline. */
@@ -74,17 +60,17 @@
 /* Bars rise from the baseline on arrival. */
 .rise {
   transform-origin: bottom;
-  animation: rise 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Lines draw in from left to right. */
 .reveal {
-  animation: reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: reveal 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Matrix cells settle in. */
 .appear {
-  animation: appear 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: appear 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* The ledger's disclosure chevron turns when open. */

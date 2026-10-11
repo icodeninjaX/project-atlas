@@ -1,10 +1,4 @@
-import {
-  ArrowRight,
-  ChartPie,
-  Landmark,
-  WalletCards,
-  type LucideIcon,
-} from "lucide-react";
+import { ChartPie, Landmark, WalletCards, type LucideIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -162,18 +156,14 @@ function MoneyTile({
       href={href}
       className={cn(
         dashboardTileClass,
-        "group hover:ring-primary/35 focus-visible:ring-ring hover:bg-background/80 flex flex-col transition-[box-shadow,background-color] focus-visible:ring-2 focus-visible:outline-none",
+        "hover:ring-primary/35 focus-visible:ring-ring hover:bg-background/80 flex flex-col transition-[box-shadow,background-color] focus-visible:ring-2 focus-visible:outline-none",
       )}
     >
       <span className="text-muted-foreground flex items-center justify-between gap-2 text-xs font-medium">
         <span className="flex min-w-0 items-center gap-2">
-          <Icon aria-hidden="true" className="text-primary size-3.5 shrink-0" />
+          <Icon aria-hidden="true" className="size-3.5 shrink-0" />
           {label}
         </span>
-        <ArrowRight
-          aria-hidden="true"
-          className="group-hover:text-primary size-3 shrink-0 transition-colors max-sm:hidden"
-        />
       </span>
       <span className="mt-2 block font-mono text-lg leading-tight font-semibold tracking-[-0.02em] [overflow-wrap:anywhere]">
         {value}
@@ -265,11 +255,7 @@ export function FinancialOverview({
               <span className="mt-3 block">
                 <Bar
                   share={budget.ratio}
-                  className={
-                    budget.over
-                      ? "bg-destructive"
-                      : "from-primary-solid to-primary bg-gradient-to-r"
-                  }
+                  className={budget.over ? "bg-destructive" : "bg-primary"}
                   marker={
                     pace?.phase === "current" ? pace.elapsedRatio : undefined
                   }
@@ -325,7 +311,7 @@ export function FinancialOverview({
           href="/money/runway"
           className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-xs font-medium focus-visible:ring-2 focus-visible:outline-none"
         >
-          View runway <ArrowRight aria-hidden="true" className="size-3" />
+          View runway
         </Link>
       </div>
     </section>

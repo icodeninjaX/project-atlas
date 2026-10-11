@@ -59,7 +59,10 @@ test.describe("authenticated mobile responsive hardening", () => {
       await page.setViewportSize(viewport);
       await page.goto("/dashboard");
       await expect(
-        page.getByRole("heading", { name: /route|mapped/i }),
+        page.getByRole("heading", {
+          name: /^Good (morning|afternoon|evening)/,
+          level: 1,
+        }),
       ).toBeVisible();
       await expect(
         page.getByRole("navigation", { name: "Primary navigation" }).last(),

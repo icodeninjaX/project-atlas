@@ -1,55 +1,49 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import { cn } from "@/lib/utils";
 
 /** Shared pieces of the Settings page. */
 
 export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
-/** A glass surface for the page's cards. */
-export const glassCardClass = cn(
-  surfaceClass,
-  "bg-card/90 @container relative min-w-0 rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
-);
+/** The page's cards: one flat, opaque surface with a hairline. */
+export const cardClass =
+  "bg-card border-border @container relative min-w-0 rounded-2xl border";
 
-/** An inset tile inside a card. */
+/** A tonal well inside a card. */
 export const tileClass =
   "bg-background/55 min-w-0 rounded-xl p-3.5 min-[360px]:p-4";
 
-/** A native select dressed like the page's inputs, with its own chevron. */
+/** A native select dressed like `Input`, with its own chevron. */
 export const selectClass =
-  "border-border bg-background/70 focus-visible:ring-ring hover:border-primary/40 min-h-11 w-full appearance-none rounded-xl border bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")] bg-[length:16px] bg-[position:right_0.75rem_center] bg-no-repeat pr-10 pl-3 text-sm transition-colors outline-none focus-visible:ring-2";
+  "border-border bg-background focus-visible:border-ring focus-visible:ring-ring/50 min-h-11 w-full appearance-none rounded-xl border bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%238d99aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")] bg-[length:16px] bg-[position:right_0.75rem_center] bg-no-repeat pr-10 pl-3 text-base transition-colors outline-none focus-visible:ring-2 sm:text-sm";
 
 /** A field's label above it. */
-export const fieldLabelClass = "text-foreground/90 text-xs font-semibold";
+export const fieldLabelClass = "text-sm font-medium";
 
 /** A small help line below a field. */
-export const fieldHelpClass =
-  "text-muted-foreground text-[0.6875rem] leading-4";
+export const fieldHelpClass = "text-muted-foreground text-xs leading-5";
 
 /**
- * The icon in a section's or row's corner: a small neutral square whose
- * glyph takes the section's tone.
+ * The icon at the start of a row: a small neutral square with a muted
+ * glyph, red only for the destructive row.
  */
 export function IconTile({
   icon: Icon,
-  tone = "primary",
+  tone = "muted",
   size = "md",
 }: {
   icon: LucideIcon;
-  tone?: "primary" | "danger" | "muted";
+  tone?: "danger" | "muted";
   size?: "sm" | "md";
 }) {
   return (
     <span
       aria-hidden="true"
       className={cn(
-        "bg-muted/60 relative grid shrink-0 place-items-center rounded-lg",
+        "bg-muted/60 grid shrink-0 place-items-center rounded-lg",
         size === "md" ? "size-9" : "size-8",
-        tone === "primary" && "text-primary",
-        tone === "danger" && "text-destructive",
-        tone === "muted" && "text-muted-foreground",
+        tone === "danger" ? "text-destructive" : "text-muted-foreground",
       )}
     >
       <Icon className="size-4" />
@@ -58,26 +52,20 @@ export function IconTile({
 }
 
 /**
- * One section of the page: a glass card with an index, an icon, a title,
- * and a sentence on what it controls. The `id` is the jump target.
+ * One section of the page: a card with a muted icon, a title, and a
+ * sentence on what it controls. The `id` is the jump target.
  */
 export function SettingsSection({
   id,
-  index,
-  icon,
+  icon: Icon,
   title,
   description,
-  tone = "primary",
-  aside,
   children,
 }: {
   id?: string;
-  index?: string;
   icon: LucideIcon;
   title: string;
   description: string;
-  tone?: "primary" | "danger";
-  aside?: ReactNode;
   children: ReactNode;
 }) {
   const titleId = `${id ?? title.toLowerCase().replace(/\W+/g, "-")}-title`;
@@ -85,45 +73,34 @@ export function SettingsSection({
     <section
       id={id}
       aria-labelledby={titleId}
-      className={cn(
-        glassCardClass,
-        "scroll-mt-36 overflow-hidden lg:scroll-mt-8",
-        tone === "danger" && "ring-destructive/15 ring-1",
-      )}
+      className={cn(cardClass, "scroll-mt-36 lg:scroll-mt-8")}
     >
-      <div
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent to-transparent",
-          tone === "danger" ? "via-destructive/50" : "via-primary/45",
-        )}
-      />
-      <header className="flex items-start gap-3.5 p-4 pb-0 min-[360px]:p-5 min-[360px]:pb-0 sm:gap-4 sm:p-6 sm:pb-0">
-        <IconTile icon={icon} tone={tone} />
-        <div className="min-w-0 flex-1">
-          {index ? <p className={eyebrowClass}>{index}</p> : null}
-          <h2
-            id={titleId}
-            className="mt-0.5 text-[1.0625rem] leading-6 font-semibold tracking-[-0.02em] sm:text-lg"
-          >
-            {title}
-          </h2>
-          <p className="text-muted-foreground mt-1 max-w-xl text-[0.8125rem] leading-5 text-pretty">
-            {description}
-          </p>
-        </div>
-        {aside ? <div className="hidden shrink-0 sm:block">{aside}</div> : null}
+      <header className="p-4 pb-0 min-[360px]:p-5 min-[360px]:pb-0 sm:p-6 sm:pb-0">
+        <h2
+          id={titleId}
+          className="flex items-center gap-2 text-base leading-6 font-semibold tracking-[-0.01em]"
+        >
+          <Icon
+            aria-hidden="true"
+            className="text-muted-foreground size-4 shrink-0"
+          />
+          {title}
+        </h2>
+        <p className="text-muted-foreground mt-1 max-w-xl text-[0.8125rem] leading-5 text-pretty">
+          {description}
+        </p>
       </header>
       <div className="p-4 min-[360px]:p-5 sm:p-6">{children}</div>
     </section>
   );
 }
 
-/** A labelled group inside a section, separated by a fading rule. */
+/** A labelled group inside a section. */
 export function SettingsGroup({
   title,
   description,
   icon: Icon,
+  tone = "muted",
   children,
   className,
   titleIsLegend = false,
@@ -131,6 +108,7 @@ export function SettingsGroup({
   title: string;
   description?: string;
   icon?: LucideIcon;
+  tone?: "danger" | "muted";
   children: ReactNode;
   className?: string;
   /** The fieldset's own legend already names the group for assistive tech. */
@@ -138,21 +116,26 @@ export function SettingsGroup({
 }) {
   return (
     <div className={cn("min-w-0", className)}>
-      <div
+      <p
         aria-hidden={titleIsLegend || undefined}
-        className="flex items-center gap-3"
+        className={cn(
+          "flex items-center gap-2 text-sm font-semibold",
+          tone === "danger" && "text-destructive",
+        )}
       >
         {Icon ? (
-          <Icon aria-hidden="true" className="text-primary size-3.5" />
+          <Icon
+            aria-hidden="true"
+            className={cn(
+              "size-4 shrink-0",
+              tone === "danger" ? "text-destructive" : "text-muted-foreground",
+            )}
+          />
         ) : null}
-        <p className={eyebrowClass}>{title}</p>
-        <span
-          aria-hidden="true"
-          className="from-border h-px min-w-6 flex-1 bg-gradient-to-r to-transparent"
-        />
-      </div>
+        {title}
+      </p>
       {description ? (
-        <p className="text-muted-foreground mt-1.5 text-xs leading-5">
+        <p className="text-muted-foreground mt-1 text-xs leading-5">
           {description}
         </p>
       ) : null}
@@ -176,7 +159,7 @@ export function SettingRow({
   icon: LucideIcon;
   title: ReactNode;
   detail?: ReactNode;
-  tone?: "primary" | "danger" | "muted";
+  tone?: "danger" | "muted";
   children?: ReactNode;
   className?: string;
 }) {
@@ -205,12 +188,12 @@ export function SettingRow({
   );
 }
 
-/** A status chip: a dot and a word or two. */
+/** A status pill: a dot and a word or two. */
 export function StatusChip({
   tone,
   children,
 }: {
-  tone: "positive" | "caution" | "neutral" | "primary";
+  tone: "positive" | "caution" | "neutral";
   children: ReactNode;
 }) {
   return (
@@ -220,10 +203,7 @@ export function StatusChip({
         tone === "positive" && "bg-positive/10 text-positive ring-positive/25",
         tone === "caution" &&
           "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300",
-        tone === "neutral" &&
-          "bg-background/60 text-muted-foreground ring-border",
-        tone === "primary" &&
-          "bg-primary/10 ring-primary/20 dark:text-primary text-blue-700",
+        tone === "neutral" && "bg-muted/60 text-muted-foreground ring-border",
       )}
     >
       <span
@@ -250,10 +230,8 @@ export function FormFeedback({
       role="status"
       aria-live="polite"
       className={cn(
-        "flex items-start gap-2 rounded-xl px-3 py-2.5 text-xs leading-5 ring-1",
-        success
-          ? "bg-positive/10 text-positive ring-positive/25"
-          : "bg-destructive/10 text-destructive ring-destructive/25",
+        "flex items-start gap-2 text-xs leading-5 font-medium",
+        success ? "text-positive" : "text-destructive",
         className,
       )}
     >
@@ -267,8 +245,8 @@ export function FormFeedback({
 }
 
 /**
- * A checkbox drawn as a switch. It stays a real checkbox, so forms submit
- * it as before; the track and knob follow `:checked`.
+ * A checkbox drawn as a switch, on a plain row; the switch carries the
+ * state. It stays a real checkbox, so forms submit it as before.
  */
 export function SwitchField({
   name,
@@ -288,14 +266,14 @@ export function SwitchField({
   return (
     <label
       className={cn(
-        "group bg-background/55 ring-border/80 hover:ring-primary/35 has-[:checked]:bg-primary/[0.06] has-[:checked]:ring-primary/30 has-[:focus-visible]:ring-ring flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl px-3.5 py-2.5 ring-1 transition-colors has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 has-[:focus-visible]:ring-2",
+        "group flex min-h-11 cursor-pointer items-center gap-3 py-2 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60",
         className,
       )}
     >
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-medium">{label}</span>
         {detail ? (
-          <span className="text-muted-foreground mt-0.5 block text-[0.6875rem] leading-4">
+          <span className="text-muted-foreground mt-0.5 block text-xs leading-5">
             {detail}
           </span>
         ) : null}
@@ -309,7 +287,7 @@ export function SwitchField({
       />
       <span
         aria-hidden="true"
-        className="bg-muted ring-border peer-checked:bg-primary-solid peer-checked:ring-primary-solid relative inline-flex h-6 w-10 shrink-0 rounded-full ring-1 transition-colors ring-inset"
+        className="bg-muted ring-border peer-checked:bg-primary-solid peer-checked:ring-primary-solid peer-focus-visible:outline-ring/50 relative inline-flex h-6 w-10 shrink-0 rounded-full ring-1 transition-colors ring-inset peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2"
       >
         <span className="absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-[0_1px_3px_rgb(7_10_15/0.3)] transition-transform duration-200 group-has-[:checked]:translate-x-4 motion-reduce:transition-none" />
       </span>

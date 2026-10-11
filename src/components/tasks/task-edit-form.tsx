@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,9 +12,15 @@ import {
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { TaskTimeRecommendations } from "@/components/tasks/task-time-recommendations";
 
+const fieldClass = "grid min-w-0 gap-1.5";
+const labelTextClass = "text-sm font-medium";
+const controlClass =
+  "border-border bg-background focus-visible:border-ring focus-visible:ring-ring/40 w-full rounded-xl border px-3 text-base outline-none focus-visible:ring-2 sm:text-sm";
+
 export function TaskEditForm({
   task,
   scheduledTasks = EMPTY_SCHEDULED_TASKS,
+  onCancel,
 }: {
   task: {
     id: string;
@@ -27,6 +34,8 @@ export function TaskEditForm({
     status: string;
   };
   scheduledTasks?: ScheduledTaskSlot[];
+  /** Closes the form without saving, such as the dialog it sits in. */
+  onCancel?: () => void;
 }) {
   const [scheduledFor, setScheduledFor] = useState(task.scheduled_for ?? "");
   const [scheduledTime, setScheduledTime] = useState(
@@ -40,66 +49,40 @@ export function TaskEditForm({
   return (
     <OfflineMutationForm
       mutation="task.update"
-      className="border-border mt-3 grid gap-3 border-t pt-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_150px_130px_130px_120px_auto]"
+      className="mt-5 grid gap-4 sm:grid-cols-2"
     >
       <input type="hidden" name="taskId" value={task.id} />
       <input type="hidden" name="status" value={task.status} />
-      <label className="text-muted-foreground text-xs">
-        Task title
+      <label className={`${fieldClass} sm:col-span-2`}>
+        <span className={labelTextClass}>Task title</span>
         <Input
           name="title"
           defaultValue={task.title}
           required
           maxLength={160}
-          className="mt-1.5"
         />
       </label>
-      <label className="text-muted-foreground text-xs">
-        Scheduled date
+      <label className={fieldClass}>
+        <span className={labelTextClass}>Scheduled date</span>
         <Input
           name="scheduledFor"
           type="date"
           value={scheduledFor}
           onChange={(event) => setScheduledFor(event.target.value)}
-          className="mt-1.5"
         />
       </label>
-      <label className="text-muted-foreground text-xs">
-        Exact time
+      <label className={fieldClass}>
+        <span className={labelTextClass}>Exact time</span>
         <Input
           ref={timeRef}
           name="scheduledTime"
           type="time"
           value={scheduledTime}
           onChange={(event) => setScheduledTime(event.target.value)}
-          className="mt-1.5"
         />
       </label>
-      <label className="text-muted-foreground text-xs">
-        Priority
-        <select
-          name="priority"
-          defaultValue={task.priority}
-          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
-        >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-          <option value="critical">Critical</option>
-        </select>
-      </label>
-      <label className="text-muted-foreground text-xs sm:col-span-2 xl:col-span-2">
-        Description
-        <textarea
-          name="description"
-          defaultValue={task.description ?? ""}
-          maxLength={2000}
-          rows={3}
-          className="border-border bg-background focus-visible:ring-ring mt-1.5 min-h-20 w-full resize-y rounded-xl border px-3 py-2 text-sm outline-none focus-visible:ring-2"
-        />
-      </label>
-      <label className="text-muted-foreground text-xs">
-        Estimated minutes
+      <label className={fieldClass}>
+        <span className={labelTextClass}>Estimated minutes</span>
         <Input
           name="estimatedMinutes"
           type="number"
@@ -107,15 +90,27 @@ export function TaskEditForm({
           max="1440"
           value={estimatedMinutes}
           onChange={(event) => setEstimatedMinutes(event.target.value)}
-          className="mt-1.5"
         />
       </label>
-      <label className="text-muted-foreground text-xs">
-        Energy needed
+      <label className={fieldClass}>
+        <span className={labelTextClass}>Priority</span>
+        <select
+          name="priority"
+          defaultValue={task.priority}
+          className={`${controlClass} min-h-11`}
+        >
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="critical">Critical</option>
+        </select>
+      </label>
+      <label className={fieldClass}>
+        <span className={labelTextClass}>Energy needed</span>
         <select
           name="energyRequired"
           defaultValue={task.energy_required}
-          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm"
+          className={`${controlClass} min-h-11`}
         >
           <option value="low">Low</option>
           <option value="medium">Medium</option>
@@ -132,15 +127,26 @@ export function TaskEditForm({
           setScheduledTime(time);
           timeRef.current?.focus();
         }}
-        className="sm:col-span-2 xl:col-span-6"
+        className="sm:col-span-2"
       />
-      <FormSubmitButton
-        variant="secondary"
-        pendingLabel="Saving…"
-        className="self-end sm:col-span-2 xl:col-span-1 xl:col-start-5 xl:row-start-2"
-      >
-        Save
-      </FormSubmitButton>
+      <label className={`${fieldClass} sm:col-span-2`}>
+        <span className={labelTextClass}>Description</span>
+        <textarea
+          name="description"
+          defaultValue={task.description ?? ""}
+          maxLength={2000}
+          rows={3}
+          className={`${controlClass} min-h-20 resize-y py-2`}
+        />
+      </label>
+      <div className="flex flex-col-reverse gap-2 pt-1 min-[400px]:flex-row min-[400px]:justify-end sm:col-span-2">
+        {onCancel ? (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+        ) : null}
+        <FormSubmitButton pendingLabel="Saving…">Save</FormSubmitButton>
+      </div>
     </OfflineMutationForm>
   );
 }

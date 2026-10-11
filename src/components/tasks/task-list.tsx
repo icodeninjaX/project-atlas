@@ -1,13 +1,4 @@
-import {
-  AlarmClock,
-  CalendarDays,
-  CircleCheck,
-  Clock3,
-  Flag,
-  Hourglass,
-  Zap,
-  type LucideIcon,
-} from "lucide-react";
+import { AlarmClock, type LucideIcon } from "lucide-react";
 import { TaskActionsMenu } from "@/components/tasks/task-actions-menu";
 import { TaskStatusForm } from "@/components/tasks/task-status-form";
 import { formatCalendarDate } from "@/lib/dates/dates";
@@ -26,22 +17,23 @@ function sentenceCase(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-type MetaTone = "muted" | "primary" | "attention" | "positive";
+type MetaTone = "muted" | "current" | "attention" | "positive";
 
 const metaToneClasses: Record<MetaTone, string> = {
   muted: "text-muted-foreground",
-  primary: "text-primary font-semibold",
+  current: "text-foreground font-medium",
   attention: "text-destructive font-semibold",
   positive: "text-positive font-semibold",
 };
 
+/** One fact about a task. Only an overdue date carries an icon. */
 function MetaItem({
   icon: Icon,
   tone = "muted",
   className,
   children,
 }: {
-  icon: LucideIcon;
+  icon?: LucideIcon;
   tone?: MetaTone;
   className?: string;
   children: React.ReactNode;
@@ -54,7 +46,7 @@ function MetaItem({
         className,
       )}
     >
-      <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+      {Icon ? <Icon className="size-3.5 shrink-0" aria-hidden="true" /> : null}
       <span className="min-w-0">{children}</span>
     </span>
   );
@@ -77,11 +69,7 @@ function ScheduleMeta({
     const doneAt = task.completed_at
       ? manilaTimeLabel(task.completed_at)
       : null;
-    return doneAt ? (
-      <MetaItem icon={CircleCheck} tone="positive">
-        Done {doneAt}
-      </MetaItem>
-    ) : null;
+    return doneAt ? <MetaItem tone="positive">Done {doneAt}</MetaItem> : null;
   }
   if (!task.scheduled_for) return null;
 
@@ -96,17 +84,10 @@ function ScheduleMeta({
     );
   }
   if (dayInHeading) {
-    return time ? (
-      <MetaItem icon={Clock3} tone="primary">
-        {time}
-      </MetaItem>
-    ) : null;
+    return time ? <MetaItem tone="current">{time}</MetaItem> : null;
   }
   return (
-    <MetaItem
-      icon={CalendarDays}
-      tone={task.scheduled_for === today ? "primary" : "muted"}
-    >
+    <MetaItem tone={task.scheduled_for === today ? "current" : "muted"}>
       {task.scheduled_for === today
         ? "Today"
         : formatCalendarDate(task.scheduled_for)}
@@ -179,18 +160,14 @@ function TaskRow({
               dayInHeading={dayInHeading}
             />
             {task.estimated_minutes ? (
-              <MetaItem icon={Hourglass}>
-                {formatTaskMinutes(task.estimated_minutes)}
-              </MetaItem>
+              <MetaItem>{formatTaskMinutes(task.estimated_minutes)}</MetaItem>
             ) : null}
-            <MetaItem icon={Flag} className={tone.text}>
-              {sentenceCase(task.priority)}
+            <MetaItem className={tone.text}>
+              {sentenceCase(task.priority)} priority
             </MetaItem>
             {/* Medium is the default, so only a departure from it is noted. */}
             {task.energy_required !== "medium" ? (
-              <MetaItem icon={Zap}>
-                {sentenceCase(task.energy_required)} energy
-              </MetaItem>
+              <MetaItem>{sentenceCase(task.energy_required)} energy</MetaItem>
             ) : null}
           </p>
         </div>

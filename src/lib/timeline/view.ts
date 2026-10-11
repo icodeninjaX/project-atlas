@@ -200,9 +200,9 @@ export function timelineStatus(
     return { tone: "neutral", label: "Only upcoming dates" };
   const days = calendarDaysBetween(summary.lastActiveOn, todayIso);
   if (days <= 0) return { tone: "positive", label: "Active today" };
-  if (days === 1) return { tone: "neutral", label: "Last moment yesterday" };
+  if (days === 1) return { tone: "neutral", label: "Last event yesterday" };
   if (days <= 7)
-    return { tone: "neutral", label: `Last moment ${days} days ago` };
+    return { tone: "neutral", label: `Last event ${days} days ago` };
   return { tone: "caution", label: `Quiet for ${days} days` };
 }
 

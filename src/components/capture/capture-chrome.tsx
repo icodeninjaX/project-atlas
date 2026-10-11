@@ -15,71 +15,34 @@ import { cn } from "@/lib/utils";
 
 /** Shared pieces of the Capture page. */
 
-export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
-
-/** A glass surface for the page's cards. */
-export const glassCardClass = cn(
+/** The page's card surface: a flat card with a hairline edge. */
+export const cardClass = cn(
   surfaceClass,
   "bg-card/90 @container relative min-w-0 rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
 );
 
 /** A text or date input on a proposal card. */
 export const inputClass =
-  "border-border bg-background/70 text-foreground focus-visible:ring-ring hover:border-primary/40 mt-1.5 min-h-11 w-full rounded-xl border px-3 text-base transition-colors outline-none focus-visible:ring-2 sm:text-sm";
+  "border-border bg-background/70 text-foreground focus-visible:border-ring focus-visible:ring-ring/40 mt-1.5 min-h-11 w-full rounded-xl border px-3 text-base font-normal transition-colors outline-none focus-visible:ring-2 sm:text-sm";
 
 /** A native select dressed like the inputs, with its own chevron. */
 export const selectClass =
-  "border-border bg-background/70 text-foreground focus-visible:ring-ring hover:border-primary/40 mt-1.5 min-h-11 w-full appearance-none rounded-xl border bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")] bg-[length:16px] bg-[position:right_0.75rem_center] bg-no-repeat pr-10 pl-3 text-sm transition-colors outline-none focus-visible:ring-2";
+  "border-border bg-background/70 text-foreground focus-visible:border-ring focus-visible:ring-ring/40 mt-1.5 min-h-11 w-full appearance-none rounded-xl border bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")] bg-[length:16px] bg-[position:right_0.75rem_center] bg-no-repeat pr-10 pl-3 text-base font-normal transition-colors outline-none focus-visible:ring-2 sm:text-sm";
 
 /** A field's label text above it. */
-export const fieldLabelClass =
-  "text-foreground/85 block min-w-0 text-xs font-semibold";
+export const fieldLabelClass = "block min-w-0 text-sm font-medium";
 
-type Tone = {
-  /** Gradient icon tile. */
-  tile: string;
-  /** Accent rail and dots. */
-  dot: string;
-  /** Tinted chip: background, text, and outline. */
-  chip: string;
-};
+/** The glyph color for a kind of action; the tile around it stays neutral. */
+type Tone = { glyph: string };
 
-/**
- * Each kind of action's color. Text shades keep 4.5:1 on the card in both
- * themes. Outlines use `ring-*` because the unlayered `* { border-color }`
- * rule in globals.css overrides `border-*` colors.
- */
+/** Each kind of action's glyph color, in shades that read in both themes. */
 const tones = {
-  rose: {
-    tile: "text-rose-700 dark:text-rose-300",
-    dot: "bg-rose-500",
-    chip: "bg-rose-500/10 text-rose-700 ring-rose-500/25 dark:text-rose-300",
-  },
-  emerald: {
-    tile: "text-emerald-700 dark:text-emerald-300",
-    dot: "bg-emerald-500",
-    chip: "bg-emerald-500/10 text-emerald-700 ring-emerald-500/25 dark:text-emerald-300",
-  },
-  sky: {
-    tile: "text-sky-700 dark:text-sky-300",
-    dot: "bg-sky-500",
-    chip: "bg-sky-500/10 text-sky-700 ring-sky-500/25 dark:text-sky-300",
-  },
-  violet: {
-    tile: "text-violet-700 dark:text-violet-300",
-    dot: "bg-violet-500",
-    chip: "bg-violet-500/10 text-violet-700 ring-violet-500/25 dark:text-violet-300",
-  },
-  amber: {
-    tile: "text-amber-700 dark:text-amber-300",
-    dot: "bg-amber-500",
-    chip: "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300",
-  },
-  muted: {
-    tile: "text-muted-foreground",
-    dot: "bg-muted-foreground/50",
-    chip: "bg-background/60 text-muted-foreground ring-border",
-  },
+  rose: { glyph: "text-rose-700 dark:text-rose-300" },
+  emerald: { glyph: "text-emerald-700 dark:text-emerald-300" },
+  sky: { glyph: "text-sky-700 dark:text-sky-300" },
+  violet: { glyph: "text-violet-700 dark:text-violet-300" },
+  amber: { glyph: "text-amber-700 dark:text-amber-300" },
+  muted: { glyph: "text-muted-foreground" },
 } satisfies Record<string, Tone>;
 
 export type CaptureKind = {
@@ -156,7 +119,7 @@ export function KindTile({
       className={cn(
         "bg-muted/60 relative grid shrink-0 place-items-center rounded-lg",
         size === "md" ? "size-9" : "size-8",
-        tone.tile,
+        tone.glyph,
       )}
     >
       <Icon className="size-4" />
@@ -188,17 +151,17 @@ export function Chip({
   );
 }
 
+/** Status chips: green went well, amber needs a look, red failed. */
 export const chipTones = {
   positive: "bg-positive/10 text-positive ring-positive/25",
   caution:
     "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300",
   danger: "bg-destructive/10 text-destructive ring-destructive/25",
   neutral: "bg-background/60 text-muted-foreground ring-border",
-  primary: "bg-primary/10 ring-primary/20 dark:text-primary text-blue-700",
 } as const;
 
 export const confidenceTone = {
   high: chipTones.positive,
-  medium: chipTones.primary,
+  medium: chipTones.neutral,
   low: chipTones.caution,
 } as const;

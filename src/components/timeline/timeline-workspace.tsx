@@ -1,17 +1,12 @@
 "use client";
 
-import {
-  ArrowRight,
-  ChevronDown,
-  ChevronRight,
-  SearchX,
-  Unlink,
-} from "lucide-react";
+import { ArrowRight, ChevronRight, SearchX, Unlink } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState, type ReactNode } from "react";
 import { stageTones } from "@/components/career/stage-tone";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
+import { EmptyState } from "@/components/shared/empty-state";
 import { kindIcons, moduleTones } from "@/components/timeline/module-tone";
 import {
   TimelineEmptyHero,
@@ -82,8 +77,8 @@ function utc(iso: string) {
   return new Date(`${iso}T12:00:00Z`);
 }
 
-function moments(count: number) {
-  return `${count} ${count === 1 ? "moment" : "moments"}`;
+function eventCount(count: number) {
+  return `${count} ${count === 1 ? "event" : "events"}`;
 }
 
 function signedCentavos(centavos: number) {
@@ -162,7 +157,7 @@ function Metric({ label, value }: { label: string; value: string }) {
   const shown =
     label === "Overall score" && /^\d+$/.test(value) ? `${value}/10` : value;
   return (
-    <span className="bg-muted/60 ring-border/70 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] leading-4 ring-1">
+    <span className="inline-flex items-baseline gap-1.5 text-xs leading-4">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-mono font-semibold">{shown}</span>
     </span>
@@ -195,17 +190,15 @@ function TimelineEventRow({
       {last ? null : (
         <span
           aria-hidden="true"
-          className="from-border to-border/50 absolute top-[3.25rem] bottom-[-0.5rem] left-[calc(2rem-0.5px)] w-px bg-gradient-to-b sm:top-[3.625rem] sm:bottom-[-0.625rem] sm:left-[calc(2.375rem-0.5px)]"
+          className="bg-border absolute top-[3.25rem] bottom-[-0.5rem] left-[calc(2rem-0.5px)] w-px sm:top-[3.625rem] sm:bottom-[-0.625rem] sm:left-[calc(2.375rem-0.5px)]"
         />
       )}
       <article className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-start gap-x-3 px-4 py-3.5 sm:grid-cols-[2.25rem_minmax(0,1fr)_auto] sm:gap-x-4 sm:px-5 sm:py-4">
         <span
           aria-hidden="true"
           className={cn(
-            "grid size-8 place-items-center rounded-full ring-1 sm:size-9",
-            tone.soft,
+            "bg-muted/60 grid size-8 place-items-center rounded-lg sm:size-9",
             tone.text,
-            tone.ring,
           )}
         >
           <Icon className="size-4" />
@@ -261,7 +254,7 @@ function TimelineEventRow({
             href={event.sourceHref as never}
             aria-label={`Open in ${tone.place}: ${title}`}
             title={`Open in ${tone.place}`}
-            className="text-muted-foreground hover:bg-primary/10 hover:text-primary focus-visible:ring-ring -mt-2.5 -mr-2 grid size-11 place-items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none sm:-mt-1.5 sm:size-9"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring -mt-2.5 -mr-2 grid size-11 place-items-center rounded-xl transition-colors focus-visible:ring-2 focus-visible:outline-none sm:-mt-1.5 sm:size-9"
           >
             <ChevronRight aria-hidden="true" className="size-4" />
           </Link>
@@ -285,17 +278,11 @@ function DayHeader({ day, todayIso }: { day: TimelineDay; todayIso: string }) {
       <span
         aria-hidden="true"
         className={cn(
-          "grid w-11 shrink-0 justify-items-center rounded-xl py-1 shadow-[0_1px_2px_rgb(7_10_15/0.08)] ring-1 sm:w-12",
-          today ? "bg-primary/12 ring-primary/35" : "bg-card/85 ring-border/80",
+          "bg-card/85 grid w-11 shrink-0 justify-items-center rounded-xl py-1 ring-1 sm:w-12",
+          today ? "ring-primary" : "ring-border/80",
         )}
       >
-        <span
-          className={cn(
-            "text-[0.5625rem] leading-3 font-semibold tracking-[0.14em] uppercase",
-            // A deeper blue keeps 4.5:1 on today's tinted leaf.
-            today ? "dark:text-primary text-blue-700" : "text-primary",
-          )}
-        >
+        <span className="text-muted-foreground text-[0.625rem] leading-3 font-semibold tracking-[0.1em] uppercase">
           {monthShort.format(date)}
         </span>
         <span className="font-mono text-lg leading-6 font-semibold tracking-[-0.025em]">
@@ -310,7 +297,7 @@ function DayHeader({ day, todayIso }: { day: TimelineDay; todayIso: string }) {
           </span>
         </h3>
         <p className="text-muted-foreground text-xs leading-5">
-          {moments(day.events.length)}
+          {eventCount(day.events.length)}
         </p>
       </div>
       {day.netCentavos !== null ? (
@@ -344,7 +331,7 @@ function MonthSection({
       <div className="flex flex-wrap items-end gap-x-4 gap-y-1 px-1">
         <h2
           id={headingId}
-          className="text-[1.375rem] leading-none font-semibold tracking-[-0.035em] sm:text-2xl"
+          className="text-[1.375rem] leading-none font-semibold tracking-[-0.025em] sm:text-2xl"
         >
           {monthName.format(date)}{" "}
           <span className="text-muted-foreground font-medium">
@@ -353,10 +340,10 @@ function MonthSection({
         </h2>
         <span
           aria-hidden="true"
-          className="from-border mb-1.5 h-px min-w-6 flex-1 bg-gradient-to-r to-transparent"
+          className="bg-border mb-1.5 h-px min-w-6 flex-1"
         />
         <p className="text-muted-foreground mb-px shrink-0 font-mono text-[0.6875rem]">
-          {moments(month.total)}
+          {eventCount(month.total)}
         </p>
       </div>
       <ol className="mt-4 space-y-6 sm:mt-5">
@@ -390,21 +377,17 @@ function MonthSection({
 
 function NoMatches() {
   return (
-    <div className="bg-card/60 mt-8 grid min-h-64 place-items-center rounded-2xl border border-dashed p-6 text-center">
-      <div className="max-w-sm">
-        <span className="bg-muted/70 ring-border/80 text-muted-foreground mx-auto grid size-11 place-items-center rounded-2xl ring-1">
-          <SearchX aria-hidden="true" className="size-5" />
-        </span>
-        <h2 className="mt-4 text-base font-semibold tracking-[-0.01em]">
-          No moments match
-        </h2>
-        <p className="text-muted-foreground mt-2 text-sm leading-6">
-          Try another word, a different module, or a wider date range.
-        </p>
-        <Button asChild variant="secondary" size="sm" className="mt-5">
-          <Link href="/timeline">Clear filters</Link>
-        </Button>
-      </div>
+    <div className="mt-8">
+      <EmptyState
+        icon={SearchX}
+        title="No events match"
+        description="Try another word, a different module, or a wider date range."
+        action={
+          <Button asChild variant="secondary" size="sm">
+            <Link href="/timeline">Clear filters</Link>
+          </Button>
+        }
+      />
     </div>
   );
 }
@@ -451,7 +434,7 @@ export function TimelineWorkspace({
       setEvents((current) => [...current, ...page.events]);
       setCursor(page.nextCursor);
       setAnnouncement(
-        `Loaded ${page.events.length} older ${page.events.length === 1 ? "moment" : "moments"}.`,
+        `Loaded ${page.events.length} older ${page.events.length === 1 ? "event" : "events"}.`,
       );
       // The button goes away with the last page; keep focus nearby.
       if (!page.nextCursor)
@@ -493,7 +476,7 @@ export function TimelineWorkspace({
       {toolbar}
 
       <section aria-label="Timeline events" className="mt-9 sm:mt-11">
-        <ol aria-label="Life timeline" className="space-y-11 sm:space-y-12">
+        <ol aria-label="Events by month" className="space-y-11 sm:space-y-12">
           {groupTimelineMonths(events).map((month) => (
             <MonthSection key={month.month} month={month} todayIso={todayIso} />
           ))}
@@ -507,28 +490,22 @@ export function TimelineWorkspace({
                 variant="secondary"
                 onClick={loadMore}
                 pending={loading}
-                pendingLabel="Loading older moments"
-                className="rounded-full px-5"
+                pendingLabel="Loading…"
               >
-                <ChevronDown aria-hidden="true" className="size-4" />
-                Load older moments
+                Load older events
               </Button>
               <p className="text-muted-foreground text-xs">
-                {moments(events.length)} loaded
+                {eventCount(events.length)} loaded
               </p>
             </>
           ) : (
             <p
               ref={endRef}
               tabIndex={-1}
-              className="text-muted-foreground inline-flex items-center gap-2.5 rounded-full text-xs focus-visible:outline-none"
+              className="text-muted-foreground text-xs focus-visible:outline-none"
             >
-              <span
-                aria-hidden="true"
-                className="bg-muted-foreground/40 ring-muted size-2 rounded-full ring-4"
-              />
               {filtered
-                ? "That’s every moment that matches."
+                ? "That’s every event that matches."
                 : "That’s the beginning of your timeline."}
             </p>
           )}

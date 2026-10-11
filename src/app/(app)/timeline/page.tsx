@@ -3,7 +3,7 @@ import { manilaTodayIsoDate } from "@/lib/dates/dates";
 import { normalizeTimelineFilters } from "@/lib/timeline/timeline";
 import { loadTimelinePage } from "@/lib/timeline/server";
 
-export const metadata = { title: "Life timeline" };
+export const metadata = { title: "Timeline" };
 
 type SearchParams = {
   q?: string;

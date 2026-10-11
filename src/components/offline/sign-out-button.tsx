@@ -11,16 +11,20 @@ import { signOutAction, signOutEverywhereAction } from "@/lib/auth/actions";
 export function SignOutButton({
   showLabel = false,
   scope = "local",
+  variant = "ghost",
 }: {
   showLabel?: boolean;
   scope?: "local" | "global";
+  /** `secondary` renders a plain labelled button for settings rows. */
+  variant?: "ghost" | "secondary";
 }) {
+  const plain = showLabel && variant === "secondary";
   const [pending, setPending] = useState(false);
   const { pending: unsynced, blocked, retry } = useOfflineSync();
   const button = (
     <Button
       type="submit"
-      variant="ghost"
+      variant={variant}
       size={showLabel ? "default" : "icon"}
       pending={pending}
       pendingLabel={showLabel ? "Logging out…" : undefined}
@@ -31,9 +35,11 @@ export function SignOutButton({
             ? "Log out everywhere"
             : "Log out"
       }
-      className={showLabel ? "w-full justify-start" : undefined}
+      className={
+        plain ? "w-full" : showLabel ? "w-full justify-start" : undefined
+      }
     >
-      <LogOut className="size-4" />
+      {plain ? null : <LogOut className="size-4" />}
       {showLabel &&
         (scope === "global" ? "Log out everywhere" : "Log out this device")}
     </Button>

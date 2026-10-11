@@ -1,4 +1,4 @@
-import { CircleDollarSign, Moon, Plus, Sun, Sunrise } from "lucide-react";
+import { CircleDollarSign, Plus } from "lucide-react";
 import Link from "next/link";
 import {
   DaylineCommand,
@@ -73,10 +73,17 @@ export type TodayDayline = {
 };
 
 const greetings = {
-  morning: { text: "Good morning", icon: Sunrise },
-  afternoon: { text: "Good afternoon", icon: Sun },
-  evening: { text: "Good evening", icon: Moon },
+  morning: "Good morning",
+  afternoon: "Good afternoon",
+  evening: "Good evening",
 } as const;
+
+/** "Good evening, Mika", or just the greeting when there is no name. */
+function greetingFor(now: Date, displayName?: string | null) {
+  const greeting = greetings[manilaDayPart(now)];
+  const firstName = displayName?.trim().split(/\s+/)[0];
+  return firstName ? `${greeting}, ${firstName}` : greeting;
+}
 
 function plural(count: number, word: string) {
   return `${count} ${word}${count === 1 ? "" : "s"}`;
@@ -122,7 +129,6 @@ function situationItems(dashboard: DashboardData): SituationItem[] {
         ? `${leadGoal.title} · ${Math.round(leadGoal.progress_percent)}%`
         : "Define an outcome",
       href: "/goals",
-      meter: leadGoal ? leadGoal.progress_percent / 100 : undefined,
     },
   ];
 }
@@ -130,6 +136,7 @@ function situationItems(dashboard: DashboardData): SituationItem[] {
 /** The Today page body, from data the page has already loaded. */
 export function TodayDashboard({
   now,
+  displayName,
   dashboard,
   dayline,
   nextBestActions,
@@ -137,6 +144,8 @@ export function TodayDashboard({
   wisdomQuote,
 }: {
   now: Date;
+  /** The profile's name, for the greeting. */
+  displayName?: string | null;
   dashboard: DashboardData;
   dayline: TodayDayline;
   nextBestActions: NextBestAction[];
@@ -144,22 +153,13 @@ export function TodayDashboard({
   wisdomQuote: WisdomQuote;
 }) {
   const daylineItems = dayline.items;
-  const greeting = greetings[manilaDayPart(now)];
   const today = manilaIsoDate(now);
 
   return (
     <PageShell>
       <PageHeading
-        eyebrow={greeting.text}
         meta={manilaDayLabel(now)}
-        title={
-          daylineItems.length ? "Your day, mapped." : "Your route is clear."
-        }
-        description={
-          daylineItems.length
-            ? "One clear move now. The rest of your system stays within reach."
-            : "Add what matters and ATLAS will surface the next useful move."
-        }
+        title={greetingFor(now, displayName)}
         actions={
           <>
             <Button asChild variant="secondary">

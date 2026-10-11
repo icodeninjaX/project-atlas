@@ -2,7 +2,7 @@
 
 import type { Factor } from "@supabase/supabase-js";
 import Image from "next/image";
-import { KeyRound, ShieldCheck, ShieldPlus, Trash2 } from "lucide-react";
+import { ShieldCheck, ShieldPlus } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   FormFeedback,
+  IconTile,
   StatusChip,
 } from "@/components/settings/settings-chrome";
 import { createClient } from "@/lib/supabase/client";
@@ -40,7 +41,7 @@ export function MfaSettings() {
   const loadFactors = useCallback(async () => {
     const result = await supabase.auth.mfa.listFactors();
     if (result.error) {
-      setError("Authenticator settings could not be loaded.");
+      setError("Two-step verification settings could not be loaded.");
       return;
     }
     setFactors(result.data.all);
@@ -65,7 +66,7 @@ export function MfaSettings() {
         issuer: "ATLAS",
       });
       if (result.error) {
-        setError("Authenticator enrollment could not be started.");
+        setError("Two-step verification setup could not be started.");
         return;
       }
       const qrCode = result.data.totp.qr_code.startsWith("data:")
@@ -118,7 +119,7 @@ export function MfaSettings() {
       }
       setEnrollment(null);
       setEnrollmentCode("");
-      setMessage("Authenticator protection is now enabled.");
+      setMessage("Two-step verification is on.");
       await loadFactors();
     });
   };
@@ -129,7 +130,7 @@ export function MfaSettings() {
       if (!verifiedFactor) return;
       if (
         !window.confirm(
-          "Remove authenticator protection? Future logins will only require your password.",
+          "Turn off two-step verification? Future logins will only require your password.",
         )
       ) {
         return;
@@ -141,7 +142,9 @@ export function MfaSettings() {
         assurance.data?.currentLevel !== "aal2" &&
         !/^\d{6}$/.test(removalCode)
       ) {
-        setError("Enter a current 6-digit code before removing the factor.");
+        setError(
+          "Enter a current 6-digit code to turn off two-step verification.",
+        );
         return;
       }
       if (assurance.data?.currentLevel !== "aal2") {
@@ -166,58 +169,46 @@ export function MfaSettings() {
         factorId: verifiedFactor.id,
       });
       if (result.error) {
-        setError("Authenticator protection could not be removed.");
+        setError("Two-step verification could not be turned off.");
         return;
       }
       setRemovalCode("");
-      setMessage("Authenticator protection was removed.");
+      setMessage("Two-step verification is off.");
       await loadFactors();
     });
   };
 
   return (
-    <div className="bg-background/55 relative mt-2.5 overflow-hidden rounded-xl p-3.5 sm:p-4">
+    <div className="bg-background/55 mt-2.5 rounded-xl p-3.5 sm:p-4">
       <div className="flex items-start gap-3">
-        <span
-          aria-hidden="true"
-          className={
-            verifiedFactor
-              ? "bg-positive/12 text-positive ring-positive/25 grid size-9 shrink-0 place-items-center rounded-xl ring-1"
-              : "bg-muted/80 text-muted-foreground ring-border/80 grid size-9 shrink-0 place-items-center rounded-xl ring-1"
-          }
-        >
-          <ShieldCheck className="size-4" />
-        </span>
+        <IconTile icon={ShieldCheck} size="sm" />
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-            Authenticator app
+            Two-step verification
             <StatusChip tone={verifiedFactor ? "positive" : "caution"}>
-              {verifiedFactor ? "Protected" : "Recommended"}
+              {verifiedFactor ? "On" : "Recommended"}
             </StatusChip>
           </p>
           <p className="text-muted-foreground mt-1 text-xs leading-5">
-            Require a rotating 6-digit code after your password. ATLAS enforces
-            the stronger session before opening private pages.
+            Require a rotating 6-digit code from an authenticator app after your
+            password. ATLAS asks for it before opening private pages.
           </p>
 
           {verifiedFactor ? (
-            <div className="bg-positive/[0.06] ring-positive/20 mt-4 rounded-xl p-3.5 ring-1">
-              <p className="text-positive flex items-center gap-2 text-sm font-semibold">
-                <KeyRound aria-hidden="true" className="size-4" />
-                Two-step verification enabled
-              </p>
-              <p className="text-muted-foreground mt-1 text-xs">
+            <div className="mt-4">
+              <p className="text-muted-foreground text-xs">
                 {verifiedFactor.friendly_name ?? "ATLAS authenticator"}
               </p>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                 <Input
                   value={removalCode}
                   onChange={(event) => setRemovalCode(event.target.value)}
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   maxLength={6}
-                  placeholder="Code if this session is AAL1"
-                  aria-label="Authenticator code for removal"
+                  placeholder="6-digit code"
+                  aria-label="Authenticator code to turn off two-step verification"
+                  className="sm:max-w-48"
                 />
                 <Button
                   type="button"
@@ -225,29 +216,18 @@ export function MfaSettings() {
                   size="sm"
                   disabled={pending}
                   pending={pending && pendingAction === "remove"}
-                  pendingLabel="Removing…"
+                  pendingLabel="Turning off…"
                   onClick={removeFactor}
                 >
-                  <Trash2 className="size-4" />
-                  Remove
+                  Turn off
                 </Button>
               </div>
             </div>
           ) : enrollment ? (
-            <div className="bg-card/70 ring-border/80 mt-4 rounded-xl p-3.5 ring-1 sm:p-4">
-              <ol className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1.5 text-xs leading-5">
-                <li className="flex items-center gap-2">
-                  <span className="bg-primary/12 text-primary grid size-5 place-items-center rounded-full font-mono text-[0.625rem] font-semibold">
-                    1
-                  </span>
-                  Scan the code with an authenticator app.
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="bg-primary/12 text-primary grid size-5 place-items-center rounded-full font-mono text-[0.625rem] font-semibold">
-                    2
-                  </span>
-                  Enter the current 6-digit code to finish.
-                </li>
+            <div className="mt-4">
+              <ol className="text-muted-foreground list-decimal space-y-1 pl-4 text-xs leading-5">
+                <li>Scan the code with an authenticator app.</li>
+                <li>Enter the current 6-digit code to finish.</li>
               </ol>
               <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
                 <Image
@@ -256,14 +236,14 @@ export function MfaSettings() {
                   width={176}
                   height={176}
                   unoptimized
-                  className="self-center rounded-xl bg-white p-2 shadow-[0_10px_30px_-18px_rgb(7_10_15/0.6)] ring-1 ring-black/10 sm:self-start"
+                  className="self-center rounded-xl bg-white p-2 ring-1 ring-black/10 sm:self-start"
                 />
                 <div className="min-w-0 flex-1 space-y-3">
                   <div>
                     <p className="text-muted-foreground text-xs">
                       Manual setup key
                     </p>
-                    <code className="bg-muted/80 ring-border/80 mt-1 block overflow-x-auto rounded-lg px-2.5 py-2 font-mono text-xs tracking-wider ring-1">
+                    <code className="bg-muted/80 mt-1 block overflow-x-auto rounded-lg px-2.5 py-2 font-mono text-xs tracking-wider">
                       {enrollment.secret}
                     </code>
                   </div>
@@ -273,9 +253,9 @@ export function MfaSettings() {
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     maxLength={6}
-                    placeholder="123456"
+                    placeholder="6-digit code"
                     aria-label="Authenticator verification code"
-                    className="font-mono text-lg tracking-[0.4em]"
+                    className="font-mono tracking-[0.2em]"
                   />
                   <div className="flex gap-2">
                     <Button
@@ -286,11 +266,11 @@ export function MfaSettings() {
                       pendingLabel="Verifying…"
                       onClick={verifyEnrollment}
                     >
-                      Verify and enable
+                      Verify and turn on
                     </Button>
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="secondary"
                       size="sm"
                       disabled={pending}
                       pending={pending && pendingAction === "cancel"}
@@ -314,7 +294,7 @@ export function MfaSettings() {
               onClick={beginEnrollment}
             >
               <ShieldPlus className="size-4" />
-              Set up authenticator
+              Set up two-step verification
             </Button>
           )}
 

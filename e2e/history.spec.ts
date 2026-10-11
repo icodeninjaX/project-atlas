@@ -4,7 +4,7 @@ const email = process.env.E2E_EMAIL;
 const password = process.env.E2E_PASSWORD;
 test.skip(!email || !password, "A disposable local E2E account is required.");
 
-test("recorded history remains readable at phone and desktop widths", async ({
+test("history remains readable at phone and desktop widths", async ({
   page,
 }) => {
   await page.goto("/login");
@@ -21,7 +21,7 @@ test("recorded history remains readable at phone and desktop widths", async ({
     await page.setViewportSize({ width, height: 850 });
     await page.goto("/history");
     await expect(
-      page.getByRole("heading", { name: "Recorded history" }),
+      page.getByRole("heading", { level: 1, name: "History", exact: true }),
     ).toBeVisible();
     // A disposable account has no records yet: each series says where its
     // records come from instead of drawing empty charts.

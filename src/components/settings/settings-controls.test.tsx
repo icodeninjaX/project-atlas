@@ -74,9 +74,7 @@ describe("Settings controls", () => {
 
     expect(document.documentElement).toHaveAttribute("data-font", "lora");
     expect(window.localStorage.getItem("atlas-font-family:v1")).toBe("lora");
-    expect(
-      screen.getByText("Lora · Plan clearly, move intentionally."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Lora · Serif")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Reset font" }));
 

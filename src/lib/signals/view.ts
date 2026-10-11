@@ -251,7 +251,7 @@ const groupCopy: Record<SignalGroupId, { label: string; detail: string }> = {
     detail: "What is moving in the right direction",
   },
   updates: {
-    label: "Worth knowing",
+    label: "Updates",
     detail: "Changes to keep an eye on",
   },
 };

@@ -11,7 +11,7 @@ import {
 } from "@/components/dashboard/dashboard-card";
 import { chooseCareerFollowupAction } from "@/lib/next-best-action/actions";
 import type { NextBestAction } from "@/lib/next-best-action/engine";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
@@ -72,7 +72,15 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
         {visible.map((action) => (
           <article key={action.id} className={cn(dashboardTileClass, "sm:p-5")}>
             <p className="text-xs font-semibold">
-              <span className="text-primary">{action.urgency}</span>
+              <span
+                className={cn(
+                  /overdue/i.test(action.urgency)
+                    ? "text-destructive"
+                    : "text-foreground",
+                )}
+              >
+                {action.urgency}
+              </span>
               <span className="text-muted-foreground">
                 {" "}
                 · {action.sourceLabel} follow-up
@@ -107,28 +115,29 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
               >
                 View {action.sourceLabel} application
               </Link>
-              <button
+              <Button
                 type="button"
+                size="sm"
                 disabled={pending}
                 onClick={() => setReviewing(action.id)}
-                className={cn(buttonVariants({ size: "sm" }), "min-h-11")}
+                className="min-h-11"
               >
                 Review task proposal
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 disabled={pending}
                 onClick={() => choose(action, "dismissed")}
-                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring min-h-11 rounded-lg px-3 text-sm focus-visible:ring-2"
+                className="min-h-11"
               >
                 Dismiss
-              </button>
+              </Button>
             </div>
             {reviewing === action.id && (
-              <div className="bg-primary/5 ring-primary/25 mt-4 rounded-xl p-4 ring-1">
-                <p className="text-sm font-semibold">
-                  Create a follow-up task?
-                </p>
+              <div className="bg-muted/40 mt-4 rounded-xl p-4">
+                <p className="text-sm font-medium">Create a follow-up task?</p>
                 <p className="mt-1 text-sm break-words">{action.taskTitle}</p>
                 <p className="text-muted-foreground mt-1 text-xs">
                   Scheduled for the recorded follow-up date, or today if
@@ -138,23 +147,26 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
                   <span className="text-foreground font-medium">Why now:</span>{" "}
                   {action.reason}. {action.uncertainty}
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
+                <div className="mt-3 flex flex-wrap justify-end gap-2">
+                  <Button
                     type="button"
-                    disabled={pending}
-                    onClick={() => choose(action, "confirmed")}
-                    className={cn(buttonVariants({ size: "sm" }), "min-h-11")}
-                  >
-                    Confirm and create task
-                  </button>
-                  <button
-                    type="button"
+                    variant="ghost"
+                    size="sm"
                     disabled={pending}
                     onClick={() => setReviewing(null)}
-                    className="min-h-11 rounded-lg px-3 text-sm"
+                    className="min-h-11"
                   >
                     Cancel
-                  </button>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={pending}
+                    onClick={() => choose(action, "confirmed")}
+                    className="min-h-11"
+                  >
+                    Confirm and create task
+                  </Button>
                 </div>
               </div>
             )}

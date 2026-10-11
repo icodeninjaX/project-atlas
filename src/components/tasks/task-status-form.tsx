@@ -1,11 +1,10 @@
 "use client";
 
-import { Check, RotateCcw } from "lucide-react";
+import { Check, LoaderCircle, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
-import { AtlasMark } from "@/components/atlas/atlas-mark";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { getTaskPriorityTone } from "@/lib/tasks/priority";
@@ -16,7 +15,6 @@ const successAnimationMs = 900;
 function TaskCompletionSuccessMark() {
   return (
     <span aria-hidden="true" className="atlas-task-success-mark">
-      <span className="atlas-task-success-logo" />
       <span className="atlas-task-success-check">
         <Check className="size-3.5" strokeWidth={3} />
       </span>
@@ -40,7 +38,7 @@ function TaskCheckCircle({
     return (
       <span
         aria-hidden="true"
-        className="grid size-[1.375rem] place-items-center rounded-full bg-green-600 text-white shadow-[0_4px_10px_-4px_rgb(22_163_74/0.8)] transition-colors group-hover/check:bg-green-700"
+        className="bg-positive text-background group-hover/check:bg-positive/85 grid size-[1.375rem] place-items-center rounded-full transition-colors"
       >
         <Check
           className="size-3.5 group-hover/check:hidden group-focus-visible/check:hidden"
@@ -116,7 +114,10 @@ function TaskStatusButton({
       {completionSucceeded ? (
         <TaskCompletionSuccessMark />
       ) : pending ? (
-        <AtlasMark className="size-4 animate-spin [animation-duration:1.1s] motion-reduce:animate-none" />
+        <LoaderCircle
+          aria-hidden="true"
+          className="text-muted-foreground size-4 animate-spin motion-reduce:animate-none"
+        />
       ) : (
         <TaskCheckCircle completed={completed} priority={priority} />
       )}

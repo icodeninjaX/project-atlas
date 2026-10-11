@@ -1,21 +1,11 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import {
-  Check,
-  Expand,
-  Flame,
-  Pause,
-  Play,
-  RotateCcw,
-  TimerReset,
-  X,
-} from "lucide-react";
+import { Expand, Pause, Play, Timer, X } from "lucide-react";
 import {
   useActionState,
   useCallback,
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -23,8 +13,10 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
+import { taskMenuItemClass } from "@/components/tasks/task-menu";
 import type { OfflineActionState } from "@/lib/offline/types";
 import { playFocusActivationSound } from "@/lib/tasks/focus-sound";
+import { cn } from "@/lib/utils";
 
 type WakeLockHandle = {
   release: () => Promise<void>;
@@ -75,14 +67,12 @@ function UnavailableFocusButton({
       disabled
       role={menuItem ? "menuitem" : undefined}
       title="Add estimated minutes to use Focus mode"
-      className={
-        menuItem
-          ? "w-full justify-start text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-white"
-          : "min-h-11 sm:min-h-9"
-      }
+      className={menuItem ? taskMenuItemClass : "min-h-11 sm:min-h-9"}
     >
-      <TimerReset className="size-3.5" />
-      Set focus minutes
+      {menuItem ? (
+        <Timer className="text-muted-foreground size-4" aria-hidden="true" />
+      ) : null}
+      Add an estimate to focus
     </Button>
   );
 }
@@ -122,7 +112,6 @@ function FocusTimer({
   const deadlineRef = useRef<number | null>(null);
   const wakeLockRef = useRef<WakeLockHandle | null>(null);
   const { submit } = useOfflineSync();
-  const gradientId = useId().replaceAll(":", "");
   const menuItem = triggerPresentation === "menu";
   const finished = remainingSeconds === 0;
   const progress = Math.min(1, remainingSeconds / totalSeconds);
@@ -244,7 +233,7 @@ function FocusTimer({
 
   const sessionLabel = useMemo(() => {
     if (finished) return "Focus session complete";
-    if (running) return "Stay with this one task";
+    if (running) return "In progress";
     if (remainingSeconds < totalSeconds) return "Session paused";
     return `${estimatedMinutes}-minute focus session`;
   }, [estimatedMinutes, finished, remainingSeconds, running, totalSeconds]);
@@ -305,41 +294,38 @@ function FocusTimer({
             onTrigger?.();
           }}
           aria-label={`Focus on ${title}`}
-          className={
-            menuItem
-              ? "w-full justify-start text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-white"
-              : "min-h-11 sm:min-h-9"
-          }
+          className={menuItem ? taskMenuItemClass : "min-h-11 sm:min-h-9"}
         >
-          <Flame className="size-3.5" />
+          {menuItem ? (
+            <Timer
+              className="text-muted-foreground size-4"
+              aria-hidden="true"
+            />
+          ) : null}
           Focus
         </Button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-[#020611]/90 backdrop-blur-xl" />
+        <Dialog.Overlay className="bg-background fixed inset-0 z-50" />
         <Dialog.Content
           onCloseAutoFocus={(event) => {
             if (!onCloseAutoFocus) return;
             event.preventDefault();
             onCloseAutoFocus();
           }}
-          className="fixed inset-0 z-50 flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#07101f] text-white outline-none sm:inset-5 sm:h-auto sm:border sm:border-white/10 sm:shadow-2xl"
+          className="bg-background text-foreground fixed inset-0 z-50 flex h-[100dvh] min-h-0 flex-col overflow-hidden outline-none"
         >
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 overflow-hidden"
-          >
-            <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-500/20 blur-3xl" />
-          </div>
-
-          <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 pt-[max(0.875rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-3 pl-[max(1rem,env(safe-area-inset-left))] sm:p-6">
-            <div className="flex items-center gap-2 font-mono text-[0.6875rem] font-semibold text-blue-200">
-              <span className="relative flex size-2">
-                {running && (
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-blue-300 opacity-75" />
+          <header className="flex shrink-0 items-center justify-between gap-3 pt-[max(0.875rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-3 pl-[max(1rem,env(safe-area-inset-left))] sm:p-6">
+            <div className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "size-2 rounded-full",
+                  running
+                    ? "bg-primary animate-pulse motion-reduce:animate-none"
+                    : "bg-muted-foreground/50",
                 )}
-                <span className="relative inline-flex size-2 rounded-full bg-blue-300" />
-              </span>
+              />
               Focus mode
               {wakeLockActive ? " · screen awake" : ""}
             </div>
@@ -353,7 +339,7 @@ function FocusTimer({
                   fullscreen ? "Exit full screen" : "Enter full screen"
                 }
                 title={fullscreen ? "Exit full screen" : "Enter full screen"}
-                className="hidden size-11 text-blue-100 hover:bg-white/10 hover:text-white sm:inline-flex sm:size-10"
+                className="hidden sm:inline-flex"
               >
                 <Expand className="size-4" />
               </Button>
@@ -363,7 +349,6 @@ function FocusTimer({
                   variant="ghost"
                   size="icon"
                   aria-label="Close Focus mode"
-                  className="size-11 text-blue-100 hover:bg-white/10 hover:text-white sm:size-10"
                 >
                   <X className="size-4" />
                 </Button>
@@ -371,90 +356,71 @@ function FocusTimer({
             </div>
           </header>
 
-          <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto overscroll-contain pt-2 pr-[max(1rem,env(safe-area-inset-right))] pb-3 pl-[max(1rem,env(safe-area-inset-left))] text-center sm:px-10 sm:py-4 [@media(max-height:680px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <Dialog.Description className="font-mono text-[0.6875rem] text-blue-200">
-              {scheduledLabel ?? "Start when you are ready"}
+          <main className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto overscroll-contain pt-2 pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] text-center sm:px-10 sm:py-6">
+            <Dialog.Description className="text-muted-foreground font-mono text-xs">
+              {scheduledLabel ?? "No scheduled time"}
             </Dialog.Description>
-            <Dialog.Title className="mt-2 max-w-2xl text-[clamp(1.35rem,6.5vw,2.25rem)] leading-tight font-semibold tracking-[-0.025em] text-balance sm:mt-3 sm:text-4xl">
+            <Dialog.Title className="mt-2 max-w-2xl text-2xl leading-tight font-semibold tracking-[-0.02em] text-balance sm:mt-3 sm:text-[1.75rem]">
               {title}
             </Dialog.Title>
             {description && (
-              <p className="mt-2 max-h-12 max-w-lg overflow-hidden text-sm leading-6 text-slate-300 sm:mt-3 sm:max-h-none">
+              <p className="text-muted-foreground mt-2 max-h-12 max-w-lg overflow-hidden text-sm leading-6 sm:mt-3 sm:max-h-none">
                 {description}
               </p>
             )}
 
             <div className="relative mt-[clamp(0.875rem,3dvh,2.5rem)] grid size-[min(75vw,38dvh,20rem)] shrink-0 place-items-center sm:mt-10 sm:size-80">
-              <div className="absolute inset-8 rounded-full bg-blue-500/15 blur-2xl" />
               <svg
                 viewBox="0 0 240 240"
-                className="absolute inset-0 size-full -rotate-90 drop-shadow-[0_0_24px_rgba(96,165,250,0.28)]"
+                className="absolute inset-0 size-full -rotate-90"
                 aria-hidden="true"
               >
-                <defs>
-                  <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#93c5fd" />
-                    <stop offset="55%" stopColor="#3b82f6" />
-                    <stop offset="100%" stopColor="#8b5cf6" />
-                  </linearGradient>
-                </defs>
                 <circle
                   cx="120"
                   cy="120"
                   r="108"
                   fill="none"
-                  stroke="rgba(148, 163, 184, 0.16)"
                   strokeWidth="7"
+                  className="stroke-muted"
                 />
                 <circle
                   cx="120"
                   cy="120"
                   r="108"
                   fill="none"
-                  stroke={`url(#${gradientId})`}
                   strokeLinecap="round"
                   strokeWidth="8"
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeOffset}
-                  className="transition-[stroke-dashoffset] duration-300 ease-linear"
+                  className="stroke-primary transition-[stroke-dashoffset] duration-300 ease-linear motion-reduce:transition-none"
                 />
               </svg>
               <div className="relative">
                 <p
                   role="timer"
                   aria-label={`${remainingSeconds} seconds remaining`}
-                  className="font-mono text-[clamp(2.65rem,13vw,3.75rem)] font-semibold tracking-[-0.06em] tabular-nums sm:text-6xl"
+                  className="font-mono text-[clamp(2.65rem,13vw,3.75rem)] font-semibold tracking-[-0.025em] tabular-nums"
                 >
                   {formatCountdown(remainingSeconds)}
                 </p>
                 <p
                   aria-live="polite"
-                  className="mt-3 text-xs font-medium text-blue-200"
+                  className="text-muted-foreground mt-3 text-xs font-medium"
                 >
                   {sessionLabel}
                 </p>
               </div>
             </div>
 
-            <div className="mt-[clamp(0.875rem,3dvh,2rem)] w-full max-w-80 rounded-2xl border border-white/10 bg-white/[0.06] p-2 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+            <div className="mt-[clamp(0.875rem,3dvh,2rem)] grid w-full max-w-80 gap-2">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                 {running ? (
-                  <Button
-                    type="button"
-                    size="lg"
-                    onClick={pauseTimer}
-                    className="w-full rounded-2xl bg-white text-slate-950 hover:bg-blue-50"
-                  >
+                  <Button type="button" size="lg" onClick={pauseTimer}>
                     <Pause className="size-4" />
                     Pause
                   </Button>
                 ) : (
-                  <Button
-                    type="button"
-                    size="lg"
-                    onClick={startTimer}
-                    className="w-full rounded-2xl bg-white text-slate-950 hover:bg-blue-50"
-                  >
+                  <Button type="button" size="lg" onClick={startTimer}>
                     <Play className="size-4 fill-current" />
                     {finished
                       ? "Focus again"
@@ -465,17 +431,15 @@ function FocusTimer({
                 )}
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="secondary"
                   size="lg"
                   onClick={resetTimer}
-                  className="rounded-2xl px-4 text-blue-100 hover:bg-white/10 hover:text-white"
                 >
-                  <RotateCcw className="size-4" />
                   Reset
                 </Button>
               </div>
 
-              <form action={completeTaskAction} className="mt-1">
+              <form action={completeTaskAction}>
                 <input type="hidden" name="taskId" value={taskId} />
                 <input type="hidden" name="status" value="completed" />
                 <Button
@@ -483,18 +447,13 @@ function FocusTimer({
                   variant="ghost"
                   pending={completingTask}
                   pendingLabel="Marking complete…"
-                  className="min-h-11 w-full rounded-2xl text-blue-200 hover:bg-emerald-400/10 hover:text-emerald-200"
+                  className="w-full"
                 >
-                  <Check className="size-4" />
                   Mark task complete
                 </Button>
               </form>
             </div>
           </main>
-
-          <footer className="relative z-10 shrink-0 pt-2 pr-[max(1rem,env(safe-area-inset-right))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] text-center font-mono text-[9px] text-slate-500 sm:p-5 [@media(max-height:680px)]:hidden">
-            One task. One timer. Everything else can wait.
-          </footer>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

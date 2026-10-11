@@ -7,7 +7,7 @@ import { timelineHref } from "@/lib/timeline/view";
 import { PageHeading, PageHeadingLink } from "@/components/shared/page-heading";
 import { PageShell } from "@/components/shared/page-shell";
 
-/** The Life timeline page body, from data the page has already loaded. */
+/** The Timeline page body, from data the page has already loaded. */
 export function TimelineScreen({
   filters,
   page,
@@ -24,7 +24,7 @@ export function TimelineScreen({
   return (
     <PageShell>
       <PageHeading
-        title="Life timeline"
+        title="Timeline"
         description="Everything you recorded, in order: tasks finished, money moved, goals reached and decisions made."
         aside={
           <PageHeadingLink href="/settings/activity" icon={History}>

@@ -88,6 +88,6 @@ describe("SignalsPanel", () => {
 
   it("explains an empty result without manufacturing a signal", () => {
     render(<SignalsPanel signals={[]} />);
-    expect(screen.getByText("Nothing needs attention.")).toBeInTheDocument();
+    expect(screen.getByText("Nothing needs attention")).toBeInTheDocument();
   });
 });

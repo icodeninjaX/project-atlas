@@ -136,10 +136,8 @@ export function PatternMatrix({ results }: { results: AssociationResult[] }) {
                   <span
                     aria-hidden="true"
                     className={cn(
-                      "mx-auto grid aspect-square w-full max-w-7 place-items-center rounded-lg ring-1",
-                      tone.soft,
+                      "bg-muted/60 mx-auto grid aspect-square w-full max-w-7 place-items-center rounded-lg",
                       tone.text,
-                      tone.ring,
                     )}
                   >
                     <Icon className="size-3.5" />
@@ -150,7 +148,7 @@ export function PatternMatrix({ results }: { results: AssociationResult[] }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, rowIndex) => {
+          {rows.map((row) => {
             const tone = metricTones[row.metric];
             return (
               <tr key={row.metric}>
@@ -173,9 +171,6 @@ export function PatternMatrix({ results }: { results: AssociationResult[] }) {
                   const name = `${metricDefinitions[column].label} and ${metricDefinitions[row.metric].label}: ${markWords[mark]}`;
                   const face = (
                     <span
-                      style={{
-                        animationDelay: `${(rowIndex + columnIndex) * 40}ms`,
-                      }}
                       className={cn(
                         "grid aspect-square w-full max-w-11 place-items-center rounded-[0.625rem]",
                         markCell[mark],

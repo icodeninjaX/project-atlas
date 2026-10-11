@@ -21,9 +21,7 @@ describe("privacy mode", () => {
     );
 
     expect(screen.getByText("₱12,345.00")).toBeInTheDocument();
-    await user.click(
-      screen.getByRole("button", { name: "Hide sensitive values" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Hide amounts" }));
     expect(screen.queryByText("₱12,345.00")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Hidden sensitive value")).toHaveTextContent(
       "••••••",

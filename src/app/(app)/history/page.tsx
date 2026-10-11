@@ -8,7 +8,7 @@ import {
 import { loadHistoricalMetrics } from "@/lib/history/server";
 import { parseHistoryView } from "@/lib/history/view";
 
-export const metadata = { title: "Recorded history" };
+export const metadata = { title: "History" };
 
 export default async function HistoryPage({
   searchParams,

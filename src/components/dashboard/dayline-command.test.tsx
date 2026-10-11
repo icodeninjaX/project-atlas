@@ -155,9 +155,7 @@ describe("DaylineCommand", () => {
   it("shows a calm empty state without removing planning controls", () => {
     render(<DaylineCommand items={[]} />);
 
-    expect(
-      screen.getByText("Nothing urgent is competing for attention."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Nothing on your route")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Tune Dayline planning" }),
     ).toHaveAttribute("href", "/settings");

@@ -22,8 +22,7 @@ function Feedback({ state }: { state: SecurityState }) {
   return <FormFeedback success={state.success}>{state.message}</FormFeedback>;
 }
 
-const detailsClass =
-  "group bg-background/55 ring-border/80 open:ring-primary/30 open:bg-background/80 rounded-2xl ring-1 transition-colors";
+const detailsClass = "group bg-background/55 rounded-xl";
 
 function Summary({
   icon,
@@ -35,7 +34,7 @@ function Summary({
   detail: string;
 }) {
   return (
-    <summary className="focus-visible:ring-ring flex min-h-16 cursor-pointer list-none items-center gap-3 rounded-2xl p-3 focus-visible:ring-2 focus-visible:outline-none sm:p-3.5 [&::-webkit-details-marker]:hidden">
+    <summary className="focus-visible:ring-ring flex min-h-16 cursor-pointer list-none items-center gap-3 rounded-xl p-3 focus-visible:ring-2 focus-visible:outline-none sm:p-3.5 [&::-webkit-details-marker]:hidden">
       <IconTile icon={icon} size="sm" />
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold">{title}</span>

@@ -15,7 +15,6 @@ const items: SituationItem[] = [
     detail: "2 due today · 1 done",
     href: "/tasks?view=overdue",
     urgent: true,
-    meter: 1 / 3,
   },
   {
     label: "Career",
@@ -28,25 +27,27 @@ const items: SituationItem[] = [
     value: "4 active",
     detail: "Learn Sales · 40%",
     href: "/goals",
-    meter: 0.4,
   },
 ];
 
 afterEach(cleanup);
 
 describe("SituationStrip", () => {
-  it("starts as one readable column and progressively enhances to a compact grid", () => {
+  it("starts as one readable column and progressively enhances to a compact strip", () => {
     render(<SituationStrip items={items} />);
 
     const heading = screen.getByRole("heading", { name: "Situation" });
     const grid = heading.parentElement?.nextElementSibling;
 
     // Columns follow the strip's width in rem: a 320 px phone gets two,
-    // while 200% text gets one column instead of two cramped ones.
+    // while 200% text gets one column instead of two cramped ones. The
+    // cells share one surface, split by hairlines.
     expect(grid).toHaveClass(
       "grid-cols-1",
       "@[17rem]:grid-cols-2",
       "@[56rem]:grid-cols-4",
+      "gap-px",
+      "bg-border",
     );
     expect(screen.getAllByRole("link")).toHaveLength(4);
     expect(
@@ -61,7 +62,7 @@ describe("SituationStrip", () => {
     expect(screen.getByText("Active accounts")).not.toHaveClass("truncate");
   });
 
-  it("marks urgent areas in words as well as color, and keeps meters decorative", () => {
+  it("marks urgent areas in words as well as color, without decorative meters", () => {
     render(<SituationStrip items={items} />);
 
     const tasks = screen.getByRole("link", { name: /Tasks/ });
@@ -72,8 +73,7 @@ describe("SituationStrip", () => {
     expect(screen.getByText("4 active").parentElement).not.toHaveClass(
       "text-destructive",
     );
-    // The meter repeats what the detail says, so it stays out of the
-    // link's accessible name.
+    // The detail carries the progress in words; there is no ring beside it.
     expect(screen.queryByRole("meter")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Goals/ })).toHaveTextContent(
       "Learn Sales · 40%",

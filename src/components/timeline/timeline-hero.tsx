@@ -64,8 +64,8 @@ function spanLabel(oldest: string, newest: string, todayIso: string) {
   return `${format(oldest)} – ${format(newest)}`;
 }
 
-function moments(count: number) {
-  return `${count} ${count === 1 ? "moment" : "moments"}`;
+function eventCount(count: number) {
+  return `${count} ${count === 1 ? "event" : "events"}`;
 }
 
 function StatusPill({
@@ -109,7 +109,7 @@ function HeroShell({ children }: { children: ReactNode }) {
   );
 }
 
-/** Money in and out across the moments in view, with the net. */
+/** Money in and out across the events in view, with the net. */
 function MoneyInView({ summary }: { summary: TimelineSummary }) {
   const moved = summary.inflowCount + summary.outflowCount > 0;
   const largest = Math.max(summary.inflowCentavos, summary.outflowCentavos);
@@ -206,7 +206,7 @@ function MoneyInView({ summary }: { summary: TimelineSummary }) {
         </>
       ) : (
         <p className="text-muted-foreground mt-3 text-sm leading-6">
-          No money came in or went out in these moments.
+          No money came in or went out in these events.
         </p>
       )}
       {summary.transferCount > 0 ? (
@@ -221,7 +221,7 @@ function MoneyInView({ summary }: { summary: TimelineSummary }) {
   );
 }
 
-/** Moments by module as one bar, each module named beneath with its count. */
+/** Events by module as one bar, each module named beneath with its count. */
 function ModuleMix({ counts }: { counts: TimelineSummary["moduleCounts"] }) {
   const filled = timelineModules.filter((module) => counts[module] > 0);
   return (
@@ -247,7 +247,7 @@ function ModuleMix({ counts }: { counts: TimelineSummary["moduleCounts"] }) {
         ) : null}
       </div>
       <ul
-        aria-label="Moments by module"
+        aria-label="Events by module"
         className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(min(100%,6.5rem),1fr))] gap-x-4 gap-y-2.5"
       >
         {timelineModules.map((module) => {
@@ -319,13 +319,13 @@ function Rhythm({
   const last = buckets.at(-1)!;
   return (
     <div>
-      <p className={cn(eyebrowClass, "mb-3")}>Moments per {unitWords[unit]}</p>
+      <p className={cn(eyebrowClass, "mb-3")}>Events per {unitWords[unit]}</p>
       <div
         aria-hidden="true"
         className="border-border/70 flex h-16 items-end gap-[2px] border-b pb-px sm:h-20 sm:gap-[3px]"
       >
         {buckets.map((bucket) => {
-          const title = `${bucketLabel(bucket, unit)} · ${moments(bucket.total)}`;
+          const title = `${bucketLabel(bucket, unit)} · ${eventCount(bucket.total)}`;
           if (bucket.total === 0)
             return (
               <span
@@ -375,7 +375,7 @@ function Rhythm({
           <span className="text-foreground font-semibold">
             {bucketLabel(peak, unit)}
           </span>{" "}
-          · {moments(peak.total)}
+          · {eventCount(peak.total)}
         </p>
       ) : null}
     </div>
@@ -415,7 +415,7 @@ export function TimelineHero({
               {summary.total}
             </span>
             <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
-              {summary.total === 1 ? "moment" : "moments"}
+              {summary.total === 1 ? "event" : "events"}
             </span>
           </p>
           {summary.oldestOn && summary.newestOn ? (
@@ -432,7 +432,7 @@ export function TimelineHero({
           ) : null}
           {hasMore ? (
             <p className="text-muted-foreground mt-1.5 max-w-xl text-xs leading-5">
-              Counting the moments loaded below. Load older ones to look further
+              Counting the events loaded below. Load older ones to look further
               back.
             </p>
           ) : null}
@@ -472,17 +472,17 @@ export function TimelineEmptyHero() {
         id="timeline-summary-heading"
         className="text-muted-foreground text-[0.8125rem] font-medium"
       >
-        Your story
+        Summary
       </h2>
-      <div className="mt-6 flex max-w-2xl gap-4">
-        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
-          <CalendarRange aria-hidden="true" className="size-5" />
+      <div className="mt-5 flex max-w-2xl gap-3">
+        <span className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
+          <CalendarRange aria-hidden="true" className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-[1.625rem] leading-tight font-semibold tracking-[-0.03em] text-balance sm:text-[1.875rem]">
+          <p className="text-lg leading-snug font-semibold tracking-[-0.01em] text-balance">
             No timeline events yet
           </p>
-          <p className="text-muted-foreground mt-3 text-sm leading-6">
+          <p className="text-muted-foreground mt-1.5 text-sm leading-6">
             Money you move, tasks and milestones you finish, career steps,
             reviews, and decisions all land here in order, so you can look back
             on what shaped each week.
@@ -491,7 +491,7 @@ export function TimelineEmptyHero() {
       </div>
       <ul
         aria-label="Ways to start your timeline"
-        className="mt-8 grid grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))] gap-3"
+        className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))] gap-2"
       >
         {timelineModules.map((module) => {
           const tone = moduleTones[module];
@@ -500,15 +500,13 @@ export function TimelineEmptyHero() {
             <li key={module} className="min-w-0">
               <Link
                 href={tone.href as never}
-                className="bg-background/55 ring-border/70 hover:bg-background/80 hover:ring-border focus-visible:ring-ring flex min-h-11 min-w-0 items-center gap-3 rounded-2xl p-3 ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="bg-background/55 hover:bg-muted/60 focus-visible:ring-ring flex min-h-11 min-w-0 items-center gap-3 rounded-xl p-3 transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "grid size-9 shrink-0 place-items-center rounded-xl ring-1",
-                    tone.soft,
+                    "bg-muted/60 grid size-9 shrink-0 place-items-center rounded-lg",
                     tone.text,
-                    tone.ring,
                   )}
                 >
                   <Icon className="size-4" />

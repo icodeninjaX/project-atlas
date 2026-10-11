@@ -1,23 +1,21 @@
 import type { LucideIcon } from "lucide-react";
 import type { Route } from "next";
 import type { ReactNode } from "react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeading, PageHeadingLink } from "@/components/shared/page-heading";
-import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import styles from "@/components/history/history.module.css";
 import type { HistoryCoverage, HistoryTone } from "@/lib/history/view";
 import { cn } from "@/lib/utils";
 
-/** Shared pieces of the Recorded history and Patterns pages. */
+/** Shared pieces of the History and Patterns pages. */
 
 export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
-/** A glass surface for the page's cards. */
-export const glassCardClass = cn(
-  surfaceClass,
-  "bg-card/90 @container relative min-w-0 rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
-);
+/** The page's cards: one flat, opaque surface with a hairline. */
+export const cardClass =
+  "bg-card border-border @container relative min-w-0 rounded-2xl border";
 
-/** An inset tile inside a card. */
+/** A tonal well inside a card. */
 export const tileClass =
   "bg-background/55 min-w-0 rounded-xl p-3.5 min-[360px]:p-4";
 
@@ -61,8 +59,7 @@ export function StatusPill({
         tone === "positive" && "bg-positive/10 text-positive ring-positive/25",
         tone === "caution" &&
           "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300",
-        tone === "neutral" &&
-          "bg-background/60 text-muted-foreground ring-border",
+        tone === "neutral" && "bg-muted/60 text-muted-foreground ring-border",
       )}
     >
       <span
@@ -84,17 +81,14 @@ export function HeroShell({
   return (
     <section
       aria-labelledby={labelledBy}
-      className={cn(
-        surfaceClass,
-        "bg-card @container relative isolate mt-6 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
-      )}
+      className={cn(cardClass, "mt-6 p-5 sm:mt-8 sm:p-6 lg:p-7")}
     >
-      <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
+      {children}
     </section>
   );
 }
 
-/** A section title with a fading rule and a note at its end. */
+/** A section title with a note at its end. */
 export function SectionHeading({
   id,
   title,
@@ -105,19 +99,12 @@ export function SectionHeading({
   note?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-end gap-x-4 gap-y-1 px-1">
-      <h2
-        id={id}
-        className="text-[1.375rem] leading-none font-semibold tracking-[-0.035em] sm:text-2xl"
-      >
+    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-1">
+      <h2 id={id} className="text-base leading-6 font-semibold">
         {title}
       </h2>
-      <span
-        aria-hidden="true"
-        className="from-border mb-1.5 h-px min-w-6 flex-1 bg-gradient-to-r to-transparent"
-      />
       {note ? (
-        <p className="text-muted-foreground mb-px min-w-0 text-xs">{note}</p>
+        <p className="text-muted-foreground min-w-0 text-xs">{note}</p>
       ) : null}
     </div>
   );
@@ -163,8 +150,8 @@ export function CoverageChip({
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[0.6875rem] leading-4 font-semibold whitespace-nowrap ring-1",
-        coverage === "recorded" &&
-          "bg-primary/10 ring-primary/20 dark:text-primary text-blue-700",
+        // Untinted, so the primary text keeps 4.5:1 on the card.
+        coverage === "recorded" && "text-primary ring-primary/30",
         coverage === "partial" &&
           "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300",
         coverage === "insufficient" &&
@@ -183,30 +170,24 @@ export function CoverageChip({
 
 /** A centered message in place of the page's content. */
 export function HistoryMessage({
-  icon: Icon,
+  icon,
   title,
   children,
   action,
 }: {
   icon: LucideIcon;
   title: string;
-  children: ReactNode;
+  children: string;
   action?: ReactNode;
 }) {
   return (
-    <div className="bg-card/60 mt-8 grid min-h-64 place-items-center rounded-2xl border border-dashed p-6 text-center">
-      <div className="max-w-sm">
-        <span className="bg-muted/70 ring-border/80 text-muted-foreground mx-auto grid size-11 place-items-center rounded-2xl ring-1">
-          <Icon aria-hidden="true" className="size-5" />
-        </span>
-        <h2 className="mt-4 text-base font-semibold tracking-[-0.01em]">
-          {title}
-        </h2>
-        <p className="text-muted-foreground mt-2 text-sm leading-6">
-          {children}
-        </p>
-        {action ? <div className="mt-5">{action}</div> : null}
-      </div>
+    <div className="mt-8">
+      <EmptyState
+        icon={icon}
+        title={title}
+        description={children}
+        action={action}
+      />
     </div>
   );
 }

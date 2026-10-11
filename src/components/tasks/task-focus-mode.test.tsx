@@ -42,7 +42,7 @@ describe("TaskFocusMode", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: "Set focus minutes" }),
+      screen.getByRole("button", { name: "Add an estimate to focus" }),
     ).toBeDisabled();
   });
 

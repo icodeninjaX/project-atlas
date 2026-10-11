@@ -16,6 +16,12 @@ const typeOptions = [
   ["Knowledge", "Knowledge"],
 ] as const;
 
+const fieldClass = "grid min-w-0 gap-1.5 text-sm font-medium";
+
+/** A native select that matches `Input`, focus ring included. */
+const selectClass =
+  "border-border bg-background focus-visible:border-ring focus-visible:ring-ring/40 min-h-11 w-full rounded-xl border px-3 text-base font-normal outline-none focus-visible:ring-2 sm:text-sm";
+
 const statusOptions = [
   ["open", "Open / active"],
   ["completed", "Completed"],
@@ -75,7 +81,7 @@ export function SearchInput({
           />
           <kbd
             aria-hidden="true"
-            className="border-border bg-muted text-muted-foreground pointer-events-none absolute top-3.5 right-3 hidden rounded border px-1.5 font-mono text-[0.625rem] sm:block"
+            className="border-border bg-muted text-muted-foreground pointer-events-none absolute top-3.5 right-3 hidden rounded-md border px-1.5 font-mono text-[0.625rem] sm:block"
           >
             /
           </kbd>
@@ -97,15 +103,13 @@ export function SearchInput({
         }
       >
         <fieldset className="border-border grid gap-3 border-t pt-3 sm:order-last sm:col-span-2 sm:grid-cols-2 lg:grid-cols-4">
-          <legend className="text-muted-foreground px-1 text-xs font-semibold">
-            Narrow results
-          </legend>
-          <label className="text-muted-foreground text-xs">
+          <legend className="px-1 text-sm font-semibold">Narrow results</legend>
+          <label className={fieldClass}>
             Type
             <select
               name="type"
               defaultValue={entityType}
-              className="border-border bg-background mt-1 min-h-10 w-full rounded-xl border px-3 text-sm"
+              className={selectClass}
             >
               <option value="all">All types</option>
               {typeOptions.map(([value, label]) => (
@@ -115,13 +119,9 @@ export function SearchInput({
               ))}
             </select>
           </label>
-          <label className="text-muted-foreground text-xs">
+          <label className={fieldClass}>
             Status
-            <select
-              name="status"
-              defaultValue={status}
-              className="border-border bg-background mt-1 min-h-10 w-full rounded-xl border px-3 text-sm"
-            >
+            <select name="status" defaultValue={status} className={selectClass}>
               <option value="all">All statuses</option>
               {statusOptions.map(([value, label]) => (
                 <option key={value} value={value}>
@@ -130,22 +130,22 @@ export function SearchInput({
               ))}
             </select>
           </label>
-          <label className="text-muted-foreground text-xs">
+          <label className={fieldClass}>
             From
             <Input
               name="from"
               type="date"
               defaultValue={fromDate}
-              className="mt-1"
+              className="font-normal"
             />
           </label>
-          <label className="text-muted-foreground text-xs">
+          <label className={fieldClass}>
             To
             <Input
               name="to"
               type="date"
               defaultValue={toDate}
-              className="mt-1"
+              className="font-normal"
             />
           </label>
         </fieldset>

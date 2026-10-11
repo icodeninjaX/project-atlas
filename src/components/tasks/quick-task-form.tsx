@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  CalendarDays,
-  ChevronDown,
-  ListPlus,
-  SlidersHorizontal,
-} from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -23,11 +18,10 @@ import { cn } from "@/lib/utils";
 
 const initialState: TaskActionState = { success: false, message: "" };
 
-const fieldLabelClass =
-  "text-muted-foreground mb-1.5 block text-xs font-medium";
+const fieldLabelClass = "mb-1.5 block text-sm font-medium";
 
 const selectClass =
-  "border-border bg-background focus-visible:border-ring focus-visible:ring-ring/25 min-h-11 w-full rounded-xl border px-3 text-base outline-none focus-visible:ring-2 sm:text-sm";
+  "border-border bg-background focus-visible:border-ring focus-visible:ring-ring/40 min-h-11 w-full rounded-xl border px-3 text-base outline-none focus-visible:ring-2 sm:text-sm";
 
 export function QuickTaskForm({
   defaultPriority = "medium",
@@ -105,14 +99,10 @@ export function QuickTaskForm({
           onCancel();
         }
       }}
-      className="border-border bg-card relative overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
+      className="border-border bg-card relative overflow-hidden rounded-2xl border"
     >
       <div className="relative p-4 sm:p-6">
-        <p className="text-primary flex items-center gap-2 text-[0.8125rem] font-semibold">
-          <ListPlus className="size-3.5" aria-hidden="true" />
-          New task
-        </p>
-        <div className="mt-3">
+        <div>
           <label htmlFor="quick-task-title" className={fieldLabelClass}>
             Task title
           </label>
@@ -124,7 +114,6 @@ export function QuickTaskForm({
             required
             maxLength={160}
             placeholder="What needs to get done?"
-            className="min-h-12 rounded-2xl px-4 font-medium sm:min-h-13 sm:text-base"
           />
         </div>
 
@@ -158,13 +147,12 @@ export function QuickTaskForm({
                       setScheduledFor(pressed ? "" : shortcut.value)
                     }
                     className={cn(
-                      "focus-visible:ring-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 text-xs font-semibold ring-1 transition-colors [-webkit-tap-highlight-color:transparent] ring-inset focus-visible:ring-2 focus-visible:outline-none active:scale-[0.97] motion-reduce:active:scale-100 sm:min-h-10",
+                      "bg-background focus-visible:ring-ring inline-flex min-h-11 items-center rounded-xl px-4 text-sm font-medium ring-1 transition-colors [-webkit-tap-highlight-color:transparent] ring-inset focus-visible:ring-2 focus-visible:outline-none",
                       pressed
-                        ? "bg-primary/10 text-primary ring-primary/45"
-                        : "bg-background text-muted-foreground ring-border hover:bg-muted hover:text-foreground",
+                        ? "text-foreground ring-primary"
+                        : "text-muted-foreground ring-border hover:bg-muted hover:text-foreground",
                     )}
                   >
-                    <CalendarDays className="size-3.5" aria-hidden="true" />
                     {shortcut.label}
                   </button>
                 );
@@ -179,12 +167,14 @@ export function QuickTaskForm({
             aria-expanded={planningDetailsVisible}
             aria-controls="quick-task-planning-details"
             onClick={() => setPlanningDetailsOpen((open) => !open)}
-            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -mx-2 inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -mx-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-10"
           >
-            <SlidersHorizontal className="size-3.5" aria-hidden="true" />
             Planning details
             <ChevronDown
-              className={`size-3.5 transition-transform ${planningDetailsVisible ? "rotate-180" : ""}`}
+              className={cn(
+                "size-4 transition-transform duration-200 motion-reduce:transition-none",
+                planningDetailsVisible && "rotate-180",
+              )}
               aria-hidden="true"
             />
           </button>
@@ -282,19 +272,18 @@ export function QuickTaskForm({
                 setScheduledTime(time);
                 timeRef.current?.focus();
               }}
-              className="md:col-span-2 xl:col-span-4"
+              className="bg-background/55 md:col-span-2 xl:col-span-4"
             />
           </div>
         )}
 
         <div className="border-border mt-4 flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground text-[0.6875rem] leading-5">
+          <p className="text-muted-foreground text-xs leading-5">
             Press{" "}
-            <kbd className="border-border bg-background text-foreground mx-0.5 inline-grid h-5 min-w-5 place-items-center rounded-md border px-1 text-[0.625rem] font-semibold shadow-[0_1px_0_var(--border)]">
+            <kbd className="border-border bg-background text-foreground mx-0.5 inline-grid h-5 min-w-5 place-items-center rounded-md border px-1 text-[0.625rem] font-semibold">
               N
             </kbd>{" "}
-            from any quiet area to focus quick capture. Exact times use
-            Asia/Manila.
+            to add a task. Times are Manila time.
           </p>
           <div className="flex shrink-0 gap-2">
             {onCancel && (

@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarClock, Check } from "lucide-react";
+import { CalendarClock, Check } from "lucide-react";
 import Link from "next/link";
 import {
   DashboardCardHeading,
@@ -39,10 +39,10 @@ export function WeekPosition({
             key={index}
             className={cn(
               "grid h-9 place-items-center rounded-lg text-[0.6875rem] font-semibold",
-              index < dayIndex && "bg-primary/15 text-primary",
+              index < dayIndex && "bg-muted text-foreground/80",
               index === dayIndex &&
-                "bg-primary-solid text-primary-solid-foreground shadow-[0_6px_16px_-8px_var(--primary-solid)]",
-              index > dayIndex && "bg-muted/70 text-muted-foreground",
+                "bg-primary-solid text-primary-solid-foreground",
+              index > dayIndex && "bg-muted/40 text-muted-foreground",
             )}
           >
             {initial}
@@ -52,9 +52,11 @@ export function WeekPosition({
 
       <div className="mt-5 flex min-w-0 items-start gap-2.5">
         {reviewComplete ? (
-          <span className="bg-positive/12 text-positive mt-0.5 grid size-5 shrink-0 place-items-center rounded-full">
-            <Check aria-hidden="true" className="size-3" strokeWidth={3} />
-          </span>
+          <Check
+            aria-hidden="true"
+            className="text-positive mt-1 size-4 shrink-0"
+            strokeWidth={2.5}
+          />
         ) : null}
         <div className="min-w-0">
           <p className="text-base leading-6 font-semibold">
@@ -75,10 +77,9 @@ export function WeekPosition({
       <div className="mt-auto pt-3">
         <Link
           href="/reviews"
-          className="text-primary hover:bg-primary/10 focus-visible:ring-ring -ml-3 inline-flex min-h-11 w-fit items-center gap-1 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
+          className="text-primary focus-visible:ring-ring -ml-1 inline-flex min-h-11 w-fit items-center rounded-md px-1 text-xs font-semibold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
         >
-          Open weekly reviews{" "}
-          <ArrowRight aria-hidden="true" className="size-3" />
+          Open weekly reviews
         </Link>
       </div>
     </section>

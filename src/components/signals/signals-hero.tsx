@@ -1,9 +1,8 @@
-import { ArrowRight } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import todayStyles from "@/components/dashboard/today.module.css";
+import { Button } from "@/components/ui/button";
 import { signalCategories, type Signal } from "@/lib/signals/engine";
 import {
   severityLabels,
@@ -20,6 +19,10 @@ import { categoryTone, severityTones } from "./signal-tone";
 
 const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
+/** The page's cards: one flat, opaque surface with a hairline. */
+export const cardClass =
+  "bg-card border-border @container relative min-w-0 rounded-2xl border";
+
 const tileClass = "bg-background/55 min-w-0 rounded-xl p-3.5 min-[360px]:p-4";
 
 function StatusPill({
@@ -32,7 +35,7 @@ function StatusPill({
   return (
     <span
       className={cn(
-        "inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] leading-tight font-semibold ring-1",
+        "inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] leading-tight font-semibold whitespace-nowrap ring-1",
         tone === "positive" && "bg-positive/10 text-positive ring-positive/25",
         tone === "caution" &&
           "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300",
@@ -53,12 +56,9 @@ function HeroShell({ children }: { children: ReactNode }) {
   return (
     <section
       aria-labelledby="signals-summary-heading"
-      className={cn(
-        surfaceClass,
-        "bg-card @container relative isolate mt-6 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
-      )}
+      className={cn(cardClass, "mt-6 p-5 sm:mt-8 sm:p-6 lg:p-7")}
     >
-      <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
+      {children}
     </section>
   );
 }
@@ -74,7 +74,7 @@ function HeroHeading({
         id="signals-summary-heading"
         className="text-muted-foreground text-[0.8125rem] font-medium"
       >
-        Pulse
+        Summary
       </h2>
       <StatusPill tone={status.tone}>{status.label}</StatusPill>
     </div>
@@ -137,21 +137,15 @@ function SeverityMix({
 
 /** The most urgent signal, with the way to act on it. */
 function StartHere({ signal }: { signal: Signal }) {
-  const tone = severityTones[signal.severity];
   const AreaIcon = categoryTone(signal.category).icon;
   return (
     <div className={tileClass}>
       <p className={eyebrowClass}>Start here</p>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-3">
         <div className="flex min-w-0 flex-1 basis-56 items-start gap-3">
           <span
             aria-hidden="true"
-            className={cn(
-              "grid size-9 shrink-0 place-items-center rounded-xl ring-1",
-              tone.soft,
-              tone.text,
-              tone.ring,
-            )}
+            className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg"
           >
             <AreaIcon className="size-4" />
           </span>
@@ -164,14 +158,17 @@ function StartHere({ signal }: { signal: Signal }) {
             </p>
           </div>
         </div>
-        <Link
-          href={signal.href as Route}
-          className="bg-card text-foreground ring-border/80 hover:bg-muted focus-visible:ring-ring ml-auto inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold shadow-[0_1px_2px_rgb(7_10_15/0.08)] ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
+        <Button
+          asChild
+          variant="secondary"
+          size="sm"
+          className="ml-auto shrink-0"
         >
-          {signalActionLabels[signal.type]}
-          <span className="sr-only">: {signal.title}</span>
-          <ArrowRight aria-hidden="true" className="text-primary size-3.5" />
-        </Link>
+          <Link href={signal.href as Route}>
+            {signalActionLabels[signal.type]}
+            <span className="sr-only">: {signal.title}</span>
+          </Link>
+        </Button>
       </div>
     </div>
   );
@@ -249,22 +246,14 @@ export function SignalsEmptyHero() {
   return (
     <HeroShell>
       <HeroHeading status={{ tone: "positive", label: "All clear" }} />
-      <div className="mt-5 grid grid-cols-[minmax(0,1fr)_6.5rem] gap-x-4 @max-[19rem]:grid-cols-1 @[26rem]:grid-cols-[minmax(0,1fr)_8rem] @[44rem]:grid-cols-[minmax(0,1fr)_13rem] @[44rem]:gap-x-10">
-        <p className="min-w-0 self-center text-[1.75rem] leading-tight font-semibold tracking-[-0.03em] text-balance sm:text-[2.125rem]">
-          Nothing needs attention
-        </p>
-        <SignalRadar
-          signals={[]}
-          filters={{ category: null, severity: null }}
-          className="col-start-2 row-start-1 w-full self-center @max-[19rem]:hidden @[44rem]:row-span-2"
-          labelClassName="hidden @[44rem]:inline"
-        />
-        <p className="text-muted-foreground col-span-2 mt-3 max-w-xl text-sm leading-6 @max-[19rem]:col-span-1 @[44rem]:col-span-1">
-          ATLAS raises a signal only when your records show a meaningful change.
-          This can mean nothing unusual was detected, or there is not yet enough
-          history for a reliable comparison.
-        </p>
-      </div>
+      <p className="mt-5 text-base leading-6 font-semibold">
+        Nothing needs attention
+      </p>
+      <p className="text-muted-foreground mt-1 max-w-xl text-sm leading-6">
+        ATLAS raises a signal only when your records show a meaningful change.
+        This can mean nothing unusual was detected, or there is not yet enough
+        history for a reliable comparison.
+      </p>
 
       <h3 className={cn(eyebrowClass, "mt-8")}>What ATLAS watches</h3>
       <ul
@@ -277,11 +266,11 @@ export function SignalsEmptyHero() {
             <li key={category} className="min-w-0">
               <Link
                 href={href as Route}
-                className="bg-background/55 ring-border/70 hover:bg-background/80 hover:ring-border focus-visible:ring-ring flex min-h-11 min-w-0 items-center gap-3 rounded-2xl p-3 ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="ring-border/80 hover:ring-foreground/25 focus-visible:ring-ring flex min-h-11 min-w-0 items-center gap-3 rounded-xl p-3 ring-1 transition-shadow focus-visible:ring-2 focus-visible:outline-none"
               >
                 <span
                   aria-hidden="true"
-                  className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg"
+                  className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg"
                 >
                   <Icon className="size-4" />
                 </span>

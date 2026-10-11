@@ -42,10 +42,14 @@ const dashboard: DashboardData = {
   priorities: [],
 };
 
-function renderToday(overrides: Partial<DashboardData> = {}) {
+function renderToday(
+  overrides: Partial<DashboardData> = {},
+  displayName: string | null = null,
+) {
   return render(
     <TodayDashboard
       now={new Date("2026-10-01T15:30:00+08:00")}
+      displayName={displayName}
       dashboard={{ ...dashboard, ...overrides }}
       dayline={{
         items: [
@@ -71,13 +75,20 @@ function renderToday(overrides: Partial<DashboardData> = {}) {
 }
 
 describe("TodayDashboard", () => {
-  it("greets by the Manila time of day above the page title", () => {
+  it("titles the page with a greeting for the Manila time of day", () => {
     renderToday();
 
-    expect(screen.getByText("Good afternoon")).toBeInTheDocument();
     expect(screen.getByText("Thursday, October 1")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { level: 1, name: "Your day, mapped." }),
+      screen.getByRole("heading", { level: 1, name: "Good afternoon" }),
+    ).toBeInTheDocument();
+  });
+
+  it("greets by first name when the profile has one", () => {
+    renderToday({}, "  Mika Santos ");
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Good afternoon, Mika" }),
     ).toBeInTheDocument();
   });
 

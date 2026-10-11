@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  CalendarClock,
-  Check,
-  Compass,
-  IdCard,
-  ListOrdered,
-  Mountain,
-  Snowflake,
-  type LucideIcon,
-} from "lucide-react";
+import { Check } from "lucide-react";
 import { useActionState } from "react";
 import {
   FormFeedback,
@@ -29,30 +20,18 @@ const strategies = [
     value: "avalanche",
     label: "Avalanche",
     description: "Highest interest rate first",
-    icon: Mountain,
-    bars: [92, 64, 40],
   },
   {
     value: "snowball",
     label: "Snowball",
     description: "Smallest remaining balance first",
-    icon: Snowflake,
-    bars: [28, 56, 88],
   },
   {
     value: "priority",
     label: "My priority",
     description: "Use your manual debt order",
-    icon: ListOrdered,
-    bars: [60, 84, 36],
   },
-] as const satisfies ReadonlyArray<{
-  value: string;
-  label: string;
-  description: string;
-  icon: LucideIcon;
-  bars: readonly number[];
-}>;
+] as const;
 
 function formatMinutes(minutes: number) {
   const hours = Math.floor(minutes / 60);
@@ -89,7 +68,7 @@ export function SettingsPreferencesForm({
 
   return (
     <form action={action} aria-busy={pending} className="space-y-7">
-      <SettingsGroup title="Identity" icon={IdCard}>
+      <SettingsGroup title="Identity">
         <div className="space-y-1.5">
           <label htmlFor="display-name" className={fieldLabelClass}>
             Display name
@@ -112,78 +91,50 @@ export function SettingsPreferencesForm({
 
       <fieldset aria-describedby="debt-strategy-help" className="min-w-0">
         <legend className="sr-only">Default debt payoff plan</legend>
-        <SettingsGroup title="Debt payoff" titleIsLegend icon={Mountain}>
-          <p aria-hidden="true" className="text-sm font-semibold">
-            Default debt payoff plan
-          </p>
+        <SettingsGroup title="Default debt payoff plan" titleIsLegend>
           <p
             id="debt-strategy-help"
-            className="text-muted-foreground mt-1 text-xs leading-5"
+            className="text-muted-foreground -mt-2 text-xs leading-5"
           >
             This becomes the starting view on Debts. You can still compare every
             plan there.
           </p>
           <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
-            {strategies.map((strategy) => {
-              const Icon = strategy.icon;
-              return (
-                <label
-                  key={strategy.value}
-                  className="group bg-background/55 ring-border/80 hover:ring-primary/35 has-[:checked]:bg-primary/[0.07] has-[:checked]:ring-primary/60 has-[:focus-visible]:ring-ring has-[:checked] relative flex min-h-28 cursor-pointer flex-col rounded-2xl p-3.5 ring-1 transition-[background-color,box-shadow] has-[:focus-visible]:ring-2"
+            {strategies.map((strategy) => (
+              <label
+                key={strategy.value}
+                className="group bg-background/55 ring-border/80 hover:ring-foreground/25 has-[:checked]:ring-primary has-[:focus-visible]:ring-ring relative flex cursor-pointer flex-col rounded-xl p-3.5 pr-10 ring-1 transition-shadow has-[:checked]:ring-2 has-[:focus-visible]:ring-2"
+              >
+                <input
+                  type="radio"
+                  name="debtStrategy"
+                  value={strategy.value}
+                  defaultChecked={strategy.value === debtStrategy}
+                  className="peer sr-only"
+                />
+                <span className="text-sm font-semibold">{strategy.label}</span>
+                <span className="text-muted-foreground mt-1 text-xs leading-5">
+                  {strategy.description}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="ring-border group-has-[:checked]:bg-primary-solid group-has-[:checked]:ring-primary-solid text-primary-solid-foreground absolute top-3.5 right-3.5 grid size-5 place-items-center rounded-full ring-1"
                 >
-                  <input
-                    type="radio"
-                    name="debtStrategy"
-                    value={strategy.value}
-                    defaultChecked={strategy.value === debtStrategy}
-                    className="peer sr-only"
+                  <Check
+                    className="size-3 opacity-0 group-has-[:checked]:opacity-100"
+                    strokeWidth={3}
                   />
-                  <span className="flex items-center gap-2">
-                    <span
-                      aria-hidden="true"
-                      className="bg-muted/80 text-muted-foreground group-has-[:checked]:bg-primary/12 group-has-[:checked]:text-primary grid size-8 place-items-center rounded-xl"
-                    >
-                      <Icon className="size-4" />
-                    </span>
-                    <span className="text-sm font-semibold">
-                      {strategy.label}
-                    </span>
-                  </span>
-                  <span className="text-muted-foreground mt-2 text-xs leading-5">
-                    {strategy.description}
-                  </span>
-                  <span
-                    aria-hidden="true"
-                    className="mt-auto flex h-6 items-end gap-1 pt-3"
-                  >
-                    {strategy.bars.map((height, index) => (
-                      <span
-                        key={index}
-                        className="bg-muted-foreground/25 group-has-[:checked]:bg-primary flex-1 rounded-[3px] transition-colors"
-                        style={{ height: `${height}%` }}
-                      />
-                    ))}
-                  </span>
-                  <span
-                    aria-hidden="true"
-                    className="ring-border group-has-[:checked]:bg-primary-solid group-has-[:checked]:ring-primary-solid text-primary-solid-foreground absolute top-3.5 right-3.5 grid size-5 place-items-center rounded-full ring-1"
-                  >
-                    <Check
-                      className="size-3 opacity-0 group-has-[:checked]:opacity-100"
-                      strokeWidth={3}
-                    />
-                  </span>
-                </label>
-              );
-            })}
+                </span>
+              </label>
+            ))}
           </div>
         </SettingsGroup>
       </fieldset>
 
       <fieldset className="min-w-0">
         <legend className="sr-only">Everyday defaults</legend>
-        <SettingsGroup title="Everyday defaults" titleIsLegend icon={Compass}>
-          <p className="text-muted-foreground -mt-1 text-xs leading-5">
+        <SettingsGroup title="Everyday defaults" titleIsLegend>
+          <p className="text-muted-foreground -mt-2 text-xs leading-5">
             Choose where ATLAS opens and prefill the fields you use most often.
           </p>
           <div className="mt-3 grid gap-x-3 gap-y-4 sm:grid-cols-2">
@@ -276,12 +227,8 @@ export function SettingsPreferencesForm({
 
       <fieldset className="min-w-0">
         <legend className="sr-only">Dayline planning</legend>
-        <SettingsGroup
-          title="Dayline planning"
-          titleIsLegend
-          icon={CalendarClock}
-        >
-          <p className="text-muted-foreground -mt-1 text-xs leading-5">
+        <SettingsGroup title="Dayline planning" titleIsLegend>
+          <p className="text-muted-foreground -mt-2 text-xs leading-5">
             Set the focus time and energy ATLAS should use when choosing
             realistic next actions.
           </p>

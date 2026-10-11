@@ -65,7 +65,7 @@ describe("TaskList", () => {
     const budget = rowFor("Send budget draft");
     expect(budget.getByText("9:30 AM")).toBeVisible();
     expect(budget.getByText("45 min")).toBeVisible();
-    expect(budget.getByText("High")).toBeVisible();
+    expect(budget.getByText("High priority")).toBeVisible();
     expect(budget.getByText("High energy")).toBeVisible();
     expect(budget.queryByText(/Oct 1/)).not.toBeInTheDocument();
     expect(

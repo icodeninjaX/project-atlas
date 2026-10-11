@@ -1,6 +1,6 @@
 import {
-  ArrowRight,
   BriefcaseBusiness,
+  ChevronRight,
   ClipboardCheck,
   Clock3,
   Flag,
@@ -14,7 +14,6 @@ import {
 import type { Route } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import { buttonVariants } from "@/components/ui/button";
 import {
   formatManilaTime,
@@ -46,11 +45,7 @@ const kindPresentation: Record<string, { label: string; icon: LucideIcon }> = {
 const positionLabels = { NOW: "Now", NEXT: "Next", LATER: "Later" } as const;
 
 /** One shade of the accent per stop, strongest for NOW. */
-const stopTone = [
-  "bg-gradient-to-r from-primary-solid to-primary",
-  "bg-primary/60",
-  "bg-primary/35",
-];
+const stopTone = ["bg-primary", "bg-primary/60", "bg-primary/35"];
 
 function presentKind(kind: string) {
   return kindPresentation[kind] ?? { label: "Item", icon: Target };
@@ -98,9 +93,7 @@ function KindLabel({ kind }: { kind: string }) {
 
   return (
     <span className="text-muted-foreground inline-flex min-w-0 items-center gap-1.5 text-xs font-medium">
-      <span className="bg-primary/10 text-primary grid size-6 shrink-0 place-items-center rounded-full">
-        <Icon aria-hidden="true" className="size-3.5" />
-      </span>
+      <Icon aria-hidden="true" className="size-3.5 shrink-0" />
       {label}
     </span>
   );
@@ -183,12 +176,6 @@ function DayLoad({
           aria-hidden="true"
           className="absolute inset-0 size-full -rotate-90 overflow-visible"
         >
-          <defs>
-            <linearGradient id="dayline-load-arc" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#38bdf8" />
-              <stop offset="100%" style={{ stopColor: "var(--primary)" }} />
-            </linearGradient>
-          </defs>
           <circle
             cx="50"
             cy="50"
@@ -207,8 +194,10 @@ function DayLoad({
               strokeLinecap="round"
               strokeDasharray={RING_CIRCUMFERENCE}
               strokeDashoffset={arcOffset}
-              stroke={over ? undefined : "url(#dayline-load-arc)"}
-              className={cn(styles.draw, over && "stroke-destructive")}
+              className={cn(
+                styles.draw,
+                over ? "stroke-destructive" : "stroke-primary",
+              )}
               style={{ "--ring-from": RING_CIRCUMFERENCE } as CSSProperties}
             />
           ) : null}
@@ -296,11 +285,7 @@ function RouteBar({
               "h-full min-w-1.5 rounded-full",
               stopTone[index] ?? stopTone[2],
             )}
-            style={{
-              flexGrow: item.durationMinutes ?? 0,
-              flexBasis: 0,
-              animationDelay: `${index * 90}ms`,
-            }}
+            style={{ flexGrow: item.durationMinutes ?? 0, flexBasis: 0 }}
           />
         ))}
         {openMinutes > 0 ? (
@@ -361,7 +346,7 @@ function RouteStops({
   startTimes?: Date[];
 }) {
   return (
-    <ol className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4">
+    <ol className="mt-4 grid gap-2 sm:grid-cols-2 sm:gap-3">
       {items.map((item, index) => {
         const startsAt = startTimes?.[index];
 
@@ -369,12 +354,9 @@ function RouteStops({
           <li key={`${item.kind}-${item.id}`} className="min-w-0">
             <Link
               href={item.href as Route}
-              className={cn(
-                surfaceClass,
-                "bg-card/85 focus-visible:ring-ring group relative grid min-h-28 grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05)] transition-[box-shadow,transform] hover:shadow-[0_1px_2px_rgb(7_10_15/0.04)] focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none sm:p-5 @max-[18rem]:p-3",
-              )}
+              className="bg-background/55 hover:bg-muted/60 focus-visible:ring-ring block min-h-28 rounded-xl p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none sm:p-5 @max-[18rem]:p-3"
             >
-              <span className="min-w-0">
+              <span className="block min-w-0">
                 <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span
                     aria-hidden="true"
@@ -402,9 +384,6 @@ function RouteStops({
                   <KindLabel kind={item.kind} />
                   <Duration minutes={item.durationMinutes} />
                 </span>
-              </span>
-              <span className="bg-background/70 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary grid size-8 place-items-center rounded-full transition-colors @max-[18rem]:hidden">
-                <ArrowRight aria-hidden="true" className="size-3.5" />
               </span>
             </Link>
           </li>
@@ -493,21 +472,17 @@ export function DaylineCommand({
                 href={current.href as Route}
                 className={cn(
                   buttonVariants({ size: "lg" }),
-                  "group w-full min-w-0 sm:w-auto",
+                  "w-full min-w-0 sm:w-auto",
                 )}
               >
                 Open this next
-                <ArrowRight
-                  aria-hidden="true"
-                  className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
-                />
               </Link>
               <details className="group/why max-w-full min-w-0">
                 <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-lg px-2 text-xs font-medium focus-visible:ring-2 focus-visible:outline-none max-sm:justify-center [&::-webkit-details-marker]:hidden">
                   Why this comes first
-                  <ArrowRight
+                  <ChevronRight
                     aria-hidden="true"
-                    className="size-3 transition-transform group-open/why:rotate-90 motion-reduce:transition-none"
+                    className="size-3.5 transition-transform group-open/why:rotate-90 motion-reduce:transition-none"
                   />
                 </summary>
                 <p className="text-muted-foreground mt-1 max-w-xl px-2 pb-1 text-xs leading-5 break-words">
@@ -524,37 +499,23 @@ export function DaylineCommand({
           />
         </div>
       ) : (
-        <div className="relative grid min-h-64 place-items-center px-5 py-12 text-center sm:px-7">
+        <div className="relative grid place-items-center px-5 py-10 text-center sm:px-7 sm:py-12">
           <div className="max-w-md">
-            <span className="relative mx-auto grid size-24 place-items-center">
-              <span
-                aria-hidden="true"
-                className="ring-primary/10 absolute inset-0 rounded-full ring-1"
-              />
-              <span
-                aria-hidden="true"
-                className="ring-primary/15 absolute inset-3 rounded-full ring-1"
-              />
-              <span
-                aria-hidden="true"
-                className="ring-primary/25 absolute inset-6 rounded-full ring-1"
-              />
-              <span className="bg-primary/12 text-primary relative grid size-10 place-items-center rounded-full">
-                <Target aria-hidden="true" className="size-5" />
-              </span>
+            <span className="bg-muted/60 text-muted-foreground mx-auto grid size-9 place-items-center rounded-lg">
+              <Target aria-hidden="true" className="size-4" />
             </span>
-            <h3 className="mt-5 text-xl font-semibold tracking-tight">
-              Nothing urgent is competing for attention.
+            <h3 className="mt-4 text-base font-semibold">
+              Nothing on your route
             </h3>
-            <p className="text-muted-foreground mt-2 text-sm leading-6">
-              Add what matters and ATLAS will surface the next useful move.
+            <p className="text-muted-foreground mt-1.5 text-sm leading-6">
+              Tasks, payments and follow-ups due today appear here in order.
             </p>
           </div>
         </div>
       )}
 
       {current && (later.length > 0 || schedule) ? (
-        <div className="border-border/70 bg-background/35 relative border-t px-4 pt-5 pb-5 min-[360px]:px-5 sm:px-7 sm:pb-7">
+        <div className="border-border/70 relative border-t px-4 pt-5 pb-5 min-[360px]:px-5 sm:px-7 sm:pb-7">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <p className="text-muted-foreground text-xs font-semibold">
               {schedule && now
@@ -563,7 +524,10 @@ export function DaylineCommand({
             </p>
             {schedule ? (
               <p className="inline-flex items-center gap-1.5 text-xs font-semibold">
-                <Flag aria-hidden="true" className="text-primary size-3.5" />
+                <Flag
+                  aria-hidden="true"
+                  className="text-muted-foreground size-3.5"
+                />
                 Clear by {formatManilaTime(schedule.endsAt)}
               </p>
             ) : null}

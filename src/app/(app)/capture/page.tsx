@@ -1,11 +1,10 @@
-import { ShieldCheck } from "lucide-react";
 import { CaptureBatchWorkspace } from "@/components/capture/capture-batch-workspace";
 import { AI_MODELS, CAPTURE_MODEL_OPTIONS } from "@/lib/ai/models";
 import { createClient } from "@/lib/supabase/server";
-import { PageHeading, PageHeadingNote } from "@/components/shared/page-heading";
+import { PageHeading } from "@/components/shared/page-heading";
 import { PageShell } from "@/components/shared/page-shell";
 
-export const metadata = { title: "Universal Capture" };
+export const metadata = { title: "Capture" };
 
 export default async function CapturePage() {
   const supabase = await createClient();
@@ -26,13 +25,8 @@ export default async function CapturePage() {
   return (
     <PageShell>
       <PageHeading
-        title="Tell ATLAS what happened"
-        description="Describe up to five actions. ATLAS will separate them into cards for you to review, correct, save, or reject."
-        aside={
-          <PageHeadingNote icon={ShieldCheck}>
-            Nothing saves until you confirm
-          </PageHeadingNote>
-        }
+        title="Capture"
+        description="Describe up to five actions. Each becomes a card you can correct, save, or reject."
       />
 
       <CaptureBatchWorkspace

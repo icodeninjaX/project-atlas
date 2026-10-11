@@ -61,7 +61,7 @@ export async function saveSettingsAction(
   if (!supabase) {
     return {
       success: false,
-      message: "Connect Supabase before saving preferences.",
+      message: "Settings can't be saved right now. Try again later.",
     };
   }
 

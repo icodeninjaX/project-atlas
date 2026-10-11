@@ -7,7 +7,7 @@ import { usePrivacyMode } from "./privacy-provider";
 
 export function PrivacyToggle({ showLabel = false }: { showLabel?: boolean }) {
   const { hidden, toggle } = usePrivacyMode();
-  const label = hidden ? "Show sensitive values" : "Hide sensitive values";
+  const label = hidden ? "Show amounts" : "Hide amounts";
 
   const button = (
     <Button

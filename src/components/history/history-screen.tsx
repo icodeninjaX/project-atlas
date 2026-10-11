@@ -1,4 +1,4 @@
-import { CloudOff, LogIn, ShieldCheck, Waypoints } from "lucide-react";
+import { CloudOff, Info, LogIn, Waypoints } from "lucide-react";
 import Link from "next/link";
 import { DashboardCardHeading } from "@/components/dashboard/dashboard-card";
 import {
@@ -6,7 +6,7 @@ import {
   HistoryHeader,
   HistoryMessage,
   SectionHeading,
-  glassCardClass,
+  cardClass,
   tileClass,
 } from "@/components/history/history-chrome";
 import {
@@ -62,15 +62,12 @@ function HistoryNotes({
   return (
     <section
       aria-labelledby="history-notes"
-      className={cn(
-        glassCardClass,
-        "mt-10 p-4 min-[360px]:p-5 sm:mt-12 sm:p-6",
-      )}
+      className={cn(cardClass, "mt-10 p-4 min-[360px]:p-5 sm:mt-12 sm:p-6")}
     >
       <DashboardCardHeading
         id="history-notes"
-        icon={ShieldCheck}
-        title="How to read recorded history"
+        icon={Info}
+        title="How to read this history"
         description="Every value is recalculated from your surviving source records each time this page loads."
       />
       <ul className="mt-5 grid gap-3 md:grid-cols-3">
@@ -94,7 +91,7 @@ function HistoryNotes({
   );
 }
 
-/** The Recorded history page body, from rows the page has already loaded. */
+/** The History page body, from rows the page has already loaded. */
 export function HistoryScreen({
   rows,
   unavailable,
@@ -128,7 +125,7 @@ export function HistoryScreen({
   return (
     <PageShell>
       <HistoryHeader
-        title="Recorded history"
+        title="History"
         description="Compare the records ATLAS can actually reconstruct. Every value is recalculated from your surviving source records."
         link={{
           href: "/history/patterns",
@@ -149,7 +146,7 @@ export function HistoryScreen({
             </Button>
           }
         >
-          Please try again after the database update is available.
+          Your records are unchanged.
         </HistoryMessage>
       ) : rows === null ? (
         <HistoryMessage icon={LogIn} title="Signed out">

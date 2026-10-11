@@ -351,14 +351,14 @@ export function HistoryEmptyHero() {
         Your history
       </h2>
       <div className="mt-6 flex max-w-2xl gap-4">
-        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
-          <History aria-hidden="true" className="size-5" />
+        <span className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
+          <History aria-hidden="true" className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-[1.625rem] leading-tight font-semibold tracking-[-0.03em] text-balance sm:text-[1.875rem]">
+          <p className="text-base leading-6 font-semibold">
             Nothing recorded yet
           </p>
-          <p className="text-muted-foreground mt-3 text-sm leading-6">
+          <p className="text-muted-foreground mt-1 text-sm leading-6">
             Recorded history rebuilds six series from what you log in ATLAS.
             Each one begins on the date of its first record, and nothing before
             it is filled in with zero.
@@ -376,15 +376,13 @@ export function HistoryEmptyHero() {
             <li key={metric} className="min-w-0">
               <Link
                 href={metricDefinitions[metric].href}
-                className="bg-background/55 ring-border/70 hover:bg-background/80 hover:ring-border focus-visible:ring-ring flex min-h-11 min-w-0 items-center gap-3 rounded-2xl p-3 ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="ring-border/80 hover:ring-foreground/25 focus-visible:ring-ring flex min-h-11 min-w-0 items-center gap-3 rounded-xl p-3 ring-1 transition-shadow focus-visible:ring-2 focus-visible:outline-none"
               >
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "grid size-9 shrink-0 place-items-center rounded-xl ring-1",
-                    tone.soft,
+                    "bg-muted/60 grid size-9 shrink-0 place-items-center rounded-lg",
                     tone.text,
-                    tone.ring,
                   )}
                 >
                   <Icon className="size-4" />

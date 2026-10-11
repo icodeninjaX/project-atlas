@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ShieldAlert, Trash2 } from "lucide-react";
+import { ChevronDown, Trash2 } from "lucide-react";
 import { useActionState } from "react";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
@@ -33,9 +33,9 @@ export function DeleteAccountControl({ configured }: { configured: boolean }) {
   const [state, formAction, deleting] = useActionState(action, initialState);
 
   return (
-    <details className="group bg-destructive/[0.04] ring-destructive/25 rounded-2xl ring-1">
-      <summary className="focus-visible:ring-destructive flex min-h-16 cursor-pointer list-none items-center gap-3 rounded-2xl p-3 focus-visible:ring-2 focus-visible:outline-none sm:p-3.5 [&::-webkit-details-marker]:hidden">
-        <IconTile icon={ShieldAlert} tone="danger" size="sm" />
+    <details className="group ring-destructive/25 rounded-xl ring-1">
+      <summary className="focus-visible:ring-destructive flex min-h-16 cursor-pointer list-none items-center gap-3 rounded-xl p-3 focus-visible:ring-2 focus-visible:outline-none sm:p-3.5 [&::-webkit-details-marker]:hidden">
+        <IconTile icon={Trash2} tone="danger" size="sm" />
         <span className="min-w-0 flex-1">
           <span className="text-destructive block text-sm font-semibold">
             Delete account permanently
@@ -55,9 +55,8 @@ export function DeleteAccountControl({ configured }: { configured: boolean }) {
           first. This action cannot be reversed.
         </p>
         {!configured ? (
-          <p className="bg-muted/60 ring-border/80 text-muted-foreground mt-3 rounded-xl px-3 py-2.5 text-xs leading-5 ring-1">
-            Not configured. Add the server-only Supabase service role key to
-            enable authenticated deletion.
+          <p className="text-muted-foreground mt-3 text-xs leading-5">
+            Account deletion isn&apos;t available on this server.
           </p>
         ) : (
           <form action={formAction} className="mt-4 space-y-3">
@@ -102,7 +101,6 @@ export function DeleteAccountControl({ configured }: { configured: boolean }) {
               pending={deleting}
               pendingLabel="Deleting…"
             >
-              <Trash2 className="size-4" />
               Delete my ATLAS
             </Button>
           </form>

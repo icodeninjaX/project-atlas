@@ -47,7 +47,7 @@ export default async function DashboardPage() {
   weekStartDate.setUTCDate(localNoon.getUTCDate() + mondayOffset);
   const weekStart = weekStartDate.toISOString().slice(0, 10);
   const supabase = await createClient();
-  const [dashboardResult, signalResult, daylineResult] = supabase
+  const [dashboardResult, signalResult, daylineResult, profileResult] = supabase
     ? await Promise.all([
         supabase.rpc("dashboard_snapshot", {
           p_today: today,
@@ -56,8 +56,9 @@ export default async function DashboardPage() {
         }),
         loadSignals(supabase, now).catch(() => null),
         loadDayline(supabase, now).catch(() => null),
+        supabase.from("profiles").select("display_name").maybeSingle(),
       ])
-    : [{ data: null }, null, null];
+    : [{ data: null }, null, null, { data: null }];
   const { data } = dashboardResult;
   const dashboard = (data as DashboardData | null) ?? emptyData;
   const dashboardSignals = signalResult
@@ -80,6 +81,7 @@ export default async function DashboardPage() {
   return (
     <TodayDashboard
       now={now}
+      displayName={profileResult.data?.display_name ?? null}
       dashboard={dashboard}
       dayline={{
         items: daylineItems,

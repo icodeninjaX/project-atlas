@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 describe("TaskStatusForm", () => {
-  it("shows the spinning ATLAS mark while completing a task", async () => {
+  it("shows a spinner while completing a task", async () => {
     const user = userEvent.setup();
     let resolveSubmit:
       ((value: { success: boolean; message: string }) => void) | undefined;
@@ -76,12 +76,9 @@ describe("TaskStatusForm", () => {
     const pendingButton = screen.getByRole("button", {
       name: "Completing Write proposal",
     });
-    const logo = container.querySelector(
-      'img[src="/brand/atlas-system-core.png"]',
-    );
     expect(pendingButton).toBeDisabled();
     expect(pendingButton).toHaveAttribute("aria-busy", "true");
-    expect(logo?.parentElement).toHaveClass("animate-spin");
+    expect(pendingButton.querySelector("svg")).toHaveClass("animate-spin");
     expect(submit).toHaveBeenCalledWith(
       "task.setStatus",
       expect.any(FormData),
@@ -107,7 +104,7 @@ describe("TaskStatusForm", () => {
     });
   });
 
-  it("resolves the ATLAS mark into a green check before refreshing", async () => {
+  it("shows a green check before refreshing", async () => {
     vi.useFakeTimers();
     const submit = vi.fn().mockResolvedValue({
       success: true,
@@ -147,7 +144,6 @@ describe("TaskStatusForm", () => {
     expect(
       screen.getByRole("button", { name: "Completed Write proposal" }),
     ).toBeDisabled();
-    expect(container.querySelector(".atlas-task-success-logo")).toBeVisible();
     expect(container.querySelector(".atlas-task-success-check")).toBeVisible();
     expect(mocks.refresh).not.toHaveBeenCalled();
 

@@ -1,9 +1,5 @@
 import {
-  ArrowRight,
-  ArrowUpRight,
   BellRing,
-  CalendarDays,
-  Compass,
   Database,
   Download,
   FileJson,
@@ -12,20 +8,12 @@ import {
   HardDrive,
   History,
   Keyboard,
-  Landmark,
+  LogOut,
   Mail,
-  MapPin,
-  Mountain,
   Palette,
-  ShieldAlert,
-  ShieldCheck,
-  TableProperties,
   UserRound,
-  WalletCards,
-  type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import { SessionControls } from "@/components/settings/session-controls";
 import { OfflineStorageSettings } from "@/components/settings/offline-storage-settings";
 import { DeleteAccountControl } from "@/components/settings/delete-account-control";
@@ -37,11 +25,12 @@ import { SettingsPreferencesForm } from "@/components/settings/settings-preferen
 import { FontPreferencePicker } from "@/components/settings/font-preference-picker";
 import { ThemePreferencePicker } from "@/components/settings/theme-preference-picker";
 import {
+  SettingRow,
   SettingsGroup,
   SettingsSection,
   StatusChip,
+  cardClass,
   eyebrowClass,
-  glassCardClass,
 } from "@/components/settings/settings-chrome";
 import { SettingsSectionNav } from "@/components/settings/settings-section-nav";
 import { createClient } from "@/lib/supabase/server";
@@ -51,6 +40,7 @@ import {
   isPushConfigured,
 } from "@/lib/notifications/server-config";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { PageHeading, PageHeadingLink } from "@/components/shared/page-heading";
 import { PageShell } from "@/components/shared/page-shell";
 
@@ -160,36 +150,31 @@ function ShortcutRow({ label, keys }: { label: string; keys: string }) {
   );
 }
 
-/** One default in the hero, as a quiet tile. */
-function GlanceTile({
-  icon: Icon,
+/** One default in the summary strip; some jump to where they are set. */
+function GlanceCell({
   label,
   value,
   href,
 }: {
-  icon: LucideIcon;
   label: string;
   value: string;
   href?: string;
 }) {
   const body = (
     <>
-      <span className="text-muted-foreground flex items-center gap-1.5 text-[0.6875rem] font-medium">
-        <Icon aria-hidden="true" className="size-3.5 shrink-0" />
-        <span className="truncate">{label}</span>
+      <span className="text-muted-foreground block truncate text-xs">
+        {label}
       </span>
-      <span className="mt-1.5 block truncate text-sm font-semibold tracking-[-0.01em]">
-        {value}
-      </span>
+      <span className="mt-1 block truncate text-sm font-semibold">{value}</span>
     </>
   );
-  const className = "bg-background/55 block min-w-0 rounded-xl px-3.5 py-3";
+  const className = "bg-card block min-w-0 px-3.5 py-3";
   return href ? (
     <a
       href={href}
       className={cn(
         className,
-        "hover:ring-primary/35 focus-visible:ring-ring transition-colors focus-visible:ring-2 focus-visible:outline-none",
+        "hover:bg-muted/40 focus-visible:ring-ring transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
       )}
     >
       {body}
@@ -256,21 +241,19 @@ export default async function SettingsPage() {
 
       <section
         aria-label="Account summary"
-        className={cn(
-          surfaceClass,
-          "bg-card @container relative isolate mt-6 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
-        )}
+        className={cn(cardClass, "mt-6 sm:mt-8")}
       >
-        <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-8 lg:p-8">
+        <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-8">
           <div className="flex min-w-0 items-center gap-4">
-            <span className="bg-primary/45 relative grid size-16 shrink-0 place-items-center rounded-[1.35rem] p-px sm:size-[4.5rem]">
-              <span className="bg-card text-foreground grid size-full place-items-center rounded-xl font-mono text-lg font-semibold tracking-tight sm:text-xl">
-                {accountInitials(accountName) || "A"}
-              </span>
+            <span
+              aria-hidden="true"
+              className="bg-muted text-foreground grid size-14 shrink-0 place-items-center rounded-full text-lg font-semibold"
+            >
+              {accountInitials(accountName) || "A"}
             </span>
             <div className="min-w-0">
               <p className={eyebrowClass}>Signed in as</p>
-              <p className="mt-1 truncate text-xl font-semibold tracking-[-0.03em] sm:text-2xl">
+              <p className="mt-1 truncate text-lg font-semibold tracking-[-0.02em] sm:text-xl">
                 {accountName}
               </p>
               <p className="text-muted-foreground mt-0.5 flex min-w-0 items-center gap-1.5 text-xs">
@@ -278,9 +261,6 @@ export default async function SettingsPage() {
                 <span className="truncate">{email}</span>
               </p>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                <StatusChip tone="primary">
-                  Private, owner-only workspace
-                </StatusChip>
                 <StatusChip tone={remindersEnabled ? "positive" : "neutral"}>
                   Reminders {remindersEnabled ? "on" : "off"}
                 </StatusChip>
@@ -289,37 +269,26 @@ export default async function SettingsPage() {
           </div>
 
           <div className="min-w-0">
-            <p className={cn(eyebrowClass, "mb-2.5 px-0.5")}>Your defaults</p>
-            <div className="grid grid-cols-2 gap-2 @lg:grid-cols-3">
-              <GlanceTile
-                icon={Compass}
+            <p className={cn(eyebrowClass, "mb-2.5")}>Your defaults</p>
+            <div className="bg-border grid grid-cols-2 gap-px overflow-hidden rounded-xl @lg:grid-cols-3">
+              <GlanceCell
                 label="Start page"
                 value={homeRouteLabels[homeRoute] ?? "Today"}
                 href="#profile"
               />
-              <GlanceTile
-                icon={Mountain}
+              <GlanceCell
                 label="Payoff plan"
                 value={strategyLabels[debtStrategy] ?? "Avalanche"}
                 href="#profile"
               />
-              <GlanceTile
-                icon={BellRing}
+              <GlanceCell
                 label="Quiet hours"
                 value={`${(preferencesResult.data?.quiet_hours_start ?? "22:00").slice(0, 5)}–${(preferencesResult.data?.quiet_hours_end ?? "07:00").slice(0, 5)}`}
                 href="#reminders"
               />
-              <GlanceTile
-                icon={WalletCards}
-                label="Currency"
-                value={currency}
-              />
-              <GlanceTile icon={MapPin} label="Timezone" value={timezone} />
-              <GlanceTile
-                icon={CalendarDays}
-                label="Weekly cycle"
-                value={`Starts ${weekStart}`}
-              />
+              <GlanceCell label="Currency" value={currency} />
+              <GlanceCell label="Timezone" value={timezone} />
+              <GlanceCell label="Weekly cycle" value={`Starts ${weekStart}`} />
             </div>
           </div>
         </div>
@@ -336,21 +305,14 @@ export default async function SettingsPage() {
             <p className={cn(eyebrowClass, "mb-2 px-2.5")}>On this page</p>
             <SettingsSectionNav variant="sidebar" />
           </div>
-          <div className="border-border/70 mx-3 border-t pt-4">
-            <p className="text-muted-foreground flex items-start gap-2 px-0.5 text-[0.6875rem] leading-4">
-              <ShieldCheck
-                aria-hidden="true"
-                className="text-primary mt-px size-3.5 shrink-0"
-              />
-              Only you can see or change these settings.
-            </p>
-          </div>
+          <p className="text-muted-foreground border-border/70 mx-3 border-t px-2.5 pt-4 text-xs leading-5">
+            Only you can see or change these settings.
+          </p>
         </aside>
 
         <div className="min-w-0 space-y-5 sm:space-y-6">
           <SettingsSection
             id="profile"
-            index="01 · Profile"
             icon={UserRound}
             title="Profile and planning defaults"
             description="Personalize your header and the payoff plan ATLAS opens first."
@@ -380,7 +342,6 @@ export default async function SettingsPage() {
 
           <SettingsSection
             id="appearance"
-            index="02 · Appearance"
             icon={Palette}
             title="Appearance"
             description="Make ATLAS feel like your workspace with a theme and app-wide typeface."
@@ -397,7 +358,6 @@ export default async function SettingsPage() {
 
           <SettingsSection
             id="security"
-            index="03 · Security"
             icon={Fingerprint}
             title="Sign-in security"
             description="Reconfirm your current password before changing sign-in credentials."
@@ -408,7 +368,6 @@ export default async function SettingsPage() {
 
           <SettingsSection
             id="offline"
-            index="04 · Offline"
             icon={HardDrive}
             title="Offline and device storage"
             description="Inspect queued changes, request a sync, and manage private page copies on this device."
@@ -418,7 +377,6 @@ export default async function SettingsPage() {
 
           <SettingsSection
             id="reminders"
-            index="05 · Reminders"
             icon={BellRing}
             title="Reminders and quiet hours"
             description="Get timely task alerts and one useful daily digest without noisy empty notifications."
@@ -444,121 +402,90 @@ export default async function SettingsPage() {
 
           <SettingsSection
             id="data"
-            index="06 · Data"
             icon={Database}
             title="Data and privacy"
             description="Review your audit trail or take a portable copy of your ATLAS records."
           >
             <div className="space-y-7">
-              <PrivacySettings />
-
-              <div className="grid gap-2.5 md:grid-cols-2">
-                <Link
-                  href="/settings/activity"
-                  className="bg-background/55 ring-border/80 hover:ring-primary/40 focus-visible:ring-ring group flex min-h-24 items-center gap-3.5 rounded-2xl p-4 ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              <div className="divide-border/70 divide-y">
+                <PrivacySettings className="pb-5" />
+                <SettingRow
+                  icon={History}
+                  title="Activity history"
+                  detail="See completed work, payments, stage changes, goals, and reviews."
+                  className="py-5"
                 >
-                  <span
-                    aria-hidden="true"
-                    className="bg-muted/80 text-muted-foreground group-hover:text-primary ring-border/80 grid size-11 shrink-0 place-items-center rounded-2xl ring-1 transition-colors"
-                  >
-                    <History className="size-[1.15rem]" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">
-                      Activity history
-                    </span>
-                    <span className="text-muted-foreground mt-1 block text-xs leading-5">
-                      See completed work, payments, stage changes, goals, and
-                      reviews.
-                    </span>
-                  </span>
-                  <ArrowRight
-                    aria-hidden="true"
-                    className="text-muted-foreground group-hover:text-primary size-4 shrink-0 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
-                  />
-                </Link>
-
-                <div className="bg-muted/40 relative flex min-h-24 flex-col gap-3 overflow-hidden rounded-xl p-4">
-                  <div className="relative flex items-start gap-3.5">
-                    <span
-                      aria-hidden="true"
-                      className="bg-primary-solid text-primary-solid-foreground grid size-11 shrink-0 place-items-center rounded-2xl"
-                    >
-                      <FileJson className="size-[1.15rem]" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold">
-                        Full ATLAS archive
-                      </p>
-                      <p className="text-muted-foreground mt-1 text-xs leading-5">
-                        A single JSON file with all supported records. Auth
-                        data, passwords, and internal credentials are never
-                        included.
-                      </p>
-                    </div>
-                  </div>
-                  <Link
-                    href="/api/export/json"
-                    prefetch={false}
-                    className="bg-primary-solid text-primary-solid-foreground hover:bg-primary-solid/90 focus-visible:ring-ring relative inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl px-4 text-sm font-semibold shadow-[inset_0_1px_0_rgb(255_255_255/0.14)] focus-visible:ring-2 focus-visible:outline-none sm:min-h-10"
-                  >
-                    <Download aria-hidden="true" className="size-4" />
-                    Download JSON
-                  </Link>
-                </div>
+                  <Button asChild variant="secondary" size="sm">
+                    <Link href="/settings/activity">View activity</Link>
+                  </Button>
+                </SettingRow>
+                <SettingRow
+                  icon={FileJson}
+                  title="Full ATLAS archive"
+                  detail="A single JSON file with all supported records. Auth data, passwords, and internal credentials are never included."
+                  className="pt-5"
+                >
+                  <Button asChild size="sm">
+                    <Link href="/api/export/json" prefetch={false}>
+                      <Download aria-hidden="true" className="size-4" />
+                      Download JSON
+                    </Link>
+                  </Button>
+                </SettingRow>
               </div>
 
               <SettingsGroup
-                title="Choose a CSV"
-                icon={TableProperties}
+                title="CSV exports"
                 description={`${csvExports.length} tables, one file each. Opens in any spreadsheet app.`}
               >
-                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                <ul className="bg-background/55 divide-border/70 divide-y overflow-hidden rounded-xl">
                   {csvExports.map((item) => (
-                    <Link
-                      key={item.entity}
-                      href={`/api/export/csv?entity=${item.entity}` as never}
-                      prefetch={false}
-                      className="bg-background/55 ring-border/80 hover:ring-primary/40 focus-visible:ring-ring group flex min-h-16 items-center gap-3 rounded-2xl p-3 ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="bg-muted/80 text-muted-foreground group-hover:bg-primary/12 group-hover:text-primary grid size-9 shrink-0 place-items-center rounded-xl transition-colors"
+                    <li key={item.entity}>
+                      <Link
+                        href={`/api/export/csv?entity=${item.entity}` as never}
+                        prefetch={false}
+                        className="focus-visible:ring-ring group flex min-h-14 items-center gap-3 px-3.5 py-2.5 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
                       >
-                        <FileSpreadsheet className="size-4" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold">
-                          {item.label}
+                        <FileSpreadsheet
+                          aria-hidden="true"
+                          className="text-muted-foreground size-4 shrink-0"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium underline-offset-2 group-hover:underline">
+                            {item.label}
+                          </span>
+                          <span className="text-muted-foreground block truncate text-xs">
+                            {item.description}
+                          </span>
                         </span>
-                        <span className="text-muted-foreground mt-0.5 block truncate text-xs">
-                          {item.description}
+                        <span
+                          aria-hidden="true"
+                          className="text-muted-foreground shrink-0 text-xs"
+                        >
+                          CSV
                         </span>
-                      </span>
-                      <ArrowUpRight
-                        aria-hidden="true"
-                        className="text-muted-foreground/70 group-hover:text-primary size-4 shrink-0 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
-                      />
-                    </Link>
+                      </Link>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </SettingsGroup>
             </div>
           </SettingsSection>
 
           <section
             aria-labelledby="shortcuts-title"
-            className={cn(glassCardClass, "p-4 min-[360px]:p-5 sm:p-6")}
+            className={cn(cardClass, "p-4 min-[360px]:p-5 sm:p-6")}
           >
-            <div className="flex items-center gap-2.5">
-              <Keyboard aria-hidden="true" className="text-primary size-4" />
-              <h2
-                id="shortcuts-title"
-                className="text-[0.9375rem] font-semibold tracking-[-0.01em]"
-              >
-                Keyboard shortcuts
-              </h2>
-            </div>
+            <h2
+              id="shortcuts-title"
+              className="flex items-center gap-2 text-base leading-6 font-semibold tracking-[-0.01em]"
+            >
+              <Keyboard
+                aria-hidden="true"
+                className="text-muted-foreground size-4 shrink-0"
+              />
+              Keyboard shortcuts
+            </h2>
             <div className="divide-border/60 mt-3 grid gap-x-8 sm:grid-cols-3 sm:divide-x [&>*]:sm:px-4 [&>*:first-child]:sm:pl-0 [&>*:last-child]:sm:pr-0">
               <ShortcutRow label="Capture a task" keys="N" />
               <ShortcutRow label="Search ATLAS" keys="/" />
@@ -571,26 +498,17 @@ export default async function SettingsPage() {
 
           <SettingsSection
             id="account"
-            index="07 · Account"
-            icon={ShieldCheck}
+            icon={LogOut}
             title="Session and account"
             description="Choose where you stay signed in, or close your ATLAS for good."
           >
             <SessionControls />
-            <SettingsGroup
-              title="Danger zone"
-              icon={ShieldAlert}
-              className="mt-7"
-            >
+            <div className="border-border/70 mt-5 border-t pt-5">
               <DeleteAccountControl configured={accountDeletionConfigured} />
-            </SettingsGroup>
+            </div>
           </SettingsSection>
 
-          <p className="text-muted-foreground flex items-start gap-2.5 px-1 text-xs leading-5">
-            <Landmark
-              aria-hidden="true"
-              className="text-primary mt-0.5 size-4 shrink-0"
-            />
+          <p className="text-muted-foreground px-1 text-xs leading-5">
             Your payoff preference changes ordering only. It never changes debt
             balances or records payments.
           </p>

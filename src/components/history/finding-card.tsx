@@ -1,6 +1,6 @@
-import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { glassCardClass, tileClass } from "@/components/history/history-chrome";
+import { cardClass } from "@/components/history/history-chrome";
 import styles from "@/components/history/history.module.css";
 import { metricTones } from "@/components/history/metric-tone";
 import { PairChart } from "@/components/history/pair-chart";
@@ -24,6 +24,11 @@ import {
 import { formatMetricValue, plural } from "@/lib/history/view";
 import { cn } from "@/lib/utils";
 
+const statClass = "bg-card min-w-0 px-3.5 py-3";
+
+const statValueClass =
+  "mt-1 font-mono text-base leading-6 font-semibold tracking-[-0.02em] tabular-nums";
+
 /** One qualified association: what moved, how strongly, and the months. */
 export function FindingCard({
   finding,
@@ -41,37 +46,17 @@ export function FindingCard({
     <article
       id={findingAnchor(finding.metrics)}
       aria-labelledby={headingId}
-      className={cn(glassCardClass, "scroll-mt-24 p-4 min-[360px]:p-5 sm:p-6")}
+      className={cn(cardClass, "scroll-mt-24 p-4 min-[360px]:p-5 sm:p-6")}
     >
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="flex shrink-0 -space-x-2 @max-[20rem]:hidden"
-          >
-            {finding.metrics.map((metric) => {
-              const tone = metricTones[metric];
-              const Icon = tone.icon;
-              return (
-                <span
-                  key={metric}
-                  className={cn(
-                    "bg-card grid size-10 place-items-center rounded-xl ring-1",
-                    tone.ring,
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "grid size-full place-items-center rounded-xl",
-                      tone.soft,
-                      tone.text,
-                    )}
-                  >
-                    <Icon className="size-[1.125rem]" />
-                  </span>
-                </span>
-              );
-            })}
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span aria-hidden="true" className="flex shrink-0 gap-1">
+            {finding.metrics.map((metric) => (
+              <span
+                key={metric}
+                className={cn("size-2 rounded-full", metricTones[metric].dot)}
+              />
+            ))}
           </span>
           <h3
             id={headingId}
@@ -104,44 +89,41 @@ export function FindingCard({
         <PairChart months={months} metrics={finding.metrics} />
       </div>
 
-      <dl className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,6.75rem),1fr))] gap-2.5">
-        <div className={cn(tileClass, "min-[360px]:p-3.5")}>
+      <dl className="bg-border mt-4 grid grid-cols-1 gap-px overflow-hidden rounded-xl @sm:grid-cols-3">
+        <div className={statClass}>
           <dt className="text-muted-foreground text-[0.6875rem] leading-4">
             Pearson r of the changes
           </dt>
-          <dd className="mt-1 font-mono text-lg leading-6 font-semibold tracking-[-0.02em] tabular-nums">
+          <dd className={statValueClass}>
             <SensitiveValue>
               {formatSigned(finding.correlation, 3)}
             </SensitiveValue>
           </dd>
         </div>
-        <div className={cn(tileClass, "min-[360px]:p-3.5")}>
+        <div className={statClass}>
           <dt className="text-muted-foreground text-[0.6875rem] leading-4">
             Monthly changes
           </dt>
-          <dd className="mt-1 font-mono text-lg leading-6 font-semibold tracking-[-0.02em] tabular-nums">
-            {finding.changes}
-          </dd>
+          <dd className={statValueClass}>{finding.changes}</dd>
         </div>
-        <div className={cn(tileClass, "min-[360px]:p-3.5")}>
+        <div className={statClass}>
           <dt className="text-muted-foreground text-[0.6875rem] leading-4">
             Estimated adjusted permutation p
           </dt>
-          <dd className="mt-1 font-mono text-lg leading-6 font-semibold tracking-[-0.02em] tabular-nums">
+          <dd className={statValueClass}>
             <SensitiveValue>{finding.adjustedP.toFixed(4)}</SensitiveValue>
           </dd>
         </div>
       </dl>
 
-      <ul className="mt-4 flex flex-wrap gap-2">
+      <ul className="mt-3 flex flex-wrap gap-x-4">
         {finding.metrics.map((metric) => (
           <li key={metric}>
             <Link
               href={metricDefinitions[metric].href}
-              className="text-muted-foreground hover:bg-primary/10 hover:text-primary ring-border/80 focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8"
+              className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center rounded-lg text-xs font-medium underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
             >
               View {metricDefinitions[metric].label.toLowerCase()} source
-              <ArrowUpRight aria-hidden="true" className="size-3.5" />
             </Link>
           </li>
         ))}
@@ -173,7 +155,7 @@ export function FindingCard({
             <caption className="sr-only">
               Monthly values behind this association
             </caption>
-            <thead className="bg-muted/80 text-muted-foreground sticky top-0 text-[0.6875rem] font-semibold tracking-[0.06em] uppercase backdrop-blur">
+            <thead className="bg-muted text-muted-foreground sticky top-0 text-[0.6875rem] font-semibold tracking-[0.06em] uppercase">
               <tr>
                 <th scope="col" className="px-3 py-2">
                   Month
