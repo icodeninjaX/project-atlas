@@ -88,7 +88,6 @@ export function SettingsSection({
     <section
       id={id}
       aria-labelledby={titleId}
-      data-spotlight
       className={cn(
         glassCardClass,
         "scroll-mt-36 overflow-hidden lg:scroll-mt-8",

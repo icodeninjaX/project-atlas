@@ -134,11 +134,7 @@ export function MonthlyNeedCard({
   const debtShare = shareOf(analysis.monthlyDebtMinimumsCentavos);
 
   return (
-    <section
-      aria-labelledby="runway-need"
-      data-spotlight
-      className={dashboardCardClass}
-    >
+    <section aria-labelledby="runway-need" className={dashboardCardClass}>
       <DashboardCardHeading
         id="runway-need"
         icon={ReceiptText}
@@ -333,11 +329,7 @@ export function RunwayFundsCard({
       : 0;
 
   return (
-    <section
-      aria-labelledby="runway-funds"
-      data-spotlight
-      className={dashboardCardClass}
-    >
+    <section aria-labelledby="runway-funds" className={dashboardCardClass}>
       <DashboardCardHeading
         id="runway-funds"
         icon={WalletCards}

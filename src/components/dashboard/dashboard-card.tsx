@@ -6,12 +6,11 @@ import { cn } from "@/lib/utils";
 import styles from "./today.module.css";
 
 /**
- * A light-catching hairline edge and, with `data-spotlight` inside a
- * SpotlightArea, a light that follows the mouse. Hosts must be positioned.
+ * A light-catching hairline edge. Hosts must be positioned.
  * Outlines elsewhere use `ring-*` because the unlayered
  * `* { border-color }` rule in globals.css overrides `border-*` colors.
  */
-export const surfaceClass = cn(styles.edge, styles.spotlight);
+export const surfaceClass = styles.edge;
 
 /** The Today page's secondary surfaces. */
 export const dashboardCardClass = cn(

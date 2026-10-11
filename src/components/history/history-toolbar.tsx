@@ -77,7 +77,7 @@ export function HistoryToolbar({
     <div
       className={cn(
         surfaceClass,
-        "bg-card/85 relative mt-6 flex flex-col gap-3 rounded-[1.5rem] p-3 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] backdrop-blur sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6 sm:p-3.5 sm:pl-5",
+        "bg-card/85 relative mt-6 flex flex-col gap-3 rounded-[1.5rem] p-3 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6 sm:p-3.5 sm:pl-5",
       )}
     >
       <Strip label="Group by">

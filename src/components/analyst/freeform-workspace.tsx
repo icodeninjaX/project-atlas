@@ -6,25 +6,25 @@ import type { Route } from "next";
 import {
   ArrowUp,
   ArrowUpRight,
+  Calculator,
   CalendarCheck,
   Check,
   ChevronDown,
   Compass,
+  CornerDownRight,
   Crosshair,
+  Info,
   Lightbulb,
+  Lock,
+  MessageSquareText,
   RotateCcw,
   Scale,
   ShieldCheck,
-  Sparkles,
   Target,
   TrendingDown,
   Wallet,
   X,
   type LucideIcon,
-  Info,
-  CornerDownRight,
-  Calculator,
-  Lock,
 } from "lucide-react";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import {
@@ -53,6 +53,7 @@ import {
   tileClass,
   type AreaTone,
 } from "@/components/analyst/analyst-chrome";
+import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 type FreeformResult = {
   status: "answered" | "fallback" | "unsupported" | "clarification_required";
@@ -652,7 +653,7 @@ function FollowUps({
               type="button"
               disabled={disabled}
               onClick={() => onAsk(text)}
-              className="group bg-card/80 ring-border/80 hover:ring-primary/40 hover:bg-primary/[0.05] focus-visible:ring-ring flex min-h-11 w-full items-center gap-2 rounded-2xl px-3.5 py-2 text-left text-sm leading-5 shadow-[0_6px_18px_rgb(7_10_15/0.06)] ring-1 backdrop-blur transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60 sm:w-auto sm:rounded-full"
+              className="group bg-card/80 ring-border/80 hover:ring-primary/40 hover:bg-primary/[0.05] focus-visible:ring-ring flex min-h-11 w-full items-center gap-2 rounded-2xl px-3.5 py-2 text-left text-sm leading-5 shadow-[0_6px_18px_rgb(7_10_15/0.06)] ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60 sm:w-auto sm:rounded-full"
             >
               <CornerDownRight
                 aria-hidden="true"
@@ -673,7 +674,6 @@ function AnswerCard({ turn }: { turn: Turn }) {
     <article
       aria-label="Analyst answer"
       aria-live="polite"
-      data-spotlight
       className={cn(glassCardClass, "overflow-hidden")}
     >
       <div
@@ -684,9 +684,9 @@ function AnswerCard({ turn }: { turn: Turn }) {
         <div className="flex min-w-0 items-center gap-3">
           <span
             aria-hidden="true"
-            className="from-primary via-primary/70 grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br to-violet-500/80 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_10px_24px_-12px_color-mix(in_srgb,var(--primary)_90%,transparent)]"
+            className="bg-primary/12 text-primary ring-primary/20 grid size-9 shrink-0 place-items-center rounded-xl ring-1"
           >
-            <Sparkles className="size-4" />
+            <MessageSquareText className="size-4" />
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold whitespace-nowrap">
@@ -854,7 +854,7 @@ function Composer({
       aria-label={pending ? "Analyzing…" : "Ask Analyst"}
       disabled={!canAsk}
       className={cn(
-        "grid size-10 shrink-0 place-items-center rounded-full transition-all",
+        "grid size-10 shrink-0 place-items-center rounded-full transition-[background-color,color,box-shadow,opacity]",
         canAsk
           ? "from-primary-solid to-primary-solid/80 text-primary-solid-foreground bg-gradient-to-br shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_8px_20px_rgb(43_102_242/0.35)] hover:brightness-110"
           : "bg-muted text-muted-foreground",
@@ -1182,39 +1182,19 @@ export function FreeformWorkspace({
       <section aria-label="Ask Analyst" className="min-w-0 space-y-6">
         {turns.length === 0 ? (
           <div
-            data-spotlight
             className={cn(
               glassCardClass,
               "bg-card isolate overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:rounded-[2rem]",
             )}
           >
-            <div
-              aria-hidden="true"
-              className="from-primary/14 pointer-events-none absolute inset-x-0 top-0 -z-10 h-56 bg-gradient-to-b to-transparent"
-            />
-            <div
-              aria-hidden="true"
-              className="bg-primary/20 pointer-events-none absolute -top-40 -right-24 -z-10 size-96 rounded-full blur-3xl"
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -bottom-40 -left-24 -z-10 size-80 rounded-full bg-violet-400/10 blur-3xl"
-            />
-            <div
-              aria-hidden="true"
-              className="atlas-grid pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 [mask-image:radial-gradient(70%_100%_at_100%_0%,black,transparent)] opacity-40"
-            />
-            <div
-              aria-hidden="true"
-              className="via-primary/70 pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
-            />
+            <HeroBackdrop />
             <div className="relative space-y-4 px-4 pt-5 pb-5 min-[360px]:px-5 sm:px-7 sm:pt-7">
               <div className="flex items-start gap-3.5">
                 <span
                   aria-hidden="true"
-                  className="from-primary via-primary/70 grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br to-violet-500/80 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_12px_28px_-12px_color-mix(in_srgb,var(--primary)_90%,transparent)]"
+                  className="bg-primary/12 text-primary ring-primary/20 grid size-11 shrink-0 place-items-center rounded-2xl ring-1"
                 >
-                  <Sparkles className="size-[1.15rem]" />
+                  <MessageSquareText className="size-[1.15rem]" />
                 </span>
                 <div className="min-w-0">
                   <p className={eyebrowClass}>Ask ATLAS</p>
@@ -1244,7 +1224,7 @@ export function FreeformWorkspace({
                             input.current?.focus();
                           }
                         }}
-                        className="group bg-card/70 ring-border/80 hover:ring-primary/40 hover:bg-primary/[0.04] focus-visible:ring-ring flex min-h-16 w-full items-center gap-3 rounded-2xl p-3 text-left text-sm ring-1 transition-[background-color,box-shadow,transform] hover:-translate-y-px focus-visible:ring-2 focus-visible:outline-none motion-reduce:hover:translate-y-0"
+                        className="group bg-card/70 ring-border/80 hover:ring-primary/40 hover:bg-primary/[0.04] focus-visible:ring-ring flex min-h-16 w-full items-center gap-3 rounded-2xl p-3 text-left text-sm ring-1 transition-[background-color,box-shadow,transform] focus-visible:ring-2 focus-visible:outline-none"
                       >
                         <span
                           aria-hidden="true"
@@ -1323,7 +1303,6 @@ export function FreeformWorkspace({
       >
         <section
           aria-labelledby="analyst-how"
-          data-spotlight
           className={cn(glassCardClass, "p-4 min-[360px]:p-5")}
         >
           <p className={eyebrowClass}>Guide</p>
@@ -1343,7 +1322,7 @@ export function FreeformWorkspace({
                   text: "Every figure comes from your records, not the model.",
                 },
                 {
-                  icon: Sparkles,
+                  icon: MessageSquareText,
                   tone: "violet",
                   title: "A model explains",
                   text: "GPT-5.4 mini plans which records to read, and the model you choose explains them.",
@@ -1390,7 +1369,6 @@ export function FreeformWorkspace({
 
         <section
           aria-labelledby="analyst-privacy"
-          data-spotlight
           className={cn(glassCardClass, "p-4 min-[360px]:p-5")}
         >
           <p className={eyebrowClass}>Privacy</p>

@@ -20,7 +20,7 @@ describe("GoalProgress", () => {
     expect(progress).toHaveAttribute("aria-valuenow", "67");
     expect(progress).toHaveAttribute(
       "aria-valuetext",
-      "67% complete — 2 of 3 milestones completed",
+      "67% complete, 2 of 3 milestones completed",
     );
     expect(screen.getByText("67%")).toBeVisible();
     expect(screen.getByText("2 of 3 milestones completed")).toBeVisible();

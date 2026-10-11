@@ -170,7 +170,6 @@ export function CaptureCard({
   return (
     <article
       aria-labelledby={titleId}
-      data-spotlight
       className={cn(
         glassCardClass,
         "overflow-hidden transition-[opacity,box-shadow] duration-300",

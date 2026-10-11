@@ -182,7 +182,6 @@ export function MetricCard({
     <section
       id={`series-${series.metric}`}
       aria-labelledby={headingId}
-      data-spotlight
       className={cn(glassCardClass, "scroll-mt-24 p-4 min-[360px]:p-5 sm:p-6")}
     >
       <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-2">
@@ -231,7 +230,7 @@ export function MetricCard({
           </p>
         ) : (
           <p className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5">
-            <SensitiveValue className="from-foreground to-foreground/65 bg-gradient-to-br bg-clip-text font-mono text-[1.75rem] leading-tight font-semibold tracking-[-0.04em] break-all text-transparent tabular-nums sm:text-[2rem]">
+            <SensitiveValue className="text-foreground font-mono text-[1.75rem] leading-tight font-semibold tracking-[-0.04em] break-all tabular-nums sm:text-[2rem]">
               {score
                 ? series.headline.toFixed(2)
                 : formatMetricValue(series.metric, series.headline)}

@@ -62,7 +62,6 @@ function HistoryNotes({
   return (
     <section
       aria-labelledby="history-notes"
-      data-spotlight
       className={cn(
         glassCardClass,
         "mt-10 p-4 min-[360px]:p-5 sm:mt-12 sm:p-6",

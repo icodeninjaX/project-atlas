@@ -200,7 +200,6 @@ export function FinancialOverview({
   return (
     <section
       aria-labelledby="financial-snapshot"
-      data-spotlight
       className={cn(dashboardCardClass, "flex flex-col")}
     >
       <DashboardCardHeading

@@ -354,7 +354,7 @@ function Outlook({
       meta="If every payment is on time"
       className={className}
     >
-      <div data-spotlight className={cn(debtSurfaceClass, "p-5 sm:p-6")}>
+      <div className={cn(debtSurfaceClass, "p-5 sm:p-6")}>
         <div className="grid gap-x-6 gap-y-3 min-[26rem]:grid-cols-2">
           <div className="min-w-0">
             <p className="text-muted-foreground text-xs">
@@ -649,7 +649,7 @@ function PaymentHistory({
       }
       className={className}
     >
-      <div data-spotlight className={debtSurfaceClass}>
+      <div className={debtSurfaceClass}>
         {payments.length === 0 ? (
           <p className="text-muted-foreground px-5 py-6 text-center text-sm">
             No payments yet. Each one you record shows here.

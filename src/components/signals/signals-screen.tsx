@@ -35,11 +35,11 @@ function Header({ checkedAt }: { checkedAt: string | null }) {
       description="Meaningful changes, risks, deadlines, and improvements detected from your ATLAS records. Every signal shows the facts behind it."
       aside={
         checkedAt ? (
-          <p className="bg-card/60 text-muted-foreground ring-border/80 inline-flex min-h-9 items-center gap-2 self-start rounded-full px-4 text-xs font-medium ring-1 backdrop-blur">
-            <span aria-hidden="true" className="relative flex size-2">
-              <span className="bg-positive/40 absolute inset-0 animate-ping rounded-full motion-reduce:hidden" />
-              <span className="bg-positive relative size-2 rounded-full" />
-            </span>
+          <p className="bg-card/60 text-muted-foreground ring-border/80 inline-flex min-h-9 items-center gap-2 self-start rounded-full px-4 text-xs font-medium ring-1">
+            <span
+              aria-hidden="true"
+              className="bg-positive size-2 shrink-0 rounded-full"
+            />
             <span>
               Checked{" "}
               <time

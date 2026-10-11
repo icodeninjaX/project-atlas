@@ -203,7 +203,7 @@ export function ModelPicker({
             className={cn(
               "size-2 rounded-full",
               selected.pool === "large"
-                ? "bg-gradient-to-br from-violet-400 to-[var(--primary)]"
+                ? "bg-primary ring-primary/30 ring-2"
                 : "bg-primary",
             )}
           />

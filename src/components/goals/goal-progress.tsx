@@ -43,7 +43,7 @@ export function GoalProgress({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={progressPercent}
-        aria-valuetext={`${progressPercent}% complete — ${progressDescription}`}
+        aria-valuetext={`${progressPercent}% complete, ${progressDescription}`}
         className="relative size-16 shrink-0 sm:size-[4.5rem]"
       >
         <svg

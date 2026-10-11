@@ -301,7 +301,6 @@ export function RunwayScenarioPlanner({
     <section
       id="scenario"
       aria-labelledby="scenario-title"
-      data-spotlight
       className={cn(dashboardCardClass, "mt-4 scroll-mt-24 sm:mt-5")}
     >
       <DashboardCardHeading

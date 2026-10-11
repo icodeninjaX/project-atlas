@@ -5,28 +5,17 @@
  * unlayered and would override them, focus rings included.
  */
 
-/* A soft blue light behind the top of the page. */
+/* A soft blue light behind the top of the page, in the brand blue only. */
 .aurora {
   position: absolute;
   inset: -1.5rem 0 auto;
   z-index: -1;
   height: 36rem;
-  background:
-    radial-gradient(
-      40% 55% at 16% 6%,
-      color-mix(in srgb, var(--primary) 30%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      34% 50% at 86% 0%,
-      color-mix(in srgb, #38bdf8 20%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      46% 46% at 52% 34%,
-      color-mix(in srgb, #6366f1 14%, transparent),
-      transparent 74%
-    );
+  background: radial-gradient(
+    55% 60% at 22% 4%,
+    color-mix(in srgb, var(--primary) 26%, transparent),
+    transparent 72%
+  );
   mask-image: linear-gradient(to bottom, #000 30%, transparent);
   pointer-events: none;
 }
@@ -78,28 +67,6 @@
   );
 }
 
-/* A light that follows the pointer across a card (see SpotlightArea). */
-@media (hover: hover) {
-  .spotlight::after {
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: radial-gradient(
-      20rem circle at var(--spot-x, 50%) var(--spot-y, 50%),
-      color-mix(in srgb, var(--primary) 9%, transparent),
-      transparent 65%
-    );
-    content: "";
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 200ms ease;
-  }
-
-  .spotlight:hover::after {
-    opacity: 1;
-  }
-}
-
 /* Unplanned time on the route bar. */
 .open {
   background:
@@ -137,9 +104,5 @@
   .fill,
   .draw {
     animation: none;
-  }
-
-  .spotlight::after {
-    transition: none;
   }
 }

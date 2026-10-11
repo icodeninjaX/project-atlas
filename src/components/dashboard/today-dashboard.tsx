@@ -167,7 +167,7 @@ export function TodayDashboard({
         }
         actions={
           <>
-            <Button asChild variant="secondary" className="backdrop-blur">
+            <Button asChild variant="secondary">
               <Link href="/money/transactions?create=true">
                 <CircleDollarSign aria-hidden="true" className="size-4" />
                 Record expense

@@ -236,7 +236,6 @@ export function SignalCard({ signal }: { signal: Signal }) {
     <article
       id={anchor}
       aria-labelledby={`${anchor}-title`}
-      data-spotlight
       className={cn(
         surfaceClass,
         "bg-card/90 target:ring-primary/45 @container relative isolate min-w-0 scroll-mt-24 overflow-hidden rounded-[1.5rem] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] target:ring-2",

@@ -191,7 +191,7 @@ export function PatternMatrix({ results }: { results: AssociationResult[] }) {
                         <a
                           href={`#${findingAnchor(cell.result.metrics)}`}
                           title={name}
-                          className="focus-visible:ring-ring mx-auto block max-w-11 rounded-[0.625rem] transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:outline-none"
+                          className="focus-visible:ring-ring mx-auto block max-w-11 rounded-[0.625rem] transition-transform focus-visible:ring-2 focus-visible:outline-none"
                         >
                           {face}
                           <span className="sr-only">{name}</span>

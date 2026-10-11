@@ -6,6 +6,7 @@ import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import styles from "@/components/history/history.module.css";
 import type { HistoryCoverage, HistoryTone } from "@/lib/history/view";
 import { cn } from "@/lib/utils";
+import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 /** Shared pieces of the Recorded history and Patterns pages. */
 
@@ -78,34 +79,6 @@ export function StatusPill({
   );
 }
 
-/** A wash of light from the top, two soft glows, and a faint grid. */
-function HeroLight() {
-  return (
-    <>
-      <div
-        aria-hidden="true"
-        className="from-primary/14 pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b to-transparent"
-      />
-      <div
-        aria-hidden="true"
-        className="bg-primary/20 pointer-events-none absolute -top-40 -right-24 -z-10 size-96 rounded-full blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-36 -left-24 -z-10 size-80 rounded-full bg-emerald-400/10 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="atlas-grid pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 [mask-image:radial-gradient(70%_100%_at_100%_0%,black,transparent)] opacity-40"
-      />
-      <div
-        aria-hidden="true"
-        className="via-primary/70 pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
-      />
-    </>
-  );
-}
-
 export function HeroShell({
   labelledBy,
   children,
@@ -116,13 +89,12 @@ export function HeroShell({
   return (
     <section
       aria-labelledby={labelledBy}
-      data-spotlight
       className={cn(
         surfaceClass,
         "bg-card @container relative isolate mt-6 overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:mt-8 sm:rounded-[2rem]",
       )}
     >
-      <HeroLight />
+      <HeroBackdrop />
       <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
     </section>
   );

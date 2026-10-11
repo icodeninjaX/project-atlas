@@ -149,10 +149,6 @@ export function TaskOverview({
         aria-hidden="true"
         className="from-primary/10 pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b to-transparent"
       />
-      <div
-        aria-hidden="true"
-        className="bg-primary/10 pointer-events-none absolute -top-24 -right-16 size-56 rounded-full blur-3xl"
-      />
       <div className="relative grid gap-5 p-5 sm:gap-6 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:items-center lg:gap-10">
         <div className="flex min-w-0 items-center gap-4 sm:gap-6">
           <ProgressRing done={done} total={total} />

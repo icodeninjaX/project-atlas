@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { SpotlightArea } from "@/components/dashboard/spotlight-area";
 import { DebtList, PaidOffList } from "@/components/debts/debt-list";
 import { DebtSheet } from "@/components/debts/debt-sheet";
 import { DebtsClearHero, DebtsHero } from "@/components/debts/debts-hero";
@@ -158,7 +157,7 @@ export function DebtsWorkspace({
   ).length;
 
   return (
-    <SpotlightArea>
+    <div>
       {open.length === 0 ? (
         <DebtsClearHero
           repaidCentavos={sum(debts, (debt) => debt.original_balance_centavos)}
@@ -247,6 +246,6 @@ export function DebtsWorkspace({
         accounts={accounts}
         today={today}
       />
-    </SpotlightArea>
+    </div>
   );
 }

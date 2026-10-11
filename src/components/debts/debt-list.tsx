@@ -110,7 +110,7 @@ export function DebtList({
       title="Your debts"
       meta={`${debts.length} open`}
     >
-      <ul data-spotlight className={cn(debtSurfaceClass, debtRowsClass)}>
+      <ul className={cn(debtSurfaceClass, debtRowsClass)}>
         {debts.map((debt) => (
           <DebtRow
             key={debt.id}

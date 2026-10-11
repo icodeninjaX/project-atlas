@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { ChevronRight, Info, Sparkles } from "lucide-react";
+import { ChevronRight, Info, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import {
@@ -280,10 +280,7 @@ export function WeeklyInsightCard({
       title="What changed"
       meta="Optional · from your records"
     >
-      <div
-        data-spotlight
-        className={cn(glassCardClass, "divide-border/70 divide-y")}
-      >
+      <div className={cn(glassCardClass, "divide-border/70 divide-y")}>
         <div className="p-4 sm:p-6">
           <LastWeekInsight autoEnabled={autoEnabled} stored={lastWeek} />
         </div>
@@ -316,7 +313,7 @@ export function WeeklyInsightCard({
               onClick={generate}
               disabled={pending || !acknowledged}
             >
-              <Sparkles aria-hidden="true" className="size-4" />
+              <Lightbulb aria-hidden="true" className="size-4" />
               {pending ? "Checking this week…" : "Generate insight"}
             </Button>
             {error && (

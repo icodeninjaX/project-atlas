@@ -33,7 +33,7 @@ const monthHeading = new Intl.DateTimeFormat("en-PH", {
 });
 
 const pillLinkClass =
-  "bg-card/60 text-foreground ring-border/80 hover:bg-card focus-visible:ring-ring inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs font-semibold ring-1 backdrop-blur transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9";
+  "bg-card/60 text-foreground ring-border/80 hover:bg-card focus-visible:ring-ring inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9";
 
 function DecisionRow({ entry }: { entry: JournalEntry }) {
   const { decision, review, notes, goal } = entry;

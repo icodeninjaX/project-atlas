@@ -41,7 +41,6 @@ export function FindingCard({
     <article
       id={findingAnchor(finding.metrics)}
       aria-labelledby={headingId}
-      data-spotlight
       className={cn(glassCardClass, "scroll-mt-24 p-4 min-[360px]:p-5 sm:p-6")}
     >
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">

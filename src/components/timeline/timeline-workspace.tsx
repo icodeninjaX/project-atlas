@@ -286,9 +286,7 @@ function DayHeader({ day, todayIso }: { day: TimelineDay; todayIso: string }) {
         aria-hidden="true"
         className={cn(
           "grid w-11 shrink-0 justify-items-center rounded-xl py-1 shadow-[0_1px_2px_rgb(7_10_15/0.08)] ring-1 sm:w-12",
-          today
-            ? "bg-primary/12 ring-primary/35"
-            : "bg-card/85 ring-border/80 backdrop-blur",
+          today ? "bg-primary/12 ring-primary/35" : "bg-card/85 ring-border/80",
         )}
       >
         <span
@@ -370,7 +368,6 @@ function MonthSection({
           >
             <DayHeader day={day} todayIso={todayIso} />
             <ol
-              data-spotlight
               className={cn(
                 surfaceClass,
                 "bg-card/90 relative min-w-0 self-start rounded-[1.5rem] py-1 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)]",

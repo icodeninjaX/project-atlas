@@ -119,10 +119,10 @@ export function RunwayHero({
             <span
               aria-hidden="true"
               className={cn(
-                "bg-gradient-to-br bg-clip-text pb-[0.06em] font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.06em] text-transparent",
+                "font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.045em]",
                 status.tone === "destructive"
-                  ? "from-destructive to-destructive/80"
-                  : "from-foreground via-foreground to-foreground/55",
+                  ? "text-destructive"
+                  : "text-foreground",
               )}
             >
               {figure.value}

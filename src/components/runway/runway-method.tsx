@@ -42,7 +42,6 @@ export function RunwayMethod({ analysis }: { analysis: RunwayAnalysis }) {
   return (
     <section
       aria-labelledby="runway-method"
-      data-spotlight
       className={cn(dashboardCardClass, "mt-4 sm:mt-5")}
     >
       <DashboardCardHeading

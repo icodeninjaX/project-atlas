@@ -1,11 +1,12 @@
 import {
   Briefcase,
   Building2,
+  Flag,
   GraduationCap,
   Heart,
   HeartPulse,
   PiggyBank,
-  Sparkles,
+  Sprout,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -55,14 +56,14 @@ const goalAreaThemes: Record<string, GoalAreaTheme> = {
     accent: "#06b6d4",
   },
   personal: {
-    icon: Sparkles,
+    icon: Sprout,
     tile: "bg-orange-500/10 text-orange-600 ring-orange-500/20 dark:text-orange-300",
     accent: "#f97316",
   },
 };
 
 const fallbackGoalAreaTheme: GoalAreaTheme = {
-  icon: Sparkles,
+  icon: Flag,
   tile: "bg-muted text-muted-foreground ring-border",
   accent: "#64748b",
 };

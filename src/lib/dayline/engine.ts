@@ -212,7 +212,7 @@ function energyReason(
   available: DaylineEnergy,
 ): string {
   return energyRank[required] > energyRank[available]
-    ? `${required[0]?.toUpperCase()}${required.slice(1)} energy—above your ${available}-energy mode`
+    ? `${required[0]?.toUpperCase()}${required.slice(1)} energy, above your ${available}-energy mode`
     : `${required[0]?.toUpperCase()}${required.slice(1)} energy`;
 }
 

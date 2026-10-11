@@ -194,11 +194,7 @@ export function PayoffPlanner({
       meta="An estimate; nothing is saved"
       className="scroll-mt-24"
     >
-      <div
-        id="plan"
-        data-spotlight
-        className={cn(debtSurfaceClass, "p-5 sm:p-6")}
-      >
+      <div id="plan" className={cn(debtSurfaceClass, "p-5 sm:p-6")}>
         <div
           role="group"
           aria-label="Plan result"
@@ -279,7 +275,7 @@ export function PayoffPlanner({
                       aria-label={STRATEGY_DETAILS[item].label}
                       className="peer sr-only"
                     />
-                    <span className="text-muted-foreground peer-checked:bg-background peer-checked:text-foreground peer-focus-visible:ring-ring flex min-h-10 cursor-pointer items-center justify-center rounded-full px-2 text-center text-xs font-semibold transition-all peer-checked:shadow-[0_1px_3px_rgb(7_10_15/0.18)] peer-focus-visible:ring-2">
+                    <span className="text-muted-foreground peer-checked:bg-background peer-checked:text-foreground peer-focus-visible:ring-ring flex min-h-10 cursor-pointer items-center justify-center rounded-full px-2 text-center text-xs font-semibold transition-[background-color,color,box-shadow] peer-checked:shadow-[0_1px_3px_rgb(7_10_15/0.18)] peer-focus-visible:ring-2">
                       {CHOICES[item]}
                     </span>
                   </label>

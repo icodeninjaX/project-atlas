@@ -261,7 +261,7 @@ export function ReviewSession({
                       : `Reviewed ${current.review_count} ${current.review_count === 1 ? "time" : "times"}${current.last_reviewed_at ? `, last ${relativeDay(current.last_reviewed_at, nowIso).toLowerCase()}` : ""}`}
                   </span>
                 </div>
-                <div className="bg-card/85 ring-border/80 mt-4 rounded-[1.5rem] p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.45)] ring-1 backdrop-blur min-[360px]:p-5 sm:p-7">
+                <div className="bg-card/85 ring-border/80 mt-4 rounded-[1.5rem] p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.45)] ring-1 min-[360px]:p-5 sm:p-7">
                   <RecallCard
                     concept={current}
                     nowIso={nowIso}

@@ -22,7 +22,6 @@ import {
   RotateCcw,
   ScanText,
   ShieldCheck,
-  Sparkles,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -48,6 +47,7 @@ import {
   understoodKinds,
 } from "./capture-chrome";
 import { CaptureCard } from "./capture-review-card";
+import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 type Account = { id: string; name: string; account_type: string };
 type Category = { id: string; name: string; category_type: string };
@@ -94,7 +94,7 @@ function CaptureSteps({ stage }: { stage: (typeof steps)[number]["key"] }) {
   return (
     <ol
       aria-label="Capture progress"
-      className="bg-card/60 ring-border/70 flex items-center gap-1 rounded-full p-1 ring-1 backdrop-blur sm:gap-1.5"
+      className="bg-card/60 ring-border/70 flex items-center gap-1 rounded-full p-1 ring-1 sm:gap-1.5"
     >
       {steps.map(({ key, label, icon: Icon }, index) => {
         const done = index < current;
@@ -370,37 +370,21 @@ export function CaptureBatchWorkspace({
         <form
           action={action}
           aria-label="Capture"
-          data-spotlight
           className={cn(
             glassCardClass,
             "bg-card isolate overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:rounded-[2rem]",
           )}
         >
-          <div
-            aria-hidden="true"
-            className="from-primary/12 pointer-events-none absolute inset-x-0 top-0 -z-10 h-56 bg-gradient-to-b to-transparent"
-          />
-          <div
-            aria-hidden="true"
-            className="bg-primary/20 pointer-events-none absolute -top-40 -right-24 -z-10 size-96 rounded-full blur-3xl"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -bottom-40 -left-24 -z-10 size-80 rounded-full bg-violet-400/10 blur-3xl"
-          />
-          <div
-            aria-hidden="true"
-            className="via-primary/70 pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
-          />
+          <HeroBackdrop />
 
           <div className="space-y-5 p-4 min-[360px]:p-5 sm:p-7">
             <div className="flex flex-col gap-4 @lg:flex-row @lg:items-start @lg:justify-between">
               <div className="flex min-w-0 items-start gap-3.5">
                 <span
                   aria-hidden="true"
-                  className="from-primary via-primary/70 relative grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br to-violet-500/80 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_12px_28px_-12px_color-mix(in_srgb,var(--primary)_90%,transparent)]"
+                  className="bg-primary/12 text-primary ring-primary/20 relative grid size-11 shrink-0 place-items-center rounded-2xl ring-1"
                 >
-                  <Sparkles className="size-[1.15rem]" />
+                  <PenLine className="size-[1.15rem]" />
                 </span>
                 <div className="min-w-0">
                   <p className={eyebrowClass}>01 · Describe</p>
@@ -637,7 +621,7 @@ export function CaptureBatchWorkspace({
                       {[ImageIcon, FileText, AudioLines].map((Icon, i) => (
                         <span
                           key={i}
-                          className="bg-card text-primary ring-border/80 grid size-9 place-items-center rounded-xl ring-1 transition-transform group-hover:-translate-y-0.5 motion-reduce:transition-none"
+                          className="bg-card text-primary ring-border/80 grid size-9 place-items-center rounded-xl ring-1 transition-transform motion-reduce:transition-none"
                           style={{ transitionDelay: `${i * 40}ms` }}
                         >
                           <Icon className="size-4" />
@@ -719,7 +703,7 @@ export function CaptureBatchWorkspace({
                 pendingLabel="Interpreting…"
                 className="rounded-2xl"
               >
-                <Sparkles aria-hidden="true" className="size-4" />
+                <ScanText aria-hidden="true" className="size-4" />
                 Preview actions
               </Button>
             </div>
@@ -750,7 +734,6 @@ export function CaptureBatchWorkspace({
             className="scroll-mt-6 space-y-4"
           >
             <div
-              data-spotlight
               className={cn(
                 glassCardClass,
                 "overflow-hidden p-4 min-[360px]:p-5 sm:p-6",
@@ -868,7 +851,6 @@ export function CaptureBatchWorkspace({
       >
         <section
           aria-labelledby="capture-understands"
-          data-spotlight
           className={cn(glassCardClass, "p-4 min-[360px]:p-5")}
         >
           <p className={eyebrowClass}>Guide</p>
@@ -913,7 +895,6 @@ export function CaptureBatchWorkspace({
 
         <section
           aria-labelledby="capture-manual"
-          data-spotlight
           className={cn(glassCardClass, "p-4 min-[360px]:p-5")}
         >
           <p className={eyebrowClass}>Prefer a form?</p>

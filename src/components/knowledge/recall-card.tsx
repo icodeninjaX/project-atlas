@@ -331,7 +331,7 @@ export function RecallCard({
                 name="outcome"
                 value={outcome}
                 className={cn(
-                  "group bg-background/60 ring-border/80 focus-visible:ring-ring relative flex min-h-16 min-w-0 flex-col items-start justify-center overflow-hidden rounded-2xl px-3 py-2.5 text-left ring-1 transition-[background-color,box-shadow,transform] focus-visible:ring-2 focus-visible:outline-none enabled:hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-45 motion-reduce:transition-none",
+                  "group bg-background/60 ring-border/80 focus-visible:ring-ring relative flex min-h-16 min-w-0 flex-col items-start justify-center overflow-hidden rounded-2xl px-3 py-2.5 text-left ring-1 transition-[background-color,box-shadow,transform] focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45 motion-reduce:transition-none",
                   "enabled:hover:bg-card enabled:hover:shadow-[0_10px_24px_-16px_rgb(7_10_15/0.6)]",
                   large && "min-h-[4.5rem]",
                 )}

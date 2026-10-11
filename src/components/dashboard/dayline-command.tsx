@@ -24,6 +24,7 @@ import {
 import { formatTaskMinutes } from "@/lib/tasks/task-view";
 import { cn } from "@/lib/utils";
 import styles from "./today.module.css";
+import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 export type DashboardDaylineItem = {
   id: string;
@@ -203,12 +204,7 @@ function DayLoad({
               strokeDasharray={RING_CIRCUMFERENCE}
               strokeDashoffset={arcOffset}
               stroke={over ? undefined : "url(#dayline-load-arc)"}
-              className={cn(
-                styles.draw,
-                over
-                  ? "stroke-destructive"
-                  : "drop-shadow-[0_0_6px_color-mix(in_srgb,var(--primary)_45%,transparent)]",
-              )}
+              className={cn(styles.draw, over && "stroke-destructive")}
               style={{ "--ring-from": RING_CIRCUMFERENCE } as CSSProperties}
             />
           ) : null}
@@ -297,8 +293,6 @@ function RouteBar({
               styles.fill,
               "h-full min-w-1.5 rounded-full",
               stopTone[index] ?? stopTone[2],
-              index === 0 &&
-                "shadow-[0_0_14px_-2px_color-mix(in_srgb,var(--primary)_70%,transparent)]",
             )}
             style={{
               flexGrow: item.durationMinutes ?? 0,
@@ -373,10 +367,9 @@ function RouteStops({
           <li key={`${item.kind}-${item.id}`} className="min-w-0">
             <Link
               href={item.href as Route}
-              data-spotlight
               className={cn(
                 surfaceClass,
-                "bg-card/85 focus-visible:ring-ring group relative grid min-h-28 grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05)] transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgb(7_10_15/0.55)] focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-5 @max-[18rem]:p-3",
+                "bg-card/85 focus-visible:ring-ring group relative grid min-h-28 grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05)] transition-[box-shadow,transform] hover:shadow-[0_18px_36px_-22px_rgb(7_10_15/0.55)] focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none sm:p-5 @max-[18rem]:p-3",
               )}
             >
               <span className="min-w-0">
@@ -446,29 +439,10 @@ export function DaylineCommand({
       className={cn(
         styles.edge,
         styles.grain,
-        "bg-card/80 @container relative isolate overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] backdrop-blur-xl sm:rounded-[2rem]",
+        "bg-card/80 @container relative isolate overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:rounded-[2rem]",
       )}
     >
-      <div
-        aria-hidden="true"
-        className="from-primary/16 pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b to-transparent"
-      />
-      <div
-        aria-hidden="true"
-        className="bg-primary/20 pointer-events-none absolute -top-36 -right-24 -z-10 size-96 rounded-full blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-32 -left-24 -z-10 size-80 rounded-full bg-sky-400/10 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="atlas-grid pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 [mask-image:radial-gradient(70%_100%_at_100%_0%,black,transparent)] opacity-45"
-      />
-      <div
-        aria-hidden="true"
-        className="via-primary/70 pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
-      />
+      <HeroBackdrop />
 
       <header className="relative flex items-start justify-between gap-3 px-4 pt-4 min-[360px]:px-5 min-[360px]:pt-5 sm:px-7 sm:pt-7">
         <div className="flex min-w-0 items-center gap-3">
@@ -490,7 +464,7 @@ export function DaylineCommand({
         <Link
           href="/settings"
           aria-label="Tune Dayline planning"
-          className="text-muted-foreground hover:text-foreground hover:bg-background/60 focus-visible:ring-ring ring-border bg-background/30 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-full text-xs font-medium ring-1 backdrop-blur transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 sm:px-3.5"
+          className="text-muted-foreground hover:text-foreground hover:bg-background/60 focus-visible:ring-ring ring-border bg-background/30 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-full text-xs font-medium ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 sm:px-3.5"
         >
           <SlidersHorizontal aria-hidden="true" className="size-3.5" />
           <span className="max-sm:sr-only">Tune</span>
@@ -571,7 +545,7 @@ export function DaylineCommand({
                 aria-hidden="true"
                 className="ring-primary/25 absolute inset-6 rounded-full ring-1"
               />
-              <span className="bg-primary/12 text-primary relative grid size-10 place-items-center rounded-full shadow-[0_0_30px_-4px_color-mix(in_srgb,var(--primary)_60%,transparent)]">
+              <span className="bg-primary/12 text-primary relative grid size-10 place-items-center rounded-full">
                 <Target aria-hidden="true" className="size-5" />
               </span>
             </span>

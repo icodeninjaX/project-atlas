@@ -330,8 +330,6 @@ function FocusTimer({
             className="pointer-events-none absolute inset-0 overflow-hidden"
           >
             <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-500/20 blur-3xl" />
-            <div className="absolute right-[-8rem] bottom-[-8rem] h-80 w-80 rounded-full bg-violet-500/15 blur-3xl" />
-            <div className="atlas-grid absolute inset-0 opacity-20" />
           </div>
 
           <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 pt-[max(0.875rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-3 pl-[max(1rem,env(safe-area-inset-left))] sm:p-6">

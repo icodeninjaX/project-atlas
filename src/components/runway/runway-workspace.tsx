@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { SpotlightArea } from "@/components/dashboard/spotlight-area";
 import { RunwayAssumptionsSheet } from "@/components/runway/runway-assumptions-sheet";
 import {
   MonthlyNeedCard,
@@ -44,7 +43,7 @@ export function RunwayWorkspace({
   const edit = () => setEditing(true);
 
   return (
-    <SpotlightArea>
+    <div>
       {analysis.status === "ready" ? (
         <>
           <RunwayHero
@@ -78,6 +77,6 @@ export function RunwayWorkspace({
         analysis={analysis}
         now={now}
       />
-    </SpotlightArea>
+    </div>
   );
 }

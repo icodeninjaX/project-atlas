@@ -16,7 +16,6 @@
     var(--primary) 32%,
     var(--border)
   ) !important;
-  border-inline-start: 3px solid var(--primary) !important;
   color: var(--card-foreground) !important;
   background:
     linear-gradient(

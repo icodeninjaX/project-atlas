@@ -89,7 +89,7 @@ function ArchiveHero({
       </div>
 
       <p className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="from-foreground via-foreground to-foreground/55 bg-gradient-to-br bg-clip-text pb-[0.06em] text-[clamp(3rem,15vw,4.5rem)] leading-[0.95] font-semibold tracking-[-0.06em] text-transparent">
+        <span className="text-foreground text-[clamp(3rem,15vw,4.5rem)] leading-[0.95] font-semibold tracking-[-0.045em]">
           {summary.weeks}
         </span>
         <span className="text-muted-foreground text-lg font-medium tracking-[-0.02em] sm:text-xl">
@@ -271,7 +271,7 @@ function JournalPage({
         </div>
       ) : (
         <p className="text-muted-foreground px-5 py-6 text-sm sm:px-8">
-          No written notes this week—only what the scores hold.
+          No written notes this week, only what the scores hold.
         </p>
       )}
 
@@ -497,7 +497,7 @@ export function ReviewArchive({
           title="How your weeks felt"
           meta="Tap a week to open it"
         >
-          <div data-spotlight className={cn(glassCardClass, "p-4 sm:p-6")}>
+          <div className={cn(glassCardClass, "p-4 sm:p-6")}>
             <ul
               aria-label="Chart legend"
               className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs"

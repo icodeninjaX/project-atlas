@@ -309,7 +309,6 @@ function PlanCard({
   return (
     <section
       aria-labelledby="decision-summary"
-      data-spotlight
       className={cn(decisionCardClass, "mt-4 sm:mt-5")}
     >
       <div className="flex min-w-0 items-center gap-3">
@@ -463,7 +462,7 @@ function Observations({
         </p>
       </div>
 
-      <div data-spotlight className={cn(decisionCardClass, "mt-4")}>
+      <div className={cn(decisionCardClass, "mt-4")}>
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
