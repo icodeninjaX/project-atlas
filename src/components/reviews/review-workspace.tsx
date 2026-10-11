@@ -58,6 +58,9 @@ export function ReviewWorkspace({
       reviews[0]?.id ??
       null,
   );
+  // Phones open a week's page in place of the list; a link to one week
+  // (`?highlight=`, or the compass) opens straight to its page.
+  const [reading, setReading] = useState(Boolean(highlightReviewId));
   const tabs = useRef<Record<ReviewView, HTMLButtonElement | null>>({
     current: null,
     archive: null,
@@ -73,6 +76,7 @@ export function ReviewWorkspace({
   const showReview = useCallback(
     (reviewId: string) => {
       setSelectedId(reviewId);
+      setReading(true);
       selectView("archive");
       tabs.current.archive?.focus({ preventScroll: true });
       const reduceMotion = window.matchMedia?.(
@@ -174,6 +178,8 @@ export function ReviewWorkspace({
             active={view === "archive"}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            reading={reading}
+            onReadingChange={setReading}
             streak={streak}
           />
         ) : null}

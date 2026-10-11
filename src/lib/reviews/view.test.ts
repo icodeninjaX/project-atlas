@@ -107,6 +107,7 @@ describe("review week", () => {
       label: "Draft saved",
       sentence:
         "A draft is waiting, with 3 of 7 prompts written. The week closes on Sunday, in 2 days.",
+      action: "Continue your review",
     });
     expect(
       thisWeekStatus({

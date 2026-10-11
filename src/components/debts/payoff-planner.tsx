@@ -4,7 +4,7 @@ import { ArrowDown, ArrowRight, ArrowUp, X } from "lucide-react";
 import Link from "next/link";
 import { Fragment, useId, type ReactNode } from "react";
 import { DebtSection, debtSurfaceClass } from "@/components/debts/debt-section";
-import { Disclosure } from "@/components/debts/debt-disclosure";
+import { Disclosure } from "@/components/shared/disclosure";
 import { PayoffCurve, type CurveSeries } from "@/components/debts/payoff-curve";
 import { MoneyAmount } from "@/components/money/money-amount";
 import { PesoInput } from "@/components/money/money-fields";

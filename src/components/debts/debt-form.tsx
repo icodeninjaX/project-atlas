@@ -8,7 +8,7 @@ import { MoneyAmount } from "@/components/money/money-amount";
 import { PesoInput } from "@/components/money/money-fields";
 import { RelatedGoalField } from "@/components/graph/related-goal-field";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
-import { Disclosure } from "@/components/debts/debt-disclosure";
+import { Disclosure } from "@/components/shared/disclosure";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { DebtActionState } from "@/lib/debts/actions";

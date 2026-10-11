@@ -8,6 +8,8 @@ const action = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/reviews/insight-actions", () => ({
   setWeeklyInsightAutoAction: action,
 }));
+const openThisWeek = (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(screen.getByRole("button", { name: /Check this week so far/ }));
 const thisWeekConsent = () =>
   screen.getByRole("checkbox", { name: /These weekly totals/ });
 
@@ -53,6 +55,7 @@ describe("Weekly insight card", () => {
         <WeeklyInsightCard />
       </PrivacyProvider>,
     );
+    await openThisWeek(user);
     const button = screen.getByRole("button", { name: "Generate insight" });
     expect(button).toBeDisabled();
     await user.click(thisWeekConsent());
@@ -82,6 +85,7 @@ describe("Weekly insight card", () => {
       ),
     );
     render(<WeeklyInsightCard />);
+    await openThisWeek(user);
     await user.click(thisWeekConsent());
     await user.click(screen.getByRole("button", { name: "Generate insight" }));
     expect(
@@ -170,8 +174,32 @@ describe("Weekly insight card", () => {
     );
     expect(action).toHaveBeenCalledWith(true);
     expect(await screen.findByText("Not enough records.")).toBeVisible();
+    expect(screen.getByText("Prepared automatically each week.")).toBeVisible();
     expect(JSON.parse(fetch.mock.calls[0]![1].body)).toEqual({
       mode: "previous",
     });
+  });
+  it("turns the automatic insight off without asking for consent again", async () => {
+    const user = userEvent.setup();
+    action.mockResolvedValue({ success: true, message: "Off" });
+    vi.stubGlobal("fetch", vi.fn());
+    render(
+      <WeeklyInsightCard
+        autoEnabled
+        lastWeek={{
+          status: "fallback",
+          message: "Not enough records.",
+          evidence: [],
+          limitations: [],
+        }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Turn off" }));
+    expect(action).toHaveBeenCalledWith(false);
+    expect(
+      await screen.findByRole("checkbox", {
+        name: /Prepare last week’s insight automatically/,
+      }),
+    ).not.toBeChecked();
   });
 });
