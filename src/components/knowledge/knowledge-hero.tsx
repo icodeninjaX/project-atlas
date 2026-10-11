@@ -37,8 +37,7 @@ import {
 import { cn } from "@/lib/utils";
 import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
-const eyebrowClass =
-  "text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase";
+const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
 function StatusPill({
   tone,
@@ -374,7 +373,7 @@ export function KnowledgeHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="knowledge-queue-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-primary text-[13px] font-semibold"
         >
           Review queue
         </h2>
@@ -495,7 +494,7 @@ export function KnowledgeEmptyHero({ onAdd }: { onAdd: () => void }) {
     <HeroShell>
       <h2
         id="knowledge-queue-heading"
-        className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+        className="text-primary text-[13px] font-semibold"
       >
         Review queue
       </h2>

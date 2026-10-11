@@ -282,7 +282,7 @@ function CapturePreview({
       className="border-primary/30 bg-card space-y-5 rounded-2xl border p-4 sm:p-6"
     >
       <div>
-        <p className="text-primary text-xs font-semibold tracking-wide uppercase">
+        <p className="text-primary text-[13px] font-semibold">
           Preview · {proposal.kind.replaceAll("_", " ")}
         </p>
         <h2 className="mt-1 text-lg font-semibold">

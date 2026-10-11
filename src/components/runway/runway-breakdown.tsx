@@ -362,7 +362,7 @@ export function RunwayFundsCard({
 
       {leftOut.length > 0 ? (
         <>
-          <p className="text-muted-foreground mt-4 text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
+          <p className="text-muted-foreground mt-4 text-xs font-semibold">
             Not counted
           </p>
           <ul className="mt-1">

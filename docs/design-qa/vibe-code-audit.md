@@ -51,14 +51,14 @@ the reason. **Clear** = ATLAS never had it.
 
 ### Typography
 
-| Tell                       | ATLAS before                                                     | Status                                                                                             |
-| -------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Pill badge above the H1    | Every page opened with an uppercase, letter-spaced, blurred pill | **Fixed**: a quiet label, with icon in brand blue and sentence-case text. Same content, same place |
-| Crushed letter spacing     | Titles at −0.05em, hero figures at −0.06em                       | **Fixed**: loosened to −0.035em and −0.045em                                                       |
-| All-caps micro labels      | Many 11px tracked labels inside cards ("Where they stand")       | **Kept**: a deliberate data-dense convention. See follow-ups                                       |
-| Inter / Geist default font | Geist                                                            | **Kept**: it is the brand face, and Settings already offers 20+ alternatives                       |
-| Monospace for "tech vibes" | `font-mono` renders the UI face with tabular numerals            | **Clear**: no terminal look                                                                        |
-| Serif italic accent word   | Landing hero ("Choose what moves.")                              | **Kept**: a documented landing brand choice; the app itself never does this                        |
+| Tell                       | ATLAS before                                                                                  | Status                                                                                                                                                                                                                                    |
+| -------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pill badge above the H1    | Every page opened with an uppercase, letter-spaced, blurred pill                              | **Fixed**: a quiet label, with icon in brand blue and sentence-case text. Same content, same place                                                                                                                                        |
+| Crushed letter spacing     | Titles at −0.05em, hero figures at −0.06em                                                    | **Fixed**: loosened to −0.035em and −0.045em                                                                                                                                                                                              |
+| All-caps micro labels      | 84 tracked uppercase section labels and eyebrows across the app ("WHERE THEY STAND", "PULSE") | **Fixed**: sentence case, one size step up so they keep their weight. **Kept** for data annotations: month and weekday abbreviations on date tiles, radar axis labels, sticky table column headers, and the printed label on wallet cards |
+| Inter / Geist default font | Geist                                                                                         | **Kept**: it is the brand face, and Settings already offers 20+ alternatives                                                                                                                                                              |
+| Monospace for "tech vibes" | `font-mono` renders the UI face with tabular numerals                                         | **Clear**: no terminal look                                                                                                                                                                                                               |
+| Serif italic accent word   | Landing hero ("Choose what moves.")                                                           | **Kept**: a documented landing brand choice; the app itself never does this                                                                                                                                                               |
 
 ### Iconography
 
@@ -94,17 +94,17 @@ the reason. **Clear** = ATLAS never had it.
 | Leftover AI-tool folders in the repo   | `.codex-audits/`, `.codex-remote-attachments/`, `.superdesign/`, root screenshots | **Kept**: not shipped to users. Worth tidying if the repo goes public |
 | Missing a11y / mobile breakage         | Axe checks, 44px targets, safe areas                                              | **Clear**                                                             |
 
-## Follow-ups worth considering
+## Follow-ups (done in a second pass)
 
-- **All-caps micro labels.** About 100 small tracked uppercase labels remain.
-  They read as intentional in a data-dense app, but converting the section
-  labels (not table headers or stat labels) to sentence case would remove the
-  last widely cited type tell.
-- **Landing stat row** ("Systems 5 · Daily route 1 · Spreadsheets 0"). It's a
-  stat banner with symbolic numbers. It works as a rhetorical beat, but it
-  matches the "stat banner row" pattern.
-- **Company monogram gradients** in Career use violet/fuchsia pairs per
-  company. A solid tint per company would be quieter.
+- **All-caps labels.** Section labels and eyebrows are sentence case. See the
+  typography table for the data annotations that keep their caps.
+- **Landing stat row** ("Systems 5 · Daily route 1 · Spreadsheets 0").
+  Removed. The numbers were symbolic, and the paragraph above already makes
+  the point.
+- **Company monograms** in Career. The glossy gradient pairs (including
+  violet → purple and fuchsia → violet) are now the app's tinted tile: a soft
+  wash with initials in the same hue. There are still eight hues, so each
+  company keeps a stable color, with no violet or fuchsia.
 
 ## Evidence
 
@@ -114,3 +114,10 @@ right.
 ![Signals heading and hero, desktop](vibe-code-audit/01-signals-desktop-before-after.jpg)
 ![Signals heading and hero, 390px](vibe-code-audit/02-signals-390-before-after.jpg)
 ![Landing hero](vibe-code-audit/03-landing-before-after.jpg)
+
+Second pass: section labels before (top) and after, company marks in dark and
+light, and the landing "problem" chapter without the stat row.
+
+![Section labels](vibe-code-audit/04-section-labels-before-after.jpg)
+![Company marks](vibe-code-audit/05-company-marks-dark-light.jpg)
+![Landing problem chapter](vibe-code-audit/06-landing-fracture-after.jpg)

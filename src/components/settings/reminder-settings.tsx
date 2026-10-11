@@ -234,7 +234,7 @@ export function ReminderSettings({
         <SettingsGroup title="Quiet hours" icon={Clock3} titleIsLegend>
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <label className="bg-background/55 ring-border/80 focus-within:ring-ring block rounded-2xl p-3 ring-1 focus-within:ring-2 sm:p-3.5">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
                 <Moon aria-hidden="true" className="size-3.5" />
                 Starts
               </span>
@@ -247,7 +247,7 @@ export function ReminderSettings({
               />
             </label>
             <label className="bg-background/55 ring-border/80 focus-within:ring-ring block rounded-2xl p-3 ring-1 focus-within:ring-2 sm:p-3.5">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
                 <Sunrise aria-hidden="true" className="size-3.5" />
                 Ends
               </span>

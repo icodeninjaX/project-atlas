@@ -110,7 +110,7 @@ export default async function SearchPage({
               <section key={group} aria-labelledby={`group-${group}`}>
                 <h2
                   id={`group-${group}`}
-                  className="text-muted-foreground mb-3 text-xs font-semibold tracking-wider uppercase"
+                  className="text-muted-foreground mb-3 text-[13px] font-semibold"
                 >
                   {group} <span className="font-mono">· {items.length}</span>
                 </h2>

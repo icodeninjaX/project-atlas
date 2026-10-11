@@ -26,9 +26,7 @@ export function GoalRelatedSummary({
       aria-label="Related items"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-muted-foreground text-[11px] font-semibold tracking-[0.12em] uppercase">
-          Related
-        </h3>
+        <h3 className="text-muted-foreground text-xs font-semibold">Related</h3>
         <Link
           href={`/goals/${goalId}`}
           className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs font-semibold hover:underline focus-visible:ring-2 sm:min-h-9"

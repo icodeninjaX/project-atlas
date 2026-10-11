@@ -311,20 +311,6 @@ export default function LandingPage() {
                   in March. Every part works alone, so nothing tells you what
                   matters today.
                 </p>
-                <dl data-reveal className="landing-stats">
-                  <div>
-                    <dt>Systems</dt>
-                    <dd>5</dd>
-                  </div>
-                  <div>
-                    <dt>Daily route</dt>
-                    <dd>1</dd>
-                  </div>
-                  <div>
-                    <dt>Spreadsheets</dt>
-                    <dd>0</dd>
-                  </div>
-                </dl>
               </div>
             </div>
           </div>

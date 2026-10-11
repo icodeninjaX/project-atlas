@@ -17,8 +17,7 @@ import type {
 import { cn } from "@/lib/utils";
 import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
-const eyebrowClass =
-  "text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase";
+const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
 const shortDay = new Intl.DateTimeFormat("en-PH", {
   timeZone: "UTC",
@@ -404,7 +403,7 @@ export function TimelineHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="timeline-summary-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-primary text-[13px] font-semibold"
         >
           In view
         </h2>
@@ -473,7 +472,7 @@ export function TimelineEmptyHero() {
     <HeroShell>
       <h2
         id="timeline-summary-heading"
-        className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+        className="text-primary text-[13px] font-semibold"
       >
         Your story
       </h2>

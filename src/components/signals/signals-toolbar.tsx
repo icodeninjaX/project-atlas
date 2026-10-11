@@ -22,7 +22,7 @@ const stripClass =
 
 /** Names each strip from `sm`; phones rely on the strips' own names. */
 const rowLabelClass =
-  "text-muted-foreground pl-2 text-[0.6875rem] font-semibold tracking-[0.12em] uppercase max-sm:hidden";
+  "text-muted-foreground pl-2 text-xs font-semibold max-sm:hidden";
 
 const pillClass =
   "focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:min-h-8 sm:px-3";

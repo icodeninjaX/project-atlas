@@ -213,7 +213,7 @@ function TimelineEventRow({
         <div className="min-w-0">
           <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-0.5">
             <div className="min-w-0 flex-1 basis-40">
-              <p className="flex flex-wrap items-center gap-x-2 text-[0.6875rem] leading-5 font-semibold tracking-[0.06em] uppercase">
+              <p className="flex flex-wrap items-center gap-x-2 text-xs leading-5 font-semibold">
                 <span className={tone.text}>
                   {timelineKindLabel(event.eventType)}
                 </span>

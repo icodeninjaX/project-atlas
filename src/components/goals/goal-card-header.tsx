@@ -64,7 +64,7 @@ function GoalAreaBadge({ area }: { area: string }) {
   return (
     <span
       aria-label={`Goal category: ${areaLabel}`}
-      className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] uppercase ${goalAreaBadgeStyles[area] ?? fallbackGoalAreaBadgeStyle}`}
+      className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${goalAreaBadgeStyles[area] ?? fallbackGoalAreaBadgeStyle}`}
     >
       {areaLabel}
     </span>

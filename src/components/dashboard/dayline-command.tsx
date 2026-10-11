@@ -231,9 +231,7 @@ function DayLoad({
         </p>
       </div>
       <div className="min-w-0 flex-[1_1_9rem] lg:flex-none">
-        <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.12em] uppercase">
-          Day load
-        </p>
+        <p className="text-muted-foreground text-xs font-semibold">Day load</p>
         <p className="mt-1 text-sm leading-5 font-semibold break-words">
           {label}
         </p>
@@ -450,9 +448,7 @@ export function DaylineCommand({
             <RouteIcon aria-hidden="true" className="size-[1.125rem]" />
           </span>
           <div className="min-w-0">
-            <p className="text-primary text-[11px] font-semibold tracking-[0.14em] uppercase">
-              Dayline
-            </p>
+            <p className="text-primary text-xs font-semibold">Dayline</p>
             <h2
               id="dayline-title"
               className="mt-0.5 text-base font-semibold tracking-[-0.02em] break-words sm:text-lg"
@@ -562,7 +558,7 @@ export function DaylineCommand({
       {current && (later.length > 0 || schedule) ? (
         <div className="border-border/70 bg-background/35 relative border-t px-4 pt-5 pb-5 min-[360px]:px-5 sm:px-7 sm:pb-7">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.12em] uppercase">
+            <p className="text-muted-foreground text-xs font-semibold">
               {schedule && now
                 ? `Your route from ${formatManilaTime(now)}`
                 : "Then on your route"}

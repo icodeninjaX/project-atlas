@@ -103,7 +103,7 @@ export function RunwayHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="runway-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-primary text-[13px] font-semibold"
         >
           Estimated runway
         </h2>
@@ -320,7 +320,7 @@ export function RunwaySetupHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="runway-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-primary text-[13px] font-semibold"
         >
           Estimated runway
         </h2>

@@ -53,7 +53,7 @@ function Strip({
     >
       <p
         aria-hidden="true"
-        className="text-muted-foreground px-1 text-[0.6875rem] font-semibold tracking-[0.12em] uppercase sm:px-0"
+        className="text-muted-foreground px-1 text-xs font-semibold sm:px-0"
       >
         {label}
       </p>

@@ -51,9 +51,7 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
           <BriefcaseBusiness aria-hidden="true" className="size-[1.125rem]" />
         </span>
         <div className="min-w-0">
-          <p className="text-primary text-[11px] font-semibold tracking-[0.14em] uppercase">
-            Next best action
-          </p>
+          <p className="text-primary text-xs font-semibold">Next best action</p>
           <h2
             id="next-best-action-title"
             className="mt-0.5 text-lg font-semibold tracking-[-0.02em]"

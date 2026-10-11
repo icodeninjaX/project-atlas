@@ -29,8 +29,7 @@ type Result = {
   intervalDays: number | null;
 };
 
-const eyebrowClass =
-  "text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase";
+const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
 function Summary({
   results,

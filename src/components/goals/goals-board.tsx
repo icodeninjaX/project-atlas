@@ -59,7 +59,7 @@ function SummaryStat({
 }) {
   return (
     <div className="border-border/70 bg-card/80 min-w-0 rounded-2xl border p-3 sm:p-4">
-      <dt className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.12em] uppercase sm:text-[11px]">
+      <dt className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold sm:text-xs">
         <Icon className="text-primary size-3.5 shrink-0" aria-hidden="true" />
         <span className="truncate">{label}</span>
       </dt>

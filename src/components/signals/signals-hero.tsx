@@ -19,8 +19,7 @@ import { SignalRadar } from "./signal-radar";
 import { categoryTone, severityTones } from "./signal-tone";
 import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
-const eyebrowClass =
-  "text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase";
+const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
 const tileClass =
   "bg-background/55 ring-border/80 min-w-0 rounded-2xl p-3.5 ring-1 min-[360px]:p-4";
@@ -76,7 +75,7 @@ function HeroHeading({
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h2
         id="signals-summary-heading"
-        className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+        className="text-primary text-[13px] font-semibold"
       >
         Pulse
       </h2>

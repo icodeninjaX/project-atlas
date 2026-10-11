@@ -491,9 +491,7 @@ export function TransactionForm({
     >
       {full ? (
         <div className="border-border bg-background/60 hidden rounded-2xl border p-4 lg:block">
-          <p className="text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
-            Preview
-          </p>
+          <p className="text-muted-foreground text-xs font-semibold">Preview</p>
           <div className="mt-3 flex min-w-0 items-center gap-3">
             <CategoryBadge
               icon={category?.icon}

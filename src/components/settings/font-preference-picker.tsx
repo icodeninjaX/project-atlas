@@ -144,7 +144,7 @@ export function FontPreferencePicker() {
           >
             Aa
           </span>
-          <p className="text-primary text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
+          <p className="text-primary text-xs font-semibold">
             {selected.category}
           </p>
           <p className="relative mt-2 text-xl leading-7 font-semibold tracking-[-0.02em] text-balance">

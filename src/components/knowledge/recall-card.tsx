@@ -27,8 +27,7 @@ import { cn } from "@/lib/utils";
 
 const initialState: KnowledgeActionState = { success: false, message: "" };
 
-const eyebrowClass =
-  "text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase";
+const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
 function isTextField(target: EventTarget | null) {
   return (

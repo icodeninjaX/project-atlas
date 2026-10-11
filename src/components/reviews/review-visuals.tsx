@@ -14,8 +14,7 @@ import type { PromptKey, StatusTone } from "@/lib/reviews/view";
 import { cn } from "@/lib/utils";
 import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
-export const eyebrowClass =
-  "text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase";
+export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
 /** Every prompt's icon, question, and its title when read back. */
 export const promptMeta: Record<

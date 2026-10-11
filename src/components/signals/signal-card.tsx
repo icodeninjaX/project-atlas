@@ -286,7 +286,7 @@ export function SignalCard({ signal }: { signal: Signal }) {
           <AreaIcon className="size-[1.125rem]" />
         </span>
         <div className="min-w-0 self-center">
-          <p className="flex flex-wrap items-center gap-x-2 text-[0.6875rem] leading-5 font-semibold tracking-[0.08em] uppercase">
+          <p className="flex flex-wrap items-center gap-x-2 text-xs leading-5 font-semibold">
             <span className="text-muted-foreground">{signal.category}</span>
             <span
               aria-hidden="true"

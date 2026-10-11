@@ -48,9 +48,7 @@ export function MoneySheet({
           <header className="flex shrink-0 items-start justify-between gap-3 px-5 pt-3 pb-4 sm:px-6 sm:pt-6">
             <div className="min-w-0">
               {eyebrow ? (
-                <p className="text-primary text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
-                  {eyebrow}
-                </p>
+                <p className="text-primary text-xs font-semibold">{eyebrow}</p>
               ) : null}
               <Dialog.Title className="mt-1 text-xl font-semibold tracking-[-0.025em] break-words">
                 {title}

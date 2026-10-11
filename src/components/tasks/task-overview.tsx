@@ -155,7 +155,7 @@ export function TaskOverview({
           <div className="min-w-0">
             <h2
               id="today-plan-title"
-              className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+              className="text-primary text-[13px] font-semibold"
             >
               Today’s plan
             </h2>

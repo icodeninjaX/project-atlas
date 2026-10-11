@@ -148,8 +148,7 @@ function sortApplications(
 const toolbarControlClass =
   "bg-background/70 ring-border/80 hover:bg-background focus-visible:ring-ring min-h-11 rounded-full text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-10";
 
-const legendClass =
-  "text-muted-foreground text-[10px] font-semibold tracking-[0.12em] uppercase";
+const legendClass = "text-muted-foreground text-[11px] font-semibold";
 
 function ApplicationCard({
   application,
@@ -289,7 +288,7 @@ function ApplicationCard({
         >
           <p
             className={cn(
-              "text-[10px] font-semibold tracking-[0.14em] uppercase",
+              "text-[11px] font-semibold",
               overdue
                 ? "text-red-700 dark:text-red-300"
                 : "text-muted-foreground",

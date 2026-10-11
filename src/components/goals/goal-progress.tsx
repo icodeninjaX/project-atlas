@@ -91,7 +91,7 @@ export function GoalProgress({
         </span>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+        <p className="text-muted-foreground text-[11px] font-semibold">
           Progress
         </p>
         <p className="text-foreground mt-1 text-[13px] leading-5 font-medium">

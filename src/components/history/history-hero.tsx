@@ -294,7 +294,7 @@ export function HistoryHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="history-window-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-primary text-[13px] font-semibold"
         >
           In this window
         </h2>
@@ -346,7 +346,7 @@ export function HistoryEmptyHero() {
     <HeroShell labelledBy="history-window-heading">
       <h2
         id="history-window-heading"
-        className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+        className="text-primary text-[13px] font-semibold"
       >
         Your history
       </h2>

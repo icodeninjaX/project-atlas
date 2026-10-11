@@ -9,8 +9,7 @@ import type { DecisionReview } from "@/lib/decisions/view";
 import { cn } from "@/lib/utils";
 import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
-export const eyebrowClass =
-  "text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase";
+export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
 /** The glass tile used inside heroes and cards. */
 export const tileClass =

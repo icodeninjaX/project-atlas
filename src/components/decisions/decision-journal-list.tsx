@@ -141,7 +141,7 @@ export function DecisionJournalList({
               <section key={month.month} aria-labelledby={headingId}>
                 <h3
                   id={headingId}
-                  className="text-muted-foreground px-1 text-[0.6875rem] font-semibold tracking-[0.12em] uppercase"
+                  className="text-muted-foreground px-1 text-xs font-semibold"
                 >
                   {monthHeading.format(new Date(`${month.month}-01T12:00:00Z`))}
                 </h3>

@@ -272,7 +272,7 @@ export function ModelPicker({
                   <header className="flex items-center gap-2 px-3 pt-3 pb-1.5">
                     <p
                       id={`model-pool-${group.pool}`}
-                      className="text-muted-foreground text-[11px] font-semibold tracking-[0.1em] uppercase"
+                      className="text-muted-foreground text-xs font-semibold"
                     >
                       {group.title}
                     </p>

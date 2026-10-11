@@ -47,7 +47,7 @@ export const AmountField = forwardRef<
     <div className="text-center">
       <label
         htmlFor={id}
-        className="text-muted-foreground text-xs font-semibold tracking-[0.1em] uppercase"
+        className="text-muted-foreground text-[13px] font-semibold"
       >
         {label}
       </label>

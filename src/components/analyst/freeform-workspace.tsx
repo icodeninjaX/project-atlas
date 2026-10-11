@@ -392,7 +392,7 @@ function AnswerBody({ turn }: { turn: Turn }) {
               />
               <p
                 className={cn(
-                  "flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.1em] uppercase",
+                  "flex items-center gap-1.5 text-xs font-semibold",
                   claim.kind === "suggestion"
                     ? "text-violet-700 dark:text-violet-300"
                     : "text-primary",
@@ -429,7 +429,7 @@ function AnswerBody({ turn }: { turn: Turn }) {
                 >
                   <h3
                     className={cn(
-                      "text-xs font-semibold tracking-[0.1em] uppercase",
+                      "text-[13px] font-semibold",
                       group.label === "Current"
                         ? "text-muted-foreground"
                         : "text-primary",
@@ -1235,7 +1235,7 @@ export function FreeformWorkspace({
                         <span className="min-w-0 flex-1">
                           <span
                             aria-hidden="true"
-                            className="text-muted-foreground block text-[10px] font-semibold tracking-[0.12em] uppercase"
+                            className="text-muted-foreground block text-[11px] font-semibold"
                           >
                             {area}
                           </span>
