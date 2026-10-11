@@ -1,4 +1,3 @@
-import { WalletCards } from "lucide-react";
 import type { BudgetMonthData } from "@/components/money/budget-editor";
 import { BudgetWorkspace } from "@/components/money/budget-workspace";
 import { MoneyNavigation } from "@/components/money/money-navigation";
@@ -94,7 +93,6 @@ export default async function BudgetPage({
   return (
     <PageShell>
       <PageHeading
-        icon={WalletCards}
         eyebrow={`Money / Budget / ${formatCalendarMonth(month)}`}
         title="Monthly plan"
         description="What you mean to spend in each category, against what you actually record. Overspending is always named in text."

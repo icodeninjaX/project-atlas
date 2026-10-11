@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import {
   AccountLogo,
-  AccountTypeIcon,
   walletStyle,
   type AccountIdentity,
 } from "@/components/money/account-visuals";
@@ -47,20 +46,12 @@ export function WalletCard({
       className={cn(
         "atlas-wallet-card relative isolate flex min-w-0 flex-col overflow-hidden text-white",
         large
-          ? "min-h-48 rounded-[1.5rem] p-5 sm:min-h-52 sm:p-6"
-          : "min-h-36 rounded-[1.25rem] p-4 sm:min-h-44",
+          ? "min-h-48 rounded-2xl p-5 sm:min-h-52 sm:p-6"
+          : "min-h-36 rounded-xl p-4 sm:min-h-44",
         className,
       )}
       style={walletStyle(account)}
     >
-      <AccountTypeIcon
-        accountType={account.account_type}
-        className={cn(
-          "pointer-events-none absolute rotate-[-10deg] opacity-[0.08]",
-          large ? "-right-5 -bottom-7 size-40" : "-right-4 -bottom-5 size-28",
-        )}
-        aria-hidden="true"
-      />
       <span className="flex min-w-0 items-start gap-3">
         <AccountLogo account={account} size="md" onCard />
         <span className="min-w-0 flex-1 pt-0.5">
@@ -81,12 +72,12 @@ export function WalletCard({
       </span>{" "}
       <span className="mt-auto flex min-w-0 items-end justify-between gap-3 pt-5 sm:pt-6">
         <span className="min-w-0">
-          <span className="block text-[0.6875rem] font-semibold tracking-[0.14em] text-white/85 uppercase">
+          <span className="block text-xs font-medium text-white/80">
             {balanceLabel}
           </span>{" "}
           <span
             className={cn(
-              "mt-1 block min-w-0 font-mono leading-none font-semibold tracking-[-0.035em] [overflow-wrap:anywhere]",
+              "mt-1 block min-w-0 font-mono leading-none font-semibold tracking-[-0.02em] [overflow-wrap:anywhere]",
               large ? "text-[2rem] sm:text-[2.25rem]" : "text-[1.375rem]",
             )}
           >

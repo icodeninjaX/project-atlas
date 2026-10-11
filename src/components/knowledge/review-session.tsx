@@ -3,7 +3,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { CheckCircle2, SkipForward, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import todayStyles from "@/components/dashboard/today.module.css";
 import styles from "@/components/knowledge/knowledge.module.css";
 import { outcomeTones } from "@/components/knowledge/knowledge-tone";
 import { RecallCard } from "@/components/knowledge/recall-card";
@@ -198,12 +197,8 @@ export function ReviewSession({
         <Dialog.Content
           aria-describedby={undefined}
           onOpenAutoFocus={(event) => event.preventDefault()}
-          className="bg-background sm:ring-border fixed inset-0 isolate z-50 flex flex-col overflow-hidden outline-none sm:inset-4 sm:rounded-[1.75rem] sm:shadow-[0_40px_120px_-40px_rgb(7_10_15/0.8)] sm:ring-1 lg:inset-y-8 lg:left-1/2 lg:w-[min(56rem,calc(100vw-4rem))] lg:-translate-x-1/2"
+          className="bg-background sm:ring-border fixed inset-0 isolate z-50 flex flex-col overflow-hidden outline-none sm:inset-4 sm:shadow-[0_40px_120px_-40px_rgb(7_10_15/0.8)] sm:ring-1 lg:inset-y-8 lg:left-1/2 lg:w-[min(56rem,calc(100vw-4rem))] lg:-translate-x-1/2"
         >
-          <div
-            aria-hidden="true"
-            className={cn(todayStyles.aurora, todayStyles.grain, "opacity-80")}
-          />
           <header className="border-border/70 bg-background/70 relative z-10 shrink-0 border-b px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 backdrop-blur-xl sm:px-6 sm:pt-4">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -260,7 +255,7 @@ export function ReviewSession({
                       : `Reviewed ${current.review_count} ${current.review_count === 1 ? "time" : "times"}${current.last_reviewed_at ? `, last ${relativeDay(current.last_reviewed_at, nowIso).toLowerCase()}` : ""}`}
                   </span>
                 </div>
-                <div className="bg-card/85 ring-border/80 mt-4 rounded-[1.5rem] p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.45)] ring-1 min-[360px]:p-5 sm:p-7">
+                <div className="bg-card/85 ring-border/80 mt-4 rounded-2xl p-4 shadow-[0_1px_2px_rgb(7_10_15/0.04)] ring-1 min-[360px]:p-5 sm:p-7">
                   <RecallCard
                     concept={current}
                     nowIso={nowIso}

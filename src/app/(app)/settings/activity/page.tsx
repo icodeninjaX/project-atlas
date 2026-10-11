@@ -110,8 +110,7 @@ export default async function ActivityPage({
   return (
     <PageShell>
       <PageHeading
-        icon={History}
-        eyebrow="Audit trail"
+        eyebrow="Settings / Activity"
         title="Activity history"
         description="A concise record of meaningful changes. Full record payloads, passwords, and secrets are never stored here."
         actions={
@@ -232,7 +231,7 @@ export default async function ActivityPage({
         {activity.length === 0 ? (
           <div className="border-border grid min-h-64 place-items-center rounded-2xl border border-dashed p-6 text-center">
             <div className="max-w-sm">
-              <span className="bg-primary/10 text-primary mx-auto grid size-12 place-items-center rounded-2xl">
+              <span className="bg-muted/60 text-foreground/75 mx-auto grid size-12 place-items-center rounded-lg">
                 <History className="size-5" />
               </span>
               <p className="mt-4 text-sm font-semibold">
@@ -262,7 +261,7 @@ export default async function ActivityPage({
               <li key={item.id}>
                 <Card>
                   <CardContent className="flex items-start gap-3 p-3.5 sm:items-center sm:p-4">
-                    <span className="bg-primary/10 text-primary grid size-9 shrink-0 place-items-center rounded-xl">
+                    <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg">
                       <CheckCircle2 className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">

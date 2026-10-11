@@ -204,7 +204,7 @@ export function CaptureWorkspace({
         />
       )}
 
-      <div className="border-border bg-muted/30 rounded-2xl border p-4 sm:p-6">
+      <div className="bg-muted/30 rounded-xl p-4 sm:p-6">
         <h2 className="text-sm font-semibold">Use a manual form</h2>
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
           <Link
@@ -282,7 +282,7 @@ function CapturePreview({
       className="border-primary/30 bg-card space-y-5 rounded-2xl border p-4 sm:p-6"
     >
       <div>
-        <p className="text-primary text-[0.8125rem] font-semibold">
+        <p className="text-muted-foreground text-[0.8125rem] font-medium">
           Preview · {proposal.kind.replaceAll("_", " ")}
         </p>
         <h2 className="mt-1 text-lg font-semibold">
@@ -293,7 +293,7 @@ function CapturePreview({
         </p>
       </div>
       {proposal.warnings.length > 0 && (
-        <div className="border-border bg-muted/50 rounded-xl border p-3 text-sm">
+        <div className="bg-muted/50 rounded-xl p-3 text-sm">
           <p className="font-medium">Needs your attention</p>
           <ul className="mt-1 list-disc space-y-1 pl-5">
             {proposal.warnings.map((warning) => (

@@ -421,7 +421,6 @@ export function ReviewForm({
           number={3}
           title="Choose next week’s focus"
           note="Pick one thing to steer by. It greets you here next week."
-          className="from-primary/[0.06] bg-gradient-to-b to-transparent"
         >
           <Prompt
             name="nextWeekFocus"

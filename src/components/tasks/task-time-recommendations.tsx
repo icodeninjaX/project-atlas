@@ -57,13 +57,13 @@ export function TaskTimeRecommendations({
   return (
     <div
       className={cn(
-        "border-primary/25 bg-card overflow-hidden rounded-2xl border shadow-[0_12px_32px_-24px_rgba(40,103,232,0.7)]",
+        "border-primary/25 bg-card overflow-hidden rounded-2xl border",
         className,
       )}
     >
       <div className="bg-primary/[0.06] border-primary/15 flex items-start justify-between gap-3 border-b px-3.5 py-3 sm:px-4">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="bg-primary/12 text-primary grid size-9 shrink-0 place-items-center rounded-xl">
+          <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg">
             <CalendarClock className="size-[18px]" aria-hidden="true" />
           </span>
           <div className="min-w-0">

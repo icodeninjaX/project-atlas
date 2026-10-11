@@ -37,7 +37,7 @@ export function FormSection({
       <legend className="float-left flex w-full items-center gap-3">
         <span
           aria-hidden="true"
-          className="bg-primary/10 text-primary ring-primary/15 grid size-8 shrink-0 place-items-center rounded-lg ring-1"
+          className="bg-muted/60 text-foreground/75 grid size-8 shrink-0 place-items-center rounded-lg"
         >
           <Icon className="size-4" />
         </span>

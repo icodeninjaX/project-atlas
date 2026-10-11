@@ -204,7 +204,7 @@ export function PayoffPlanner({
             <p className="text-muted-foreground text-xs">Debt-free by</p>
             <p
               className={cn(
-                "mt-1 leading-none font-semibold tracking-[-0.045em]",
+                "mt-1 leading-none font-semibold tracking-[-0.025em]",
                 paidOff
                   ? "text-[clamp(2rem,9vw,2.75rem)]"
                   : "text-destructive text-2xl",

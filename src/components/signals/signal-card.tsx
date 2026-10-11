@@ -39,7 +39,7 @@ export function MaybeSensitive({
 }
 
 const panelClass =
-  "bg-background/55 ring-border/80 @container min-w-0 rounded-2xl p-3.5 ring-1 sm:p-4";
+  "bg-background/55 @container min-w-0 rounded-xl p-3.5 sm:p-4";
 
 const valueClass =
   "font-mono font-semibold tracking-[-0.02em] tabular-nums [overflow-wrap:anywhere]";
@@ -238,7 +238,7 @@ export function SignalCard({ signal }: { signal: Signal }) {
       aria-labelledby={`${anchor}-title`}
       className={cn(
         surfaceClass,
-        "bg-card/90 target:ring-primary/45 @container relative isolate min-w-0 scroll-mt-24 overflow-hidden rounded-[1.5rem] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] target:ring-2",
+        "bg-card/90 target:ring-primary/45 @container relative isolate min-w-0 scroll-mt-24 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] target:ring-2",
       )}
     >
       {urgent ? (

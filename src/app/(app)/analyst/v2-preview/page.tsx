@@ -1,4 +1,3 @@
-import { ChartNoAxesCombined } from "lucide-react";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { AnswerV2View } from "@/components/analyst/answer-v2";
@@ -25,7 +24,6 @@ export default async function AnalystV2PreviewPage() {
   return (
     <PageShell>
       <PageHeading
-        icon={ChartNoAxesCombined}
         eyebrow="Internal preview"
         title="Analyst V2 answers"
         description="Synthetic fixture answers checked by the versioned claim ledger. Nothing here reads your records or calls a model."

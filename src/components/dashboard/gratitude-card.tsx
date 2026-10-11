@@ -82,17 +82,21 @@ export function GratitudeCard({
         compact
           ? cn(
               styles.edge,
-              "text-foreground border-0 bg-[#edf2fa] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] dark:bg-[#0f1726] dark:text-white",
+              "text-foreground bg-card border-0 shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
             )
           : "border-[#9a795f]/80 bg-[#172236] text-white",
         className,
       )}
-      style={{
-        backgroundImage: 'url("/gratitude/atlas-gratitude-card-surface.webp")',
-        backgroundPosition: "center",
-        backgroundSize: "cover",
-        backgroundBlendMode: compact ? "soft-light" : undefined,
-      }}
+      style={
+        compact
+          ? undefined
+          : {
+              backgroundImage:
+                'url("/gratitude/atlas-gratitude-card-surface.webp")',
+              backgroundPosition: "center",
+              backgroundSize: "cover",
+            }
+      }
     >
       <CardContent
         className={`relative flex h-full flex-col justify-between ${
@@ -101,10 +105,10 @@ export function GratitudeCard({
             : "min-h-44 p-4 sm:min-h-52 sm:p-6 lg:min-h-56 lg:p-7"
         }`}
       >
-        <div className={compact ? "pr-12" : "pr-16 sm:pr-20 lg:pr-24"}>
+        <div className={compact ? undefined : "pr-16 sm:pr-20 lg:pr-24"}>
           <p
             className={`text-xs font-semibold ${
-              compact ? "text-primary dark:text-[#a9c5ff]" : "text-[#a9c5ff]"
+              compact ? "text-muted-foreground font-medium" : "text-[#a9c5ff]"
             }`}
           >
             <span>Daily reflection</span>
@@ -118,7 +122,7 @@ export function GratitudeCard({
             <p
               className={`max-w-xl font-serif ${
                 compact
-                  ? "text-foreground text-lg leading-7 sm:text-xl sm:leading-8 lg:text-2xl lg:leading-[1.4] dark:text-[#eef3fa]"
+                  ? "text-foreground text-lg leading-7 sm:text-xl sm:leading-8"
                   : "text-lg leading-6 text-[#f8fafc] sm:text-2xl sm:leading-[1.45] lg:text-[1.75rem] lg:leading-[1.35]"
               }`}
             >
@@ -126,9 +130,7 @@ export function GratitudeCard({
             </p>
             <footer
               className={`text-xs font-medium sm:text-sm ${compact ? "mt-3" : "mt-2"} ${
-                compact
-                  ? "text-muted-foreground dark:text-[#dce6f5]"
-                  : "text-[#dce6f5]"
+                compact ? "text-muted-foreground" : "text-[#dce6f5]"
               }`}
             >
               — {quote.author}
@@ -136,34 +138,19 @@ export function GratitudeCard({
           </blockquote>
         </div>
 
-        <p
-          className={`mt-4 text-xs leading-5 sm:mt-5 ${
-            compact
-              ? "text-muted-foreground dark:text-[#aab6c8]"
-              : "text-[#aab6c8]"
-          }`}
-        >
-          New on refresh · Changes hourly · {quote.collectionSize} famous quotes
-        </p>
-
-        {compact ? (
-          <span
-            aria-hidden="true"
-            className="text-primary/10 pointer-events-none absolute right-5 -bottom-10 font-serif text-[10rem] leading-none select-none dark:text-white/[0.04]"
-          >
-            ”
-          </span>
-        ) : null}
-
-        <Sunrise
-          aria-hidden="true"
-          className={`absolute ${
-            compact
-              ? "text-primary/70 top-5 right-5 size-7 opacity-60 dark:text-[#dce6f5]/85"
-              : "top-5 right-5 size-11 text-[#dce6f5]/85 sm:top-6 sm:right-6 sm:size-14 lg:top-1/2 lg:right-7 lg:size-16 lg:-translate-y-1/2"
-          }`}
-          strokeWidth={1.25}
-        />
+        {compact ? null : (
+          <>
+            <p className="mt-4 text-xs leading-5 text-[#aab6c8] sm:mt-5">
+              New on refresh · Changes hourly · {quote.collectionSize} famous
+              quotes
+            </p>
+            <Sunrise
+              aria-hidden="true"
+              className="absolute top-5 right-5 size-11 text-[#dce6f5]/85 sm:top-6 sm:right-6 sm:size-14 lg:top-1/2 lg:right-7 lg:size-16 lg:-translate-y-1/2"
+              strokeWidth={1.25}
+            />
+          </>
+        )}
       </CardContent>
     </Card>
   );

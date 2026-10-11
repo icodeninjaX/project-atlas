@@ -1,7 +1,7 @@
 import { FreeformWorkspace } from "@/components/analyst/freeform-workspace";
 import { IntelligenceWorkspace } from "@/components/analyst/intelligence-workspace";
 import { connection } from "next/server";
-import { ChartNoAxesCombined, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
 import { preferredRoute } from "@/lib/analyst/intelligence/policy";
 import { createClient } from "@/lib/supabase/server";
@@ -36,8 +36,6 @@ export default async function AnalystPage() {
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Answers from your records"
-        icon={ChartNoAxesCombined}
         title="ATLAS Analyst"
         description="Ask about your records in plain words. ATLAS calculates the facts, and every figure in an answer is checked against its sources."
         aside={

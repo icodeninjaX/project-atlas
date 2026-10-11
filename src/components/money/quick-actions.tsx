@@ -14,7 +14,7 @@ function Disc({ icon: Icon, primary }: { icon: LucideIcon; primary: boolean }) {
       className={cn(
         "grid size-12 place-items-center rounded-full transition-transform duration-150 group-active:scale-95 motion-reduce:transition-none",
         primary
-          ? "bg-primary-solid text-primary-solid-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_8px_20px_-8px_color-mix(in_srgb,var(--primary-solid)_70%,transparent)]"
+          ? "bg-primary-solid text-primary-solid-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.14)]"
           : "border-border bg-secondary text-foreground border shadow-[inset_0_1px_0_rgb(255_255_255/0.05)]",
       )}
     >

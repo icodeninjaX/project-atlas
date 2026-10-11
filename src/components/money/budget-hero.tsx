@@ -297,7 +297,7 @@ export function BudgetHero({
   return (
     <section
       aria-labelledby="budget-month"
-      className="border-primary/20 bg-card relative mt-8 overflow-hidden rounded-[1.75rem] border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
+      className="border-primary/20 bg-card relative mt-8 overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
     >
       <div
         aria-hidden="true"
@@ -333,7 +333,7 @@ export function BudgetHero({
               </div>
               <p
                 className={cn(
-                  "mt-1.5 min-w-0 font-mono text-[clamp(2.375rem,11vw,3.5rem)] leading-none font-semibold tracking-[-0.045em] [overflow-wrap:anywhere]",
+                  "mt-1.5 min-w-0 font-mono text-[clamp(2.25rem,9vw,3rem)] leading-none font-semibold tracking-[-0.03em] [overflow-wrap:anywhere]",
                   over && "text-destructive",
                 )}
               >

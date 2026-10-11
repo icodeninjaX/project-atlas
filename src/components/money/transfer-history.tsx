@@ -41,7 +41,7 @@ export function TransferHistory({
     return (
       <div className="border-border bg-card/40 mt-3 grid min-h-48 place-items-center rounded-2xl border border-dashed p-6 text-center">
         <div className="max-w-sm">
-          <span className="border-primary/20 bg-primary/10 text-primary mx-auto grid size-11 place-items-center rounded-xl border">
+          <span className="border-border bg-muted/60 text-foreground/75 mx-auto grid size-9 place-items-center rounded-lg border">
             <ArrowLeftRight className="size-5" aria-hidden="true" />
           </span>
           <p className="mt-4 text-base font-semibold">No transfers yet</p>

@@ -7,13 +7,11 @@ import {
 } from "@/components/decisions/decision-tone";
 import type { DecisionReview } from "@/lib/decisions/view";
 import { cn } from "@/lib/utils";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
 /** The glass tile used inside heroes and cards. */
-export const tileClass =
-  "bg-background/55 ring-border/80 min-w-0 rounded-2xl ring-1";
+export const tileClass = "bg-background/55 min-w-0 rounded-xl";
 
 const monthShort = new Intl.DateTimeFormat("en-PH", {
   timeZone: "UTC",
@@ -97,7 +95,7 @@ export function DateLeaf({
       >
         {monthShort.format(date)}
       </span>
-      <span className="font-mono text-lg leading-6 font-semibold tracking-[-0.04em]">
+      <span className="font-mono text-lg leading-6 font-semibold tracking-[-0.025em]">
         {date.getUTCDate()}
       </span>
     </span>
@@ -119,11 +117,10 @@ export function DecisionHeroShell({
       aria-labelledby={labelledBy}
       className={cn(
         surfaceClass,
-        "bg-card @container relative isolate mt-6 overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:mt-8 sm:rounded-[2rem]",
+        "bg-card @container relative isolate mt-6 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
         className,
       )}
     >
-      <HeroBackdrop />
       <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
     </section>
   );
@@ -132,5 +129,5 @@ export function DecisionHeroShell({
 /** A secondary card on a decision page. */
 export const decisionCardClass = cn(
   surfaceClass,
-  "bg-card/90 @container relative min-w-0 rounded-[1.5rem] p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] min-[360px]:p-5 sm:p-6",
+  "bg-card/90 @container relative min-w-0 rounded-2xl p-4 shadow-[0_1px_2px_rgb(7_10_15/0.04)] min-[360px]:p-5 sm:p-6",
 );

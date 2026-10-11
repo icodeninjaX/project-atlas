@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
-import todayStyles from "@/components/dashboard/today.module.css";
 import { cn } from "@/lib/utils";
 
 /**
- * The frame every app page sits in: one width, one gutter, and the same
- * soft light behind the title, so the title never jumps between pages.
+ * The frame every app page sits in: one width and one gutter, so the
+ * title never jumps between pages.
  */
 export function PageShell({
   children,
@@ -20,10 +19,6 @@ export function PageShell({
         className,
       )}
     >
-      <div
-        aria-hidden="true"
-        className={cn(todayStyles.aurora, todayStyles.grain)}
-      />
       {children}
     </div>
   );

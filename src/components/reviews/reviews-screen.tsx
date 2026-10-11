@@ -1,4 +1,3 @@
-import { NotebookPen } from "lucide-react";
 import { ReviewForm } from "@/components/reviews/review-form";
 import { ReviewWorkspace } from "@/components/reviews/review-workspace";
 import { WeekHero, type WeekFacts } from "@/components/reviews/week-hero";
@@ -80,7 +79,6 @@ export function ReviewsScreen({
     <PageShell>
       <PageHeading
         eyebrow="Monday–Sunday"
-        icon={NotebookPen}
         title="Weekly reviews"
         description="Each week gets a factual summary of what happened, then a few prompts to decide what changes next."
       />

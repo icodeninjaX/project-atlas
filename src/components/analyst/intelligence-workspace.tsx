@@ -402,7 +402,7 @@ export function IntelligenceWorkspace({
 
   if (!consent)
     return (
-      <section className="border-border bg-background/40 flex min-w-0 flex-col gap-3 rounded-2xl border p-4 text-sm">
+      <section className="bg-background/40 flex min-w-0 flex-col gap-3 rounded-xl p-4 text-sm">
         <p className="flex items-center gap-2 font-semibold">
           <ShieldCheck aria-hidden="true" className="size-4" /> Choose what
           Analyst may share

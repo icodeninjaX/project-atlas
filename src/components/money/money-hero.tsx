@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import { cn } from "@/lib/utils";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 export type HeroTone = "positive" | "caution" | "destructive" | "neutral";
 
@@ -38,7 +37,7 @@ export function TonePill({
   );
 }
 
-/** The lead surface of a money page, lit warm when something is wrong. */
+/** The lead surface of a money page, outlined red when something is wrong. */
 export function MoneyHeroShell({
   labelledBy,
   tone,
@@ -55,11 +54,11 @@ export function MoneyHeroShell({
       aria-labelledby={labelledBy}
       className={cn(
         surfaceClass,
-        "bg-card @container relative isolate mt-8 overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:rounded-[2rem]",
+        "bg-card @container relative isolate mt-8 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
+        tone === "destructive" && "ring-destructive/35 ring-1",
         className,
       )}
     >
-      <HeroBackdrop warm={tone === "destructive"} />
       <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
     </section>
   );
@@ -78,7 +77,7 @@ export function HeroStat({
   tone?: "positive" | "destructive";
 }) {
   return (
-    <div className="sm:bg-background/55 sm:ring-border/80 min-w-0 sm:rounded-2xl sm:p-4 sm:ring-1">
+    <div className="sm:bg-background/55 min-w-0 sm:rounded-xl sm:p-4">
       <dt className="text-muted-foreground text-xs font-medium">{label}</dt>
       <dd
         className={cn(

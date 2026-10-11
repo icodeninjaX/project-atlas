@@ -44,26 +44,24 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
   return (
     <section
       aria-labelledby="next-best-action-title"
-      className={cn(dashboardCardClass, "mt-5 sm:p-7")}
+      className={cn(dashboardCardClass, "mt-5")}
     >
-      <div className="flex min-w-0 items-start gap-3">
-        <span className="bg-primary/10 text-primary ring-primary/15 grid size-10 shrink-0 place-items-center rounded-xl ring-1">
-          <BriefcaseBusiness aria-hidden="true" className="size-[1.125rem]" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-primary text-xs font-semibold">Next best action</p>
-          <h2
-            id="next-best-action-title"
-            className="mt-0.5 text-lg font-semibold tracking-[-0.02em]"
-          >
-            Turn a follow-up into a task
-          </h2>
-          <p className="text-muted-foreground mt-1.5 text-sm leading-6">
-            {visible.length === 1
-              ? "This follow-up is on today’s route but isn’t a task yet. Add it to Tasks to track it, or dismiss it."
-              : "These follow-ups are on today’s route but aren’t tasks yet. Add one to Tasks to track it, or dismiss it."}
-          </p>
-        </div>
+      <div className="min-w-0">
+        <h2
+          id="next-best-action-title"
+          className="flex items-center gap-2 text-[0.9375rem] font-semibold tracking-[-0.01em]"
+        >
+          <BriefcaseBusiness
+            aria-hidden="true"
+            className="text-muted-foreground size-4 shrink-0"
+          />
+          Turn a follow-up into a task
+        </h2>
+        <p className="text-muted-foreground mt-0.5 text-xs leading-5">
+          {visible.length === 1
+            ? "This follow-up is on today’s route but isn’t a task yet. Add it to Tasks to track it, or dismiss it."
+            : "These follow-ups are on today’s route but aren’t tasks yet. Add one to Tasks to track it, or dismiss it."}
+        </p>
       </div>
       {message && (
         <p role="status" className="mt-4 text-sm">
@@ -80,7 +78,7 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
                 · {action.sourceLabel} follow-up
               </span>
             </p>
-            <h3 className="mt-2 text-lg font-semibold break-words">
+            <h3 className="mt-1.5 text-base font-semibold break-words">
               {action.title}
             </h3>
             {action.relatedGoals.length > 0 && (

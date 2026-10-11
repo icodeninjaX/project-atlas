@@ -1,4 +1,3 @@
-import { Landmark } from "lucide-react";
 import { DebtsWorkspace } from "@/components/debts/debts-workspace";
 import { MoneyNavigation } from "@/components/money/money-navigation";
 import { PageHeading } from "@/components/shared/page-heading";
@@ -54,7 +53,6 @@ export default async function DebtsPage({
   return (
     <PageShell>
       <PageHeading
-        icon={Landmark}
         eyebrow="Money / Debts"
         title="Debt payoff"
         description="What you owe, what it costs each month, and the order that clears it soonest."

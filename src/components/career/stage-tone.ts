@@ -1,10 +1,13 @@
 import { isCareerStage, type CareerStage } from "@/lib/career/view";
 
 /**
- * Each stage's color. `dot` fills markers and track segments; `soft`,
- * `text`, and `ring` tint chips. Outlines use `ring-*` because the
- * unlayered `* { border-color }` rule in globals.css overrides `border-*`
- * colors. Text shades keep 4.5:1 on the card in both themes.
+ * Each stage's color. Stages are ordered, so the open ones share one blue
+ * that deepens as an application moves forward; offers are green,
+ * rejections rose, and everything idle stays neutral. `dot` fills markers
+ * and track segments; `soft`, `text`, and `ring` tint chips. Outlines use
+ * `ring-*` because the unlayered `* { border-color }` rule in globals.css
+ * overrides `border-*` colors. Text shades keep 4.5:1 on the card in both
+ * themes.
  */
 export const stageTones: Record<
   CareerStage,
@@ -17,34 +20,34 @@ export const stageTones: Record<
     ring: "ring-slate-500/25",
   },
   preparing: {
-    dot: "bg-violet-500",
-    soft: "bg-violet-500/10",
-    text: "text-violet-700 dark:text-violet-300",
-    ring: "ring-violet-500/25",
+    dot: "bg-slate-500",
+    soft: "bg-slate-500/10",
+    text: "text-slate-700 dark:text-slate-200",
+    ring: "ring-slate-500/30",
   },
   applied: {
-    dot: "bg-blue-500",
+    dot: "bg-blue-300",
     soft: "bg-blue-500/10",
     text: "text-blue-700 dark:text-blue-300",
     ring: "ring-blue-500/25",
   },
   assessment: {
-    dot: "bg-amber-500",
-    soft: "bg-amber-500/10",
-    text: "text-amber-700 dark:text-amber-300",
-    ring: "ring-amber-500/25",
+    dot: "bg-blue-400",
+    soft: "bg-blue-500/10",
+    text: "text-blue-700 dark:text-blue-300",
+    ring: "ring-blue-500/25",
   },
   interview: {
-    dot: "bg-cyan-500",
-    soft: "bg-cyan-500/10",
-    text: "text-cyan-700 dark:text-cyan-300",
-    ring: "ring-cyan-500/25",
+    dot: "bg-blue-500",
+    soft: "bg-blue-500/12",
+    text: "text-blue-700 dark:text-blue-300",
+    ring: "ring-blue-500/30",
   },
   final_interview: {
-    dot: "bg-indigo-500",
-    soft: "bg-indigo-500/10",
-    text: "text-indigo-700 dark:text-indigo-300",
-    ring: "ring-indigo-500/25",
+    dot: "bg-blue-600",
+    soft: "bg-blue-500/15",
+    text: "text-blue-800 dark:text-blue-200",
+    ring: "ring-blue-500/35",
   },
   offer: {
     dot: "bg-emerald-500",
@@ -53,7 +56,7 @@ export const stageTones: Record<
     ring: "ring-emerald-500/25",
   },
   accepted: {
-    dot: "bg-green-500",
+    dot: "bg-green-600",
     soft: "bg-green-500/10",
     text: "text-green-700 dark:text-green-300",
     ring: "ring-green-500/25",

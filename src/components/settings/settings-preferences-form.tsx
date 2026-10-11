@@ -129,7 +129,7 @@ export function SettingsPreferencesForm({
               return (
                 <label
                   key={strategy.value}
-                  className="group bg-background/55 ring-border/80 hover:ring-primary/35 has-[:checked]:bg-primary/[0.07] has-[:checked]:ring-primary/60 has-[:focus-visible]:ring-ring relative flex min-h-28 cursor-pointer flex-col rounded-2xl p-3.5 ring-1 transition-[background-color,box-shadow] has-[:checked]:shadow-[0_10px_30px_-18px_color-mix(in_srgb,var(--primary)_80%,transparent)] has-[:focus-visible]:ring-2"
+                  className="group bg-background/55 ring-border/80 hover:ring-primary/35 has-[:checked]:bg-primary/[0.07] has-[:checked]:ring-primary/60 has-[:focus-visible]:ring-ring has-[:checked] relative flex min-h-28 cursor-pointer flex-col rounded-2xl p-3.5 ring-1 transition-[background-color,box-shadow] has-[:focus-visible]:ring-2"
                 >
                   <input
                     type="radio"

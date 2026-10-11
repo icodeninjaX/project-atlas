@@ -104,7 +104,7 @@ export function SettingsSectionNav({
           variant === "strip" && "min-h-10 rounded-full px-3.5 ring-1",
           variant === "strip" &&
             (current
-              ? "bg-primary-solid text-primary-solid-foreground ring-primary-solid shadow-[0_4px_14px_-6px_color-mix(in_srgb,var(--primary-solid)_70%,transparent)]"
+              ? "bg-primary-solid text-primary-solid-foreground ring-primary-solid"
               : "bg-card/70 text-muted-foreground ring-border/80 hover:text-foreground hover:bg-card"),
           variant === "sidebar" && "min-h-10 w-full rounded-xl px-2.5",
           variant === "sidebar" &&

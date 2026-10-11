@@ -151,14 +151,14 @@ export function ReminderSettings({
 
   return (
     <form action={formAction} className="space-y-7">
-      <div className="bg-background/55 ring-border/80 relative overflow-hidden rounded-2xl p-4 ring-1 sm:p-5">
+      <div className="bg-background/55 relative overflow-hidden rounded-xl p-4 sm:p-5">
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
             <span
               aria-hidden="true"
               className={
                 preferences.remindersEnabled
-                  ? "bg-primary-solid text-primary-solid-foreground grid size-10 shrink-0 place-items-center rounded-2xl shadow-[0_6px_18px_-8px_color-mix(in_srgb,var(--primary-solid)_80%,transparent)]"
+                  ? "bg-primary-solid text-primary-solid-foreground grid size-10 shrink-0 place-items-center rounded-2xl"
                   : "bg-muted text-muted-foreground grid size-10 shrink-0 place-items-center rounded-2xl"
               }
             >

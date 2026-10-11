@@ -250,7 +250,7 @@ export function TaskList({
                 {groupSummary(group.tasks)}
               </p>
             </div>
-            <ul className="border-border bg-card divide-border mt-2 divide-y rounded-2xl border shadow-[0_1px_2px_rgb(7_10_15/0.04),0_16px_40px_-28px_rgb(7_10_15/0.35)]">
+            <ul className="border-border bg-card divide-border mt-2 divide-y rounded-2xl border shadow-[0_1px_2px_rgb(7_10_15/0.04)]">
               {group.tasks.map((task) => (
                 <TaskRow
                   key={task.id}

@@ -29,8 +29,6 @@ function signalCount(count: number) {
 function Header({ checkedAt }: { checkedAt: string | null }) {
   return (
     <PageHeading
-      eyebrow="Changes and risks"
-      icon={Radar}
       title="Signals"
       description="Meaningful changes, risks, deadlines, and improvements detected from your ATLAS records. Every signal shows the facts behind it."
       aside={
@@ -128,7 +126,7 @@ function SignalFeed({
 
 function NoMatches() {
   return (
-    <div className="bg-card/60 mt-8 grid min-h-64 place-items-center rounded-[1.5rem] border border-dashed p-6 text-center">
+    <div className="bg-card/60 mt-8 grid min-h-64 place-items-center rounded-2xl border border-dashed p-6 text-center">
       <div className="max-w-sm">
         <span className="bg-muted/70 ring-border/80 text-muted-foreground mx-auto grid size-11 place-items-center rounded-2xl ring-1">
           <SearchX aria-hidden="true" className="size-5" />
@@ -154,7 +152,7 @@ function Unavailable() {
       aria-labelledby="signals-unavailable"
       className={cn(
         surfaceClass,
-        "bg-card/90 relative mt-6 grid min-h-64 place-items-center rounded-[1.75rem] p-6 text-center shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] sm:mt-8",
+        "bg-card/90 relative mt-6 grid min-h-64 place-items-center rounded-2xl p-6 text-center shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
       )}
     >
       <div className="max-w-sm">

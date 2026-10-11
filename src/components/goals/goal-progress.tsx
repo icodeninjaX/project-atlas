@@ -36,7 +36,7 @@ export function GoalProgress({
         : `${completedMilestones} of ${totalMilestones} milestones completed`;
 
   return (
-    <div className="border-border/60 bg-muted/40 mt-5 flex items-center gap-4 rounded-2xl border p-3.5 sm:gap-5 sm:p-4">
+    <div className="bg-muted/40 mt-5 flex items-center gap-4 rounded-xl p-3.5 sm:gap-5 sm:p-4">
       <div
         role="progressbar"
         aria-label={`Progress for ${goalTitle}`}

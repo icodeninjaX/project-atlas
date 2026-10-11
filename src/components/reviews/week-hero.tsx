@@ -135,7 +135,7 @@ export function WeekHero({
         )}
       >
         <div className="min-w-0">
-          <p className="text-foreground text-[clamp(2.5rem,12vw,4.25rem)] leading-[0.98] font-semibold tracking-[-0.04em]">
+          <p className="text-foreground text-[clamp(2.25rem,9vw,3rem)] leading-[0.98] font-semibold tracking-[-0.025em]">
             <time dateTime={weekStart}>
               {compactReviewWeekLabel(weekStart)}
             </time>

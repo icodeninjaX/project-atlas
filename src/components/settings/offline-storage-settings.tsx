@@ -106,7 +106,7 @@ export function OfflineStorageSettings() {
               className="bg-muted mt-2.5 block h-1.5 overflow-hidden rounded-full"
             >
               <span
-                className="from-primary/70 to-primary block h-full rounded-full bg-gradient-to-r transition-[width] duration-700"
+                className="bg-primary block h-full rounded-full transition-[width] duration-700"
                 style={{
                   width: `${Math.max(usedShare * 100, estimate ? 2 : 0)}%`,
                 }}

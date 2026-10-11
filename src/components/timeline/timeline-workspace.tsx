@@ -298,7 +298,7 @@ function DayHeader({ day, todayIso }: { day: TimelineDay; todayIso: string }) {
         >
           {monthShort.format(date)}
         </span>
-        <span className="font-mono text-lg leading-6 font-semibold tracking-[-0.04em]">
+        <span className="font-mono text-lg leading-6 font-semibold tracking-[-0.025em]">
           {date.getUTCDate()}
         </span>
       </span>
@@ -370,7 +370,7 @@ function MonthSection({
             <ol
               className={cn(
                 surfaceClass,
-                "bg-card/90 relative min-w-0 self-start rounded-[1.5rem] py-1 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)]",
+                "bg-card/90 relative min-w-0 self-start rounded-2xl py-1 shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
               )}
             >
               {day.events.map((event, index) => (
@@ -390,7 +390,7 @@ function MonthSection({
 
 function NoMatches() {
   return (
-    <div className="bg-card/60 mt-8 grid min-h-64 place-items-center rounded-[1.5rem] border border-dashed p-6 text-center">
+    <div className="bg-card/60 mt-8 grid min-h-64 place-items-center rounded-2xl border border-dashed p-6 text-center">
       <div className="max-w-sm">
         <span className="bg-muted/70 ring-border/80 text-muted-foreground mx-auto grid size-11 place-items-center rounded-2xl ring-1">
           <SearchX aria-hidden="true" className="size-5" />

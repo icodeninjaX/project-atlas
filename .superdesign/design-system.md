@@ -20,16 +20,21 @@ Preserve the existing ATLAS identity. The product is calm, precise, restrained, 
 - Light: background `#f4f7fb`, foreground `#111827`, card `#ffffff`, primary `#2867e8`, secondary `#edf2f9`, muted `#e9eef6`, muted foreground `#5f6b7d`, border `#dce3ed`, destructive `#c83a4a`, sidebar `#f9fbfe`.
 - Dark: background `#070a0f`, foreground `#f4f7fb`, card `#0e131c`, primary `#84afff`, secondary `#151d2a`, muted `#182131`, muted foreground `#8d99aa`, border `#202a39`, destructive `#e04f5f`, sidebar `#0a0e15`.
 - Filled primary surfaces that carry text (buttons, active pills, selected segments) use `primary-solid` / `primary-solid-foreground`: `#2867e8` in light and a saturated `#2b66f2` in dark, both with white labels at 4.5:1 or better. `primary` stays the accent for links, rings, tints, and meters.
-- Cards: flat bordered surfaces with 16px radius. Favor grouping, hierarchy, and whitespace over decorative shadows. Primary and secondary buttons carry a subtle top highlight and soft shadow for tactile depth.
+- Cards: flat surfaces with a uniform 1px hairline and 16px radius (`rounded-2xl`); nothing larger. No large or colored shadows on in-page surfaces; elevation shadows belong only to floating layers (menus, popovers, dialogs, sheets). Primary buttons carry only a faint top highlight, never a colored glow.
+- Inside a card, group with tonal wells (`bg-background/55`, 12px radius, no border) rather than nested bordered boxes. Interactive tiles keep a ring so hover and selection read.
+- No decorative light: no glow orbs, auroras, radial washes, film grain, gradient text, gradient hairlines, or cursor spotlights. Gradients are allowed only for data (a chart fill) and for provider-colored account cards.
+- Color is for data and actions. Labels, kickers, and chrome stay neutral; blue marks what you can act on, red what needs attention, green what went well. Ordered scales (career stages, memory strength) use one hue that deepens, with semantic colors only at the ends.
 - Controls: 12px radius, visible focus rings, concise labels, and at least 44×44px mobile targets where practical.
-- Icons: use the exact Lucide icons present in source; each navigation destination has a distinct icon. Do not introduce emoji, alternate icon families, decorative illustrations, or invented brand marks.
+- Icons: use the exact Lucide icons present in source; each navigation destination has a distinct icon. Do not introduce emoji, alternate icon families, decorative illustrations, or invented brand marks. In headings, an icon is a 16px muted glyph beside the title, not a tinted tile. Where a tile helps scanning (rows, starters), use a small neutral square (`bg-muted/60`, 8px radius) and let only the glyph carry color.
 - Brand mark: reproduce the existing code-rendered `AtlasMark` exactly when identity is shown.
 - Copy: direct, humane, factual. Avoid hype, gamification, and unexplained financial predictions.
 
 ## Type and spacing
 
-- Application titles: 30px on mobile, 36px from `sm`, semibold, tight tracking.
-- Section/card titles: 14–16px semibold.
+- Application titles: 24px on mobile, 28px from `sm`, semibold, −0.02em tracking. App pages are tools, not landing pages: no slogan-sized display titles.
+- Page eyebrows only carry information: a trail (`Money / Budget`), a greeting with the date, or a cadence (`Monday–Sunday`). No icon in the eyebrow and no descriptor kickers ("Insight engine").
+- Hero figures: at most 52px (`text-[clamp(2.5rem,10vw,3.25rem)]`); money totals at most 48px. Display tracking no tighter than −0.03em.
+- Section/card titles: 14–16px semibold, sentence case. Small labels above content are muted and sentence case; all caps only for data annotations (month and weekday abbreviations, chart axes, table headers).
 - Default UI/body: 14px with 20–24px leading.
 - Supporting copy: 12px; compact metadata 10–11px.
 - Mobile page gutter: 16px by default; 12px only for dense task rows. Tablet 24px; desktop 32px.
@@ -59,6 +64,10 @@ Preserve the existing ATLAS identity. The product is calm, precise, restrained, 
 
 ## Component patterns
 
+- Navigation tabs (Money sections, Task views): underline tabs with no track, no icons, counts as plain muted numbers (red only for overdue). Segmented filters (All / Expenses / Income, List / Board) may keep a track.
+- Pills are for status only (stage, severity, review state). Dates, amounts, and reasons are plain text, red or amber only when overdue or close.
+- Repeated figures belong in one summary strip (one card, hairline dividers), not a row of identical bordered stat cards.
+- Long lists live in one card with dividers and date sub-headers, not one card per group.
 - `Button`: primary for the dominant action, secondary for peer navigation/actions, ghost for icon-only or low-emphasis actions, destructive only for irreversible removal.
 - `Card`: one concept per surface; mobile padding can reduce from 20px to 16px where density requires it.
 - `PageHeading`: stack text and actions on mobile; actions wrap or become full-width while retaining hierarchy.

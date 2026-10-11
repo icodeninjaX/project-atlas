@@ -194,7 +194,7 @@ function ApplicationCard({
       data-testid={`kanban-card-${application.id}`}
       aria-label={`${application.company_name}, ${application.role_title}`}
       className={cn(
-        "group bg-card relative overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.06),0_14px_30px_-22px_rgb(7_10_15/0.55)] ring-1 transition-[box-shadow,opacity,transform] duration-200 lg:cursor-grab lg:active:cursor-grabbing",
+        "group bg-card relative overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] ring-1 transition-[box-shadow,opacity,transform] duration-200 lg:cursor-grab lg:active:cursor-grabbing",
         overdue
           ? "ring-destructive/30 dark:bg-[color-mix(in_srgb,var(--destructive)_5%,var(--card))]"
           : "ring-border/80 hover:ring-primary/35",
@@ -574,7 +574,7 @@ export function CareerKanban({
       <h2 id="career-board-heading" className="sr-only">
         Pipeline board
       </h2>
-      <div className="bg-card/70 ring-border/80 rounded-[1.5rem] p-2 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_18px_40px_-30px_rgb(7_10_15/0.45)] ring-1">
+      <div className="bg-card/70 ring-border/80 rounded-2xl p-2 shadow-[0_1px_2px_rgb(7_10_15/0.04)] ring-1">
         <div className="flex flex-col gap-2 md:flex-row md:items-center">
           <label className="bg-background/70 ring-border/80 focus-within:ring-ring/60 relative flex min-h-11 min-w-0 flex-1 items-center rounded-full pl-10 ring-1 transition-shadow focus-within:ring-2 sm:min-h-10">
             <Search
@@ -722,7 +722,7 @@ export function CareerKanban({
               role="dialog"
               aria-modal={isMobileViewport || undefined}
               aria-labelledby="career-board-customization-title"
-              className="bg-card ring-border motion-safe:max-lg:animate-analyst-sheet lg:bg-background/60 absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto rounded-t-[1.75rem] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 lg:relative lg:inset-auto lg:mt-2 lg:max-h-none lg:overflow-visible lg:rounded-[1.25rem] lg:p-4 lg:shadow-none"
+              className="bg-card ring-border motion-safe:max-lg:animate-analyst-sheet lg:bg-background/60 absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 lg:relative lg:inset-auto lg:mt-2 lg:max-h-none lg:overflow-visible lg:rounded-xl lg:p-4 lg:shadow-none"
             >
               <div
                 className="bg-muted-foreground/25 mx-auto mb-4 h-1 w-10 rounded-full lg:hidden"
@@ -1010,11 +1010,11 @@ export function CareerKanban({
                   if (application) moveApplication(application, stage);
                 }}
                 className={cn(
-                  "lg:bg-card/45 lg:ring-border/70 relative w-full min-w-0 flex-col transition-[background-color,box-shadow] lg:flex lg:w-[300px] lg:shrink-0 lg:rounded-[1.5rem] lg:p-2 lg:ring-1 lg:backdrop-blur",
+                  "lg:bg-card/45 lg:ring-border/70 relative w-full min-w-0 flex-col transition-[background-color,box-shadow] lg:flex lg:w-[300px] lg:shrink-0 lg:rounded-2xl lg:p-2 lg:ring-1 lg:backdrop-blur",
                   selected ? "flex" : "hidden",
                   !selected && "lg:flex",
                   dropping &&
-                    "lg:bg-primary/[0.06] ring-primary/45 lg:ring-primary/45 rounded-[1.5rem] ring-2 lg:ring-2",
+                    "lg:bg-primary/[0.06] ring-primary/45 lg:ring-primary/45 rounded-2xl ring-2 lg:ring-2",
                 )}
               >
                 <span

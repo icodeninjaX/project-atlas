@@ -239,7 +239,7 @@ export function CaptureCard({
         {!item.id && (
           <p
             role="status"
-            className="bg-background/55 ring-border/80 text-muted-foreground rounded-2xl p-3.5 text-sm ring-1"
+            className="bg-background/55 text-muted-foreground rounded-xl p-3.5 text-sm"
           >
             This action is not supported by Capture yet. Use a manual form.
           </p>

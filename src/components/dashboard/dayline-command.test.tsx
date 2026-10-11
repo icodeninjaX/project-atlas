@@ -94,7 +94,7 @@ describe("DaylineCommand", () => {
     ).toEqual(["Due today", "High priority"]);
     expect(screen.getByText("Task")).toBeInTheDocument();
     const next = screen.getByRole("link", { name: /Review the launch goal/ });
-    expect(next).toHaveTextContent(/^NEXT/);
+    expect(next).toHaveTextContent(/^Next/);
     expect(within(next).getByText("Goal")).toBeInTheDocument();
     expect(screen.getByText("2 of 3 priorities")).toBeInTheDocument();
   });

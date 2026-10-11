@@ -1,11 +1,5 @@
 import type { CSSProperties } from "react";
-import {
-  CalendarClock,
-  CheckCheck,
-  Goal,
-  Target,
-  TrendingUp,
-} from "lucide-react";
+import { Goal } from "lucide-react";
 import { goalAreaTheme } from "@/components/goals/goal-area";
 import { GoalCardHeader } from "@/components/goals/goal-card-header";
 import { GoalCreatePanel } from "@/components/goals/goal-create-panel";
@@ -47,21 +41,18 @@ export type GoalsBoardMilestone = {
 const openStatuses = new Set(["active", "paused"]);
 
 function SummaryStat({
-  icon: Icon,
   label,
   value,
   detail,
 }: {
-  icon: typeof Target;
   label: string;
   value: string;
   detail: string;
 }) {
   return (
-    <div className="border-border/70 bg-card/80 min-w-0 rounded-2xl border p-3 sm:p-4">
-      <dt className="text-muted-foreground flex items-center gap-1.5 text-[0.6875rem] font-semibold sm:text-xs">
-        <Icon className="text-primary size-3.5 shrink-0" aria-hidden="true" />
-        <span className="truncate">{label}</span>
+    <div className="bg-card min-w-0 p-3.5 sm:p-4">
+      <dt className="text-muted-foreground truncate text-xs font-medium">
+        {label}
       </dt>
       <dd className="mt-2">
         <span className="block truncate font-mono text-xl leading-none font-semibold tracking-tight tabular-nums sm:text-[1.75rem]">
@@ -137,20 +128,17 @@ export function GoalsBoard({
   return (
     <PageShell>
       <GoalCreatePanel
-        eyebrow="Milestone progress"
         title="Goals"
         description="Progress updates automatically as you complete, reopen, or add milestones."
         summary={
           goals.length > 0 ? (
-            <dl className="mt-6 grid grid-cols-2 gap-2 sm:mt-8 sm:gap-3 lg:grid-cols-4">
+            <dl className="bg-border border-border mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border sm:mt-8 lg:grid-cols-4">
               <SummaryStat
-                icon={Target}
                 label="Active goals"
                 value={String(activeGoals)}
                 detail={`of ${goals.length} total`}
               />
               <SummaryStat
-                icon={CheckCheck}
                 label="Milestones"
                 value={`${doneMilestones}/${totalMilestones}`}
                 detail={
@@ -160,13 +148,11 @@ export function GoalsBoard({
                 }
               />
               <SummaryStat
-                icon={TrendingUp}
                 label="Avg. progress"
                 value={`${averageProgress}%`}
                 detail="Across all goals"
               />
               <SummaryStat
-                icon={CalendarClock}
                 label="Next deadline"
                 value={
                   nextDeadline
@@ -190,9 +176,9 @@ export function GoalsBoard({
       />
       <div className="mt-5 grid gap-4 sm:mt-6 sm:gap-5 lg:grid-cols-2">
         {goals.length === 0 ? (
-          <div className="border-border relative isolate grid min-h-72 place-items-center overflow-hidden rounded-3xl border border-dashed px-6 py-12 text-center lg:col-span-2">
+          <div className="border-border relative isolate grid min-h-72 place-items-center overflow-hidden rounded-2xl border border-dashed px-6 py-12 text-center lg:col-span-2">
             <div>
-              <span className="bg-primary/10 text-primary ring-primary/20 mx-auto grid size-14 place-items-center rounded-2xl ring-1 ring-inset">
+              <span className="bg-muted/60 text-foreground/75 mx-auto grid size-12 place-items-center rounded-lg">
                 <Goal className="size-6" aria-hidden="true" />
               </span>
               <p className="mt-5 text-base font-semibold tracking-tight">
@@ -226,7 +212,7 @@ export function GoalsBoard({
                     "--goal-accent": goalAreaTheme(goal.area).accent,
                   } as CSSProperties
                 }
-                className={`relative rounded-2xl bg-[radial-gradient(120%_70%_at_100%_0%,color-mix(in_srgb,var(--goal-accent)_9%,transparent),transparent_55%)] shadow-[0_1px_2px_rgb(15_23_42/0.04),0_8px_24px_-12px_rgb(15_23_42/0.12)] transition duration-200 before:absolute before:inset-x-6 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[color-mix(in_srgb,var(--goal-accent)_55%,transparent)] before:to-transparent motion-reduce:transition-none sm:rounded-3xl dark:shadow-[0_1px_0_rgb(255_255_255/0.03)_inset,0_12px_32px_-16px_rgb(0_0_0/0.6)] [@media(hover:hover)]:hover:border-[color-mix(in_srgb,var(--goal-accent)_35%,var(--border))] [@media(hover:hover)]:hover:shadow-[0_2px_4px_rgb(15_23_42/0.04),0_18px_40px_-16px_rgb(15_23_42/0.22)] ${
+                className={`relative rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] transition duration-200 motion-reduce:transition-none dark:shadow-none [@media(hover:hover)]:hover:border-[color-mix(in_srgb,var(--goal-accent)_35%,var(--border))] ${
                   highlighted ? "ring-primary/60 ring-2" : ""
                 }`}
               >

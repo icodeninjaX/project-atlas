@@ -40,9 +40,9 @@ describe("GoalCardHeader", () => {
     const personal = screen.getByLabelText("Goal category: Personal");
 
     expect(learning).toHaveTextContent("Learning");
-    expect(learning).toHaveClass("bg-cyan-50", "text-cyan-800");
+    expect(learning).toHaveClass("text-cyan-700");
     expect(personal).toHaveTextContent("Personal");
-    expect(personal).toHaveClass("bg-orange-50", "text-orange-800");
+    expect(personal).toHaveClass("text-orange-700");
     expect(learning.className).not.toBe(personal.className);
   });
 

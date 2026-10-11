@@ -124,7 +124,7 @@ export function DebtsHero({
         <MoneyAmount
           centavos={remainingCentavos}
           quietCentavos
-          className="font-mono text-[clamp(2.75rem,13vw,4.5rem)] leading-[0.95] font-semibold tracking-[-0.06em] [overflow-wrap:anywhere] tabular-nums"
+          className="font-mono text-[clamp(2.25rem,9vw,3rem)] leading-[0.95] font-semibold tracking-[-0.03em] [overflow-wrap:anywhere] tabular-nums"
         />
       </p>
       {status ? (
@@ -191,14 +191,14 @@ function QuietHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="debts-heading"
-          className="text-primary text-[0.8125rem] font-semibold"
+          className="text-muted-foreground text-[0.8125rem] font-medium"
         >
           Debts
         </h2>
         <TonePill tone={pill.tone}>{pill.label}</TonePill>
       </div>
       <div className="mt-6 flex max-w-xl gap-4">
-        <span className="bg-primary/12 text-primary ring-primary/20 grid size-11 shrink-0 place-items-center rounded-2xl ring-1 max-[359px]:hidden">
+        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-[359px]:hidden">
           {icon}
         </span>
         <div className="min-w-0">

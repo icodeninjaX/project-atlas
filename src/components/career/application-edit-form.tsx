@@ -111,7 +111,7 @@ export function ApplicationEditForm({
                 className="max-[359px]:hidden"
               />
               <div className="min-w-0">
-                <p className="text-primary text-xs font-semibold">
+                <p className="text-muted-foreground text-xs font-medium">
                   {stageLabel(application.stage)} · Application details
                 </p>
                 <Dialog.Title className="mt-1 truncate text-xl font-semibold tracking-[-0.025em]">

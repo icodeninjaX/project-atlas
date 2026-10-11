@@ -195,7 +195,7 @@ function DetailHero({
         <MoneyAmount
           centavos={debt.current_balance_centavos}
           quietCentavos
-          className="font-mono text-[clamp(2.75rem,13vw,4.25rem)] leading-[0.95] font-semibold tracking-[-0.06em] [overflow-wrap:anywhere] tabular-nums"
+          className="font-mono text-[clamp(2.25rem,9vw,3rem)] leading-[0.95] font-semibold tracking-[-0.03em] [overflow-wrap:anywhere] tabular-nums"
         />
       </p>
       <div className="mt-6">
@@ -362,7 +362,7 @@ function Outlook({
             </p>
             <p
               className={cn(
-                "mt-1 font-mono text-2xl leading-none font-semibold tracking-[-0.04em]",
+                "mt-1 font-mono text-2xl leading-none font-semibold tracking-[-0.025em]",
                 shown.status !== "paid_off" && "text-destructive text-lg",
               )}
             >
@@ -382,7 +382,7 @@ function Outlook({
             <p className="text-muted-foreground text-xs">
               Interest you will pay
             </p>
-            <p className="mt-1 font-mono text-2xl leading-none font-semibold tracking-[-0.04em] [overflow-wrap:anywhere]">
+            <p className="mt-1 font-mono text-2xl leading-none font-semibold tracking-[-0.025em] [overflow-wrap:anywhere]">
               {shown.status === "paid_off" ? (
                 <MoneyAmount centavos={shown.totalInterestCentavos} />
               ) : (

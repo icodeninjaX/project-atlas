@@ -67,8 +67,6 @@ export default async function SearchPage({
   return (
     <PageShell>
       <PageHeading
-        eyebrow="All your records"
-        icon={Search}
         title="Search"
         description="Results stay inside your account and are grouped by the record you recognize."
       />

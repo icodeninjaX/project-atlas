@@ -126,7 +126,7 @@ export function DecisionJournalList({
       </div>
 
       {entries.length === 0 ? (
-        <div className="mt-4 grid place-items-center gap-3 rounded-[1.5rem] border border-dashed p-8 text-center">
+        <div className="mt-4 grid place-items-center gap-3 rounded-2xl border border-dashed p-8 text-center">
           <p className="text-sm font-semibold">No decisions on page {page}</p>
           <Link href="/decisions" className={pillLinkClass}>
             <ArrowLeft aria-hidden="true" className="size-4" />
@@ -148,7 +148,7 @@ export function DecisionJournalList({
                 <ul
                   className={cn(
                     surfaceClass,
-                    "bg-card/90 divide-border/70 relative mt-2.5 divide-y overflow-hidden rounded-[1.5rem] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)]",
+                    "bg-card/90 divide-border/70 relative mt-2.5 divide-y overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
                   )}
                 >
                   {month.decisions.map((entry) => (

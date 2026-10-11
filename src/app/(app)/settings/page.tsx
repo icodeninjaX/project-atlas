@@ -17,7 +17,6 @@ import {
   MapPin,
   Mountain,
   Palette,
-  Settings2,
   ShieldAlert,
   ShieldCheck,
   TableProperties,
@@ -54,7 +53,6 @@ import {
 import { cn } from "@/lib/utils";
 import { PageHeading, PageHeadingLink } from "@/components/shared/page-heading";
 import { PageShell } from "@/components/shared/page-shell";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 export const metadata = { title: "Settings" };
 
@@ -185,8 +183,7 @@ function GlanceTile({
       </span>
     </>
   );
-  const className =
-    "bg-background/55 ring-border/80 block min-w-0 rounded-2xl px-3.5 py-3 ring-1 ";
+  const className = "bg-background/55 block min-w-0 rounded-xl px-3.5 py-3";
   return href ? (
     <a
       href={href}
@@ -248,8 +245,6 @@ export default async function SettingsPage() {
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Account and preferences"
-        icon={Settings2}
         title="Settings"
         description="Set your defaults, choose how ATLAS looks, and manage sign-in, privacy and your data."
         aside={
@@ -263,15 +258,13 @@ export default async function SettingsPage() {
         aria-label="Account summary"
         className={cn(
           surfaceClass,
-          "bg-card @container relative isolate mt-6 overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:mt-8 sm:rounded-[2rem]",
+          "bg-card @container relative isolate mt-6 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
         )}
       >
-        <HeroBackdrop />
-
         <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-8 lg:p-8">
           <div className="flex min-w-0 items-center gap-4">
             <span className="bg-primary/45 relative grid size-16 shrink-0 place-items-center rounded-[1.35rem] p-px sm:size-[4.5rem]">
-              <span className="bg-card text-foreground grid size-full place-items-center rounded-[1.25rem] font-mono text-lg font-semibold tracking-tight sm:text-xl">
+              <span className="bg-card text-foreground grid size-full place-items-center rounded-xl font-mono text-lg font-semibold tracking-tight sm:text-xl">
                 {accountInitials(accountName) || "A"}
               </span>
             </span>
@@ -485,11 +478,11 @@ export default async function SettingsPage() {
                   />
                 </Link>
 
-                <div className="from-primary/[0.1] ring-primary/20 relative flex min-h-24 flex-col gap-3 overflow-hidden rounded-2xl bg-gradient-to-br to-transparent p-4 ring-1">
+                <div className="bg-muted/40 relative flex min-h-24 flex-col gap-3 overflow-hidden rounded-xl p-4">
                   <div className="relative flex items-start gap-3.5">
                     <span
                       aria-hidden="true"
-                      className="bg-primary-solid text-primary-solid-foreground grid size-11 shrink-0 place-items-center rounded-2xl shadow-[0_8px_22px_-10px_color-mix(in_srgb,var(--primary-solid)_90%,transparent)]"
+                      className="bg-primary-solid text-primary-solid-foreground grid size-11 shrink-0 place-items-center rounded-2xl"
                     >
                       <FileJson className="size-[1.15rem]" />
                     </span>
@@ -507,7 +500,7 @@ export default async function SettingsPage() {
                   <Link
                     href="/api/export/json"
                     prefetch={false}
-                    className="bg-primary-solid text-primary-solid-foreground hover:bg-primary-solid/90 focus-visible:ring-ring relative inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl px-4 text-sm font-semibold shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_4px_14px_-4px_color-mix(in_srgb,var(--primary-solid)_55%,transparent)] focus-visible:ring-2 focus-visible:outline-none sm:min-h-10"
+                    className="bg-primary-solid text-primary-solid-foreground hover:bg-primary-solid/90 focus-visible:ring-ring relative inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl px-4 text-sm font-semibold shadow-[inset_0_1px_0_rgb(255_255_255/0.14)] focus-visible:ring-2 focus-visible:outline-none sm:min-h-10"
                   >
                     <Download aria-hidden="true" className="size-4" />
                     Download JSON

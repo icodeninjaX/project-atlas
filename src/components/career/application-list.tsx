@@ -217,31 +217,26 @@ export function ApplicationList({
         return (
           <section key={group.id} aria-labelledby={headingId}>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1">
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "grid size-7 shrink-0 place-items-center rounded-lg ring-1",
-                  tone === "attention" &&
-                    "bg-destructive/10 text-destructive ring-destructive/20",
-                  tone === "default" &&
-                    "bg-primary/10 text-primary ring-primary/15",
-                  tone === "muted" &&
-                    "bg-muted/70 text-muted-foreground ring-border/80",
-                )}
-              >
-                <Icon className="size-3.5" />
-              </span>
               <h2
                 id={headingId}
                 className="flex items-center gap-2 text-sm font-semibold tracking-[-0.01em]"
               >
+                <Icon
+                  aria-hidden="true"
+                  className={cn(
+                    "size-4 shrink-0",
+                    tone === "attention"
+                      ? "text-destructive"
+                      : "text-muted-foreground",
+                  )}
+                />
                 {group.label}
                 <span
                   className={cn(
-                    "grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-mono text-[0.6875rem] leading-none font-semibold",
+                    "font-mono text-xs font-medium",
                     tone === "attention"
-                      ? "bg-destructive text-white dark:bg-red-500/20 dark:text-red-300"
-                      : "bg-foreground/[0.07] text-muted-foreground",
+                      ? "text-destructive"
+                      : "text-muted-foreground",
                   )}
                 >
                   <span className="sr-only">, </span>
@@ -251,14 +246,14 @@ export function ApplicationList({
                   </span>
                 </span>
               </h2>
-              <p className="text-muted-foreground text-xs max-sm:basis-full max-sm:pl-10 sm:ml-auto">
+              <p className="text-muted-foreground text-xs max-sm:basis-full sm:ml-auto">
                 {group.detail}
               </p>
             </div>
             <ul
               className={cn(
                 surfaceClass,
-                "bg-card/90 divide-border/70 relative mt-3 divide-y rounded-[1.5rem] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)]",
+                "bg-card/90 divide-border/70 relative mt-3 divide-y rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
                 group.id === "attention" &&
                   "ring-destructive/20 ring-1 dark:bg-[color-mix(in_srgb,var(--destructive)_4%,var(--card))]",
               )}

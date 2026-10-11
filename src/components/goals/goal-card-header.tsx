@@ -15,7 +15,6 @@ import {
 import { useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { AtlasMark } from "@/components/atlas/atlas-mark";
-import { goalAreaTheme } from "@/components/goals/goal-area";
 import { GoalForm } from "@/components/goals/goal-form";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
@@ -36,27 +35,19 @@ type Goal = {
   saved_amount_centavos?: number | null;
 };
 
+/** Each area's text color; each keeps 4.5:1 on the card in both themes. */
 const goalAreaBadgeStyles: Record<string, string> = {
-  finance:
-    "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300",
-  career:
-    "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300",
-  health:
-    "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-300",
-  relationship:
-    "border-pink-200 bg-pink-50 text-pink-800 dark:border-pink-800 dark:bg-pink-950/60 dark:text-pink-300",
-  family:
-    "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-300",
-  business:
-    "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800 dark:bg-violet-950/60 dark:text-violet-300",
-  learning:
-    "border-cyan-200 bg-cyan-50 text-cyan-800 dark:border-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300",
-  personal:
-    "border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-800 dark:bg-orange-950/60 dark:text-orange-300",
+  finance: "text-emerald-700 dark:text-emerald-300",
+  career: "text-blue-700 dark:text-blue-300",
+  health: "text-rose-700 dark:text-rose-300",
+  relationship: "text-pink-700 dark:text-pink-300",
+  family: "text-amber-800 dark:text-amber-300",
+  business: "text-violet-700 dark:text-violet-300",
+  learning: "text-cyan-700 dark:text-cyan-300",
+  personal: "text-orange-700 dark:text-orange-300",
 };
 
-const fallbackGoalAreaBadgeStyle =
-  "border-border bg-muted text-muted-foreground";
+const fallbackGoalAreaBadgeStyle = "text-muted-foreground";
 
 function GoalAreaBadge({ area }: { area: string }) {
   const areaLabel = area.charAt(0).toUpperCase() + area.slice(1);
@@ -64,22 +55,10 @@ function GoalAreaBadge({ area }: { area: string }) {
   return (
     <span
       aria-label={`Goal category: ${areaLabel}`}
-      className={`rounded-full border px-2 py-0.5 text-[0.6875rem] font-semibold ${goalAreaBadgeStyles[area] ?? fallbackGoalAreaBadgeStyle}`}
+      className={`inline-flex items-center gap-1.5 text-xs font-medium ${goalAreaBadgeStyles[area] ?? fallbackGoalAreaBadgeStyle}`}
     >
+      <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
       {areaLabel}
-    </span>
-  );
-}
-
-function GoalAreaTile({ area }: { area: string }) {
-  const { icon: Icon, tile } = goalAreaTheme(area);
-
-  return (
-    <span
-      aria-hidden="true"
-      className={`grid size-10 shrink-0 place-items-center rounded-xl ring-1 ring-inset sm:size-11 sm:rounded-2xl ${tile}`}
-    >
-      <Icon className="size-[18px] sm:size-5" strokeWidth={1.75} />
     </span>
   );
 }
@@ -143,17 +122,15 @@ function GoalDeadline({
     open && today ? calendarDaysBetween(today, targetDate) : undefined;
   const tone =
     daysLeft === undefined
-      ? "bg-muted/70 text-muted-foreground"
+      ? "text-muted-foreground"
       : daysLeft < 0
-        ? "bg-destructive/10 text-destructive"
+        ? "text-destructive"
         : daysLeft <= 14
-          ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-          : "bg-muted/70 text-muted-foreground";
+          ? "text-amber-700 dark:text-amber-300"
+          : "text-muted-foreground";
 
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] font-medium ${tone}`}
-    >
+    <span className={`inline-flex items-center gap-1.5 text-xs ${tone}`}>
       <CalendarDays className="size-3.5" aria-hidden="true" />
       Target {formatCalendarDate(targetDate)}
       {daysLeft !== undefined ? (
@@ -263,8 +240,7 @@ export function GoalCardHeader({
 
   return (
     <Dialog.Root open={deleteOpen} onOpenChange={(open) => setDeleteOpen(open)}>
-      <div className="flex items-start gap-3 sm:gap-3.5">
-        <GoalAreaTile area={goal.area} />
+      <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <GoalAreaBadge area={goal.area} />
@@ -335,7 +311,7 @@ export function GoalCardHeader({
         </p>
       ) : null}
       {goal.target_date || goal.target_amount_centavos ? (
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
           {goal.target_date ? (
             <GoalDeadline
               targetDate={goal.target_date}
@@ -344,7 +320,7 @@ export function GoalCardHeader({
             />
           ) : null}
           {goal.target_amount_centavos ? (
-            <span className="bg-muted/70 text-muted-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] font-medium">
+            <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
               <PiggyBank className="size-3.5" aria-hidden="true" />
               <SensitiveValue>
                 {formatCentavos(goal.saved_amount_centavos ?? 0)}

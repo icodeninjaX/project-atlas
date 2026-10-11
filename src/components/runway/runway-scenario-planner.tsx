@@ -55,7 +55,7 @@ function Field({
       className={cn(
         // With large text on a phone the tile steps aside so the field
         // keeps its width.
-        "bg-background/55 ring-border/80 flex min-w-0 flex-col rounded-2xl p-4 ring-1 @max-[15rem]:bg-transparent @max-[15rem]:p-0 @max-[15rem]:ring-0",
+        "bg-background/55 flex min-w-0 flex-col rounded-xl p-4 @max-[15rem]:bg-transparent @max-[15rem]:p-0 @max-[15rem]:ring-0",
         className,
       )}
     >
@@ -458,13 +458,13 @@ export function RunwayScenarioPlanner({
             // assistive tech reads the panel alone.
             <div
               aria-hidden="true"
-              className="bg-card/90 max-lg:animate-analyst-rise ring-border sticky bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-10 mt-3 flex items-center justify-between gap-3 rounded-[1.25rem] px-4 py-3 shadow-[0_12px_32px_-12px_rgb(7_10_15/0.45)] ring-1 backdrop-blur-md group-data-[keyboard=open]/shell:bottom-2 lg:hidden"
+              className="bg-card/90 max-lg:animate-analyst-rise ring-border sticky bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-10 mt-3 flex items-center justify-between gap-3 rounded-xl px-4 py-3 shadow-[0_12px_32px_-12px_rgb(7_10_15/0.45)] ring-1 backdrop-blur-md group-data-[keyboard=open]/shell:bottom-2 lg:hidden"
             >
               <p className="flex min-w-0 items-baseline gap-1.5">
-                <span className="text-primary text-xs font-semibold">
+                <span className="text-muted-foreground text-xs font-medium">
                   Scenario
                 </span>
-                <span className="font-mono text-xl font-semibold tracking-[-0.04em]">
+                <span className="font-mono text-xl font-semibold tracking-[-0.025em]">
                   {figure.value}
                 </span>
                 <span className="text-muted-foreground text-xs">
@@ -479,7 +479,7 @@ export function RunwayScenarioPlanner({
         <div
           role="group"
           aria-label="Scenario result"
-          className="bg-background/55 ring-border/80 min-w-0 rounded-[1.25rem] p-4 ring-1 min-[360px]:p-5 lg:sticky lg:top-24"
+          className="bg-background/55 ring-border/80 min-w-0 rounded-xl p-4 ring-1 min-[360px]:p-5 lg:sticky lg:top-24"
         >
           <div className="grid grid-cols-2 gap-4">
             <div className="min-w-0">
@@ -489,11 +489,11 @@ export function RunwayScenarioPlanner({
               </p>
             </div>
             <div className="min-w-0">
-              <p className="text-primary text-xs font-semibold">
+              <p className="text-muted-foreground text-xs font-medium">
                 Scenario estimate
               </p>
               <p className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 font-mono leading-none">
-                <span className="text-[2rem] font-semibold tracking-[-0.05em]">
+                <span className="text-[2rem] font-semibold tracking-[-0.025em]">
                   {figure.value}
                 </span>
                 <span className="text-muted-foreground text-sm">

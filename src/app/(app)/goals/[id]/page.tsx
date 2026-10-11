@@ -1,4 +1,3 @@
-import { Goal } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GoalRelatedDetails } from "@/components/graph/goal-related-details";
@@ -45,7 +44,6 @@ export default async function GoalRelationshipsPage({
     <PageShell>
       <BackLink href="/goals">All goals</BackLink>
       <PageHeading
-        icon={Goal}
         eyebrow="Goals / Connections"
         title={goal.title}
         description="Direct relationships connected to this goal."

@@ -92,7 +92,7 @@ function PlanStat({
 }) {
   return (
     // Phones show plain stats; a box inside the card would only add noise.
-    <div className="border-border bg-background/60 min-w-0 rounded-2xl border p-3.5 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:p-0 sm:p-4">
+    <div className="bg-background/60 min-w-0 rounded-xl p-3.5 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:p-0 sm:p-4">
       <dt className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium sm:gap-2">
         <span
           className={cn(
@@ -143,23 +143,19 @@ export function TaskOverview({
   return (
     <section
       aria-labelledby="today-plan-title"
-      className="border-border bg-card relative mt-6 overflow-hidden rounded-[1.75rem] border shadow-[0_24px_70px_rgb(7_10_15/0.1)] sm:mt-7"
+      className="border-border bg-card relative mt-6 overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.1)] sm:mt-7"
     >
-      <div
-        aria-hidden="true"
-        className="from-primary/10 pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b to-transparent"
-      />
       <div className="relative grid gap-5 p-5 sm:gap-6 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:items-center lg:gap-10">
         <div className="flex min-w-0 items-center gap-4 sm:gap-6">
           <ProgressRing done={done} total={total} />
           <div className="min-w-0">
             <h2
               id="today-plan-title"
-              className="text-primary text-[0.8125rem] font-semibold"
+              className="text-muted-foreground text-[0.8125rem] font-medium"
             >
               Today’s plan
             </h2>
-            <p className="mt-2 text-[clamp(1.75rem,8vw,2.75rem)] leading-none font-semibold tracking-[-0.045em] sm:mt-2.5">
+            <p className="mt-2 text-[clamp(1.75rem,8vw,2.75rem)] leading-none font-semibold tracking-[-0.025em] sm:mt-2.5">
               {headline}
             </p>
             <p className="text-muted-foreground mt-2 text-sm">{detail}</p>

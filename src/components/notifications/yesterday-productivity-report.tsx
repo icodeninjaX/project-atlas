@@ -103,12 +103,12 @@ export function YesterdayProductivityReport({
               </Dialog.Close>
             </header>
 
-            <div className="bg-background/70 relative mt-5 flex items-center gap-4 rounded-xl border p-4">
+            <div className="bg-background/70 relative mt-5 flex items-center gap-4 rounded-xl p-4">
               <span className="text-primary border-primary/50 grid size-11 shrink-0 place-items-center rounded-xl border">
                 <CheckCircle2 aria-hidden="true" className="size-5" />
               </span>
               <div className="min-w-0">
-                <p className="font-mono text-4xl leading-none font-semibold tracking-[-0.08em] tabular-nums">
+                <p className="font-mono text-4xl leading-none font-semibold tracking-[-0.025em] tabular-nums">
                   {String(normalizedTaskCount).padStart(2, "0")}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">

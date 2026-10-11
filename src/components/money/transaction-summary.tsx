@@ -15,7 +15,7 @@ function FlowTile({
 }) {
   return (
     // Phones show plain stats; a box inside the card would only add noise.
-    <div className="border-border bg-background/60 min-w-0 rounded-2xl border p-4 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:p-0">
+    <div className="bg-background/60 min-w-0 rounded-xl p-4 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:p-0">
       <p className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
         <span
           className={cn(
@@ -119,24 +119,20 @@ export function TransactionSummary({
   return (
     <section
       aria-labelledby="month-summary-title"
-      className="border-border bg-card relative overflow-hidden rounded-[1.75rem] border shadow-[0_24px_70px_rgb(7_10_15/0.1)]"
+      className="border-border bg-card relative overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.1)]"
     >
-      <div
-        aria-hidden="true"
-        className="from-primary/10 pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b to-transparent"
-      />
       <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:items-center lg:gap-10">
         <div className="min-w-0">
           <h2
             id="month-summary-title"
-            className="text-primary text-[0.8125rem] font-semibold"
+            className="text-muted-foreground text-[0.8125rem] font-medium"
           >
             {monthLabel} so far
           </h2>
           <p className="text-muted-foreground mt-3 text-sm">Net cash flow</p>
           <p
             className={cn(
-              "mt-1 min-w-0 font-mono text-[clamp(2.25rem,10vw,3.25rem)] leading-none font-semibold tracking-[-0.045em] [overflow-wrap:anywhere]",
+              "mt-1 min-w-0 font-mono text-[clamp(2.25rem,9vw,3rem)] leading-none font-semibold tracking-[-0.03em] [overflow-wrap:anywhere]",
               net > 0 && "text-positive",
             )}
           >

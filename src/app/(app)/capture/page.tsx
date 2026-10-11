@@ -1,4 +1,4 @@
-import { Inbox, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { CaptureBatchWorkspace } from "@/components/capture/capture-batch-workspace";
 import { AI_MODELS, CAPTURE_MODEL_OPTIONS } from "@/lib/ai/models";
 import { createClient } from "@/lib/supabase/server";
@@ -26,8 +26,6 @@ export default async function CapturePage() {
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Capture"
-        icon={Inbox}
         title="Tell ATLAS what happened"
         description="Describe up to five actions. ATLAS will separate them into cards for you to review, correct, save, or reject."
         aside={

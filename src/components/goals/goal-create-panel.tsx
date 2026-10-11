@@ -1,6 +1,6 @@
 "use client";
 
-import { Goal, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useCallback, useState, type ReactNode } from "react";
 import { GoalForm } from "@/components/goals/goal-form";
 import { PageHeading } from "@/components/shared/page-heading";
@@ -24,7 +24,6 @@ export function GoalCreatePanel({
     <>
       <PageHeading
         eyebrow={eyebrow}
-        icon={Goal}
         title={title}
         description={description}
         actions={

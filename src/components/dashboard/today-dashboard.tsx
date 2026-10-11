@@ -89,7 +89,6 @@ function situationItems(dashboard: DashboardData): SituationItem[] {
   return [
     {
       label: "Available cash",
-      area: "money",
       value: formatCentavos(financial.total_balance_centavos),
       detail: paydayLabel(financial.days_until_payday) ?? "Active accounts",
       href: "/money/accounts",
@@ -97,7 +96,6 @@ function situationItems(dashboard: DashboardData): SituationItem[] {
     },
     {
       label: "Tasks",
-      area: "tasks",
       value: `${tasks.overdue} overdue`,
       // Not `completed_today`: the snapshot counts it from UTC midnight.
       detail:
@@ -109,7 +107,6 @@ function situationItems(dashboard: DashboardData): SituationItem[] {
     },
     {
       label: "Career",
-      area: "career",
       value: plural(career.follow_up, "overdue follow-up"),
       detail:
         career.interviews > 0
@@ -120,7 +117,6 @@ function situationItems(dashboard: DashboardData): SituationItem[] {
     },
     {
       label: "Goals",
-      area: "goals",
       value: `${goals.length} active`,
       detail: leadGoal
         ? `${leadGoal.title} · ${Math.round(leadGoal.progress_percent)}%`
@@ -155,7 +151,6 @@ export function TodayDashboard({
     <PageShell>
       <PageHeading
         eyebrow={greeting.text}
-        icon={greeting.icon}
         meta={manilaDayLabel(now)}
         title={
           daylineItems.length ? "Your day, mapped." : "Your route is clear."
@@ -210,7 +205,7 @@ export function TodayDashboard({
         <GratitudeCard
           initialQuote={wisdomQuote}
           compact
-          className="rounded-[1.5rem]"
+          className="rounded-2xl"
         />
         <WeekPosition
           dayIndex={manilaWeekdayIndex(now)}

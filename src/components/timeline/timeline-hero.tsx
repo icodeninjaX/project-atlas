@@ -15,7 +15,6 @@ import type {
   TimelineTone,
 } from "@/lib/timeline/view";
 import { cn } from "@/lib/utils";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
@@ -102,10 +101,9 @@ function HeroShell({ children }: { children: ReactNode }) {
       aria-labelledby="timeline-summary-heading"
       className={cn(
         surfaceClass,
-        "bg-card @container relative isolate mt-6 overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:mt-8 sm:rounded-[2rem]",
+        "bg-card @container relative isolate mt-6 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
       )}
     >
-      <HeroBackdrop />
       <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
     </section>
   );
@@ -138,7 +136,7 @@ function MoneyInView({ summary }: { summary: TimelineSummary }) {
   ];
 
   return (
-    <div className="bg-background/55 ring-border/80 rounded-2xl p-3.5 ring-1 min-[360px]:p-4 sm:p-5">
+    <div className="bg-background/55 rounded-xl p-3.5 min-[360px]:p-4 sm:p-5">
       <p className={eyebrowClass}>Money in view</p>
       {moved ? (
         <>
@@ -403,7 +401,7 @@ export function TimelineHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="timeline-summary-heading"
-          className="text-primary text-[0.8125rem] font-semibold"
+          className="text-muted-foreground text-[0.8125rem] font-medium"
         >
           In view
         </h2>
@@ -413,7 +411,7 @@ export function TimelineHero({
       <div className="mt-5 grid gap-7 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-x-12 lg:gap-y-9">
         <div className="min-w-0">
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-foreground font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.045em]">
+            <span className="text-foreground font-mono text-[clamp(2.5rem,10vw,3.25rem)] leading-[0.92] font-semibold tracking-[-0.03em]">
               {summary.total}
             </span>
             <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
@@ -472,12 +470,12 @@ export function TimelineEmptyHero() {
     <HeroShell>
       <h2
         id="timeline-summary-heading"
-        className="text-primary text-[0.8125rem] font-semibold"
+        className="text-muted-foreground text-[0.8125rem] font-medium"
       >
         Your story
       </h2>
       <div className="mt-6 flex max-w-2xl gap-4">
-        <span className="bg-primary/12 text-primary ring-primary/20 grid size-11 shrink-0 place-items-center rounded-2xl ring-1 max-sm:hidden">
+        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
           <CalendarRange aria-hidden="true" className="size-5" />
         </span>
         <div className="min-w-0">

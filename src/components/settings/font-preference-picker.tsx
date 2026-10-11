@@ -135,7 +135,7 @@ export function FontPreferencePicker() {
 
         <div
           aria-live="polite"
-          className="bg-background/55 ring-border/80 relative overflow-hidden rounded-2xl p-4 ring-1 sm:p-5"
+          className="bg-background/55 relative overflow-hidden rounded-xl p-4 sm:p-5"
           style={{ fontFamily: `var(${selected.cssVariable})` }}
         >
           <span
@@ -144,7 +144,7 @@ export function FontPreferencePicker() {
           >
             Aa
           </span>
-          <p className="text-primary text-xs font-semibold">
+          <p className="text-muted-foreground text-xs font-medium">
             {selected.category}
           </p>
           <p className="relative mt-2 text-xl leading-7 font-semibold tracking-[-0.02em] text-balance">
