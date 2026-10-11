@@ -562,10 +562,27 @@ export function MilestoneList({
   const [actionMode, setActionMode] = useState<MilestoneActionMode | null>(
     null,
   );
-  const [dialogState, setDialogState] = useState<MilestoneDialogState>(null);
+  // Arriving from a link to one milestone (the Dayline's "Open this next")
+  // opens it straight away.
+  const [dialogState, setDialogState] = useState<MilestoneDialogState>(() => {
+    const milestone = milestones.find(({ id }) => id === highlightMilestoneId);
+    return milestone ? { mode: "view", milestone } : null;
+  });
   const actionButtonRef = useRef<HTMLButtonElement | null>(null);
   const milestonesId = `milestones-${goalId}`;
   const addMilestoneId = `add-milestone-${goalId}`;
+
+  // Keep the linked row in view behind the dialog, and hand focus back to it
+  // when the dialog closes.
+  useEffect(() => {
+    if (!highlightMilestoneId) return;
+    const row = document.getElementById(`milestone-${highlightMilestoneId}`);
+    if (!row) return;
+    row.scrollIntoView?.({ block: "center" });
+    actionButtonRef.current ??= row.querySelector<HTMLButtonElement>(
+      "[data-milestone-open]",
+    );
+  }, [highlightMilestoneId]);
 
   const changeActionMode = (mode: MilestoneActionMode | null) => {
     setActionMode(mode);
@@ -648,6 +665,7 @@ export function MilestoneList({
                   <div className="min-w-0 flex-1 px-1 py-1">
                     <button
                       type="button"
+                      data-milestone-open
                       aria-label={`Open milestone ${milestone.title}`}
                       onClick={(event) => {
                         actionButtonRef.current = event.currentTarget;

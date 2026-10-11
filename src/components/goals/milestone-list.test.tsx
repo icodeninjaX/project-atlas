@@ -183,6 +183,50 @@ describe("MilestoneList", () => {
     ).toBeVisible();
   });
 
+  it("opens the linked milestone on arrival and returns focus to its row", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MilestoneList
+        goalId="1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb"
+        highlightMilestoneId="9b1f3f1e-6a52-4a8e-9a1c-0e4b2f6d7c11"
+        milestones={[
+          {
+            id: "53f3368c-d188-4aef-82b3-2846ba974169",
+            title: "Plan the route",
+            target_date: null,
+            completed_at: null,
+          },
+          {
+            id: "9b1f3f1e-6a52-4a8e-9a1c-0e4b2f6d7c11",
+            title: "Opportunity Cost",
+            target_date: "2026-08-23",
+            completed_at: null,
+          },
+        ]}
+      />,
+    );
+
+    expect(
+      await screen.findByRole("dialog", { name: "Opportunity Cost" }),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Close milestone details" }),
+    );
+
+    expect(
+      screen.queryByRole("dialog", { name: "Opportunity Cost" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hide" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(
+      screen.getByRole("button", { name: "Open milestone Opportunity Cost" }),
+    ).toHaveFocus();
+  });
+
   it("shows the spinning ATLAS mark while completing a milestone", async () => {
     const user = userEvent.setup();
     let resolveSubmit:

@@ -413,7 +413,7 @@ export function generateDayline(
         id: milestone.id,
         kind: "goal",
         title: milestone.title,
-        href: `/goals?highlight=${milestone.goalId}`,
+        href: `/goals?highlight=${milestone.goalId}&milestone=${milestone.id}`,
         actionDate: milestone.targetDate as string,
         createdAt: milestone.createdAt,
         durationMinutes: 30,
