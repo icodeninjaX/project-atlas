@@ -308,3 +308,16 @@ Round 4: signed-in pages, before (left) and after (right), dark theme at
 ![Accounts](vibe-code-audit/13-accounts-before-after.jpg)
 ![Transactions](vibe-code-audit/14-transactions-before-after.jpg)
 ![Signals](vibe-code-audit/15-signals-before-after.jpg)
+
+Round 5: surfaces a page opens, `main` on the left and this pass on the
+right, same data, dark theme at 1440px.
+
+![Daily report](vibe-code-audit/16-daily-report-before-after.jpg)
+![Focus mode](vibe-code-audit/17-focus-mode-before-after.jpg)
+![New account dialog](vibe-code-audit/18-new-account-before-after.jpg)
+![Debt payment sheet](vibe-code-audit/19-payment-sheet-before-after.jpg)
+![Job application dialog](vibe-code-audit/20-application-dialog-before-after.jpg)
+![Knowledge review session](vibe-code-audit/21-review-session-before-after.jpg)
+![Analyst and model picker](vibe-code-audit/22-analyst-before-after.jpg)
+![Settings](vibe-code-audit/23-settings-before-after.jpg)
+![Login with an expired sign-in link](vibe-code-audit/24-login-before-after.jpg)
