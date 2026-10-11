@@ -54,6 +54,7 @@ import {
 import { cn } from "@/lib/utils";
 import { PageHeading, PageHeadingLink } from "@/components/shared/page-heading";
 import { PageShell } from "@/components/shared/page-shell";
+import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 export const metadata = { title: "Settings" };
 
@@ -185,7 +186,7 @@ function GlanceTile({
     </>
   );
   const className =
-    "bg-background/55 ring-border/80 block min-w-0 rounded-2xl px-3.5 py-3 ring-1 backdrop-blur";
+    "bg-background/55 ring-border/80 block min-w-0 rounded-2xl px-3.5 py-3 ring-1 ";
   return href ? (
     <a
       href={href}
@@ -260,36 +261,16 @@ export default async function SettingsPage() {
 
       <section
         aria-label="Account summary"
-        data-spotlight
         className={cn(
           surfaceClass,
           "bg-card @container relative isolate mt-6 overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:mt-8 sm:rounded-[2rem]",
         )}
       >
-        <div
-          aria-hidden="true"
-          className="from-primary/14 pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b to-transparent"
-        />
-        <div
-          aria-hidden="true"
-          className="bg-primary/20 pointer-events-none absolute -top-40 -right-24 -z-10 size-96 rounded-full blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-36 -left-24 -z-10 size-80 rounded-full bg-emerald-400/10 blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="atlas-grid pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 [mask-image:radial-gradient(70%_100%_at_100%_0%,black,transparent)] opacity-40"
-        />
-        <div
-          aria-hidden="true"
-          className="via-primary/70 pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
-        />
+        <HeroBackdrop />
 
         <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-8 lg:p-8">
           <div className="flex min-w-0 items-center gap-4">
-            <span className="from-primary via-primary/60 relative grid size-16 shrink-0 place-items-center rounded-[1.35rem] bg-gradient-to-br to-emerald-400/70 p-[2px] shadow-[0_18px_40px_-18px_color-mix(in_srgb,var(--primary)_90%,transparent)] sm:size-[4.5rem]">
+            <span className="bg-primary/45 relative grid size-16 shrink-0 place-items-center rounded-[1.35rem] p-px sm:size-[4.5rem]">
               <span className="bg-card text-foreground grid size-full place-items-center rounded-[1.25rem] font-mono text-lg font-semibold tracking-tight sm:text-xl">
                 {accountInitials(accountName) || "A"}
               </span>
@@ -507,10 +488,6 @@ export default async function SettingsPage() {
                 </Link>
 
                 <div className="from-primary/[0.1] ring-primary/20 relative flex min-h-24 flex-col gap-3 overflow-hidden rounded-2xl bg-gradient-to-br to-transparent p-4 ring-1">
-                  <div
-                    aria-hidden="true"
-                    className="bg-primary/20 pointer-events-none absolute -top-12 -right-12 size-36 rounded-full blur-3xl"
-                  />
                   <div className="relative flex items-start gap-3.5">
                     <span
                       aria-hidden="true"
@@ -569,7 +546,7 @@ export default async function SettingsPage() {
                       </span>
                       <ArrowUpRight
                         aria-hidden="true"
-                        className="text-muted-foreground/70 group-hover:text-primary size-4 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transition-none"
+                        className="text-muted-foreground/70 group-hover:text-primary size-4 shrink-0 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
                       />
                     </Link>
                   ))}
@@ -580,7 +557,6 @@ export default async function SettingsPage() {
 
           <section
             aria-labelledby="shortcuts-title"
-            data-spotlight
             className={cn(glassCardClass, "p-4 min-[360px]:p-5 sm:p-6")}
           >
             <div className="flex items-center gap-2.5">

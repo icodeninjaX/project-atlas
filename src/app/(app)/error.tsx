@@ -6,7 +6,7 @@ export default function AppError({ reset }: { reset: () => void }) {
   return (
     <div className="grid min-h-[70dvh] place-items-center p-6 text-center">
       <div className="max-w-sm">
-        <p className="text-destructive font-mono text-xs font-semibold tracking-wider uppercase">
+        <p className="text-destructive font-mono text-[13px] font-semibold">
           Route interrupted
         </p>
         <h1 className="mt-3 text-2xl font-semibold">

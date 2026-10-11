@@ -84,7 +84,7 @@ export function AnswerV2View({
 
   return (
     <article className="border-border bg-card flex min-w-0 flex-col gap-4 rounded-2xl border p-4 text-sm">
-      <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+      <p className="text-muted-foreground text-[13px] font-semibold">
         {statusLabel[answer.status]}
       </p>
       {direct.length > 0 && (

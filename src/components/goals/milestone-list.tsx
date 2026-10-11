@@ -340,7 +340,7 @@ function MilestoneActionDialog({
             <>
               <header className="border-border bg-card/95 sticky top-0 z-10 flex items-start justify-between gap-4 border-b px-5 py-4 backdrop-blur-sm">
                 <div className="min-w-0 flex-1">
-                  <p className="text-muted-foreground mb-1 text-[10px] font-semibold tracking-[0.18em] uppercase">
+                  <p className="text-muted-foreground mb-1 text-[11px] font-semibold">
                     Milestone
                   </p>
                   <Dialog.Title className="text-foreground text-lg leading-tight font-semibold tracking-tight">
@@ -594,7 +594,7 @@ export function MilestoneList({
     <div className="border-border/70 mt-5 border-t pt-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.12em] uppercase">
+          <p className="text-muted-foreground text-xs font-semibold">
             Milestones
           </p>
           <span

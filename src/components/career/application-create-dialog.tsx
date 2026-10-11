@@ -35,7 +35,7 @@ export function ApplicationCreateDialog() {
         <Dialog.Content className={careerDialogContentClass}>
           <header className={careerDialogHeaderClass}>
             <div className="min-w-0">
-              <p className="text-primary text-[11px] font-semibold tracking-[0.12em] uppercase">
+              <p className="text-primary text-xs font-semibold">
                 New application
               </p>
               <Dialog.Title className="mt-1 text-xl font-semibold tracking-[-0.025em]">

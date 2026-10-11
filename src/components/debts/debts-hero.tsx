@@ -191,7 +191,7 @@ function QuietHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="debts-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-primary text-[13px] font-semibold"
         >
           Debts
         </h2>

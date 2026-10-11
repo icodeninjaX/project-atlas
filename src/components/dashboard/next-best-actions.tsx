@@ -44,7 +44,6 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
   return (
     <section
       aria-labelledby="next-best-action-title"
-      data-spotlight
       className={cn(dashboardCardClass, "mt-5 sm:p-7")}
     >
       <div className="flex min-w-0 items-start gap-3">
@@ -52,9 +51,7 @@ export function NextBestActions({ actions }: { actions: NextBestAction[] }) {
           <BriefcaseBusiness aria-hidden="true" className="size-[1.125rem]" />
         </span>
         <div className="min-w-0">
-          <p className="text-primary text-[11px] font-semibold tracking-[0.14em] uppercase">
-            Next best action
-          </p>
+          <p className="text-primary text-xs font-semibold">Next best action</p>
           <h2
             id="next-best-action-title"
             className="mt-0.5 text-lg font-semibold tracking-[-0.02em]"

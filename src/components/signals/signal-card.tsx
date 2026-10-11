@@ -236,7 +236,6 @@ export function SignalCard({ signal }: { signal: Signal }) {
     <article
       id={anchor}
       aria-labelledby={`${anchor}-title`}
-      data-spotlight
       className={cn(
         surfaceClass,
         "bg-card/90 target:ring-primary/45 @container relative isolate min-w-0 scroll-mt-24 overflow-hidden rounded-[1.5rem] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] target:ring-2",
@@ -287,7 +286,7 @@ export function SignalCard({ signal }: { signal: Signal }) {
           <AreaIcon className="size-[1.125rem]" />
         </span>
         <div className="min-w-0 self-center">
-          <p className="flex flex-wrap items-center gap-x-2 text-[0.6875rem] leading-5 font-semibold tracking-[0.08em] uppercase">
+          <p className="flex flex-wrap items-center gap-x-2 text-xs leading-5 font-semibold">
             <span className="text-muted-foreground">{signal.category}</span>
             <span
               aria-hidden="true"

@@ -148,8 +148,7 @@ function sortApplications(
 const toolbarControlClass =
   "bg-background/70 ring-border/80 hover:bg-background focus-visible:ring-ring min-h-11 rounded-full text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-10";
 
-const legendClass =
-  "text-muted-foreground text-[10px] font-semibold tracking-[0.12em] uppercase";
+const legendClass = "text-muted-foreground text-[11px] font-semibold";
 
 function ApplicationCard({
   application,
@@ -199,7 +198,6 @@ function ApplicationCard({
         overdue
           ? "ring-destructive/30 dark:bg-[color-mix(in_srgb,var(--destructive)_5%,var(--card))]"
           : "ring-border/80 hover:ring-primary/35",
-        "lg:hover:-translate-y-px motion-reduce:lg:hover:translate-y-0",
         moving && "opacity-55",
       )}
     >
@@ -290,7 +288,7 @@ function ApplicationCard({
         >
           <p
             className={cn(
-              "text-[10px] font-semibold tracking-[0.14em] uppercase",
+              "text-[11px] font-semibold",
               overdue
                 ? "text-red-700 dark:text-red-300"
                 : "text-muted-foreground",
@@ -576,7 +574,7 @@ export function CareerKanban({
       <h2 id="career-board-heading" className="sr-only">
         Pipeline board
       </h2>
-      <div className="bg-card/70 ring-border/80 rounded-[1.5rem] p-2 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_18px_40px_-30px_rgb(7_10_15/0.45)] ring-1 backdrop-blur-xl">
+      <div className="bg-card/70 ring-border/80 rounded-[1.5rem] p-2 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_18px_40px_-30px_rgb(7_10_15/0.45)] ring-1">
         <div className="flex flex-col gap-2 md:flex-row md:items-center">
           <label className="bg-background/70 ring-border/80 focus-within:ring-ring/60 relative flex min-h-11 min-w-0 flex-1 items-center rounded-full pl-10 ring-1 transition-shadow focus-within:ring-2 sm:min-h-10">
             <Search
@@ -914,7 +912,7 @@ export function CareerKanban({
         role="tablist"
         aria-label="Application stages"
         // `relative` keeps the tabs' screen-reader text inside the strip.
-        className="bg-muted/50 ring-border/80 relative mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-1 overflow-x-auto rounded-full p-1 ring-1 backdrop-blur lg:hidden [&::-webkit-scrollbar]:hidden"
+        className="bg-muted/50 ring-border/80 relative mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-1 overflow-x-auto rounded-full p-1 ring-1 lg:hidden [&::-webkit-scrollbar]:hidden"
       >
         {visibleStages.map((stage) => {
           const selected = activeStage === stage;

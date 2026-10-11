@@ -83,7 +83,6 @@ function NextPayment({
   const overdue = due.tone === "destructive";
   return (
     <div
-      data-spotlight
       className={cn(
         debtSurfaceClass,
         "p-5 sm:p-6",

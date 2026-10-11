@@ -25,8 +25,7 @@ import { cn } from "@/lib/utils";
 
 const initialState: KnowledgeActionState = { success: false, message: "" };
 
-const eyebrowClass =
-  "text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase";
+const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
 function ArchiveForm({
   concept,
@@ -232,7 +231,7 @@ export function ConceptPanel({
     <div className="min-w-0">
       {showTitle ? (
         <>
-          <p className="text-primary text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
+          <p className="text-primary text-xs font-semibold">
             {concept.category}
           </p>
           <h2 className="mt-1.5 text-xl leading-7 font-semibold tracking-[-0.025em] break-words">

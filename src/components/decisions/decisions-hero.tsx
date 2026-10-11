@@ -275,7 +275,7 @@ export function DecisionsHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="decisions-summary-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-primary text-[13px] font-semibold"
         >
           Review loop
         </h2>
@@ -285,7 +285,7 @@ export function DecisionsHero({
       <div className="mt-5 grid gap-7 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-x-12 lg:gap-y-9">
         <div className="min-w-0">
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="from-foreground via-foreground to-foreground/55 bg-gradient-to-br bg-clip-text pb-[0.06em] font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.06em] text-transparent">
+            <span className="text-foreground font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.045em]">
               {summary.total}
             </span>
             <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
@@ -346,7 +346,7 @@ export function DecisionsEmptyHero({
     <DecisionHeroShell labelledBy="decisions-summary-heading">
       <h2
         id="decisions-summary-heading"
-        className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+        className="text-primary text-[13px] font-semibold"
       >
         Your journal
       </h2>

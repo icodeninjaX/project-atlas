@@ -17,9 +17,7 @@ export function AuthCard({
   return (
     <main className="mx-auto grid min-h-[calc(100dvh-4.5rem)] max-w-md place-items-center px-5 py-12">
       <div className="w-full">
-        <p className="text-primary text-xs font-semibold tracking-[0.14em] uppercase">
-          {eyebrow}
-        </p>
+        <p className="text-primary text-[13px] font-semibold">{eyebrow}</p>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">{title}</h1>
         <p className="text-muted-foreground mt-3 text-sm leading-6">
           {description}

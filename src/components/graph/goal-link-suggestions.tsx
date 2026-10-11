@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Sparkles, X } from "lucide-react";
+import { Check, Waypoints, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -112,7 +112,7 @@ export function GoalLinkSuggestions({
             id="graph-suggestions"
             className="flex items-center gap-2 text-sm font-semibold"
           >
-            <Sparkles className="text-primary size-4" aria-hidden="true" />
+            <Waypoints className="text-primary size-4" aria-hidden="true" />
             Suggested for this goal
           </h3>
           <p className="text-muted-foreground mt-1 text-xs">

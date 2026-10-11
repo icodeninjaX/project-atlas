@@ -91,7 +91,7 @@ export function KnowledgeToolbar({
         aria-label="Browse concepts"
         className={cn(
           surfaceClass,
-          "bg-card/85 relative rounded-[1.5rem] p-3 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] backdrop-blur sm:p-4",
+          "bg-card/85 relative rounded-[1.5rem] p-3 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] sm:p-4",
         )}
       >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_11rem_11rem]">

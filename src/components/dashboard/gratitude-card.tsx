@@ -103,7 +103,7 @@ export function GratitudeCard({
       >
         <div className={compact ? "pr-12" : "pr-16 sm:pr-20 lg:pr-24"}>
           <p
-            className={`text-[11px] font-semibold tracking-[0.12em] uppercase ${
+            className={`text-xs font-semibold ${
               compact ? "text-primary dark:text-[#a9c5ff]" : "text-[#a9c5ff]"
             }`}
           >

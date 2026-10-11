@@ -133,7 +133,7 @@ export function AccountsOverview({
           <div className="flex items-center justify-between gap-3">
             <h2
               id="accounts-total"
-              className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+              className="text-primary text-[13px] font-semibold"
             >
               Total balance
             </h2>

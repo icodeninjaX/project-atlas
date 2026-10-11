@@ -58,8 +58,8 @@ function SummaryStat({
   detail: string;
 }) {
   return (
-    <div className="border-border/70 bg-card/80 min-w-0 rounded-2xl border p-3 backdrop-blur-sm sm:p-4">
-      <dt className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.12em] uppercase sm:text-[11px]">
+    <div className="border-border/70 bg-card/80 min-w-0 rounded-2xl border p-3 sm:p-4">
+      <dt className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold sm:text-xs">
         <Icon className="text-primary size-3.5 shrink-0" aria-hidden="true" />
         <span className="truncate">{label}</span>
       </dt>
@@ -191,10 +191,6 @@ export function GoalsBoard({
       <div className="mt-5 grid gap-4 sm:mt-6 sm:gap-5 lg:grid-cols-2">
         {goals.length === 0 ? (
           <div className="border-border relative isolate grid min-h-72 place-items-center overflow-hidden rounded-3xl border border-dashed px-6 py-12 text-center lg:col-span-2">
-            <div
-              aria-hidden="true"
-              className="bg-primary/10 pointer-events-none absolute top-1/2 left-1/2 -z-10 size-72 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
-            />
             <div>
               <span className="bg-primary/10 text-primary ring-primary/20 mx-auto grid size-14 place-items-center rounded-2xl ring-1 ring-inset">
                 <Goal className="size-6" aria-hidden="true" />
@@ -230,7 +226,7 @@ export function GoalsBoard({
                     "--goal-accent": goalAreaTheme(goal.area).accent,
                   } as CSSProperties
                 }
-                className={`relative rounded-2xl bg-[radial-gradient(120%_70%_at_100%_0%,color-mix(in_srgb,var(--goal-accent)_9%,transparent),transparent_55%)] shadow-[0_1px_2px_rgb(15_23_42/0.04),0_8px_24px_-12px_rgb(15_23_42/0.12)] transition duration-200 before:absolute before:inset-x-6 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[color-mix(in_srgb,var(--goal-accent)_55%,transparent)] before:to-transparent motion-reduce:transition-none sm:rounded-3xl dark:shadow-[0_1px_0_rgb(255_255_255/0.03)_inset,0_12px_32px_-16px_rgb(0_0_0/0.6)] [@media(hover:hover)]:hover:-translate-y-0.5 [@media(hover:hover)]:hover:border-[color-mix(in_srgb,var(--goal-accent)_35%,var(--border))] [@media(hover:hover)]:hover:shadow-[0_2px_4px_rgb(15_23_42/0.04),0_18px_40px_-16px_rgb(15_23_42/0.22)] motion-reduce:[@media(hover:hover)]:hover:translate-y-0 ${
+                className={`relative rounded-2xl bg-[radial-gradient(120%_70%_at_100%_0%,color-mix(in_srgb,var(--goal-accent)_9%,transparent),transparent_55%)] shadow-[0_1px_2px_rgb(15_23_42/0.04),0_8px_24px_-12px_rgb(15_23_42/0.12)] transition duration-200 before:absolute before:inset-x-6 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[color-mix(in_srgb,var(--goal-accent)_55%,transparent)] before:to-transparent motion-reduce:transition-none sm:rounded-3xl dark:shadow-[0_1px_0_rgb(255_255_255/0.03)_inset,0_12px_32px_-16px_rgb(0_0_0/0.6)] [@media(hover:hover)]:hover:border-[color-mix(in_srgb,var(--goal-accent)_35%,var(--border))] [@media(hover:hover)]:hover:shadow-[0_2px_4px_rgb(15_23_42/0.04),0_18px_40px_-16px_rgb(15_23_42/0.22)] ${
                   highlighted ? "ring-primary/60 ring-2" : ""
                 }`}
               >

@@ -67,9 +67,7 @@ export function TaskTimeRecommendations({
             <CalendarClock className="size-[18px]" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold tracking-[0.12em] uppercase">
-              Schedule conflict
-            </p>
+            <p className="text-xs font-semibold">Schedule conflict</p>
             <p
               role="status"
               aria-live="polite"

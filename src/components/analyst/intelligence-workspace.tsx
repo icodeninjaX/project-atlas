@@ -137,7 +137,7 @@ export function AnswerCard({
   const writer = answer.models.writer;
   return (
     <article className="border-border bg-card flex min-w-0 flex-col gap-4 rounded-2xl border p-4 text-sm leading-6">
-      <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+      <p className="text-muted-foreground text-[13px] font-semibold">
         {p.statusLabel}
       </p>
       {p.direct.length > 0 && (

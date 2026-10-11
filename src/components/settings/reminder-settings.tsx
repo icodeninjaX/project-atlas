@@ -152,10 +152,6 @@ export function ReminderSettings({
   return (
     <form action={formAction} className="space-y-7">
       <div className="bg-background/55 ring-border/80 relative overflow-hidden rounded-2xl p-4 ring-1 sm:p-5">
-        <div
-          aria-hidden="true"
-          className="bg-primary/15 pointer-events-none absolute -top-16 -right-10 size-44 rounded-full blur-3xl"
-        />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
             <span
@@ -238,7 +234,7 @@ export function ReminderSettings({
         <SettingsGroup title="Quiet hours" icon={Clock3} titleIsLegend>
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <label className="bg-background/55 ring-border/80 focus-within:ring-ring block rounded-2xl p-3 ring-1 focus-within:ring-2 sm:p-3.5">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
                 <Moon aria-hidden="true" className="size-3.5" />
                 Starts
               </span>
@@ -251,7 +247,7 @@ export function ReminderSettings({
               />
             </label>
             <label className="bg-background/55 ring-border/80 focus-within:ring-ring block rounded-2xl p-3 ring-1 focus-within:ring-2 sm:p-3.5">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
                 <Sunrise aria-hidden="true" className="size-3.5" />
                 Ends
               </span>

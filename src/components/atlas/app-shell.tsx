@@ -243,7 +243,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           {navigationGroups.map((group) => (
             <div key={group.label}>
-              <p className="text-muted-foreground mb-1.5 px-3 text-[10px] font-semibold tracking-[0.14em] uppercase">
+              <p className="text-muted-foreground mb-1.5 px-3 text-[11px] font-semibold">
                 {group.label}
               </p>
               <div className="space-y-0.5">

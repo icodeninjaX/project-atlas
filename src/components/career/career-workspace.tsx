@@ -37,7 +37,7 @@ function ViewSwitch({ view }: { view: CareerView }) {
   return (
     <nav
       aria-label="Career views"
-      className="bg-muted/50 ring-border/80 flex min-w-0 rounded-full p-1 ring-1 backdrop-blur"
+      className="bg-muted/50 ring-border/80 flex min-w-0 rounded-full p-1 ring-1"
     >
       {views.map(({ value, label, icon: Icon, href }) => {
         const active = view === value;

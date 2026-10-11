@@ -22,7 +22,7 @@ const stripClass =
 
 /** Names each strip from `sm`; phones rely on the strips' own names. */
 const rowLabelClass =
-  "text-muted-foreground pl-2 text-[0.6875rem] font-semibold tracking-[0.12em] uppercase max-sm:hidden";
+  "text-muted-foreground pl-2 text-xs font-semibold max-sm:hidden";
 
 const pillClass =
   "focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:min-h-8 sm:px-3";
@@ -110,7 +110,7 @@ export function SignalsToolbar({
       <div
         className={cn(
           surfaceClass,
-          "bg-card/85 relative grid gap-2 rounded-[1.5rem] p-2.5 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] backdrop-blur sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:items-center sm:gap-x-3 sm:p-3",
+          "bg-card/85 relative grid gap-2 rounded-[1.5rem] p-2.5 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:items-center sm:gap-x-3 sm:p-3",
         )}
       >
         <p aria-hidden="true" className={rowLabelClass}>

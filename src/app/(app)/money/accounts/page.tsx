@@ -107,7 +107,7 @@ export default async function AccountsPage() {
           <EmptyState
             icon={WalletCards}
             title="Add your first account"
-            description="Cash, GCash, Maya, bank, or savings — each starts with one truthful balance. Use Add account above to begin."
+            description="Cash, GCash, Maya, bank, or savings. Each starts with one truthful balance. Use Add account above to begin."
           />
         </div>
       ) : (

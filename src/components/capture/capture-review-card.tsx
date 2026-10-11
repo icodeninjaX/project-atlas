@@ -170,7 +170,6 @@ export function CaptureCard({
   return (
     <article
       aria-labelledby={titleId}
-      data-spotlight
       className={cn(
         glassCardClass,
         "overflow-hidden transition-[opacity,box-shadow] duration-300",
@@ -191,7 +190,7 @@ export function CaptureCard({
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
             <p
               id={titleId}
-              className="text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase"
+              className="text-muted-foreground text-xs font-semibold"
             >
               {index + 1}. {kind.label}
             </p>

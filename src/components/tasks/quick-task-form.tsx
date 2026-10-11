@@ -3,8 +3,8 @@
 import {
   CalendarDays,
   ChevronDown,
+  ListPlus,
   SlidersHorizontal,
-  Sparkles,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -112,8 +112,8 @@ export function QuickTaskForm({
         className="from-primary/10 pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b to-transparent"
       />
       <div className="relative p-4 sm:p-6">
-        <p className="text-primary flex items-center gap-2 text-xs font-semibold tracking-[0.12em] uppercase">
-          <Sparkles className="size-3.5" aria-hidden="true" />
+        <p className="text-primary flex items-center gap-2 text-[13px] font-semibold">
+          <ListPlus className="size-3.5" aria-hidden="true" />
           New task
         </p>
         <div className="mt-3">

@@ -195,7 +195,7 @@ function DetailHero({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <span className="text-primary text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
+            <span className="text-primary text-xs font-semibold">
               Decision review
             </span>
             <ReviewChip review={review} />
@@ -309,7 +309,6 @@ function PlanCard({
   return (
     <section
       aria-labelledby="decision-summary"
-      data-spotlight
       className={cn(decisionCardClass, "mt-4 sm:mt-5")}
     >
       <div className="flex min-w-0 items-center gap-3">
@@ -424,9 +423,7 @@ function ReviewStop({
         <CalendarCheck className="size-4" />
       </span>
       <p className="flex flex-wrap items-baseline gap-x-2 text-xs">
-        <span className="font-semibold tracking-[0.06em] uppercase">
-          Review date
-        </span>
+        <span className="font-semibold">Review date</span>
         <span className="text-muted-foreground font-mono">
           {formatCalendarDate(on)}
           {upcoming ? ` · in ${days(calendarDaysBetween(todayIso, on))}` : null}
@@ -463,7 +460,7 @@ function Observations({
         </p>
       </div>
 
-      <div data-spotlight className={cn(decisionCardClass, "mt-4")}>
+      <div className={cn(decisionCardClass, "mt-4")}>
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"

@@ -709,7 +709,7 @@ function taskSignals(
           category: "Tasks",
           severity: "positive",
           title: "Strong task execution",
-          message: `You completed ${currentCompleted} tasks this week—your strongest week in the last month.`,
+          message: `You completed ${currentCompleted} tasks this week, your strongest week in the last month.`,
           reason: `Your previous three weekly completion totals were ${previousWeekCounts.join(", ")}. This week has already passed each of them.`,
           metric: {
             label: "Completed this week",

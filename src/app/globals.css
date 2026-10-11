@@ -411,22 +411,6 @@ select option {
   background: color-mix(in srgb, var(--primary) 35%, transparent);
 }
 
-.atlas-grid {
-  background-image:
-    linear-gradient(
-      to right,
-      color-mix(in srgb, var(--border) 55%, transparent) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--border) 55%, transparent) 1px,
-      transparent 1px
-    );
-  background-size: 32px 32px;
-  mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
-}
-
 .atlas-launch-screen {
   position: fixed;
   inset: 0;

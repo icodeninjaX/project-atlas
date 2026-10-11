@@ -5,8 +5,7 @@ import { cn } from "@/lib/utils";
 
 /** Shared pieces of the Settings page. */
 
-export const eyebrowClass =
-  "text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase";
+export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
 /** A glass surface for the page's cards. */
 export const glassCardClass = cn(
@@ -88,7 +87,6 @@ export function SettingsSection({
     <section
       id={id}
       aria-labelledby={titleId}
-      data-spotlight
       className={cn(
         glassCardClass,
         "scroll-mt-36 overflow-hidden lg:scroll-mt-8",

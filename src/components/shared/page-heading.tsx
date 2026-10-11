@@ -5,8 +5,8 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * The one page title every ATLAS screen opens with: an eyebrow pill, the
- * gradient title, a short description, and the page's own actions. Keeping
+ * The one page title every ATLAS screen opens with: a quiet eyebrow, the
+ * title, a short description, and the page's own actions. Keeping
  * it in one place is what makes moving between pages feel like one app.
  */
 export function PageHeading({
@@ -21,7 +21,7 @@ export function PageHeading({
   titleId,
 }: {
   eyebrow?: string;
-  /** Shown inside the eyebrow pill. */
+  /** Shown beside the eyebrow. */
   icon?: LucideIcon;
   /** Quiet context beside the eyebrow, such as today's date. */
   meta?: ReactNode;
@@ -45,9 +45,12 @@ export function PageHeading({
         {eyebrow || meta ? (
           <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs font-medium">
             {eyebrow ? (
-              <span className="bg-card/60 text-primary ring-border/70 inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.1em] uppercase ring-1 backdrop-blur">
+              <span className="text-foreground/80 inline-flex max-w-full items-center gap-1.5 text-[13px] font-medium">
                 {Icon ? (
-                  <Icon aria-hidden="true" className="size-3.5 shrink-0" />
+                  <Icon
+                    aria-hidden="true"
+                    className="text-primary size-3.5 shrink-0"
+                  />
                 ) : null}
                 <span className="truncate">{eyebrow}</span>
               </span>
@@ -60,8 +63,8 @@ export function PageHeading({
         <h1
           id={titleId}
           className={cn(
-            "from-foreground via-foreground to-foreground/60 bg-gradient-to-br bg-clip-text pb-[0.08em] text-[1.875rem] leading-[1.04] font-semibold tracking-[-0.05em] break-words text-transparent min-[360px]:text-[2.125rem] sm:text-[2.75rem] lg:text-[3.25rem]",
-            (eyebrow || meta) && "mt-4",
+            "text-foreground text-[1.875rem] leading-[1.04] font-semibold tracking-[-0.035em] break-words min-[360px]:text-[2.125rem] sm:text-[2.75rem] lg:text-[3.25rem]",
+            (eyebrow || meta) && "mt-3",
           )}
         >
           {title}
@@ -98,7 +101,7 @@ export function PageHeading({
 }
 
 const headerPillClass =
-  "bg-card/60 ring-border/80 inline-flex min-h-9 items-center gap-2 self-start rounded-full px-4 text-xs font-semibold ring-1 backdrop-blur";
+  "bg-card/60 ring-border/80 inline-flex min-h-9 items-center gap-2 self-start rounded-full px-4 text-xs font-semibold ring-1 ";
 
 /** A companion page linked from a page title, such as Activity history. */
 export function PageHeadingLink({

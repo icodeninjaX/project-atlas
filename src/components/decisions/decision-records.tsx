@@ -314,7 +314,6 @@ export function DecisionRecordsCard({
   return (
     <section
       aria-labelledby="observed-change"
-      data-spotlight
       className={cn(decisionCardClass, "mt-4 sm:mt-5")}
     >
       <div className="flex min-w-0 items-center gap-3">

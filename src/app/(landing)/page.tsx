@@ -5,11 +5,11 @@ import {
   BellRing,
   Download,
   EyeOff,
+  FileSearch,
   Fingerprint,
   GitBranch,
   LineChart,
   ShieldCheck,
-  Sparkles,
   Split,
   WifiOff,
 } from "lucide-react";
@@ -32,9 +32,9 @@ import { ROUTE_STOPS } from "@/components/landing/scene-states";
 import "@/components/landing/landing.css";
 
 export const metadata: Metadata = {
-  title: { absolute: "ATLAS — Your personal operating system" },
+  title: { absolute: "ATLAS · Your personal operating system" },
   description:
-    "Money, debts, tasks, goals, career and weekly reflection working as one system — with one clear daily route. Private by design, built for real life in Philippine pesos.",
+    "Money, debts, tasks, goals, career and weekly reflection working as one system, with one clear daily route. Private by design, built for real life in Philippine pesos.",
 };
 
 function step(index: number) {
@@ -117,9 +117,9 @@ function DomainChapter({
 
 const intelligence = [
   {
-    icon: Sparkles,
+    icon: FileSearch,
     title: "Grounded Analyst",
-    body: "Ask across money, tasks, goals and reviews. Every claim cites the records behind it — no evidence, no answer.",
+    body: "Ask across money, tasks, goals and reviews. Every claim cites the records behind it. No evidence, no answer.",
   },
   {
     icon: ArrowUpRight,
@@ -129,7 +129,7 @@ const intelligence = [
   {
     icon: GitBranch,
     title: "Patterns",
-    body: "Monthly associations between income, spending, debt payments, tasks and review scores — shown only when they pass strict checks, never framed as cause.",
+    body: "Monthly associations between income, spending, debt payments, tasks and review scores. Shown only when they pass strict checks, and never framed as cause.",
   },
   {
     icon: LineChart,
@@ -152,7 +152,7 @@ const trust = [
   {
     icon: EyeOff,
     title: "Privacy mode",
-    body: "One tap blurs every amount on screen — for cafés, commutes and screen shares.",
+    body: "One tap blurs every amount on screen for cafés, commutes and screen shares.",
     demo: true,
   },
   {
@@ -213,7 +213,7 @@ export default function LandingPage() {
               href="/signup"
               className="landing-button landing-button--small"
             >
-              Get started
+              Create account
             </Link>
           </nav>
         </div>
@@ -249,7 +249,7 @@ export default function LandingPage() {
               </h1>
               <p className="landing-lede landing-intro" style={step(3)}>
                 ATLAS brings your money, debts, tasks, goals, and career into
-                one clear daily route—built for real life in Philippine pesos.
+                one clear daily route, built for real life in Philippine pesos.
               </p>
               <div
                 className="landing-intro mt-9 flex flex-wrap gap-3"
@@ -284,7 +284,7 @@ export default function LandingPage() {
               Scroll to take it apart
             </p>
             <p className="landing-mono hidden text-[#8d99aa] sm:block">
-              14.5547° N · 121.0244° E — Asia/Manila
+              14.5547° N · 121.0244° E · Asia/Manila
             </p>
           </div>
         </section>
@@ -308,23 +308,9 @@ export default function LandingPage() {
                 <p data-reveal className="landing-body">
                   Your balance lives in a banking app. Deadlines live in your
                   head. The job hunt lives in a spreadsheet you stopped updating
-                  in March. Every part works alone—so nothing tells you what
+                  in March. Every part works alone, so nothing tells you what
                   matters today.
                 </p>
-                <dl data-reveal className="landing-stats">
-                  <div>
-                    <dt>Systems</dt>
-                    <dd>5</dd>
-                  </div>
-                  <div>
-                    <dt>Daily route</dt>
-                    <dd>1</dd>
-                  </div>
-                  <div>
-                    <dt>Spreadsheets</dt>
-                    <dd>0</dd>
-                  </div>
-                </dl>
               </div>
             </div>
           </div>
@@ -339,7 +325,7 @@ export default function LandingPage() {
               Every centavo, <Serif>accounted for.</Serif>
             </>
           }
-          body="Accounts, transactions, transfers and monthly budgets—stored as exact integer centavos, so balances never drift. Debts get a payoff strategy, amortization estimates and an atomic payment history."
+          body="Accounts, transactions, transfers and monthly budgets, stored as exact integer centavos, so balances never drift. Debts get a payoff strategy, amortization estimates and an atomic payment history."
           points={[
             "GCash, Maya, banks and cash in one ledger",
             "Avalanche or snowball debt strategies",
@@ -392,7 +378,7 @@ export default function LandingPage() {
               A job search <Serif>with a memory.</Serif>
             </>
           }
-          body="Table or Kanban, your call. Every application keeps its stage history, notes and follow-up date—and overdue follow-ups surface on Today before an opportunity goes cold."
+          body="Table or Kanban, your call. Every application keeps its stage history, notes and follow-up date, and overdue follow-ups surface on Today before an opportunity goes cold."
           points={[
             "Customizable table and Kanban views",
             "Stage history for every application",
@@ -409,7 +395,7 @@ export default function LandingPage() {
               Sunday, <Serif>with receipts.</Serif>
             </>
           }
-          body="Each Monday-to-Sunday week closes with a factual summary of what actually happened—then guided prompts help you decide what changes. Drafts save; scores trend over time."
+          body="Each Monday-to-Sunday week closes with a factual summary of what actually happened. Guided prompts then help you decide what changes. Drafts save; scores trend over time."
           points={[
             "Factual weekly summaries",
             "Guided reflection with drafts",
@@ -444,7 +430,7 @@ export default function LandingPage() {
                   </h2>
                   <p data-reveal className="landing-body">
                     Every piece of the core faces the same empty middle. That is
-                    where ATLAS connects your records—carefully, with evidence,
+                    where ATLAS connects your records: carefully, with evidence,
                     and never without your say.
                   </p>
                   <div data-reveal className="mt-8">
@@ -518,7 +504,7 @@ export default function LandingPage() {
               </ol>
               <div className="landing-dayline-bottom">
                 <p data-reveal className="landing-body">
-                  Today turns everything into the Dayline—an ordered route of
+                  Today turns everything into the Dayline, an ordered route of
                   what to do now, next and later. Deterministic priorities you
                   can read, not a mystery score.
                 </p>

@@ -4,7 +4,7 @@ import {
   Compass,
   Hourglass,
   Lightbulb,
-  Sparkles,
+  ThumbsUp,
   WalletCards,
   type LucideIcon,
 } from "lucide-react";
@@ -12,9 +12,9 @@ import type { ReactNode } from "react";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import type { PromptKey, StatusTone } from "@/lib/reviews/view";
 import { cn } from "@/lib/utils";
+import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
-export const eyebrowClass =
-  "text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.12em] uppercase";
+export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
 /** Every prompt's icon, question, and its title when read back. */
 export const promptMeta: Record<
@@ -28,7 +28,7 @@ export const promptMeta: Record<
   }
 > = {
   wins: {
-    icon: Sparkles,
+    icon: ThumbsUp,
     question: "What went well?",
     title: "What went well",
     hint: "Notice a moment worth keeping.",
@@ -144,34 +144,6 @@ export function StatusPill({
   );
 }
 
-/** A wash of light from the top, two soft glows, and a faint grid. */
-function HeroLight() {
-  return (
-    <>
-      <div
-        aria-hidden="true"
-        className="from-primary/14 pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b to-transparent"
-      />
-      <div
-        aria-hidden="true"
-        className="bg-primary/20 pointer-events-none absolute -top-40 -right-24 -z-10 size-96 rounded-full blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-36 -left-24 -z-10 size-80 rounded-full bg-indigo-400/10 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="atlas-grid pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 [mask-image:radial-gradient(70%_100%_at_100%_0%,black,transparent)] opacity-40"
-      />
-      <div
-        aria-hidden="true"
-        className="via-primary/70 pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
-      />
-    </>
-  );
-}
-
 /** The lead surface of each tab. */
 export function HeroShell({
   labelledBy,
@@ -185,14 +157,13 @@ export function HeroShell({
   return (
     <section
       aria-labelledby={labelledBy}
-      data-spotlight
       className={cn(
         surfaceClass,
         "bg-card @container relative isolate overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:rounded-[2rem]",
         className,
       )}
     >
-      <HeroLight />
+      <HeroBackdrop />
       <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
     </section>
   );

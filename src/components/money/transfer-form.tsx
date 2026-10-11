@@ -78,7 +78,7 @@ function AccountEnd({
             : "border-border bg-background/60 border-dashed",
       )}
     >
-      <span className="text-muted-foreground text-xs font-semibold tracking-[0.1em] uppercase">
+      <span className="text-muted-foreground text-[13px] font-semibold">
         {label}
       </span>
       <span className="mt-2 flex min-w-0 items-center gap-3">

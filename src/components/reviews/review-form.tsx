@@ -272,7 +272,7 @@ export function ReviewForm({
 
       {/* `overflow-clip` rounds the corners without becoming a scroll
           container, so the action bar can stay sticky. */}
-      <div data-spotlight className={cn(glassCardClass, "overflow-clip")}>
+      <div className={cn(glassCardClass, "overflow-clip")}>
         <div className="px-4 py-4 sm:px-6">
           <div className="flex items-baseline justify-between gap-3 text-xs">
             <p className="text-muted-foreground">
@@ -352,7 +352,7 @@ export function ReviewForm({
                 How did the week feel?
               </p>
               <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-                Out of 10. Optional—leave any empty.
+                Out of 10. Optional, so leave any empty.
               </p>
             </div>
           </div>

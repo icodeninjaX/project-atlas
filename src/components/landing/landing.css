@@ -724,12 +724,6 @@
   max-width: 36rem;
 }
 
-.landing-fracture-copy .landing-stats {
-  margin-top: 2.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--landing-line);
-}
-
 .landing-dayline {
   display: flex;
   min-height: 100dvh;
@@ -746,26 +740,6 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 2rem;
-}
-
-.landing-stats {
-  display: flex;
-  gap: 2.5rem;
-}
-
-.landing-stats dt {
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 0.6875rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--landing-faint);
-}
-
-.landing-stats dd {
-  margin-top: 0.35rem;
-  font-size: clamp(2rem, 3.4vw, 3rem);
-  font-weight: 600;
-  letter-spacing: -0.04em;
 }
 
 .landing-chapter--intelligence .landing-intelligence-pin {

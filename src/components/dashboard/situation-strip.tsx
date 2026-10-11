@@ -112,10 +112,8 @@ export function SituationStrip({ items }: { items: SituationItem[] }) {
             <Link
               key={item.label}
               href={item.href}
-              data-spotlight
               className={cn(
-                styles.spotlight,
-                "group bg-card/90 focus-visible:ring-ring relative isolate flex min-w-0 flex-col overflow-hidden rounded-2xl p-3.5 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_14px_30px_-24px_rgb(7_10_15/0.45)] transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-22px_rgb(7_10_15/0.5)] focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 min-[360px]:p-4 sm:p-5 @[17rem]:min-h-24",
+                "group bg-card/90 focus-visible:ring-ring relative isolate flex min-w-0 flex-col overflow-hidden rounded-2xl p-3.5 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_14px_30px_-24px_rgb(7_10_15/0.45)] transition-[box-shadow,transform] hover:shadow-[0_20px_40px_-22px_rgb(7_10_15/0.5)] focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none min-[360px]:p-4 sm:p-5 @[17rem]:min-h-24",
                 item.urgent ? "ring-destructive/30 ring-1" : styles.edge,
               )}
             >

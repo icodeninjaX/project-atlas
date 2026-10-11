@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import { cn } from "@/lib/utils";
+import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 export type HeroTone = "positive" | "caution" | "destructive" | "neutral";
 
@@ -37,40 +38,6 @@ export function TonePill({
   );
 }
 
-/** The hero's backdrop: a wash of light from the top and two soft glows. */
-function HeroLight({ warm }: { warm: boolean }) {
-  return (
-    <>
-      <div
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b to-transparent",
-          warm ? "from-destructive/12" : "from-primary/14",
-        )}
-      />
-      <div
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none absolute -top-40 -right-24 -z-10 size-96 rounded-full blur-3xl",
-          warm ? "bg-destructive/15" : "bg-primary/20",
-        )}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-36 -left-24 -z-10 size-80 rounded-full bg-sky-400/10 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="atlas-grid pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 [mask-image:radial-gradient(70%_100%_at_100%_0%,black,transparent)] opacity-40"
-      />
-      <div
-        aria-hidden="true"
-        className="via-primary/70 pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
-      />
-    </>
-  );
-}
-
 /** The lead surface of a money page, lit warm when something is wrong. */
 export function MoneyHeroShell({
   labelledBy,
@@ -86,14 +53,13 @@ export function MoneyHeroShell({
   return (
     <section
       aria-labelledby={labelledBy}
-      data-spotlight
       className={cn(
         surfaceClass,
         "bg-card @container relative isolate mt-8 overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:rounded-[2rem]",
         className,
       )}
     >
-      <HeroLight warm={tone === "destructive"} />
+      <HeroBackdrop warm={tone === "destructive"} />
       <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
     </section>
   );

@@ -62,7 +62,7 @@ function ScanHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="patterns-scan-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-primary text-[13px] font-semibold"
         >
           The scan
         </h2>
@@ -77,7 +77,7 @@ function ScanHero({
         <div className="min-w-0">
           {found ? (
             <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="from-foreground via-foreground to-foreground/55 bg-gradient-to-br bg-clip-text pb-[0.06em] font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.06em] text-transparent">
+              <span className="text-foreground font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.045em]">
                 {found}
               </span>
               <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
@@ -186,7 +186,6 @@ function PatternsMethod({ version }: { version: string }) {
   return (
     <section
       aria-labelledby="patterns-method"
-      data-spotlight
       className={cn(
         glassCardClass,
         "mt-10 p-4 min-[360px]:p-5 sm:mt-12 sm:p-6",

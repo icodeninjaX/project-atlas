@@ -29,7 +29,7 @@ export function AccountCreatePanel({ trigger }: { trigger?: ReactNode }) {
         <Dialog.Content className="bg-background fixed inset-0 z-[60] overflow-y-auto p-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] outline-none sm:inset-y-6 sm:left-1/2 sm:w-[min(calc(100vw-3rem),58rem)] sm:-translate-x-1/2 sm:rounded-[1.75rem] sm:border sm:p-7 sm:shadow-[0_24px_70px_rgb(7_10_15/0.4)] lg:inset-y-10">
           <div className="mb-7 flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-primary text-[0.6875rem] font-semibold tracking-[0.12em] uppercase">
+              <p className="text-primary text-xs font-semibold">
                 Money / Accounts
               </p>
               <Dialog.Title className="mt-1 text-2xl font-semibold tracking-[-0.03em]">

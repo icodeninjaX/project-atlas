@@ -4,10 +4,10 @@ import {
   CalendarClock,
   Check,
   Compass,
+  IdCard,
   ListOrdered,
   Mountain,
   Snowflake,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { useActionState } from "react";
@@ -89,7 +89,7 @@ export function SettingsPreferencesForm({
 
   return (
     <form action={action} aria-busy={pending} className="space-y-7">
-      <SettingsGroup title="Identity" icon={Sparkles}>
+      <SettingsGroup title="Identity" icon={IdCard}>
         <div className="space-y-1.5">
           <label htmlFor="display-name" className={fieldLabelClass}>
             Display name

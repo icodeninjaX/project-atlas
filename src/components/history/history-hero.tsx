@@ -294,7 +294,7 @@ export function HistoryHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="history-window-heading"
-          className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+          className="text-primary text-[13px] font-semibold"
         >
           In this window
         </h2>
@@ -306,7 +306,7 @@ export function HistoryHero({
       <div className="mt-5 grid gap-7 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-x-12">
         <div className="min-w-0">
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <SensitiveValue className="from-foreground via-foreground to-foreground/55 bg-gradient-to-br bg-clip-text pb-[0.06em] font-mono text-[clamp(3.25rem,16vw,5.5rem)] leading-[0.92] font-semibold tracking-[-0.06em] text-transparent">
+            <SensitiveValue className="text-foreground font-mono text-[clamp(3.25rem,16vw,5.5rem)] leading-[0.92] font-semibold tracking-[-0.045em]">
               {overview.records.toLocaleString("en-PH")}
             </SensitiveValue>
             <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
@@ -346,7 +346,7 @@ export function HistoryEmptyHero() {
     <HeroShell labelledBy="history-window-heading">
       <h2
         id="history-window-heading"
-        className="text-primary text-xs font-semibold tracking-[0.12em] uppercase"
+        className="text-primary text-[13px] font-semibold"
       >
         Your history
       </h2>

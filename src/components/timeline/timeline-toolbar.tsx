@@ -234,7 +234,7 @@ export function TimelineToolbar({
         aria-label="Filter the timeline"
         className={cn(
           surfaceClass,
-          "bg-card/85 relative rounded-[1.5rem] p-3 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] backdrop-blur sm:p-4",
+          "bg-card/85 relative rounded-[1.5rem] p-3 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] sm:p-4",
         )}
       >
         {filters.module ? (
