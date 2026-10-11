@@ -232,7 +232,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <AtlasMark />
           <div>
             <p className="text-sm font-semibold">ATLAS</p>
-            <p className="text-muted-foreground text-[11px]">
+            <p className="text-muted-foreground text-[0.6875rem]">
               Personal operating system
             </p>
           </div>
@@ -243,7 +243,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           {navigationGroups.map((group) => (
             <div key={group.label}>
-              <p className="text-muted-foreground mb-1.5 px-3 text-[11px] font-semibold">
+              <p className="text-muted-foreground mb-1.5 px-3 text-[0.6875rem] font-semibold">
                 {group.label}
               </p>
               <div className="space-y-0.5">
@@ -303,7 +303,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               />
               {label}
               {shortcut && (
-                <kbd className="border-border bg-background text-muted-foreground ml-auto rounded-md border px-1.5 py-px text-[10px]">
+                <kbd className="border-border bg-background text-muted-foreground ml-auto rounded-md border px-1.5 py-px text-[0.625rem]">
                   {shortcut}
                 </kbd>
               )}
@@ -335,7 +335,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             href={href}
             aria-current={isActive(href) ? "page" : undefined}
             className={cn(
-              "text-muted-foreground focus-visible:ring-ring relative flex min-h-[4.5rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[11px] font-medium focus-visible:ring-2 focus-visible:outline-none",
+              "text-muted-foreground focus-visible:ring-ring relative flex min-h-[4.5rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[0.6875rem] font-medium focus-visible:ring-2 focus-visible:outline-none",
               isActive(href) && "text-primary font-semibold",
             )}
           >
@@ -360,7 +360,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-label="More navigation"
             onClick={() => setMoreOpen((open) => !open)}
             className={cn(
-              "text-muted-foreground focus-visible:ring-ring flex min-h-[4.5rem] w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
+              "text-muted-foreground focus-visible:ring-ring flex min-h-[4.5rem] w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[0.6875rem] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
               (moreOpen || moreDestinationActive) &&
                 "text-primary font-semibold",
             )}

@@ -45,7 +45,7 @@ export function PageHeading({
         {eyebrow || meta ? (
           <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs font-medium">
             {eyebrow ? (
-              <span className="text-foreground/80 inline-flex max-w-full items-center gap-1.5 text-[13px] font-medium">
+              <span className="text-foreground/80 inline-flex max-w-full items-center gap-1.5 text-[0.8125rem] font-medium">
                 {Icon ? (
                   <Icon
                     aria-hidden="true"

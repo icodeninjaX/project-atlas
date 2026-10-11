@@ -38,7 +38,7 @@ export function WeekPosition({
           <li
             key={index}
             className={cn(
-              "grid h-9 place-items-center rounded-lg text-[11px] font-semibold",
+              "grid h-9 place-items-center rounded-lg text-[0.6875rem] font-semibold",
               index < dayIndex && "bg-primary/15 text-primary",
               index === dayIndex &&
                 "bg-primary-solid text-primary-solid-foreground shadow-[0_6px_16px_-8px_var(--primary-solid)]",

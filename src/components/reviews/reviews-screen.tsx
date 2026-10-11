@@ -82,7 +82,7 @@ export function ReviewsScreen({
         eyebrow="Monday–Sunday"
         icon={NotebookPen}
         title="Weekly reviews"
-        description="A quiet place to notice your patterns, remember your progress, and choose what matters next."
+        description="Each week gets a factual summary of what happened, then a few prompts to decide what changes next."
       />
 
       <ReviewWorkspace

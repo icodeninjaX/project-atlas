@@ -13,6 +13,11 @@ Current status (2026-08-26): the public production origin, health endpoint, and 
    - production application origin
    - `http://localhost:3000/auth/callback`
 6. Enable email confirmations and configure a production SMTP provider.
+   Replace the stock Supabase emails: in Authentication → Email Templates,
+   paste `supabase/templates/confirmation.html` (Confirm signup),
+   `recovery.html` (Reset password) and `email_change.html` (Change email
+   address), using the subjects set in `supabase/config.toml`. Send from an
+   ATLAS address rather than the default Supabase sender.
 7. Enable leaked-password protection when supported by the selected Supabase plan, review Auth rate limits, and verify signup and reset behavior.
 8. Do not run `supabase/seed.sql` in production.
 

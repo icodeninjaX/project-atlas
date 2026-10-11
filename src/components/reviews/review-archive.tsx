@@ -157,7 +157,7 @@ function WeekRow({
               {compactReviewWeekLabel(review.weekStart)}
             </time>
             {review.completedAt ? null : (
-              <span className="bg-muted rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
+              <span className="bg-muted rounded-full px-1.5 py-0.5 text-[0.625rem] font-semibold">
                 Draft
               </span>
             )}
@@ -235,7 +235,7 @@ function JournalPage({
         ) : null}
         <h2
           className={cn(
-            "text-[1.5rem] leading-[1.15] font-semibold tracking-[-0.03em] text-balance break-words sm:text-[1.875rem]",
+            "text-2xl leading-[1.15] font-semibold tracking-[-0.03em] text-balance break-words sm:text-[1.875rem]",
             focus ? "mt-1.5" : "mt-4",
           )}
         >

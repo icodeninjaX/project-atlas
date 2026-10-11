@@ -60,7 +60,7 @@ export function StrengthRing({
           />
         ))}
       </svg>
-      <span className="font-mono text-[0.75rem] leading-none font-semibold tabular-nums">
+      <span className="font-mono text-xs leading-none font-semibold tabular-nums">
         {level}
       </span>
     </span>

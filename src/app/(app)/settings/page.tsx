@@ -155,7 +155,7 @@ function ShortcutRow({ label, keys }: { label: string; keys: string }) {
   return (
     <div className="flex min-h-10 items-center justify-between gap-4">
       <span className="text-muted-foreground text-sm">{label}</span>
-      <kbd className="bg-background/80 ring-border text-foreground min-w-8 rounded-lg px-2 py-1 text-center font-mono text-[11px] font-semibold shadow-[inset_0_-2px_0_color-mix(in_srgb,var(--border)_90%,transparent)] ring-1">
+      <kbd className="bg-background/80 ring-border text-foreground min-w-8 rounded-lg px-2 py-1 text-center font-mono text-[0.6875rem] font-semibold shadow-[inset_0_-2px_0_color-mix(in_srgb,var(--border)_90%,transparent)] ring-1">
         {keys}
       </kbd>
     </div>
@@ -176,7 +176,7 @@ function GlanceTile({
 }) {
   const body = (
     <>
-      <span className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-medium">
+      <span className="text-muted-foreground flex items-center gap-1.5 text-[0.6875rem] font-medium">
         <Icon aria-hidden="true" className="size-3.5 shrink-0" />
         <span className="truncate">{label}</span>
       </span>
@@ -248,10 +248,10 @@ export default async function SettingsPage() {
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Your ATLAS"
+        eyebrow="Account and preferences"
         icon={Settings2}
         title="Settings"
-        description="Shape your defaults, choose how ATLAS looks, and manage your account data in one place."
+        description="Set your defaults, choose how ATLAS looks, and manage sign-in, privacy and your data."
         aside={
           <PageHeadingLink href="/settings/activity" icon={History}>
             Activity history
@@ -296,9 +296,7 @@ export default async function SettingsPage() {
           </div>
 
           <div className="min-w-0">
-            <p className={cn(eyebrowClass, "mb-2.5 px-0.5")}>
-              Your defaults at a glance
-            </p>
+            <p className={cn(eyebrowClass, "mb-2.5 px-0.5")}>Your defaults</p>
             <div className="grid grid-cols-2 gap-2 @lg:grid-cols-3">
               <GlanceTile
                 icon={Compass}
@@ -346,7 +344,7 @@ export default async function SettingsPage() {
             <SettingsSectionNav variant="sidebar" />
           </div>
           <div className="border-border/70 mx-3 border-t pt-4">
-            <p className="text-muted-foreground flex items-start gap-2 px-0.5 text-[11px] leading-4">
+            <p className="text-muted-foreground flex items-start gap-2 px-0.5 text-[0.6875rem] leading-4">
               <ShieldCheck
                 aria-hidden="true"
                 className="text-primary mt-px size-3.5 shrink-0"

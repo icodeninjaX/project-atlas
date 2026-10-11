@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <main className="bg-background grid min-h-dvh place-items-center p-6 text-center">
       <div>
-        <p className="text-primary font-mono text-[13px] font-semibold">
+        <p className="text-primary font-mono text-[0.8125rem] font-semibold">
           Off route · 404
         </p>
         <h1 className="mt-4 text-3xl font-semibold">

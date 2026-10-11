@@ -74,17 +74,17 @@
 /* Bars rise from the baseline on arrival. */
 .rise {
   transform-origin: bottom;
-  animation: rise 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Lines draw in from left to right. */
 .reveal {
-  animation: reveal 1100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Matrix cells settle in. */
 .appear {
-  animation: appear 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: appear 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* The ledger's disclosure chevron turns when open. */

@@ -66,7 +66,7 @@ export function ApplicationForm({
               name="companyName"
               required
               maxLength={160}
-              placeholder="e.g. Acme Philippines"
+              placeholder="e.g. Globe Telecom"
               aria-label="Company name"
               className="mt-1.5"
             />
@@ -163,7 +163,7 @@ export function ApplicationForm({
             />
             <p
               id="new-application-applied-at-help"
-              className="text-muted-foreground mt-1.5 text-[11px] leading-snug"
+              className="text-muted-foreground mt-1.5 text-[0.6875rem] leading-snug"
             >
               When you submitted the application. Leave blank if you have not
               applied yet.
@@ -202,7 +202,7 @@ export function ApplicationForm({
             />
             <p
               id="new-application-next-action-at-help"
-              className="text-muted-foreground mt-1.5 text-[11px] leading-snug"
+              className="text-muted-foreground mt-1.5 text-[0.6875rem] leading-snug"
             >
               When you plan to complete the next action.
             </p>

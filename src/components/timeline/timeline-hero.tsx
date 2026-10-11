@@ -403,7 +403,7 @@ export function TimelineHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="timeline-summary-heading"
-          className="text-primary text-[13px] font-semibold"
+          className="text-primary text-[0.8125rem] font-semibold"
         >
           In view
         </h2>
@@ -472,7 +472,7 @@ export function TimelineEmptyHero() {
     <HeroShell>
       <h2
         id="timeline-summary-heading"
-        className="text-primary text-[13px] font-semibold"
+        className="text-primary text-[0.8125rem] font-semibold"
       >
         Your story
       </h2>

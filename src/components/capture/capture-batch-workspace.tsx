@@ -72,8 +72,8 @@ const manualForms = [
 
 const examples = [
   "Paid ₱380 for groceries using GCash",
-  "Remind me to call Acme tomorrow",
-  "Applied for Product Designer at Acme today",
+  "Remind me to call Mika about rent tomorrow",
+  "Applied for Product Designer at Canva today",
 ] as const;
 
 function formatFileSize(bytes: number) {
@@ -394,7 +394,7 @@ export function CaptureBatchWorkspace({
                   >
                     What happened?
                   </label>
-                  <p className="text-muted-foreground mt-0.5 text-[13px] leading-5">
+                  <p className="text-muted-foreground mt-0.5 text-[0.8125rem] leading-5">
                     Up to five actions, in your own words.
                   </p>
                 </div>
@@ -472,7 +472,7 @@ export function CaptureBatchWorkspace({
                 minLength={8}
                 maxLength={MAX_TEXT}
                 aria-describedby="capture-text-count"
-                placeholder="Paid ₱380 for groceries using GCash, then remind me to call Acme tomorrow"
+                placeholder="Paid ₱380 for groceries using GCash, then remind me to call Mika tomorrow"
                 onChange={(event) => {
                   setText(event.target.value);
                   setVisibleBatch(state.batchId);
@@ -492,16 +492,16 @@ export function CaptureBatchWorkspace({
                 className="placeholder:text-muted-foreground/70 block min-h-36 w-full resize-y bg-transparent px-4 py-3.5 text-base leading-7 outline-none sm:min-h-40 sm:text-[1.0625rem]"
               />
               <div className="flex items-center justify-between gap-3 px-4 pb-3">
-                <p className="text-muted-foreground hidden text-[11px] sm:block">
-                  <kbd className="bg-background ring-border rounded-md px-1.5 py-0.5 font-mono text-[10px] font-semibold ring-1">
+                <p className="text-muted-foreground hidden text-[0.6875rem] sm:block">
+                  <kbd className="bg-background ring-border rounded-md px-1.5 py-0.5 font-mono text-[0.625rem] font-semibold ring-1">
                     Ctrl
                   </kbd>{" "}
                   or{" "}
-                  <kbd className="bg-background ring-border rounded-md px-1.5 py-0.5 font-mono text-[10px] font-semibold ring-1">
+                  <kbd className="bg-background ring-border rounded-md px-1.5 py-0.5 font-mono text-[0.625rem] font-semibold ring-1">
                     ⌘
                   </kbd>{" "}
                   +{" "}
-                  <kbd className="bg-background ring-border rounded-md px-1.5 py-0.5 font-mono text-[10px] font-semibold ring-1">
+                  <kbd className="bg-background ring-border rounded-md px-1.5 py-0.5 font-mono text-[0.625rem] font-semibold ring-1">
                     Enter
                   </kbd>{" "}
                   to preview
@@ -509,7 +509,7 @@ export function CaptureBatchWorkspace({
                 <p
                   id="capture-text-count"
                   className={cn(
-                    "ml-auto font-mono text-[11px] tabular-nums",
+                    "ml-auto font-mono text-[0.6875rem] tabular-nums",
                     overLimit || text.length > MAX_TEXT * 0.9
                       ? "text-amber-700 dark:text-amber-300"
                       : "text-muted-foreground",
@@ -652,7 +652,7 @@ export function CaptureBatchWorkspace({
                   {extracting ? "Reading file…" : "Extract text"}
                 </Button>
               </div>
-              <p className="text-muted-foreground text-[11px] leading-4">
+              <p className="text-muted-foreground text-[0.6875rem] leading-4">
                 On mobile, choose Camera or Files. Files up to 4 MB. ATLAS does
                 not store the original file.
               </p>
@@ -707,7 +707,7 @@ export function CaptureBatchWorkspace({
                 Preview actions
               </Button>
             </div>
-            <p className="text-muted-foreground flex items-start gap-2 text-[11px] leading-4">
+            <p className="text-muted-foreground flex items-start gap-2 text-[0.6875rem] leading-4">
               <Lock aria-hidden="true" className="mt-px size-3 shrink-0" />
               <span>
                 Your text or selected file is sent to OpenAI only when you
@@ -749,7 +749,7 @@ export function CaptureBatchWorkspace({
                   <h2 className="mt-0.5 text-[1.0625rem] leading-6 font-semibold tracking-[-0.02em] sm:text-lg">
                     Review all {items.length} proposals
                   </h2>
-                  <p className="text-muted-foreground mt-1 max-w-xl text-[13px] leading-5 text-pretty">
+                  <p className="text-muted-foreground mt-1 max-w-xl text-[0.8125rem] leading-5 text-pretty">
                     Correct any field. Each card saves independently. Confirm
                     all saves in order and stops at the first incomplete or
                     failed card; earlier saves remain saved.

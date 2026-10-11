@@ -36,7 +36,7 @@ export default async function AnalystPage() {
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Evidence-based analysis"
+        eyebrow="Answers from your records"
         icon={ChartNoAxesCombined}
         title="ATLAS Analyst"
         description="Ask about your records in plain words. ATLAS calculates the facts, and every figure in an answer is checked against its sources."

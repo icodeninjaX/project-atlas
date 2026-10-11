@@ -141,7 +141,7 @@ export function ReviewWorkspace({
                 {name === "archive" ? (
                   <span
                     className={cn(
-                      "rounded-full px-1.5 py-0.5 font-mono text-[10px] leading-none tabular-nums",
+                      "rounded-full px-1.5 py-0.5 font-mono text-[0.625rem] leading-none tabular-nums",
                       selected
                         ? "bg-primary/12 text-primary"
                         : "bg-background/70 text-muted-foreground",

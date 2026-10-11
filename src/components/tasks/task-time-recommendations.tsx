@@ -82,7 +82,7 @@ export function TaskTimeRecommendations({
             </p>
           </div>
         </div>
-        <span className="border-primary/20 bg-background text-primary shrink-0 rounded-full border px-2.5 py-1 font-mono text-[11px] font-semibold">
+        <span className="border-primary/20 bg-background text-primary shrink-0 rounded-full border px-2.5 py-1 font-mono text-[0.6875rem] font-semibold">
           {formatTaskTime(scheduledTime)}
         </span>
       </div>
@@ -92,11 +92,11 @@ export function TaskTimeRecommendations({
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-sm font-semibold">Available times</p>
-              <p className="text-muted-foreground mt-0.5 text-[11px] leading-4">
+              <p className="text-muted-foreground mt-0.5 text-[0.6875rem] leading-4">
                 Nearest openings that fit this task.
               </p>
             </div>
-            <span className="bg-muted text-muted-foreground shrink-0 rounded-full px-2.5 py-1 font-mono text-[10px] font-medium">
+            <span className="bg-muted text-muted-foreground shrink-0 rounded-full px-2.5 py-1 font-mono text-[0.625rem] font-medium">
               {availability.durationMinutes} min
             </span>
           </div>

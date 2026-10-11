@@ -128,7 +128,7 @@ export function HistoryScreen({
   return (
     <PageShell>
       <HistoryHeader
-        eyebrow="Deterministic metrics"
+        eyebrow="Monthly metrics"
         eyebrowIcon={History}
         title="Recorded history"
         description="Compare the records ATLAS can actually reconstruct. Every value is recalculated from your surviving source records."

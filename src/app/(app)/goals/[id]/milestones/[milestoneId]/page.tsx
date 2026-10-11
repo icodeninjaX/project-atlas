@@ -42,7 +42,7 @@ export default async function MilestoneRelationshipsPage({
       <BackLink href={`/goals/${id}` as Route}>Goal relationships</BackLink>
       <PageHeading
         icon={Goal}
-        eyebrow="ATLAS Graph"
+        eyebrow="Goals / Milestone"
         title={milestone.title}
         description="Knowledge linked to this milestone."
       />

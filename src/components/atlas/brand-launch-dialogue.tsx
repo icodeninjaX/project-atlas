@@ -17,7 +17,7 @@ export const BRAND_LAUNCH_DIALOGUES = [
     response: "Bring it into focus.",
   },
   {
-    prompt: "Ready to move?",
+    prompt: "Not sure where to start?",
     response: "Your route is waiting.",
   },
   {

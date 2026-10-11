@@ -75,7 +75,7 @@ function HeroHeading({
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h2
         id="signals-summary-heading"
-        className="text-primary text-[13px] font-semibold"
+        className="text-primary text-[0.8125rem] font-semibold"
       >
         Pulse
       </h2>

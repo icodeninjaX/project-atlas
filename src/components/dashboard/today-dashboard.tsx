@@ -158,7 +158,7 @@ export function TodayDashboard({
         icon={greeting.icon}
         meta={manilaDayLabel(now)}
         title={
-          daylineItems.length ? "Your Day, Mapped." : "Your route is clear."
+          daylineItems.length ? "Your day, mapped." : "Your route is clear."
         }
         description={
           daylineItems.length

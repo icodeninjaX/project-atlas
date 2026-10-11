@@ -237,13 +237,13 @@ export function MfaSettings() {
             <div className="bg-card/70 ring-border/80 mt-4 rounded-xl p-3.5 ring-1 sm:p-4">
               <ol className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1.5 text-xs leading-5">
                 <li className="flex items-center gap-2">
-                  <span className="bg-primary/12 text-primary grid size-5 place-items-center rounded-full font-mono text-[10px] font-semibold">
+                  <span className="bg-primary/12 text-primary grid size-5 place-items-center rounded-full font-mono text-[0.625rem] font-semibold">
                     1
                   </span>
                   Scan the code with an authenticator app.
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="bg-primary/12 text-primary grid size-5 place-items-center rounded-full font-mono text-[10px] font-semibold">
+                  <span className="bg-primary/12 text-primary grid size-5 place-items-center rounded-full font-mono text-[0.625rem] font-semibold">
                     2
                   </span>
                   Enter the current 6-digit code to finish.

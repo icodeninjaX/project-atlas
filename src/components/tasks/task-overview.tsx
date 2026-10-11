@@ -56,7 +56,7 @@ function ProgressRing({ done, total }: { done: number; total: number }) {
             strokeDasharray={RING_CIRCUMFERENCE}
             strokeDashoffset={RING_CIRCUMFERENCE * (1 - ratio)}
             className={cn(
-              "transition-[stroke-dashoffset] duration-700 ease-out motion-reduce:transition-none",
+              "transition-[stroke-dashoffset] duration-500 ease-out motion-reduce:transition-none",
               finished
                 ? "stroke-green-600 dark:stroke-green-500"
                 : "stroke-primary",
@@ -155,7 +155,7 @@ export function TaskOverview({
           <div className="min-w-0">
             <h2
               id="today-plan-title"
-              className="text-primary text-[13px] font-semibold"
+              className="text-primary text-[0.8125rem] font-semibold"
             >
               Today’s plan
             </h2>

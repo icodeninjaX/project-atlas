@@ -64,7 +64,7 @@ export function DecisionsScreen({
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Reflect"
+        eyebrow="Choices and outcomes"
         icon={Scale}
         title="Decision journal"
         description="Record a choice in your own words, then return to what happened. ATLAS will not infer past decisions for you."

@@ -67,7 +67,7 @@ export default async function SearchPage({
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Across ATLAS"
+        eyebrow="All your records"
         icon={Search}
         title="Search"
         description="Results stay inside your account and are grouped by the record you recognize."
@@ -110,7 +110,7 @@ export default async function SearchPage({
               <section key={group} aria-labelledby={`group-${group}`}>
                 <h2
                   id={`group-${group}`}
-                  className="text-muted-foreground mb-3 text-[13px] font-semibold"
+                  className="text-muted-foreground mb-3 text-[0.8125rem] font-semibold"
                 >
                   {group} <span className="font-mono">· {items.length}</span>
                 </h2>

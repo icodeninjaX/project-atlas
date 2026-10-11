@@ -46,7 +46,7 @@ export function GoalRelatedSummary({
             .map((type) => (
               <span
                 key={type}
-                className="border-border/70 bg-muted/50 text-foreground/85 rounded-full border px-2.5 py-1 text-[11px] font-medium"
+                className="border-border/70 bg-muted/50 text-foreground/85 rounded-full border px-2.5 py-1 text-[0.6875rem] font-medium"
               >
                 {graphRegistry[type].label} · {counts[type]}
               </span>

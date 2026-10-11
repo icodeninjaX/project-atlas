@@ -51,7 +51,7 @@ export function CollapsibleFilters({
           <SlidersHorizontal className="size-4" />
           Filters
           {activeCount > 0 ? (
-            <span className="bg-primary/15 text-primary rounded-full px-1.5 font-mono text-[10px] leading-4">
+            <span className="bg-primary/15 text-primary rounded-full px-1.5 font-mono text-[0.625rem] leading-4">
               {activeCount}
             </span>
           ) : null}

@@ -233,7 +233,7 @@ function Citations({
           key={id}
           href={`#${anchor(id)}`}
           onClick={onOpen}
-          className="text-muted-foreground hover:text-primary hover:ring-primary/40 bg-background/55 ring-border/80 focus-visible:ring-ring inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-medium ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          className="text-muted-foreground hover:text-primary hover:ring-primary/40 bg-background/55 ring-border/80 focus-visible:ring-ring inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 text-[0.6875rem] font-medium ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           <span
             aria-hidden="true"
@@ -284,7 +284,7 @@ function AnswerBody({ turn }: { turn: Turn }) {
           ))}
         {lead.map((claim, index) => (
           <div key={`lead-${index}`}>
-            <p className="text-[1rem] leading-7 tracking-[-0.005em] text-pretty">
+            <p className="text-base leading-7 tracking-[-0.005em] text-pretty">
               <ClaimText text={personalize(claim.text, result)} />
             </p>
             <Citations
@@ -312,14 +312,14 @@ function AnswerBody({ turn }: { turn: Turn }) {
                       href={item.source.href as Route}
                       className="group hover:bg-primary/[0.05] focus-visible:ring-ring flex min-h-14 items-center gap-3 px-3.5 py-2.5 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
                     >
-                      <span className="from-primary/25 to-primary/8 text-primary ring-primary/20 grid size-7 shrink-0 place-items-center rounded-full bg-gradient-to-br font-mono text-xs font-semibold ring-1 ring-inset">
+                      <span className="bg-primary/12 text-primary ring-primary/20 grid size-7 shrink-0 place-items-center rounded-full font-mono text-xs font-semibold ring-1 ring-inset">
                         {index + 1}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium">
                           {label.title}
                         </span>
-                        <span className="text-muted-foreground block text-[11px] first-letter:uppercase">
+                        <span className="text-muted-foreground block text-[0.6875rem] first-letter:uppercase">
                           {String(item.value)} priority
                           {label.date &&
                             ` · ${formatPeriodLabel(label.date, label.date)}`}
@@ -363,7 +363,7 @@ function AnswerBody({ turn }: { turn: Turn }) {
                 <dd className="mt-1.5 font-mono text-xl font-semibold tracking-tight tabular-nums">
                   <SensitiveValue>{displayValue(item)}</SensitiveValue>
                 </dd>
-                <dd className="text-muted-foreground mt-0.5 text-[11px]">
+                <dd className="text-muted-foreground mt-0.5 text-[0.6875rem]">
                   {formatPeriodLabel(item.period.from, item.period.through)}
                 </dd>
               </div>
@@ -429,7 +429,7 @@ function AnswerBody({ turn }: { turn: Turn }) {
                 >
                   <h3
                     className={cn(
-                      "text-[13px] font-semibold",
+                      "text-[0.8125rem] font-semibold",
                       group.label === "Current"
                         ? "text-muted-foreground"
                         : "text-primary",
@@ -449,7 +449,7 @@ function AnswerBody({ turn }: { turn: Turn }) {
                       </div>
                     ))}
                   </dl>
-                  <p className="text-muted-foreground mt-3 text-[11px] leading-4 break-words">
+                  <p className="text-muted-foreground mt-3 text-[0.6875rem] leading-4 break-words">
                     <SensitiveValue>
                       {group.items[0]?.comparisonBasis}
                     </SensitiveValue>
@@ -506,16 +506,16 @@ function AnswerBody({ turn }: { turn: Turn }) {
                     <p className="mt-1 font-mono text-base font-semibold tabular-nums">
                       <SensitiveValue>{displayValue(item)}</SensitiveValue>
                     </p>
-                    <p className="text-muted-foreground mt-1 text-[11px]">
+                    <p className="text-muted-foreground mt-1 text-[0.6875rem]">
                       {formatPeriodLabel(item.period.from, item.period.through)}
                       {item.completeness !== "complete" &&
                         ` · ${item.completeness}`}
                     </p>
-                    <p className="text-muted-foreground mt-1 text-[11px] leading-4 break-words">
+                    <p className="text-muted-foreground mt-1 text-[0.6875rem] leading-4 break-words">
                       <SensitiveValue>{item.comparisonBasis}</SensitiveValue>
                     </p>
                     {item.relationship && (
-                      <p className="text-muted-foreground mt-1 text-[11px] break-words">
+                      <p className="text-muted-foreground mt-1 text-[0.6875rem] break-words">
                         Current {item.relationship.origin} path:{" "}
                         {item.relationship.source.type} →{" "}
                         {item.relationship.target.type}
@@ -707,7 +707,7 @@ function AnswerCard({ turn }: { turn: Turn }) {
         {verified && (
           <span
             title="Every figure and comparison was checked against the ATLAS records it cites."
-            className="bg-positive/10 text-positive ring-positive/25 inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1"
+            className="bg-positive/10 text-positive ring-positive/25 inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold ring-1"
           >
             <ShieldCheck aria-hidden="true" className="size-3.5" />
             Checked
@@ -715,7 +715,7 @@ function AnswerCard({ turn }: { turn: Turn }) {
           </span>
         )}
         {turn.result?.status === "fallback" && (
-          <span className="bg-background/60 text-muted-foreground ring-border inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1">
+          <span className="bg-background/60 text-muted-foreground ring-border inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold ring-1">
             ATLAS facts only
           </span>
         )}
@@ -856,7 +856,7 @@ function Composer({
       className={cn(
         "grid size-10 shrink-0 place-items-center rounded-full transition-[background-color,color,box-shadow,opacity]",
         canAsk
-          ? "from-primary-solid to-primary-solid/80 text-primary-solid-foreground bg-gradient-to-br shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_8px_20px_rgb(43_102_242/0.35)] hover:brightness-110"
+          ? "bg-primary-solid text-primary-solid-foreground hover:bg-primary-solid/90 shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_1px_2px_rgb(7_10_15/0.18),0_4px_14px_-4px_color-mix(in_srgb,var(--primary-solid)_55%,transparent)]"
           : "bg-muted text-muted-foreground",
       )}
     >
@@ -1160,7 +1160,7 @@ export function FreeformWorkspace({
   );
 
   const sharingStatus = consent && (
-    <p className="text-muted-foreground flex items-center justify-center gap-1.5 text-[11px]">
+    <p className="text-muted-foreground flex items-center justify-center gap-1.5 text-[0.6875rem]">
       <span
         aria-hidden="true"
         className="bg-positive size-1.5 shrink-0 rounded-full"
@@ -1235,7 +1235,7 @@ export function FreeformWorkspace({
                         <span className="min-w-0 flex-1">
                           <span
                             aria-hidden="true"
-                            className="text-muted-foreground block text-[11px] font-semibold"
+                            className="text-muted-foreground block text-[0.6875rem] font-semibold"
                           >
                             {area}
                           </span>
@@ -1264,7 +1264,7 @@ export function FreeformWorkspace({
                   className="scroll-mt-6 space-y-3"
                 >
                   <div className="flex justify-end">
-                    <p className="from-primary-solid to-primary-solid/85 text-primary-solid-foreground max-w-[85%] rounded-2xl rounded-br-md bg-gradient-to-br px-4 py-2.5 text-sm leading-6 break-words shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_10px_28px_-8px_rgb(43_102_242/0.45)]">
+                    <p className="bg-primary-solid text-primary-solid-foreground max-w-[85%] rounded-2xl rounded-br-md px-4 py-2.5 text-sm leading-6 break-words shadow-[0_1px_2px_rgb(7_10_15/0.18)]">
                       {turn.question}
                       {turn.focus && (
                         <span className="mt-0.5 block text-xs opacity-80">

@@ -36,7 +36,7 @@ function unique<T>(values: T[], check: (value: T) => boolean) {
 
 function SourceSnippet({ children }: { children: ReactNode }) {
   return (
-    <span className="text-muted-foreground mt-1.5 flex min-w-0 items-start gap-1 text-[11px] leading-4 font-normal">
+    <span className="text-muted-foreground mt-1.5 flex min-w-0 items-start gap-1 text-[0.6875rem] leading-4 font-normal">
       <Quote aria-hidden="true" className="mt-px size-3 shrink-0 opacity-70" />
       <span className="min-w-0 break-words">Source: “{children}”</span>
     </span>

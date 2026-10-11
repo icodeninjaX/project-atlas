@@ -129,7 +129,7 @@ export function TransactionSummary({
         <div className="min-w-0">
           <h2
             id="month-summary-title"
-            className="text-primary text-[13px] font-semibold"
+            className="text-primary text-[0.8125rem] font-semibold"
           >
             {monthLabel} so far
           </h2>

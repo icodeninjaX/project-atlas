@@ -279,7 +279,7 @@ export function CareerHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="pipeline-heading"
-          className="text-primary text-[13px] font-semibold"
+          className="text-primary text-[0.8125rem] font-semibold"
         >
           Pipeline
         </h2>
@@ -343,7 +343,7 @@ export function CareerEmptyHero() {
     <HeroShell>
       <h2
         id="pipeline-heading"
-        className="text-primary text-[13px] font-semibold"
+        className="text-primary text-[0.8125rem] font-semibold"
       >
         Pipeline
       </h2>

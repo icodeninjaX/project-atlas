@@ -15,7 +15,7 @@ const palette = [
 ];
 
 const sizes = {
-  sm: "size-9 rounded-[0.7rem] text-[0.75rem]",
+  sm: "size-9 rounded-xl text-xs",
   md: "size-10 rounded-xl text-[0.8125rem]",
   lg: "size-12 rounded-2xl text-base",
 };
