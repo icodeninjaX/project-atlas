@@ -247,21 +247,21 @@ The template had moved into the layers people open less often:
 
 ### Changes
 
-| Area             | Before                                                                 | After                                                                                     |
-| ---------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Floating layers  | Four scrims, mixed radii and shadows, slate menus, frosted headers     | One scrim, 16px on every floating corner, neutral elevation, token menus, solid headers   |
-| Forms            | Step circles, section icon tiles, boxed groups, 4px glows, pill chips  | Plain 14px group headings, labels above fields, 2px focus ring, 12px chips, ring-only selection |
-| Confirms         | Five destructive-confirm styles, two native `confirm()` popups         | One muted well with "Keep it" and the destructive action; Radix dialogs                   |
-| Page titles      | Slogans on Money, Debts, Capture, Analyst, Timeline, History, auth     | The page's name; descriptions are one factual sentence; Today greets by first name       |
-| Empty states     | 26–34px slogan titles, concentric rings, "how it works" tile rows      | 16px factual title, one line, one action, a neutral tile                                  |
-| Daily report     | Celebration modal with nested frames, "01", decorative circle, meter   | Compact dialog: date, "1 task completed yesterday", Done                                   |
-| Focus mode       | Night-sky background, glow orbs, gradient ring, glass dock, slogan     | Page background and tokens, solid ring, standard buttons; follows the theme               |
-| Analyst          | Chatbot prompt, rainbow starter cards, tinted insight stripes, shimmer | One list of suggested questions, neutral wells, plain skeleton, factual model hints       |
-| Lists            | One card per signal, event, envelope, day of transfers                 | One card per group with dividers and date sub-headers                                     |
-| Toasts           | Gradient wash, blue border, logo spinning into a check                 | One flat card for every type; the icon carries the color                                  |
-| Launch splash    | 4.5s spin, pulse, 3D letters, green glow, chat taglines                | A short fade of the mark and wordmark on the theme background                             |
-| Copy             | "Supabase is not configured.", "Add VAPID and cron secrets…"           | "Sign-in isn't available right now. Try again later."                                     |
-| Landing          | Glowing CTA and bullets, glass cards, film grain, serif accent in 9 h2s, feature-card bento, logo chips | Flat 16px cards, serif accent on the hero only, hairline-divided lists, plain provider sentence |
+| Area            | Before                                                                                                  | After                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Floating layers | Four scrims, mixed radii and shadows, slate menus, frosted headers                                      | One scrim, 16px on every floating corner, neutral elevation, token menus, solid headers         |
+| Forms           | Step circles, section icon tiles, boxed groups, 4px glows, pill chips                                   | Plain 14px group headings, labels above fields, 2px focus ring, 12px chips, ring-only selection |
+| Confirms        | Five destructive-confirm styles, two native `confirm()` popups                                          | One muted well with "Keep it" and the destructive action; Radix dialogs                         |
+| Page titles     | Slogans on Money, Debts, Capture, Analyst, Timeline, History, auth                                      | The page's name; descriptions are one factual sentence; Today greets by first name              |
+| Empty states    | 26–34px slogan titles, concentric rings, "how it works" tile rows                                       | 16px factual title, one line, one action, a neutral tile                                        |
+| Daily report    | Celebration modal with nested frames, "01", decorative circle, meter                                    | Compact dialog: date, "1 task completed yesterday", Done                                        |
+| Focus mode      | Night-sky background, glow orbs, gradient ring, glass dock, slogan                                      | Page background and tokens, solid ring, standard buttons; follows the theme                     |
+| Analyst         | Chatbot prompt, rainbow starter cards, tinted insight stripes, shimmer                                  | One list of suggested questions, neutral wells, plain skeleton, factual model hints             |
+| Lists           | One card per signal, event, envelope, day of transfers                                                  | One card per group with dividers and date sub-headers                                           |
+| Toasts          | Gradient wash, blue border, logo spinning into a check                                                  | One flat card for every type; the icon carries the color                                        |
+| Launch splash   | 4.5s spin, pulse, 3D letters, green glow, chat taglines                                                 | A short fade of the mark and wordmark on the theme background                                   |
+| Copy            | "Supabase is not configured.", "Add VAPID and cron secrets…"                                            | "Sign-in isn't available right now. Try again later."                                           |
+| Landing         | Glowing CTA and bullets, glass cards, film grain, serif accent in 9 h2s, feature-card bento, logo chips | Flat 16px cards, serif accent on the hero only, hairline-divided lists, plain provider sentence |
 
 The floating-layer, form and control rules are now in
 `.superdesign/design-system.md` under "Component patterns" and "Floating
