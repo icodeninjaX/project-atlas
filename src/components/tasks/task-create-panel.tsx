@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardCheck, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { PageHeading } from "@/components/shared/page-heading";
 import { QuickTaskForm } from "@/components/tasks/quick-task-form";
@@ -66,7 +66,6 @@ export function TaskCreatePanel({
     <>
       <PageHeading
         eyebrow={eyebrow}
-        icon={ClipboardCheck}
         meta={meta}
         title={title}
         description={description}
@@ -110,7 +109,7 @@ export function TaskCreatePanel({
         <button
           type="button"
           onClick={openForm}
-          className="bg-primary-solid text-primary-solid-foreground focus-visible:ring-ring focus-visible:ring-offset-background fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-30 grid size-14 place-items-center rounded-full shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_14px_30px_-10px_color-mix(in_srgb,var(--primary-solid)_80%,transparent)] transition-transform duration-150 [-webkit-tap-highlight-color:transparent] group-data-[keyboard=open]/shell:hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 motion-reduce:transition-none sm:hidden"
+          className="bg-primary-solid text-primary-solid-foreground focus-visible:ring-ring focus-visible:ring-offset-background fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-30 grid size-14 place-items-center rounded-full shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_6px_16px_rgb(7_10_15/0.35)] transition-transform duration-150 [-webkit-tap-highlight-color:transparent] group-data-[keyboard=open]/shell:hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 motion-reduce:transition-none sm:hidden"
         >
           <Plus className="size-6" aria-hidden="true" />
           <span className="sr-only">New task</span>

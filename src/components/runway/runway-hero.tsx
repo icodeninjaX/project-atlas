@@ -103,7 +103,7 @@ export function RunwayHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="runway-heading"
-          className="text-primary text-[0.8125rem] font-semibold"
+          className="text-muted-foreground text-[0.8125rem] font-medium"
         >
           Estimated runway
         </h2>
@@ -119,7 +119,7 @@ export function RunwayHero({
             <span
               aria-hidden="true"
               className={cn(
-                "font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.045em]",
+                "font-mono text-[clamp(2.5rem,10vw,3.25rem)] leading-[0.92] font-semibold tracking-[-0.03em]",
                 status.tone === "destructive"
                   ? "text-destructive"
                   : "text-foreground",
@@ -320,14 +320,14 @@ export function RunwaySetupHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="runway-heading"
-          className="text-primary text-[0.8125rem] font-semibold"
+          className="text-muted-foreground text-[0.8125rem] font-medium"
         >
           Estimated runway
         </h2>
         <RunwayPill tone="neutral">Needs setup</RunwayPill>
       </div>
       <div className="mt-6 flex max-w-xl gap-4">
-        <span className="bg-primary/12 text-primary ring-primary/20 grid size-11 shrink-0 place-items-center rounded-2xl ring-1 max-[359px]:hidden">
+        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-[359px]:hidden">
           <CircleAlert aria-hidden="true" className="size-5" />
         </span>
         <div className="min-w-0">

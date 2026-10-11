@@ -235,8 +235,8 @@ export function ModelPicker({
           className={cn(
             "border-border bg-card text-card-foreground fixed z-[60] border shadow-[0_28px_80px_rgb(7_10_15/0.32)] outline-none",
             sheet
-              ? "motion-safe:animate-analyst-sheet inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-[1.75rem] px-2 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
-              : "motion-safe:animate-analyst-rise overflow-y-auto overscroll-contain rounded-[1.25rem] p-1.5",
+              ? "motion-safe:animate-analyst-sheet inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-2xl px-2 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+              : "motion-safe:animate-analyst-rise overflow-y-auto overscroll-contain rounded-xl p-1.5",
           )}
         >
           {sheet && (

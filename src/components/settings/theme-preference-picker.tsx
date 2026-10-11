@@ -42,7 +42,7 @@ export function ThemePreferencePicker() {
               className={cn(
                 "focus-visible:ring-ring group flex flex-col gap-2.5 rounded-2xl p-2 text-left ring-1 transition-[background-color,box-shadow] focus-visible:ring-2 focus-visible:outline-none sm:p-2.5",
                 selected
-                  ? "bg-primary/[0.07] ring-primary/60 shadow-[0_10px_30px_-18px_color-mix(in_srgb,var(--primary)_80%,transparent)]"
+                  ? "bg-primary/[0.07] ring-primary/60"
                   : "bg-background/55 ring-border/80 hover:ring-primary/35",
               )}
             >

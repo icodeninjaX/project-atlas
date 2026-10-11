@@ -5,13 +5,13 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * The one page title every ATLAS screen opens with: a quiet eyebrow, the
- * title, a short description, and the page's own actions. Keeping
- * it in one place is what makes moving between pages feel like one app.
+ * The one page title every ATLAS screen opens with: an optional trail or
+ * context line, the title, a short description, and the page's own
+ * actions. Sized for a tool, not a landing page, so the page's content
+ * starts high. Keeping it in one place makes every page feel like one app.
  */
 export function PageHeading({
   eyebrow,
-  icon: Icon,
   meta,
   title,
   description,
@@ -20,9 +20,8 @@ export function PageHeading({
   compactOnMobile = false,
   titleId,
 }: {
+  /** Where this page sits, such as "Money / Budget". */
   eyebrow?: string;
-  /** Shown beside the eyebrow. */
-  icon?: LucideIcon;
   /** Quiet context beside the eyebrow, such as today's date. */
   meta?: ReactNode;
   title: string;
@@ -40,31 +39,24 @@ export function PageHeading({
   titleId?: string;
 }) {
   return (
-    <header className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
+    <header className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
       <div className="max-w-2xl min-w-0">
         {eyebrow || meta ? (
-          <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs font-medium">
+          <p className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem]">
             {eyebrow ? (
-              <span className="text-foreground/80 inline-flex max-w-full items-center gap-1.5 text-[0.8125rem] font-medium">
-                {Icon ? (
-                  <Icon
-                    aria-hidden="true"
-                    className="text-primary size-3.5 shrink-0"
-                  />
-                ) : null}
-                <span className="truncate">{eyebrow}</span>
+              <span className="text-foreground/80 max-w-full truncate font-medium">
+                {eyebrow}
               </span>
             ) : null}
-            {meta ? (
-              <span className="text-muted-foreground">{meta}</span>
-            ) : null}
+            {eyebrow && meta ? <span aria-hidden="true">·</span> : null}
+            {meta ? <span>{meta}</span> : null}
           </p>
         ) : null}
         <h1
           id={titleId}
           className={cn(
-            "text-foreground text-[1.875rem] leading-[1.04] font-semibold tracking-[-0.035em] break-words min-[360px]:text-[2.125rem] sm:text-[2.75rem] lg:text-[3.25rem]",
-            (eyebrow || meta) && "mt-3",
+            "text-foreground text-2xl leading-tight font-semibold tracking-[-0.02em] break-words sm:text-[1.75rem]",
+            (eyebrow || meta) && "mt-1.5",
           )}
         >
           {title}
@@ -73,7 +65,7 @@ export function PageHeading({
           // The smallest phones skip the description so content starts higher.
           <p
             className={cn(
-              "text-muted-foreground mt-2.5 max-w-xl text-sm leading-6 text-pretty max-[359px]:hidden sm:text-[0.9375rem]",
+              "text-muted-foreground mt-1.5 max-w-xl text-sm leading-6 text-pretty max-[359px]:hidden",
               compactOnMobile && "max-sm:hidden",
             )}
           >
@@ -101,7 +93,7 @@ export function PageHeading({
 }
 
 const headerPillClass =
-  "bg-card/60 ring-border/80 inline-flex min-h-9 items-center gap-2 self-start rounded-full px-4 text-xs font-semibold ring-1 ";
+  "inline-flex min-h-9 items-center gap-2 self-start rounded-lg text-[0.8125rem] font-medium";
 
 /** A companion page linked from a page title, such as Activity history. */
 export function PageHeadingLink({
@@ -118,10 +110,10 @@ export function PageHeadingLink({
       href={href}
       className={cn(
         headerPillClass,
-        "text-foreground hover:bg-card focus-visible:ring-ring min-h-11 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9",
+        "text-muted-foreground hover:text-foreground focus-visible:ring-ring min-h-11 px-2 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9",
       )}
     >
-      <Icon aria-hidden="true" className="text-primary size-4" />
+      <Icon aria-hidden="true" className="size-4" />
       {children}
     </Link>
   );
@@ -136,8 +128,8 @@ export function PageHeadingNote({
   children: ReactNode;
 }) {
   return (
-    <p className={cn(headerPillClass, "text-foreground")}>
-      <Icon aria-hidden="true" className="text-primary size-4" />
+    <p className={cn(headerPillClass, "text-muted-foreground")}>
+      <Icon aria-hidden="true" className="size-4" />
       {children}
     </p>
   );
@@ -156,10 +148,10 @@ export function BackLink({
       href={href}
       className={cn(
         headerPillClass,
-        "text-foreground hover:bg-card focus-visible:ring-ring mb-5 min-h-11 pl-3 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:mb-6 sm:min-h-9",
+        "text-muted-foreground hover:text-foreground focus-visible:ring-ring mb-4 -ml-1 min-h-11 px-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9",
       )}
     >
-      <ArrowLeft aria-hidden="true" className="text-primary size-4" />
+      <ArrowLeft aria-hidden="true" className="size-4" />
       {children}
     </Link>
   );

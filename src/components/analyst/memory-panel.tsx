@@ -90,7 +90,7 @@ export function MemoryOffer({
       </p>
     );
   return (
-    <div className="border-border bg-background/40 flex min-w-0 flex-col gap-2 rounded-2xl border p-3 text-sm">
+    <div className="bg-background/40 flex min-w-0 flex-col gap-2 rounded-xl p-3 text-sm">
       <p className="flex items-center gap-2 font-semibold">
         <Bookmark aria-hidden="true" className="size-4" /> Remember this for
         future answers?

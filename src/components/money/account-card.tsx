@@ -22,7 +22,7 @@ export function AccountCard({ account }: { account: AccountSummary }) {
   if (!account.is_archived) return <WalletCard account={account} />;
 
   return (
-    <article className="border-border bg-card flex min-w-0 flex-col gap-4 rounded-[1.5rem] border p-3">
+    <article className="border-border bg-card flex min-w-0 flex-col gap-4 rounded-2xl border p-3">
       <WalletCard
         account={account}
         balanceLabel="Balance when archived"

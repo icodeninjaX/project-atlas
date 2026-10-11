@@ -106,7 +106,7 @@ function NextPayment({
           <p className="text-muted-foreground text-xs">
             {debt.minimum_payment_centavos > 0 ? "Minimum due" : "No minimum"}
           </p>
-          <p className="mt-0.5 font-mono text-[1.75rem] leading-none font-semibold tracking-[-0.045em] tabular-nums">
+          <p className="mt-0.5 font-mono text-[1.75rem] leading-none font-semibold tracking-[-0.025em] tabular-nums">
             {debt.minimum_payment_centavos > 0 ? (
               <MoneyAmount
                 centavos={debt.minimum_payment_centavos}

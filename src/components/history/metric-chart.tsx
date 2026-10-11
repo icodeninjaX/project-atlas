@@ -184,7 +184,7 @@ export function MetricChart({
 
       <div
         id={`${id}-readout`}
-        className="bg-background/55 ring-border/70 mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl px-3.5 py-3 ring-1"
+        className="bg-background/55 mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl px-3.5 py-3"
       >
         <div className="min-w-0">
           <p className="text-sm leading-5 font-semibold tracking-[-0.01em]">

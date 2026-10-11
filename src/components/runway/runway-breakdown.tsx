@@ -106,7 +106,7 @@ function CardTotal({
         <MoneyAmount
           centavos={centavos}
           quietCentavos
-          className="font-mono text-[1.75rem] leading-none font-semibold tracking-[-0.04em] [overflow-wrap:anywhere] sm:text-[2rem]"
+          className="font-mono text-[1.75rem] leading-none font-semibold tracking-[-0.025em] [overflow-wrap:anywhere] sm:text-[2rem]"
         />
         {unit ? (
           <span className="text-muted-foreground text-sm">{unit}</span>
@@ -379,7 +379,7 @@ export function RunwayFundsCard({
         </>
       ) : null}
 
-      <div className="bg-background/55 ring-border/80 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl p-3.5 ring-1">
+      <div className="bg-background/55 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl p-3.5">
         <p className="text-muted-foreground min-w-0 flex-[1_1_12rem] text-xs leading-5">
           {leftOut.length === 0 ? (
             "Every account with money in it is counted."

@@ -227,12 +227,8 @@ export function TransferForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-border bg-card relative min-w-0 overflow-hidden rounded-[1.75rem] border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
+      className="border-border bg-card relative min-w-0 overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
     >
-      <div
-        aria-hidden="true"
-        className="from-primary/12 pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b to-transparent"
-      />
       <div className="relative grid min-w-0 gap-7 p-5 sm:p-7">
         <AmountField
           ref={amountRef}

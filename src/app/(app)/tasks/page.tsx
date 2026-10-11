@@ -229,7 +229,6 @@ export default async function TasksPage({
   return (
     <PageShell>
       <TaskCreatePanel
-        eyebrow="Task list"
         meta={manilaDateLabel(now)}
         title="Tasks"
         description="Capture quickly. Keep today small enough to finish."

@@ -67,7 +67,7 @@ function SheetTabs({
       role="tablist"
       aria-label="Account sections"
       onKeyDown={moveFocus}
-      className="border-border bg-muted/60 grid grid-cols-3 gap-1 rounded-xl border p-1"
+      className="bg-muted/60 grid grid-cols-3 gap-1 rounded-xl p-1"
     >
       {TABS.map((tab, index) => {
         const selected = tab.value === value;

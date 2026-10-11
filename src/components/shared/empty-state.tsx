@@ -15,7 +15,7 @@ export function EmptyState({
   return (
     <div className="border-border bg-card/40 grid min-h-56 place-items-center rounded-2xl border border-dashed p-6 text-center sm:min-h-72 sm:p-8">
       <div className="max-w-sm">
-        <div className="border-primary/20 bg-primary/10 text-primary mx-auto grid size-11 place-items-center rounded-xl border">
+        <div className="border-border bg-muted/60 text-foreground/75 mx-auto grid size-9 place-items-center rounded-lg border">
           <Icon className="size-5" />
         </div>
         <h2 className="mt-5 text-base font-semibold">{title}</h2>

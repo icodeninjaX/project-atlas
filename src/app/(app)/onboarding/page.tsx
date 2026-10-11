@@ -1,4 +1,3 @@
-import { Compass } from "lucide-react";
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
 import { safeRedirectPath } from "@/lib/auth/redirects";
 import { PageHeading } from "@/components/shared/page-heading";
@@ -16,8 +15,6 @@ export default async function OnboardingPage({
   return (
     <PageShell className="max-w-3xl">
       <PageHeading
-        eyebrow="Initial position"
-        icon={Compass}
         title="Build your starting map."
         description="Start with what is true today. You can add detailed debts after setup and change every optional answer later."
       />

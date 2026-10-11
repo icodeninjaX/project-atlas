@@ -395,7 +395,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="mobile-more-title"
-            className="border-border bg-card text-card-foreground absolute inset-x-0 bottom-0 max-h-[calc(100dvh-env(safe-area-inset-top)-0.75rem)] overflow-y-auto overscroll-contain rounded-t-[1.75rem] border-t px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl"
+            className="border-border bg-card text-card-foreground absolute inset-x-0 bottom-0 max-h-[calc(100dvh-env(safe-area-inset-top)-0.75rem)] overflow-y-auto overscroll-contain rounded-t-2xl border-t px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl"
           >
             <div className="bg-border mx-auto mb-3 h-1 w-10 rounded-full" />
             <div className="flex min-h-11 items-center justify-between">

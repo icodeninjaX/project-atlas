@@ -10,12 +10,12 @@ export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 /** A glass surface for the page's cards. */
 export const glassCardClass = cn(
   surfaceClass,
-  "bg-card/90 @container relative min-w-0 rounded-[1.5rem] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)]",
+  "bg-card/90 @container relative min-w-0 rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
 );
 
 /** An inset tile inside a card. */
 export const tileClass =
-  "bg-background/55 ring-border/80 min-w-0 rounded-2xl p-3.5 ring-1 min-[360px]:p-4";
+  "bg-background/55 min-w-0 rounded-xl p-3.5 min-[360px]:p-4";
 
 /** A native select dressed like the page's inputs, with its own chevron. */
 export const selectClass =
@@ -29,8 +29,8 @@ export const fieldHelpClass =
   "text-muted-foreground text-[0.6875rem] leading-4";
 
 /**
- * The icon in a section's or row's corner: a soft tile with a highlight on
- * top. `tone` follows the section's purpose.
+ * The icon in a section's or row's corner: a small neutral square whose
+ * glyph takes the section's tone.
  */
 export function IconTile({
   icon: Icon,
@@ -45,15 +45,14 @@ export function IconTile({
     <span
       aria-hidden="true"
       className={cn(
-        "relative grid shrink-0 place-items-center ring-1 ring-inset",
-        size === "md" ? "size-11 rounded-2xl" : "size-9 rounded-xl",
-        tone === "primary" && "bg-primary/12 text-primary ring-primary/20",
-        tone === "danger" &&
-          "bg-destructive/12 text-destructive ring-destructive/25",
-        tone === "muted" && "bg-muted/80 text-muted-foreground ring-border/80",
+        "bg-muted/60 relative grid shrink-0 place-items-center rounded-lg",
+        size === "md" ? "size-9" : "size-8",
+        tone === "primary" && "text-primary",
+        tone === "danger" && "text-destructive",
+        tone === "muted" && "text-muted-foreground",
       )}
     >
-      <Icon className={size === "md" ? "size-[1.15rem]" : "size-4"} />
+      <Icon className="size-4" />
     </span>
   );
 }

@@ -1,5 +1,5 @@
 import type { Route } from "next";
-import { Goal } from "lucide-react";
+
 import { notFound } from "next/navigation";
 import { GoalRelatedDetails } from "@/components/graph/goal-related-details";
 import { BackLink, PageHeading } from "@/components/shared/page-heading";
@@ -41,7 +41,6 @@ export default async function MilestoneRelationshipsPage({
     <PageShell>
       <BackLink href={`/goals/${id}` as Route}>Goal relationships</BackLink>
       <PageHeading
-        icon={Goal}
         eyebrow="Goals / Milestone"
         title={milestone.title}
         description="Knowledge linked to this milestone."

@@ -80,7 +80,7 @@ function ArchiveForm({
 
 function Stat({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="bg-background/55 ring-border/70 min-w-0 rounded-2xl px-3.5 py-3 ring-1">
+    <div className="bg-background/55 min-w-0 rounded-xl px-3.5 py-3">
       <dt className="text-muted-foreground text-[0.6875rem] leading-4 font-medium">
         {label}
       </dt>
@@ -231,7 +231,7 @@ export function ConceptPanel({
     <div className="min-w-0">
       {showTitle ? (
         <>
-          <p className="text-primary text-xs font-semibold">
+          <p className="text-muted-foreground text-xs font-medium">
             {concept.category}
           </p>
           <h2 className="mt-1.5 text-xl leading-7 font-semibold tracking-[-0.025em] break-words">
@@ -261,7 +261,7 @@ export function ConceptPanel({
             Archived {formatKnowledgeDate(concept.archived_at!)}. Restore it to
             bring it back into your reviews.
           </p>
-          <div className="bg-background/55 ring-border/70 mt-4 rounded-2xl p-4 ring-1">
+          <div className="bg-background/55 mt-4 rounded-xl p-4">
             <p className={eyebrowClass}>Learning notes</p>
             <p className="mt-2 text-sm leading-6 break-words whitespace-pre-wrap">
               {concept.notes}

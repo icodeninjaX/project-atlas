@@ -6,7 +6,6 @@ import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import styles from "@/components/history/history.module.css";
 import type { HistoryCoverage, HistoryTone } from "@/lib/history/view";
 import { cn } from "@/lib/utils";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 /** Shared pieces of the Recorded history and Patterns pages. */
 
@@ -15,23 +14,21 @@ export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 /** A glass surface for the page's cards. */
 export const glassCardClass = cn(
   surfaceClass,
-  "bg-card/90 @container relative min-w-0 rounded-[1.5rem] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)]",
+  "bg-card/90 @container relative min-w-0 rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
 );
 
 /** An inset tile inside a card. */
 export const tileClass =
-  "bg-background/55 ring-border/80 min-w-0 rounded-2xl p-3.5 ring-1 min-[360px]:p-4";
+  "bg-background/55 min-w-0 rounded-xl p-3.5 min-[360px]:p-4";
 
 /** The page title, with a companion page beside it. */
 export function HistoryHeader({
   eyebrow,
-  eyebrowIcon,
   title,
   description,
   link,
 }: {
-  eyebrow: string;
-  eyebrowIcon: LucideIcon;
+  eyebrow?: string;
   title: string;
   description: string;
   link: { href: Route; label: string; icon: LucideIcon };
@@ -39,7 +36,6 @@ export function HistoryHeader({
   return (
     <PageHeading
       eyebrow={eyebrow}
-      icon={eyebrowIcon}
       title={title}
       description={description}
       aside={
@@ -90,10 +86,9 @@ export function HeroShell({
       aria-labelledby={labelledBy}
       className={cn(
         surfaceClass,
-        "bg-card @container relative isolate mt-6 overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:mt-8 sm:rounded-[2rem]",
+        "bg-card @container relative isolate mt-6 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
       )}
     >
-      <HeroBackdrop />
       <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
     </section>
   );
@@ -199,7 +194,7 @@ export function HistoryMessage({
   action?: ReactNode;
 }) {
   return (
-    <div className="bg-card/60 mt-8 grid min-h-64 place-items-center rounded-[1.5rem] border border-dashed p-6 text-center">
+    <div className="bg-card/60 mt-8 grid min-h-64 place-items-center rounded-2xl border border-dashed p-6 text-center">
       <div className="max-w-sm">
         <span className="bg-muted/70 ring-border/80 text-muted-foreground mx-auto grid size-11 place-items-center rounded-2xl ring-1">
           <Icon aria-hidden="true" className="size-5" />

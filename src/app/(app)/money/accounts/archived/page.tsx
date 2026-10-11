@@ -28,7 +28,6 @@ export default async function ArchivedAccountsPage() {
   return (
     <PageShell>
       <PageHeading
-        icon={WalletCards}
         eyebrow="Money / Accounts / Archived"
         title="Archived accounts"
         description="Accounts stored outside your active totals. Restore one whenever you need to use it again."

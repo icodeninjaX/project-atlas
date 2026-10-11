@@ -26,7 +26,7 @@ export function SessionControls() {
         detail="ATLAS checks for unsynced offline changes before ending this session."
         className="pb-5"
       >
-        <div className="ring-border/80 bg-background/55 w-full rounded-xl p-0.5 ring-1 sm:w-56">
+        <div className="bg-background/55 w-full rounded-xl p-0.5 sm:w-56">
           <SignOutButton showLabel />
         </div>
       </SettingRow>
@@ -63,7 +63,7 @@ export function SessionControls() {
         detail="End this session and revoke refresh tokens everywhere else."
         className="pt-5"
       >
-        <div className="ring-border/80 bg-background/55 w-full rounded-xl p-0.5 ring-1 sm:w-56">
+        <div className="bg-background/55 w-full rounded-xl p-0.5 sm:w-56">
           <SignOutButton showLabel scope="global" />
         </div>
       </SettingRow>

@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Scale, WalletCards } from "lucide-react";
+import { ArrowLeftRight, Scale } from "lucide-react";
 import type { AccountIdentity } from "@/components/money/account-visuals";
 import { TransferForm } from "@/components/money/transfer-form";
 import { TransferHistory } from "@/components/money/transfer-history";
@@ -87,7 +87,6 @@ export default async function TransfersPage({
   return (
     <PageShell>
       <PageHeading
-        icon={WalletCards}
         eyebrow="Money / Transfers"
         title="Move money between accounts"
         description="Record an internal transfer without counting it as income or an expense."
@@ -98,8 +97,8 @@ export default async function TransfersPage({
       <div className="mt-8 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
         <TransferForm accounts={activeAccounts} today={today} />
 
-        <aside className="border-border bg-card/60 rounded-[1.5rem] border p-5">
-          <span className="bg-primary/10 text-primary grid size-10 place-items-center rounded-xl">
+        <aside className="border-border bg-card/60 rounded-2xl border p-5">
+          <span className="bg-muted/60 text-foreground/75 grid size-9 place-items-center rounded-lg">
             <Scale className="size-5" aria-hidden="true" />
           </span>
           <h2 className="mt-4 text-base font-semibold">

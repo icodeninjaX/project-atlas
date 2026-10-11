@@ -47,7 +47,6 @@ import {
   understoodKinds,
 } from "./capture-chrome";
 import { CaptureCard } from "./capture-review-card";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 type Account = { id: string; name: string; account_type: string };
 type Category = { id: string; name: string; category_type: string };
@@ -109,7 +108,7 @@ function CaptureSteps({ stage }: { stage: (typeof steps)[number]["key"] }) {
               className={cn(
                 "flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors sm:px-3.5",
                 active &&
-                  "bg-primary-solid text-primary-solid-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_4px_14px_-6px_color-mix(in_srgb,var(--primary-solid)_70%,transparent)]",
+                  "bg-primary-solid text-primary-solid-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.14)]",
                 done && "text-positive",
                 !active && !done && "text-muted-foreground",
               )}
@@ -372,17 +371,15 @@ export function CaptureBatchWorkspace({
           aria-label="Capture"
           className={cn(
             glassCardClass,
-            "bg-card isolate overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:rounded-[2rem]",
+            "bg-card isolate overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
           )}
         >
-          <HeroBackdrop />
-
           <div className="space-y-5 p-4 min-[360px]:p-5 sm:p-7">
             <div className="flex flex-col gap-4 @lg:flex-row @lg:items-start @lg:justify-between">
               <div className="flex min-w-0 items-start gap-3.5">
                 <span
                   aria-hidden="true"
-                  className="bg-primary/12 text-primary ring-primary/20 relative grid size-11 shrink-0 place-items-center rounded-2xl ring-1"
+                  className="bg-muted/60 text-foreground/75 relative grid size-9 shrink-0 place-items-center rounded-lg"
                 >
                   <PenLine className="size-[1.15rem]" />
                 </span>
@@ -402,7 +399,7 @@ export function CaptureBatchWorkspace({
               <div
                 role="group"
                 aria-label="Text source"
-                className="bg-background/60 ring-border/80 grid shrink-0 grid-cols-2 gap-1 rounded-xl p-1 ring-1"
+                className="bg-background/60 grid shrink-0 grid-cols-2 gap-1 rounded-xl p-1"
               >
                 {(
                   [
@@ -560,7 +557,7 @@ export function CaptureBatchWorkspace({
               <div className="flex flex-col gap-2 @md:flex-row @md:items-stretch">
                 {chosenFile ? (
                   <div className="bg-background/60 ring-primary/25 flex min-w-0 flex-1 items-center gap-3 rounded-2xl p-3 ring-1">
-                    <span className="bg-primary/10 text-primary ring-primary/20 grid size-10 shrink-0 place-items-center rounded-xl ring-1">
+                    <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg">
                       <FileUp aria-hidden="true" className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">
@@ -719,7 +716,7 @@ export function CaptureBatchWorkspace({
             {state.message && items.length === 0 && (
               <p
                 role="status"
-                className="bg-background/60 ring-border/80 rounded-xl px-3 py-2.5 text-sm ring-1"
+                className="bg-background/60 rounded-xl px-3 py-2.5 text-sm"
               >
                 {state.message}
               </p>
@@ -822,7 +819,7 @@ export function CaptureBatchWorkspace({
               {summary && (
                 <p
                   role="status"
-                  className="bg-background/60 ring-border/80 mt-3 rounded-xl px-3 py-2.5 text-sm ring-1"
+                  className="bg-background/60 mt-3 rounded-xl px-3 py-2.5 text-sm"
                 >
                   {summary}
                 </p>

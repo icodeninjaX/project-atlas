@@ -195,7 +195,7 @@ export function PairChart({
       </div>
       <div
         id={`${id}-readout`}
-        className="bg-background/55 ring-border/70 mt-3 rounded-2xl px-3.5 py-3 ring-1"
+        className="bg-background/55 mt-3 rounded-xl px-3.5 py-3"
       >
         <p className="text-sm leading-5 font-semibold tracking-[-0.01em]">
           {formatPeriodLabel(month.month, month.through)}

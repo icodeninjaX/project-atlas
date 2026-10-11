@@ -56,7 +56,7 @@ export function BalanceAdjustmentForm({
   return (
     <form action={action} className="grid min-w-0 gap-4">
       <input type="hidden" name="accountId" value={accountId} />
-      <div className="border-border bg-background/60 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border">
+      <div className="bg-background/60 grid grid-cols-2 gap-px overflow-hidden rounded-xl">
         <div className="min-w-0 p-3.5">
           <p className="text-muted-foreground text-xs">ATLAS shows</p>
           <p className="mt-1 font-mono text-base font-semibold [overflow-wrap:anywhere]">

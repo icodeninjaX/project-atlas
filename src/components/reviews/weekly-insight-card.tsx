@@ -104,7 +104,7 @@ function InsightResultView({
             />
             {label} ({result.evidence.length})
           </summary>
-          <ul className="divide-border/60 bg-background/50 ring-border/60 mt-1 divide-y rounded-xl text-xs ring-1">
+          <ul className="divide-border/60 bg-background/50 mt-1 divide-y rounded-xl text-xs">
             {result.evidence.map((item) => (
               <li
                 key={item.id}

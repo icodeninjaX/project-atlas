@@ -156,6 +156,62 @@ about whole apps: microcopy, states, emails, component defaults and motion.
 - **The "Debt Payment" category name.** It is stored data that code matches
   by name, so renaming it needs a data migration.
 
+## Round 4: the signed-in pages, against reference products
+
+Rounds 1–3 were judged from code and from the pages that render without an
+account. This round ran the real app against a local Supabase with fictional
+data, screenshotted all 25 signed-in pages, and compared them with products
+known for restraint.
+
+### Reference products
+
+- Linear, [How we redesigned the Linear UI](https://linear.app/now/how-we-redesigned-the-linear-ui) and [Behind the latest design refresh](https://linear.app/now/behind-the-latest-design-refresh): chrome recedes, fewer and smaller icons, colored icon backgrounds removed, fewer separators.
+- Vercel, [Geist materials](https://vercel.com/geist/materials) and [typography](https://vercel.com/geist/typography): 6px base radius, 12px cards and menus, 16px only for full-screen layers.
+- Copilot Money, [design breakdown](https://blakecrosley.com/de/guides/design/copilot-money): surfaces separated by tonal steps rather than borders; color reserved for data.
+- Mercury and Stripe dashboards: small page titles, thin hairlines, dense lists.
+
+### What every page shared
+
+Every module opened with the same template: icon-and-label kicker, a 52px
+title, a slogan description, then a glowing hero card with a colored kicker,
+a 96px number with a word beside it, a status pill, an "Up next" box, a
+multi-color bar and identical stat tiles, followed by lists where each group
+sat in its own bordered card. Inside cards, bordered boxes sat in bordered
+boxes, and most headings carried a tinted icon tile.
+
+### Changes
+
+| Area              | Before                                                                                                                 | After                                                                          |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Light             | Hero glow on 13 surfaces, page-wide light, film grain, colored top washes on 6 panels                                  | None. Surfaces are flat                                                        |
+| Edges and shadows | Gradient "light-catching" edge, 22–90px soft shadows on 37 cards, blue glows on buttons and selected cards             | Uniform 1px hairline, hairline-level shadow, elevation only on floating layers |
+| Radius            | Cards and heroes at 24–32px                                                                                            | 16px cards, 12px inner wells                                                   |
+| Nested boxes      | 51 bordered or ringed tiles inside cards                                                                               | Borderless tonal wells; interactive tiles keep their ring                      |
+| Page titles       | 52px slogan display, icon + kicker above                                                                               | 28px title; eyebrow only for trails, greeting with date, or cadence            |
+| Hero figures      | Up to 96px with −0.06em tracking                                                                                       | Up to 52px with −0.03em                                                        |
+| Kicker labels     | Blue on 46 labels across 24 cards and heroes                                                                           | Muted                                                                          |
+| Icon tiles        | Tinted squares beside most headings                                                                                    | 16px muted glyph in headings; neutral squares where a tile helps scanning      |
+| Tabs              | Pill tracks with icons and count badges (Money, Tasks)                                                                 | Underline tabs, plain counts                                                   |
+| Pills             | Dates, reasons, payday and percentages as pills                                                                        | Plain text, red or amber only when it matters; pills kept for status           |
+| Stat rows         | Four identical stat cards on Goals                                                                                     | One summary strip                                                              |
+| Transactions      | One card per day                                                                                                       | One list with day sub-headers                                                  |
+| Account cards     | Glossy gradient, stripes, watermark icon, uppercase label                                                              | Flat provider color, sentence-case label                                       |
+| Ordered scales    | Seven unrelated hues for career stages and memory strength                                                             | One blue that deepens, semantic colors only at the ends                        |
+| Today             | Glowing NOW pill, uppercase NOW/NEXT/LATER, 40px task title, quote card with texture, giant quote mark and meta footer | Solid "Now" badge, sentence case, 28px title, plain quote card                 |
+
+The rules behind these changes are now in `.superdesign/design-system.md`,
+so new screens start from them.
+
+### Deliberately kept
+
+- Progress rings and meters: they show real progress, and the text beside
+  them carries the same figure.
+- The diagonal hatching in History's series chart: it is the legend for
+  "partial" coverage.
+- Segmented filters (All / Expenses / Income, List / Board) and Kanban
+  column counts: established controls.
+- The stacked-card shadow on phones: it separates overlapping account cards.
+
 ## Evidence
 
 Same component, same data, dark theme, HEAD on the left and this pass on the
@@ -177,3 +233,13 @@ Round 3: flat icon tiles, the login screen, and the branded auth emails.
 ![Flat icon tiles](vibe-code-audit/07-flat-icon-tiles.jpg)
 ![Login](vibe-code-audit/08-login.jpg)
 ![Auth emails](vibe-code-audit/09-auth-emails.jpg)
+
+Round 4: signed-in pages, before (left) and after (right), dark theme at
+1440px with the same fictional data.
+
+![Today](vibe-code-audit/10-today-before-after.jpg)
+![Goals](vibe-code-audit/11-goals-before-after.jpg)
+![Career](vibe-code-audit/12-career-before-after.jpg)
+![Accounts](vibe-code-audit/13-accounts-before-after.jpg)
+![Transactions](vibe-code-audit/14-transactions-before-after.jpg)
+![Signals](vibe-code-audit/15-signals-before-after.jpg)

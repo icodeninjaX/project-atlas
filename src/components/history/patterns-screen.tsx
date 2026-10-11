@@ -1,11 +1,4 @@
-import {
-  Check,
-  CloudOff,
-  History,
-  LogIn,
-  ShieldCheck,
-  Waypoints,
-} from "lucide-react";
+import { Check, CloudOff, History, LogIn, ShieldCheck } from "lucide-react";
 import { DashboardCardHeading } from "@/components/dashboard/dashboard-card";
 import { FindingCard } from "@/components/history/finding-card";
 import {
@@ -62,7 +55,7 @@ function ScanHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="patterns-scan-heading"
-          className="text-primary text-[0.8125rem] font-semibold"
+          className="text-muted-foreground text-[0.8125rem] font-medium"
         >
           The scan
         </h2>
@@ -77,7 +70,7 @@ function ScanHero({
         <div className="min-w-0">
           {found ? (
             <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="text-foreground font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.045em]">
+              <span className="text-foreground font-mono text-[clamp(2.5rem,10vw,3.25rem)] leading-[0.92] font-semibold tracking-[-0.03em]">
                 {found}
               </span>
               <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
@@ -148,7 +141,7 @@ function ScanHero({
         </div>
 
         <div className="min-w-0">
-          <div className="bg-background/55 ring-border/80 rounded-2xl p-2 ring-1 min-[360px]:p-3 sm:p-4">
+          <div className="bg-background/55 rounded-xl p-2 min-[360px]:p-3 sm:p-4">
             <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 px-1">
               <h3 className={eyebrowClass}>Every pair tested</h3>
               <ul
@@ -242,8 +235,7 @@ export function PatternsScreen({
   return (
     <PageShell>
       <HistoryHeader
-        eyebrow="Recorded history"
-        eyebrowIcon={Waypoints}
+        eyebrow="History / Patterns"
         title="Patterns"
         description="Look for repeated monthly movement in your surviving records. Findings describe associations, not causes."
         link={{

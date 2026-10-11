@@ -15,12 +15,12 @@ export const surfaceClass = styles.edge;
 /** The Today page's secondary surfaces. */
 export const dashboardCardClass = cn(
   surfaceClass,
-  "bg-card/90 @container relative min-w-0 rounded-[1.5rem] p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] min-[360px]:p-5 sm:p-6",
+  "bg-card/90 @container relative min-w-0 rounded-2xl p-4 shadow-[0_1px_2px_rgb(7_10_15/0.04)] min-[360px]:p-5 sm:p-6",
 );
 
 /** An inset tile inside a dashboard card. */
 export const dashboardTileClass =
-  "bg-background/55 ring-border/80 min-w-0 rounded-2xl p-3.5 ring-1 min-[360px]:p-4";
+  "bg-background/55 min-w-0 rounded-xl p-3.5 min-[360px]:p-4";
 
 export function DashboardCardHeading({
   id,
@@ -39,30 +39,30 @@ export function DashboardCardHeading({
 }) {
   return (
     <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-4 gap-y-2">
-      <div className="flex min-w-0 items-center gap-3">
-        <span
-          className={cn(
-            "grid size-10 shrink-0 place-items-center rounded-xl ring-1 @max-[14rem]:hidden",
-            tone === "attention"
-              ? "bg-destructive/10 text-destructive ring-destructive/20"
-              : "bg-primary/10 text-primary ring-primary/15",
-          )}
+      <div className="min-w-0">
+        <h2
+          id={id}
+          className="flex items-center gap-2 text-[0.9375rem] font-semibold tracking-[-0.01em]"
         >
-          <Icon aria-hidden="true" className="size-[1.125rem]" />
-        </span>
-        <div className="min-w-0">
-          <h2 id={id} className="text-base font-semibold tracking-[-0.01em]">
-            {title}
-          </h2>
-          <p className="text-muted-foreground mt-0.5 text-xs leading-5 break-words">
-            {description}
-          </p>
-        </div>
+          <Icon
+            aria-hidden="true"
+            className={cn(
+              "size-4 shrink-0",
+              tone === "attention"
+                ? "text-destructive"
+                : "text-muted-foreground",
+            )}
+          />
+          {title}
+        </h2>
+        <p className="text-muted-foreground mt-0.5 text-xs leading-5 break-words">
+          {description}
+        </p>
       </div>
       {action ? (
         <Link
           href={action.href}
-          className="text-primary hover:bg-primary/10 focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
         >
           {action.label} <ArrowRight aria-hidden="true" className="size-3" />
         </Link>

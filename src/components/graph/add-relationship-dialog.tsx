@@ -286,7 +286,7 @@ export function AddGraphRelationshipDialog({
                 })}
               </div>
             ) : null}
-            <div className="border-border bg-muted/30 rounded-xl border p-3 text-sm">
+            <div className="bg-muted/30 rounded-xl p-3 text-sm">
               <span className="font-semibold">Relationship:</span> {pair.label}
             </div>
           </div>

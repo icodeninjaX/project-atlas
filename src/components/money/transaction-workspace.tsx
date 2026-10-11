@@ -206,7 +206,7 @@ export function TransactionWorkspace({
           <button
             type="button"
             onClick={startRecording}
-            className="bg-primary-solid text-primary-solid-foreground focus-visible:ring-ring focus-visible:ring-offset-background fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-30 grid size-14 place-items-center rounded-full shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_14px_30px_-10px_color-mix(in_srgb,var(--primary-solid)_80%,transparent)] transition-transform duration-150 [-webkit-tap-highlight-color:transparent] group-data-[keyboard=open]/shell:hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 motion-reduce:transition-none sm:hidden"
+            className="bg-primary-solid text-primary-solid-foreground focus-visible:ring-ring focus-visible:ring-offset-background fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-30 grid size-14 place-items-center rounded-full shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_6px_16px_rgb(7_10_15/0.35)] transition-transform duration-150 [-webkit-tap-highlight-color:transparent] group-data-[keyboard=open]/shell:hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 motion-reduce:transition-none sm:hidden"
           >
             <Plus className="size-6" aria-hidden="true" />
             <span className="sr-only">New transaction</span>
@@ -394,7 +394,7 @@ function TransactionHistory({
       {transactions.length === 0 && !accountFilter ? (
         <div className="border-border bg-card/40 mt-3 grid min-h-56 place-items-center rounded-2xl border border-dashed p-6 text-center">
           <div className="max-w-sm">
-            <span className="border-primary/20 bg-primary/10 text-primary mx-auto grid size-11 place-items-center rounded-xl border">
+            <span className="border-border bg-muted/60 text-foreground/75 mx-auto grid size-9 place-items-center rounded-lg border">
               <ReceiptText className="size-5" aria-hidden="true" />
             </span>
             <p className="mt-4 text-base font-semibold">
@@ -505,7 +505,7 @@ function TransactionHistory({
             <div
               aria-busy={navigating}
               className={cn(
-                "mt-4 space-y-5 transition-opacity",
+                "border-border bg-card divide-border mt-4 divide-y overflow-hidden rounded-2xl border transition-opacity",
                 navigating && "opacity-60",
               )}
             >
@@ -524,8 +524,8 @@ function TransactionHistory({
                     key={group.date}
                     aria-label={`${label}, ${group.items.length} ${group.items.length === 1 ? "transaction" : "transactions"}`}
                   >
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 px-1">
-                      <h3 className="text-sm font-semibold">
+                    <div className="bg-muted/30 flex flex-wrap items-baseline justify-between gap-x-3 px-4 py-2 sm:px-5">
+                      <h3 className="text-[0.8125rem] font-semibold">
                         {label}
                         {label === "Today" || label === "Yesterday" ? (
                           <span className="text-muted-foreground ml-1.5 font-normal">
@@ -541,7 +541,7 @@ function TransactionHistory({
                         />
                       </p>
                     </div>
-                    <ul className="border-border bg-card divide-border mt-2 divide-y overflow-hidden rounded-2xl border">
+                    <ul className="divide-border border-border divide-y border-t">
                       {group.items.map((transaction) => {
                         const direction =
                           transaction.transaction_type === "income"

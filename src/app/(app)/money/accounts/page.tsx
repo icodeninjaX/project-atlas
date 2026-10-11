@@ -82,7 +82,6 @@ export default async function AccountsPage() {
   return (
     <PageShell>
       <PageHeading
-        icon={WalletCards}
         eyebrow="Money / Accounts"
         title="Where your money lives"
         description="Every total is opening balance plus recorded movement, so it can always be explained."

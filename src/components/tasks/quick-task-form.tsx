@@ -105,12 +105,8 @@ export function QuickTaskForm({
           onCancel();
         }
       }}
-      className="border-border bg-card relative overflow-hidden rounded-[1.5rem] border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
+      className="border-border bg-card relative overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
     >
-      <div
-        aria-hidden="true"
-        className="from-primary/10 pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b to-transparent"
-      />
       <div className="relative p-4 sm:p-6">
         <p className="text-primary flex items-center gap-2 text-[0.8125rem] font-semibold">
           <ListPlus className="size-3.5" aria-hidden="true" />
@@ -210,7 +206,7 @@ export function QuickTaskForm({
         {planningDetailsVisible && (
           <div
             id="quick-task-planning-details"
-            className="bg-muted/40 border-border mt-2 grid gap-3 rounded-2xl border p-3 sm:p-4 md:grid-cols-2 xl:grid-cols-4"
+            className="bg-muted/40 mt-2 grid gap-3 rounded-xl p-3 sm:p-4 md:grid-cols-2 xl:grid-cols-4"
           >
             <div>
               <label htmlFor="quick-task-time" className={fieldLabelClass}>

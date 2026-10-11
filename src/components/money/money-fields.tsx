@@ -79,7 +79,7 @@ export const AmountField = forwardRef<
           aria-describedby={hint ? `${id}-hint` : undefined}
           style={{ width: `${Math.max(value.length, 4) + 0.5}ch` }}
           className={cn(
-            "placeholder:text-muted-foreground/40 max-w-full min-w-0 bg-transparent text-left font-mono font-semibold tracking-[-0.04em] outline-none",
+            "placeholder:text-muted-foreground/40 max-w-full min-w-0 bg-transparent text-left font-mono font-semibold tracking-[-0.025em] outline-none",
             hero
               ? "text-[clamp(2.5rem,12vw,3.75rem)] leading-tight"
               : "text-4xl",

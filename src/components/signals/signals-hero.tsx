@@ -17,12 +17,10 @@ import { cn } from "@/lib/utils";
 import { MaybeSensitive } from "./signal-card";
 import { SignalRadar } from "./signal-radar";
 import { categoryTone, severityTones } from "./signal-tone";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
-const tileClass =
-  "bg-background/55 ring-border/80 min-w-0 rounded-2xl p-3.5 ring-1 min-[360px]:p-4";
+const tileClass = "bg-background/55 min-w-0 rounded-xl p-3.5 min-[360px]:p-4";
 
 function StatusPill({
   tone,
@@ -57,10 +55,9 @@ function HeroShell({ children }: { children: ReactNode }) {
       aria-labelledby="signals-summary-heading"
       className={cn(
         surfaceClass,
-        "bg-card @container relative isolate mt-6 overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:mt-8 sm:rounded-[2rem]",
+        "bg-card @container relative isolate mt-6 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
       )}
     >
-      <HeroBackdrop />
       <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
     </section>
   );
@@ -75,7 +72,7 @@ function HeroHeading({
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h2
         id="signals-summary-heading"
-        className="text-primary text-[0.8125rem] font-semibold"
+        className="text-muted-foreground text-[0.8125rem] font-medium"
       >
         Pulse
       </h2>
@@ -205,7 +202,7 @@ export function SignalsHero({
       */}
       <div className="mt-5 grid grid-cols-[minmax(0,1fr)_6.5rem] gap-x-4 @max-[19rem]:grid-cols-1 @[26rem]:grid-cols-[minmax(0,1fr)_8rem] @[44rem]:grid-cols-[minmax(0,1fr)_15rem] @[44rem]:gap-x-10 @[56rem]:grid-cols-[minmax(0,1fr)_17.5rem] @[56rem]:gap-x-14">
         <p className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1 self-center">
-          <span className="text-foreground font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.045em]">
+          <span className="text-foreground font-mono text-[clamp(2.5rem,10vw,3.25rem)] leading-[0.92] font-semibold tracking-[-0.03em]">
             {summary.headline.value}
           </span>
           <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
@@ -284,7 +281,7 @@ export function SignalsEmptyHero() {
               >
                 <span
                   aria-hidden="true"
-                  className="bg-primary/10 text-primary ring-primary/20 grid size-9 shrink-0 place-items-center rounded-xl ring-1"
+                  className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg"
                 >
                   <Icon className="size-4" />
                 </span>

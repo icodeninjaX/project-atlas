@@ -110,7 +110,7 @@ export function SignalsToolbar({
       <div
         className={cn(
           surfaceClass,
-          "bg-card/85 relative grid gap-2 rounded-[1.5rem] p-2.5 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:items-center sm:gap-x-3 sm:p-3",
+          "bg-card/85 relative grid gap-2 rounded-2xl p-2.5 shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:items-center sm:gap-x-3 sm:p-3",
         )}
       >
         <p aria-hidden="true" className={rowLabelClass}>

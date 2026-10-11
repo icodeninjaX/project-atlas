@@ -275,7 +275,7 @@ export function DecisionsHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="decisions-summary-heading"
-          className="text-primary text-[0.8125rem] font-semibold"
+          className="text-muted-foreground text-[0.8125rem] font-medium"
         >
           Review loop
         </h2>
@@ -285,7 +285,7 @@ export function DecisionsHero({
       <div className="mt-5 grid gap-7 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-x-12 lg:gap-y-9">
         <div className="min-w-0">
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-foreground font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.045em]">
+            <span className="text-foreground font-mono text-[clamp(2.5rem,10vw,3.25rem)] leading-[0.92] font-semibold tracking-[-0.03em]">
               {summary.total}
             </span>
             <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
@@ -346,12 +346,12 @@ export function DecisionsEmptyHero({
     <DecisionHeroShell labelledBy="decisions-summary-heading">
       <h2
         id="decisions-summary-heading"
-        className="text-primary text-[0.8125rem] font-semibold"
+        className="text-muted-foreground text-[0.8125rem] font-medium"
       >
         Your journal
       </h2>
       <div className="mt-6 flex max-w-2xl gap-4">
-        <span className="bg-primary/12 text-primary ring-primary/20 grid size-11 shrink-0 place-items-center rounded-2xl ring-1 max-sm:hidden">
+        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
           <Scale aria-hidden="true" className="size-5" />
         </span>
         <div className="min-w-0">
@@ -374,7 +374,7 @@ export function DecisionsEmptyHero({
             <div className="flex items-center gap-2.5">
               <span
                 aria-hidden="true"
-                className="bg-primary/10 text-primary ring-primary/15 grid size-8 shrink-0 place-items-center rounded-lg ring-1"
+                className="bg-muted/60 text-foreground/75 grid size-8 shrink-0 place-items-center rounded-lg"
               >
                 <step.icon className="size-4" />
               </span>

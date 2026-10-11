@@ -1,4 +1,3 @@
-import { WalletCards } from "lucide-react";
 import {
   TransactionWorkspace,
   type TransactionHistoryItem,
@@ -179,7 +178,6 @@ export default async function TransactionsPage({
   return (
     <PageShell>
       <PageHeading
-        icon={WalletCards}
         eyebrow="Money / Transactions"
         title="Money movement"
         description="Income and expenses change balances. Transfers stay separate and never inflate either total."

@@ -224,13 +224,13 @@ export function MetricCard({
           {score ? "Average score" : "Total in view"}
         </p>
         {series.headline === null ? (
-          <p className="text-muted-foreground mt-1.5 font-mono text-[1.75rem] leading-tight font-semibold tracking-[-0.04em]">
+          <p className="text-muted-foreground mt-1.5 font-mono text-[1.75rem] leading-tight font-semibold tracking-[-0.025em]">
             <span aria-hidden="true">—</span>
             <span className="sr-only">No supported history</span>
           </p>
         ) : (
           <p className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5">
-            <SensitiveValue className="text-foreground font-mono text-[1.75rem] leading-tight font-semibold tracking-[-0.04em] break-all tabular-nums sm:text-[2rem]">
+            <SensitiveValue className="text-foreground font-mono text-[1.75rem] leading-tight font-semibold tracking-[-0.025em] break-all tabular-nums sm:text-[2rem]">
               {score
                 ? series.headline.toFixed(2)
                 : formatMetricValue(series.metric, series.headline)}

@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, Columns3, List } from "lucide-react";
+import { Columns3, List } from "lucide-react";
 import Link from "next/link";
 import { ApplicationCreateDialog } from "@/components/career/application-create-dialog";
 import { ApplicationList } from "@/components/career/application-list";
@@ -88,8 +88,6 @@ export function CareerWorkspace({
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Applications"
-        icon={BriefcaseBusiness}
         title="Career"
         description={
           view === "board"

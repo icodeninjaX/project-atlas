@@ -100,7 +100,7 @@ function Window({
           {span(from, through, todayIso)}
         </span>
       </p>
-      <p className="mt-2 font-mono text-[1.75rem] leading-none font-semibold tracking-[-0.04em] [overflow-wrap:anywhere]">
+      <p className="mt-2 font-mono text-[1.75rem] leading-none font-semibold tracking-[-0.025em] [overflow-wrap:anywhere]">
         <SensitiveValue>{display(metric, value)}</SensitiveValue>
       </p>
       <p className="text-muted-foreground mt-2 text-xs">
@@ -319,7 +319,7 @@ export function DecisionRecordsCard({
       <div className="flex min-w-0 items-center gap-3">
         <span
           aria-hidden="true"
-          className="bg-primary/10 text-primary ring-primary/15 grid size-10 shrink-0 place-items-center rounded-xl ring-1 @max-[14rem]:hidden"
+          className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg @max-[14rem]:hidden"
         >
           <ChartColumn className="size-[1.125rem]" />
         </span>

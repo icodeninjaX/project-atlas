@@ -1,4 +1,4 @@
-import { CalendarRange, History } from "lucide-react";
+import { History } from "lucide-react";
 import { TimelineToolbar } from "@/components/timeline/timeline-toolbar";
 import { TimelineWorkspace } from "@/components/timeline/timeline-workspace";
 import type { TimelineFilters } from "@/lib/timeline/timeline";
@@ -24,8 +24,6 @@ export function TimelineScreen({
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Your history"
-        icon={CalendarRange}
         title="Life timeline"
         description="Everything you recorded, in order: tasks finished, money moved, goals reached and decisions made."
         aside={
@@ -53,7 +51,7 @@ export function TimelineScreen({
           }
         />
       ) : (
-        <div className="mt-8 grid min-h-64 place-items-center rounded-[1.5rem] border border-dashed p-6 text-center">
+        <div className="mt-8 grid min-h-64 place-items-center rounded-2xl border border-dashed p-6 text-center">
           <p className="text-muted-foreground text-sm">
             Timeline is unavailable while ATLAS is not configured.
           </p>

@@ -68,7 +68,7 @@ export function AccountLedger({
                 type="button"
                 aria-haspopup="dialog"
                 onClick={() => setSelectedId(account.id)}
-                className="group focus-visible:ring-ring focus-visible:ring-offset-background relative block w-full rounded-[1.25rem] text-left transition-transform duration-200 ease-out [-webkit-tap-highlight-color:transparent] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none motion-reduce:active:scale-100"
+                className="group focus-visible:ring-ring focus-visible:ring-offset-background relative block w-full rounded-xl text-left transition-transform duration-200 ease-out [-webkit-tap-highlight-color:transparent] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none motion-reduce:active:scale-100"
               >
                 {/* Spaces sit between elements: names are joined without
                     them, whatever the visual layout. */}

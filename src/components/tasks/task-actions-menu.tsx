@@ -203,7 +203,7 @@ export function TaskActionsMenu({
               ?.querySelector<HTMLInputElement>(`[name="${fieldName}"]`)
               ?.focus();
           }}
-          className="border-border bg-card text-card-foreground fixed right-0 bottom-0 left-0 z-50 max-h-[88dvh] overflow-y-auto rounded-t-[1.75rem] border border-b-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(90vw,640px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border"
+          className="border-border bg-card text-card-foreground fixed right-0 bottom-0 left-0 z-50 max-h-[88dvh] overflow-y-auto rounded-t-2xl border border-b-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(90vw,640px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border"
         >
           <div className="flex items-start justify-between gap-4">
             <div>

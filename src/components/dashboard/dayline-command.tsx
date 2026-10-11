@@ -24,7 +24,6 @@ import {
 import { formatTaskMinutes } from "@/lib/tasks/task-view";
 import { cn } from "@/lib/utils";
 import styles from "./today.module.css";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 export type DashboardDaylineItem = {
   id: string;
@@ -42,6 +41,9 @@ const kindPresentation: Record<string, { label: string; icon: LucideIcon }> = {
   career: { label: "Career", icon: BriefcaseBusiness },
   goal: { label: "Goal", icon: Goal },
 };
+
+/** How each route position reads on screen. */
+const positionLabels = { NOW: "Now", NEXT: "Next", LATER: "Later" } as const;
 
 /** One shade of the accent per stop, strongest for NOW. */
 const stopTone = [
@@ -109,18 +111,20 @@ function ReasonChips({ reason }: { reason: string }) {
   if (!parts.length) return null;
 
   return (
-    <ul aria-label="Why it is on your route" className="flex flex-wrap gap-2">
+    <ul
+      aria-label="Why it is on your route"
+      className="flex flex-wrap gap-x-3 gap-y-1 text-[0.8125rem] leading-5"
+    >
       {parts.map((part) => {
         const pressing = /overdue|critical|due today/i.test(part);
         return (
           <li
             key={part}
             className={cn(
-              "inline-flex min-h-7 max-w-full min-w-0 items-center rounded-full px-3 py-1 text-xs leading-4 font-medium break-words ring-1",
+              "max-w-full min-w-0 break-words",
               pressing
-                ? // red-700/red-300 keep 12px text above 4.5:1 on the tint.
-                  "bg-destructive/10 ring-destructive/20 text-red-700 dark:text-red-300"
-                : "bg-background/60 text-muted-foreground ring-border",
+                ? "font-medium text-red-700 dark:text-red-300"
+                : "text-muted-foreground",
             )}
           >
             {part}
@@ -164,7 +168,7 @@ function DayLoad({
   const arcOffset = RING_CIRCUMFERENCE * (1 - Math.min(ratio, 1));
 
   return (
-    <div className="bg-background/50 ring-border/80 flex min-w-0 flex-wrap items-center gap-4 rounded-2xl p-4 ring-1 sm:p-5 lg:flex-col lg:flex-nowrap lg:items-start lg:gap-5">
+    <div className="bg-background/50 flex min-w-0 flex-wrap items-center gap-4 rounded-xl p-4 sm:p-5 lg:flex-col lg:flex-nowrap lg:items-start lg:gap-5">
       <div
         role="meter"
         aria-label="Day load"
@@ -367,7 +371,7 @@ function RouteStops({
               href={item.href as Route}
               className={cn(
                 surfaceClass,
-                "bg-card/85 focus-visible:ring-ring group relative grid min-h-28 grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05)] transition-[box-shadow,transform] hover:shadow-[0_18px_36px_-22px_rgb(7_10_15/0.55)] focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none sm:p-5 @max-[18rem]:p-3",
+                "bg-card/85 focus-visible:ring-ring group relative grid min-h-28 grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05)] transition-[box-shadow,transform] hover:shadow-[0_1px_2px_rgb(7_10_15/0.04)] focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none sm:p-5 @max-[18rem]:p-3",
               )}
             >
               <span className="min-w-0">
@@ -379,8 +383,8 @@ function RouteStops({
                       stopTone[index + 1] ?? stopTone[2],
                     )}
                   />
-                  <span className="text-primary text-[0.6875rem] font-bold tracking-[0.12em]">
-                    {item.position}
+                  <span className="text-foreground text-xs font-semibold">
+                    {positionLabels[item.position]}
                   </span>
                   {startsAt ? (
                     <span className="text-muted-foreground text-[0.6875rem] font-medium">
@@ -436,31 +440,29 @@ export function DaylineCommand({
       aria-labelledby="dayline-title"
       className={cn(
         styles.edge,
-        styles.grain,
-        "bg-card/80 @container relative isolate overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:rounded-[2rem]",
+        "bg-card/80 @container relative isolate overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
       )}
     >
-      <HeroBackdrop />
-
       <header className="relative flex items-start justify-between gap-3 px-4 pt-4 min-[360px]:px-5 min-[360px]:pt-5 sm:px-7 sm:pt-7">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="bg-primary/12 text-primary ring-primary/20 grid size-10 shrink-0 place-items-center rounded-xl ring-1 @max-[23rem]:hidden">
-            <RouteIcon aria-hidden="true" className="size-[1.125rem]" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-primary text-xs font-semibold">Dayline</p>
-            <h2
-              id="dayline-title"
-              className="mt-0.5 text-base font-semibold tracking-[-0.02em] break-words sm:text-lg"
-            >
-              Your route through today
-            </h2>
-          </div>
+        <div className="min-w-0">
+          <h2
+            id="dayline-title"
+            className="flex items-center gap-2 text-[0.9375rem] font-semibold tracking-[-0.01em]"
+          >
+            <RouteIcon
+              aria-hidden="true"
+              className="text-muted-foreground size-4 shrink-0"
+            />
+            Your route through today
+          </h2>
+          <p className="text-muted-foreground mt-0.5 text-xs leading-5">
+            Dayline orders what to do now, next and later.
+          </p>
         </div>
         <Link
           href="/settings"
           aria-label="Tune Dayline planning"
-          className="text-muted-foreground hover:text-foreground hover:bg-background/60 focus-visible:ring-ring ring-border bg-background/30 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-full text-xs font-medium ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 sm:px-3.5"
+          className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-lg text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 sm:px-2.5"
         >
           <SlidersHorizontal aria-hidden="true" className="size-3.5" />
           <span className="max-sm:sr-only">Tune</span>
@@ -468,15 +470,11 @@ export function DaylineCommand({
       </header>
 
       {current ? (
-        <div className="relative grid gap-6 px-4 pt-6 pb-5 min-[360px]:px-5 sm:px-7 sm:pt-9 sm:pb-8 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-end lg:gap-10">
+        <div className="relative grid gap-6 px-4 pt-5 pb-5 min-[360px]:px-5 sm:px-7 sm:pt-6 sm:pb-7 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-center lg:gap-10">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <span className="bg-primary-solid text-primary-solid-foreground inline-flex min-h-7 items-center gap-2 rounded-full px-3 text-xs font-bold tracking-[0.12em] shadow-[0_0_0_4px_color-mix(in_srgb,var(--primary)_16%,transparent),0_8px_22px_-6px_color-mix(in_srgb,var(--primary-solid)_75%,transparent)]">
-                <span
-                  aria-hidden="true"
-                  className="size-1.5 rounded-full bg-current"
-                />
-                NOW
+              <span className="bg-primary-solid text-primary-solid-foreground inline-flex h-6 items-center rounded-md px-2 text-xs font-semibold">
+                Now
               </span>
               <KindLabel kind={current.kind} />
               <Duration
@@ -484,7 +482,7 @@ export function DaylineCommand({
                 until={schedule?.stops[0]?.endsAt}
               />
             </div>
-            <h3 className="mt-5 max-w-2xl min-w-0 text-2xl leading-[1.12] font-semibold tracking-[-0.04em] text-balance break-words min-[360px]:text-[1.625rem] sm:text-[2.125rem] lg:text-[2.5rem]">
+            <h3 className="mt-4 max-w-2xl min-w-0 text-2xl leading-tight font-semibold tracking-[-0.02em] text-balance break-words sm:text-[1.75rem]">
               {current.title}
             </h3>
             <div className="mt-4 max-w-2xl min-w-0">
@@ -495,7 +493,7 @@ export function DaylineCommand({
                 href={current.href as Route}
                 className={cn(
                   buttonVariants({ size: "lg" }),
-                  "group w-full min-w-0 rounded-2xl sm:w-auto",
+                  "group w-full min-w-0 sm:w-auto",
                 )}
               >
                 Open this next

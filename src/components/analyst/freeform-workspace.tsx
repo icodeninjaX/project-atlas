@@ -53,7 +53,6 @@ import {
   tileClass,
   type AreaTone,
 } from "@/components/analyst/analyst-chrome";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 type FreeformResult = {
   status: "answered" | "fallback" | "unsupported" | "clarification_required";
@@ -684,7 +683,7 @@ function AnswerCard({ turn }: { turn: Turn }) {
         <div className="flex min-w-0 items-center gap-3">
           <span
             aria-hidden="true"
-            className="bg-primary/12 text-primary ring-primary/20 grid size-9 shrink-0 place-items-center rounded-xl ring-1"
+            className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg"
           >
             <MessageSquareText className="size-4" />
           </span>
@@ -856,7 +855,7 @@ function Composer({
       className={cn(
         "grid size-10 shrink-0 place-items-center rounded-full transition-[background-color,color,box-shadow,opacity]",
         canAsk
-          ? "bg-primary-solid text-primary-solid-foreground hover:bg-primary-solid/90 shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_1px_2px_rgb(7_10_15/0.18),0_4px_14px_-4px_color-mix(in_srgb,var(--primary-solid)_55%,transparent)]"
+          ? "bg-primary-solid text-primary-solid-foreground hover:bg-primary-solid/90 shadow-[inset_0_1px_0_rgb(255_255_255/0.14)]"
           : "bg-muted text-muted-foreground",
       )}
     >
@@ -1152,7 +1151,7 @@ export function FreeformWorkspace({
       <button
         type="button"
         onClick={() => updateConsent(true)}
-        className="bg-primary-solid text-primary-solid-foreground focus-visible:ring-ring min-h-10 shrink-0 rounded-full px-4 text-xs font-semibold shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_4px_14px_-4px_color-mix(in_srgb,var(--primary-solid)_55%,transparent)] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="bg-primary-solid text-primary-solid-foreground focus-visible:ring-ring min-h-10 shrink-0 rounded-full px-4 text-xs font-semibold shadow-[inset_0_1px_0_rgb(255_255_255/0.14)] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         Allow data sharing
       </button>
@@ -1184,15 +1183,14 @@ export function FreeformWorkspace({
           <div
             className={cn(
               glassCardClass,
-              "bg-card isolate overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:rounded-[2rem]",
+              "bg-card isolate overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
             )}
           >
-            <HeroBackdrop />
             <div className="relative space-y-4 px-4 pt-5 pb-5 min-[360px]:px-5 sm:px-7 sm:pt-7">
               <div className="flex items-start gap-3.5">
                 <span
                   aria-hidden="true"
-                  className="bg-primary/12 text-primary ring-primary/20 grid size-11 shrink-0 place-items-center rounded-2xl ring-1"
+                  className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg"
                 >
                   <MessageSquareText className="size-[1.15rem]" />
                 </span>

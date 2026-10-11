@@ -35,7 +35,6 @@ import {
   type QueueTone,
 } from "@/lib/knowledge/view";
 import { cn } from "@/lib/utils";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
@@ -72,10 +71,9 @@ function HeroShell({ children }: { children: ReactNode }) {
       aria-labelledby="knowledge-queue-heading"
       className={cn(
         surfaceClass,
-        "bg-card @container relative isolate mt-6 overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:mt-8 sm:rounded-[2rem]",
+        "bg-card @container relative isolate mt-6 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
       )}
     >
-      <HeroBackdrop />
       <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
     </section>
   );
@@ -94,10 +92,10 @@ function UpNext({
 }) {
   if (!concept) {
     return (
-      <div className="bg-background/55 ring-border/80 rounded-2xl p-4 ring-1 sm:p-5">
+      <div className="bg-background/55 rounded-xl p-4 sm:p-5">
         <p className={eyebrowClass}>Up next</p>
         <div className="mt-3 flex items-start gap-3">
-          <span className="bg-primary/10 text-primary ring-primary/15 grid size-10 shrink-0 place-items-center rounded-xl ring-1">
+          <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg">
             <CalendarCheck2 aria-hidden="true" className="size-[1.125rem]" />
           </span>
           <div className="min-w-0">
@@ -116,7 +114,7 @@ function UpNext({
   const chip = reviewChip(concept, nowIso);
   const level = strengthLevel(concept.confidence);
   return (
-    <div className="bg-background/55 ring-border/80 @container rounded-2xl p-4 ring-1 sm:p-5">
+    <div className="bg-background/55 @container rounded-xl p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className={eyebrowClass}>{due ? "Up next" : "Next up"}</p>
         {chip ? <DueChip due={chip} showDate={false} /> : null}
@@ -267,7 +265,7 @@ function Forecast({
                   className={cn(
                     "w-full max-w-7 rounded-t-[6px] rounded-b-[2px]",
                     index === 0
-                      ? "from-primary to-primary/70 bg-gradient-to-t"
+                      ? "bg-primary"
                       : "bg-primary/35 dark:bg-primary/45",
                     styles.rise,
                   )}
@@ -323,7 +321,7 @@ function Habit({
     <li className="flex min-w-0 items-start gap-2.5">
       <span
         aria-hidden="true"
-        className="bg-primary/10 text-primary ring-primary/15 mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg ring-1 max-[359px]:hidden"
+        className="bg-muted/60 text-foreground/75 mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg max-[359px]:hidden"
       >
         <Icon className="size-4" />
       </span>
@@ -373,7 +371,7 @@ export function KnowledgeHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="knowledge-queue-heading"
-          className="text-primary text-[0.8125rem] font-semibold"
+          className="text-muted-foreground text-[0.8125rem] font-medium"
         >
           Review queue
         </h2>
@@ -385,7 +383,7 @@ export function KnowledgeHero({
       <div className="mt-5 grid gap-7 @3xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] @3xl:gap-x-12 @3xl:gap-y-9">
         <div className="min-w-0">
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-foreground font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.045em]">
+            <span className="text-foreground font-mono text-[clamp(2.5rem,10vw,3.25rem)] leading-[0.92] font-semibold tracking-[-0.03em]">
               {summary.due}
             </span>
             <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
@@ -494,12 +492,12 @@ export function KnowledgeEmptyHero({ onAdd }: { onAdd: () => void }) {
     <HeroShell>
       <h2
         id="knowledge-queue-heading"
-        className="text-primary text-[0.8125rem] font-semibold"
+        className="text-muted-foreground text-[0.8125rem] font-medium"
       >
         Review queue
       </h2>
       <div className="mt-6 flex max-w-2xl gap-4">
-        <span className="bg-primary/12 text-primary ring-primary/20 grid size-11 shrink-0 place-items-center rounded-2xl ring-1 max-sm:hidden">
+        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
           <GraduationCap aria-hidden="true" className="size-5" />
         </span>
         <div className="min-w-0">
@@ -526,7 +524,7 @@ export function KnowledgeEmptyHero({ onAdd }: { onAdd: () => void }) {
         {steps.map((step, index) => (
           <li
             key={step.title}
-            className="bg-background/55 ring-border/70 flex min-w-0 gap-3 rounded-2xl p-4 ring-1"
+            className="bg-background/55 flex min-w-0 gap-3 rounded-xl p-4"
           >
             <span className="bg-primary/10 text-primary ring-primary/15 grid size-7 shrink-0 place-items-center rounded-full font-mono text-xs font-semibold ring-1">
               {index + 1}

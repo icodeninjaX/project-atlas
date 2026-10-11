@@ -737,7 +737,7 @@ export function MilestoneList({
           onResult={(result) => {
             if (result.success) setAddMilestoneOpen(false);
           }}
-          className="border-border bg-muted/20 mt-3 space-y-3 rounded-xl border p-3"
+          className="bg-muted/20 mt-3 space-y-3 rounded-xl p-3"
         >
           <input type="hidden" name="goalId" value={goalId} />
           <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">

@@ -479,7 +479,7 @@ export function TransactionForm({
       className={cn(
         "z-10 min-w-0 space-y-2",
         docked &&
-          "sticky -mx-2 rounded-[1.25rem] border p-2 shadow-[0_12px_32px_-12px_rgb(7_10_15/0.45)] backdrop-blur-md",
+          "sticky -mx-2 rounded-xl border p-2 shadow-[0_12px_32px_-12px_rgb(7_10_15/0.45)] backdrop-blur-md",
         full
           ? cn(
               docked &&
@@ -490,7 +490,7 @@ export function TransactionForm({
       )}
     >
       {full ? (
-        <div className="border-border bg-background/60 hidden rounded-2xl border p-4 lg:block">
+        <div className="bg-background/60 hidden rounded-xl p-4 lg:block">
           <p className="text-muted-foreground text-xs font-semibold">Preview</p>
           <div className="mt-3 flex min-w-0 items-center gap-3">
             <CategoryBadge
@@ -601,7 +601,7 @@ export function TransactionForm({
       // overflow-clip, not -hidden: clipping must not create a scroll
       // container, or the docked summary would stick to the card instead
       // of the viewport.
-      className="border-border bg-card relative overflow-clip rounded-[1.75rem] border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
+      className="border-border bg-card relative overflow-clip rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
     >
       <div
         aria-hidden="true"

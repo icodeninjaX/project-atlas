@@ -122,18 +122,14 @@ export function AccountsOverview({
   return (
     <section
       aria-labelledby="accounts-total"
-      className="border-primary/20 bg-card relative mt-8 overflow-hidden rounded-[1.75rem] border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
+      className="border-primary/20 bg-card relative mt-8 overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
     >
-      <div
-        aria-hidden="true"
-        className="from-primary/12 pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b to-transparent"
-      />
       <div className="relative grid gap-7 p-5 sm:gap-8 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center lg:gap-10">
         <div className="min-w-0">
           <div className="flex items-center justify-between gap-3">
             <h2
               id="accounts-total"
-              className="text-primary text-[0.8125rem] font-semibold"
+              className="text-muted-foreground text-[0.8125rem] font-medium"
             >
               Total balance
             </h2>
@@ -145,7 +141,7 @@ export function AccountsOverview({
               </span>
             ) : null}
           </div>
-          <p className="mt-3 min-w-0 font-mono text-[clamp(2.375rem,11vw,3.5rem)] leading-none font-semibold tracking-[-0.045em] [overflow-wrap:anywhere]">
+          <p className="mt-3 min-w-0 font-mono text-[clamp(2.25rem,9vw,3rem)] leading-none font-semibold tracking-[-0.03em] [overflow-wrap:anywhere]">
             <MoneyAmount centavos={total} quietCentavos />
           </p>
           <p

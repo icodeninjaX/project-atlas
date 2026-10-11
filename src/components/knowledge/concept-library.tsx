@@ -200,7 +200,7 @@ export function ConceptLibrary({
             <ul
               className={cn(
                 surfaceClass,
-                "bg-card/90 divide-border/70 relative mt-3 divide-y rounded-[1.5rem] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)]",
+                "bg-card/90 divide-border/70 relative mt-3 divide-y rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
               )}
             >
               {group.concepts.map((concept) => (

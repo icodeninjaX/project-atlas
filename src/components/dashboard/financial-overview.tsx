@@ -132,7 +132,7 @@ function CashFlow({
             />{" "}
             {flow.netCentavos >= 0 ? "kept so far" : "more out than in"}
             {flow.netCentavos > 0 && incomeCentavos > 0 ? (
-              <span className="bg-positive/10 text-positive ml-2 inline-flex rounded-full px-2 py-0.5 text-[0.6875rem] leading-4 font-semibold whitespace-nowrap">
+              <span className="text-positive ml-1.5 text-xs font-medium whitespace-nowrap">
                 {Math.round((flow.netCentavos / incomeCentavos) * 100)}% of
                 income
               </span>
@@ -217,7 +217,7 @@ export function FinancialOverview({
           <dt className="text-muted-foreground text-xs font-medium">
             Available balance
           </dt>
-          <dd className="mt-2 min-w-0 font-mono text-[clamp(2.125rem,10vw,2.875rem)] leading-none font-semibold tracking-[-0.05em] [overflow-wrap:anywhere] break-words">
+          <dd className="mt-2 min-w-0 font-mono text-[clamp(2.125rem,10vw,2.875rem)] leading-none font-semibold tracking-[-0.025em] [overflow-wrap:anywhere] break-words">
             <MoneyAmount
               centavos={financial.total_balance_centavos}
               quietCentavos
@@ -228,7 +228,7 @@ export function FinancialOverview({
               Across active accounts
             </span>
             {payday ? (
-              <span className="bg-positive/10 text-positive ring-positive/20 inline-flex items-center rounded-full px-2.5 py-1 text-[0.6875rem] leading-none font-semibold ring-1">
+              <span className="text-positive text-xs font-medium">
                 {payday}
               </span>
             ) : null}

@@ -4,7 +4,6 @@ import {
   Archive,
   BookOpen,
   CalendarCheck2,
-  GraduationCap,
   Plus,
   SearchX,
   Sprout,
@@ -81,11 +80,11 @@ function LibraryEmpty({
     <div
       className={cn(
         surfaceClass,
-        "bg-card/80 relative grid min-h-56 place-items-center rounded-[1.5rem] p-6 text-center",
+        "bg-card/80 relative grid min-h-56 place-items-center rounded-2xl p-6 text-center",
       )}
     >
       <div className="max-w-sm">
-        <span className="bg-primary/10 text-primary ring-primary/15 mx-auto grid size-11 place-items-center rounded-2xl ring-1">
+        <span className="bg-muted/60 text-foreground/75 mx-auto grid size-9 place-items-center rounded-lg">
           <Icon aria-hidden="true" className="size-5" />
         </span>
         <p className="mt-4 font-semibold">{title}</p>
@@ -355,8 +354,6 @@ export function KnowledgeWorkspace({
   return (
     <PageShell>
       <PageHeading
-        eyebrow="Spaced review"
-        icon={GraduationCap}
         title="Knowledge"
         description="Capture what you learn, explain it in your own words, and let spaced reviews make it stick."
         actions={
@@ -426,7 +423,7 @@ export function KnowledgeWorkspace({
                 aria-label="Selected concept"
                 className={cn(
                   surfaceClass,
-                  "bg-card/90 relative [scrollbar-width:thin] rounded-[1.5rem] p-5 shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)] max-xl:hidden sm:p-6 xl:sticky xl:top-6 xl:max-h-[calc(100dvh-3rem)] xl:overflow-y-auto xl:overscroll-contain",
+                  "bg-card/90 relative [scrollbar-width:thin] rounded-2xl p-5 shadow-[0_1px_2px_rgb(7_10_15/0.04)] max-xl:hidden sm:p-6 xl:sticky xl:top-6 xl:max-h-[calc(100dvh-3rem)] xl:overflow-y-auto xl:overscroll-contain",
                 )}
               >
                 <ConceptPanel {...panelProps} onArchived={moveOn} />

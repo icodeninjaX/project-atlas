@@ -176,7 +176,7 @@ export function MfaSettings() {
   };
 
   return (
-    <div className="bg-background/55 ring-border/80 relative mt-2.5 overflow-hidden rounded-2xl p-3.5 ring-1 sm:p-4">
+    <div className="bg-background/55 relative mt-2.5 overflow-hidden rounded-xl p-3.5 sm:p-4">
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"

@@ -1,4 +1,4 @@
-import { CloudOff, History, LogIn, ShieldCheck, Waypoints } from "lucide-react";
+import { CloudOff, LogIn, ShieldCheck, Waypoints } from "lucide-react";
 import Link from "next/link";
 import { DashboardCardHeading } from "@/components/dashboard/dashboard-card";
 import {
@@ -128,8 +128,6 @@ export function HistoryScreen({
   return (
     <PageShell>
       <HistoryHeader
-        eyebrow="Monthly metrics"
-        eyebrowIcon={History}
         title="Recorded history"
         description="Compare the records ATLAS can actually reconstruct. Every value is recalculated from your surviving source records."
         link={{

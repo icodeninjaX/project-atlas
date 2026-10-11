@@ -20,7 +20,7 @@ export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 /** A glass surface for the page's cards. */
 export const glassCardClass = cn(
   surfaceClass,
-  "bg-card/90 @container relative min-w-0 rounded-[1.5rem] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)]",
+  "bg-card/90 @container relative min-w-0 rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
 );
 
 /** A text or date input on a proposal card. */
@@ -51,32 +51,32 @@ type Tone = {
  */
 const tones = {
   rose: {
-    tile: "bg-rose-500/12 text-rose-700 ring-rose-500/25 dark:text-rose-300",
+    tile: "text-rose-700 dark:text-rose-300",
     dot: "bg-rose-500",
     chip: "bg-rose-500/10 text-rose-700 ring-rose-500/25 dark:text-rose-300",
   },
   emerald: {
-    tile: "bg-emerald-500/12 text-emerald-700 ring-emerald-500/25 dark:text-emerald-300",
+    tile: "text-emerald-700 dark:text-emerald-300",
     dot: "bg-emerald-500",
     chip: "bg-emerald-500/10 text-emerald-700 ring-emerald-500/25 dark:text-emerald-300",
   },
   sky: {
-    tile: "bg-sky-500/12 text-sky-700 ring-sky-500/25 dark:text-sky-300",
+    tile: "text-sky-700 dark:text-sky-300",
     dot: "bg-sky-500",
     chip: "bg-sky-500/10 text-sky-700 ring-sky-500/25 dark:text-sky-300",
   },
   violet: {
-    tile: "bg-violet-500/12 text-violet-700 ring-violet-500/25 dark:text-violet-300",
+    tile: "text-violet-700 dark:text-violet-300",
     dot: "bg-violet-500",
     chip: "bg-violet-500/10 text-violet-700 ring-violet-500/25 dark:text-violet-300",
   },
   amber: {
-    tile: "bg-amber-500/12 text-amber-700 ring-amber-500/25 dark:text-amber-300",
+    tile: "text-amber-700 dark:text-amber-300",
     dot: "bg-amber-500",
     chip: "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300",
   },
   muted: {
-    tile: "bg-muted/80 text-muted-foreground ring-border/80",
+    tile: "text-muted-foreground",
     dot: "bg-muted-foreground/50",
     chip: "bg-background/60 text-muted-foreground ring-border",
   },
@@ -140,7 +140,7 @@ export const understoodKinds = [
   },
 ] as const;
 
-/** A soft gradient tile holding an icon. */
+/** A neutral square holding an icon; `tone` colors the glyph. */
 export function KindTile({
   icon: Icon,
   tone,
@@ -154,12 +154,12 @@ export function KindTile({
     <span
       aria-hidden="true"
       className={cn(
-        "relative grid shrink-0 place-items-center ring-1 ring-inset",
-        size === "md" ? "size-11 rounded-2xl" : "size-9 rounded-xl",
+        "bg-muted/60 relative grid shrink-0 place-items-center rounded-lg",
+        size === "md" ? "size-9" : "size-8",
         tone.tile,
       )}
     >
-      <Icon className={size === "md" ? "size-[1.15rem]" : "size-4"} />
+      <Icon className="size-4" />
     </span>
   );
 }

@@ -12,7 +12,6 @@ import type { ReactNode } from "react";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import type { PromptKey, StatusTone } from "@/lib/reviews/view";
 import { cn } from "@/lib/utils";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
@@ -159,11 +158,10 @@ export function HeroShell({
       aria-labelledby={labelledBy}
       className={cn(
         surfaceClass,
-        "bg-card @container relative isolate overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:rounded-[2rem]",
+        "bg-card @container relative isolate overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
         className,
       )}
     >
-      <HeroBackdrop />
       <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
     </section>
   );
@@ -172,12 +170,11 @@ export function HeroShell({
 /** A glass card below the hero. */
 export const glassCardClass = cn(
   surfaceClass,
-  "bg-card/90 @container relative min-w-0 rounded-[1.5rem] shadow-[0_1px_2px_rgb(7_10_15/0.05),0_22px_44px_-30px_rgb(7_10_15/0.4)]",
+  "bg-card/90 @container relative min-w-0 rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
 );
 
 /** An inset tile inside a glass card. */
-export const tileClass =
-  "bg-background/55 ring-border/80 min-w-0 rounded-2xl ring-1";
+export const tileClass = "bg-background/55 min-w-0 rounded-xl";
 
 /**
  * A section of the reviews page: a short title above its surface, with an

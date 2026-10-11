@@ -114,7 +114,7 @@ function ReviewArc({
         <span
           style={{ width: `${arc.share * 100}%` }}
           className={cn(
-            "from-primary/55 to-primary absolute inset-y-0 left-0 rounded-full bg-gradient-to-r",
+            "bg-primary absolute inset-y-0 left-0 rounded-full",
             styles.reach,
           )}
         />
@@ -164,7 +164,7 @@ function HeroFact({
   note: ReactNode;
 }) {
   return (
-    <div className="sm:bg-background/55 sm:ring-border/80 min-w-0 sm:rounded-2xl sm:p-4 sm:ring-1">
+    <div className="sm:bg-background/55 min-w-0 sm:rounded-xl sm:p-4">
       <dt className="text-muted-foreground text-xs font-medium">{label}</dt>
       <dd className="mt-1 text-base leading-tight font-semibold tracking-[-0.01em] [overflow-wrap:anywhere]">
         {value}
@@ -195,14 +195,14 @@ function DetailHero({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <span className="text-primary text-xs font-semibold">
+            <span className="text-muted-foreground text-xs font-medium">
               Decision review
             </span>
             <ReviewChip review={review} />
           </p>
           <h1
             id="decision-heading"
-            className="mt-3 text-[1.75rem] leading-[1.1] font-semibold tracking-[-0.04em] text-balance break-words sm:text-[2.25rem]"
+            className="mt-3 text-[1.75rem] leading-[1.1] font-semibold tracking-[-0.025em] text-balance break-words sm:text-[2.25rem]"
           >
             {decision.title}
           </h1>
@@ -314,7 +314,7 @@ function PlanCard({
       <div className="flex min-w-0 items-center gap-3">
         <span
           aria-hidden="true"
-          className="bg-primary/10 text-primary ring-primary/15 grid size-10 shrink-0 place-items-center rounded-xl ring-1 @max-[14rem]:hidden"
+          className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg @max-[14rem]:hidden"
         >
           <ListChecks className="size-[1.125rem]" />
         </span>
@@ -623,7 +623,7 @@ function PlanHistory({
                           "ring-primary/25 bg-primary/[0.05] p-3",
                         )}
                       >
-                        <p className="text-primary text-[0.6875rem] font-semibold">
+                        <p className="text-muted-foreground text-[0.6875rem] font-medium">
                           After
                         </p>
                         <p className="mt-1 text-sm leading-6 break-words whitespace-pre-wrap">

@@ -323,7 +323,7 @@ function FocusTimer({
             event.preventDefault();
             onCloseAutoFocus();
           }}
-          className="fixed inset-0 z-50 flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#07101f] text-white outline-none sm:inset-5 sm:h-auto sm:rounded-[2rem] sm:border sm:border-white/10 sm:shadow-2xl"
+          className="fixed inset-0 z-50 flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#07101f] text-white outline-none sm:inset-5 sm:h-auto sm:border sm:border-white/10 sm:shadow-2xl"
         >
           <div
             aria-hidden="true"
@@ -375,7 +375,7 @@ function FocusTimer({
             <Dialog.Description className="font-mono text-[0.6875rem] text-blue-200">
               {scheduledLabel ?? "Start when you are ready"}
             </Dialog.Description>
-            <Dialog.Title className="mt-2 max-w-2xl text-[clamp(1.35rem,6.5vw,2.25rem)] leading-tight font-semibold tracking-[-0.04em] text-balance sm:mt-3 sm:text-4xl">
+            <Dialog.Title className="mt-2 max-w-2xl text-[clamp(1.35rem,6.5vw,2.25rem)] leading-tight font-semibold tracking-[-0.025em] text-balance sm:mt-3 sm:text-4xl">
               {title}
             </Dialog.Title>
             {description && (
@@ -436,7 +436,7 @@ function FocusTimer({
               </div>
             </div>
 
-            <div className="mt-[clamp(0.875rem,3dvh,2rem)] w-full max-w-80 rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-2 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+            <div className="mt-[clamp(0.875rem,3dvh,2rem)] w-full max-w-80 rounded-2xl border border-white/10 bg-white/[0.06] p-2 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                 {running ? (
                   <Button

@@ -89,7 +89,7 @@ function ArchiveHero({
       </div>
 
       <p className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="text-foreground text-[clamp(3rem,15vw,4.5rem)] leading-[0.95] font-semibold tracking-[-0.045em]">
+        <span className="text-foreground text-[clamp(2.25rem,9vw,3rem)] leading-[0.95] font-semibold tracking-[-0.03em]">
           {summary.weeks}
         </span>
         <span className="text-muted-foreground text-lg font-medium tracking-[-0.02em] sm:text-xl">
@@ -212,10 +212,6 @@ function JournalPage({
       aria-label={`Review for ${reviewWeekLabel(review.weekStart)}`}
     >
       <header className="border-border/70 relative isolate border-b px-5 pt-6 pb-5 sm:px-8 sm:pt-7">
-        <div
-          aria-hidden="true"
-          className="from-primary/[0.08] pointer-events-none absolute inset-x-0 top-0 -z-10 h-40 bg-gradient-to-b to-transparent"
-        />
         <div className="flex flex-wrap items-center gap-2">
           <time
             dateTime={review.weekStart}
@@ -356,7 +352,7 @@ function ArchiveEmpty() {
   return (
     <HeroShell labelledBy="archive-empty-heading">
       <div className="flex max-w-2xl gap-4">
-        <span className="bg-primary/12 text-primary ring-primary/20 grid size-11 shrink-0 place-items-center rounded-2xl ring-1 max-sm:hidden">
+        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
           <BookOpenCheck aria-hidden="true" className="size-5" />
         </span>
         <div className="min-w-0">

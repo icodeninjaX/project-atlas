@@ -22,7 +22,6 @@ import {
   type PipelineTone,
 } from "@/lib/career/view";
 import { cn } from "@/lib/utils";
-import { HeroBackdrop } from "@/components/shared/hero-backdrop";
 
 const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
@@ -61,10 +60,9 @@ function HeroShell({ children }: { children: ReactNode }) {
       aria-labelledby="pipeline-heading"
       className={cn(
         surfaceClass,
-        "bg-card @container relative isolate mt-6 overflow-hidden rounded-[1.75rem] shadow-[0_1px_2px_rgb(7_10_15/0.06),0_32px_90px_-34px_rgb(7_10_15/0.5)] sm:mt-8 sm:rounded-[2rem]",
+        "bg-card @container relative isolate mt-6 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-8",
       )}
     >
-      <HeroBackdrop />
       <div className="relative p-5 sm:p-7 lg:p-8">{children}</div>
     </section>
   );
@@ -149,10 +147,10 @@ function UpNext({
 }) {
   if (!application) {
     return (
-      <div className="bg-background/55 ring-border/80 rounded-2xl p-4 ring-1 sm:p-5">
+      <div className="bg-background/55 rounded-xl p-4 sm:p-5">
         <p className={eyebrowClass}>Up next</p>
         <div className="mt-3 flex items-start gap-3">
-          <span className="bg-primary/10 text-primary ring-primary/15 grid size-10 shrink-0 place-items-center rounded-xl ring-1">
+          <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg">
             <CalendarCheck2 aria-hidden="true" className="size-[1.125rem]" />
           </span>
           <div className="min-w-0">
@@ -223,7 +221,7 @@ function Conversions({ conversions }: { conversions: Conversion[] }) {
             // Phones show plain figures; tiles from `sm`, where there is room.
             <div
               key={conversion.key}
-              className="sm:bg-background/55 sm:ring-border/80 min-w-0 sm:rounded-2xl sm:p-4 sm:ring-1"
+              className="sm:bg-background/55 min-w-0 sm:rounded-xl sm:p-4"
             >
               <dt className="text-muted-foreground text-xs leading-4 font-medium">
                 {conversion.label}
@@ -279,7 +277,7 @@ export function CareerHero({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="pipeline-heading"
-          className="text-primary text-[0.8125rem] font-semibold"
+          className="text-muted-foreground text-[0.8125rem] font-medium"
         >
           Pipeline
         </h2>
@@ -292,7 +290,7 @@ export function CareerHero({
       <div className="mt-5 grid gap-7 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-x-12 lg:gap-y-9">
         <div className="min-w-0 lg:col-start-1 lg:row-start-1">
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-foreground font-mono text-[clamp(3.75rem,19vw,6rem)] leading-[0.92] font-semibold tracking-[-0.045em]">
+            <span className="text-foreground font-mono text-[clamp(2.5rem,10vw,3.25rem)] leading-[0.92] font-semibold tracking-[-0.03em]">
               {summary.active}
             </span>
             <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
@@ -343,12 +341,12 @@ export function CareerEmptyHero() {
     <HeroShell>
       <h2
         id="pipeline-heading"
-        className="text-primary text-[0.8125rem] font-semibold"
+        className="text-muted-foreground text-[0.8125rem] font-medium"
       >
         Pipeline
       </h2>
       <div className="mt-6 flex max-w-2xl gap-4">
-        <span className="bg-primary/12 text-primary ring-primary/20 grid size-11 shrink-0 place-items-center rounded-2xl ring-1 max-sm:hidden">
+        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
           <BriefcaseBusiness aria-hidden="true" className="size-5" />
         </span>
         <div className="min-w-0">
@@ -371,7 +369,7 @@ export function CareerEmptyHero() {
         {pipelineStages.map((stage, index) => (
           <li
             key={stage}
-            className="bg-background/55 ring-border/70 flex min-w-0 items-center gap-2 rounded-xl px-3 py-2.5 ring-1"
+            className="bg-background/55 flex min-w-0 items-center gap-2 rounded-xl px-3 py-2.5"
           >
             <span
               aria-hidden="true"

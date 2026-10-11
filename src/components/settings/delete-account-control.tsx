@@ -33,7 +33,7 @@ export function DeleteAccountControl({ configured }: { configured: boolean }) {
   const [state, formAction, deleting] = useActionState(action, initialState);
 
   return (
-    <details className="group from-destructive/[0.07] ring-destructive/25 rounded-2xl bg-gradient-to-br to-transparent ring-1">
+    <details className="group bg-destructive/[0.04] ring-destructive/25 rounded-2xl ring-1">
       <summary className="focus-visible:ring-destructive flex min-h-16 cursor-pointer list-none items-center gap-3 rounded-2xl p-3 focus-visible:ring-2 focus-visible:outline-none sm:p-3.5 [&::-webkit-details-marker]:hidden">
         <IconTile icon={ShieldAlert} tone="danger" size="sm" />
         <span className="min-w-0 flex-1">

@@ -117,7 +117,7 @@ export function CategorySelect({
               side="bottom"
               sideOffset={8}
               collisionPadding={16}
-              className="border-border bg-card animate-money-dropdown z-[70] max-h-[var(--radix-select-content-available-height)] w-[var(--radix-select-trigger-width)] [transform-origin:var(--radix-select-content-transform-origin)] overflow-hidden rounded-2xl border shadow-[0_24px_48px_-16px_rgb(7_10_15/0.45)]"
+              className="border-border bg-card animate-money-dropdown z-[70] max-h-[var(--radix-select-content-available-height)] w-[var(--radix-select-trigger-width)] [transform-origin:var(--radix-select-content-transform-origin)] overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgb(7_10_15/0.04)]"
             >
               <Select.ScrollUpButton className="text-muted-foreground grid h-7 place-items-center">
                 <ChevronUp aria-hidden="true" className="size-4" />

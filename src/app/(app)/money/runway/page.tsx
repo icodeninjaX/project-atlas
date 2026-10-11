@@ -21,7 +21,6 @@ export default async function RunwayPage() {
   return (
     <PageShell>
       <PageHeading
-        icon={WalletCards}
         eyebrow="Money / Runway"
         title="Personal runway"
         description="How long the money you have covers what you must keep paying. Future income never extends it."
