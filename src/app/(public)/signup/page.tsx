@@ -16,9 +16,8 @@ export default async function SignupPage({
 
   return (
     <AuthCard
-      eyebrow="Create your ATLAS"
-      title="Start with what is true."
-      description="Set up a private workspace, then map your cash, debts, and next priorities."
+      title="Create your ATLAS account"
+      description="Set up a private workspace, then add your cash, income, and goals."
       footer={
         <>
           Already have an account?{" "}
@@ -34,6 +33,7 @@ export default async function SignupPage({
       <AuthForm
         action={signUpAction}
         submitLabel="Create account"
+        pendingLabel="Creating account…"
         hiddenFields={next ? { next } : undefined}
       />
     </AuthCard>

@@ -7,21 +7,39 @@ import { pathWithNext, safeRedirectPath } from "@/lib/auth/redirects";
 
 export const metadata = { title: "Log in" };
 
+/** Why a redirect sent the visitor here, keyed by its query parameter. */
+function noticeFor(params: { error?: string; setup?: string }) {
+  if (params.error === "auth_callback_failed")
+    return "That sign-in link has expired or was already used. Log in again or request a new link.";
+  // The server has no sign-in service configured.
+  if (params.setup === "required")
+    return "Sign-in isn’t available right now. Try again later.";
+  return null;
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; setup?: string }>;
 }) {
-  const requestedNext = (await searchParams).next;
+  const params = await searchParams;
+  const requestedNext = params.next;
   const next = requestedNext
     ? safeRedirectPath(requestedNext, "/dashboard")
     : null;
+  const notice = noticeFor(params);
 
   return (
     <AuthCard
-      eyebrow="Log in"
-      title="Continue your route."
-      description="Log in to see today’s priorities and the numbers behind them."
+      title="Log in to ATLAS"
+      description="See today’s priorities and the numbers behind them."
+      notice={
+        notice && (
+          <p role="alert" className="text-destructive mb-4 text-sm leading-5">
+            {notice}
+          </p>
+        )
+      }
       footer={
         <>
           New to ATLAS?{" "}
@@ -37,6 +55,7 @@ export default async function LoginPage({
       <AuthForm
         action={signInAction}
         submitLabel="Log in"
+        pendingLabel="Logging in…"
         hiddenFields={next ? { next } : undefined}
       />
       <Link

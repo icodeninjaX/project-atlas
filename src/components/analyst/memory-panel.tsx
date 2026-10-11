@@ -2,6 +2,7 @@
 
 import { Bookmark, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 /**
  * Analyst's saved priorities: an offer to remember one the person just
@@ -92,8 +93,8 @@ export function MemoryOffer({
   return (
     <div className="bg-background/40 flex min-w-0 flex-col gap-2 rounded-xl p-3 text-sm">
       <p className="flex items-center gap-2 font-semibold">
-        <Bookmark aria-hidden="true" className="size-4" /> Remember this for
-        future answers?
+        <Bookmark aria-hidden="true" className="text-muted-foreground size-4" />{" "}
+        Remember this for future answers?
       </p>
       <p className="break-words">“{text}”</p>
       <p className="text-muted-foreground text-xs">{DISCLOSURE}</p>
@@ -103,8 +104,9 @@ export function MemoryOffer({
         </p>
       )}
       <div className="flex gap-2">
-        <button
+        <Button
           type="button"
+          size="sm"
           disabled={state === "saving"}
           onClick={async () => {
             setState("saving");
@@ -112,17 +114,17 @@ export function MemoryOffer({
             setError(failure);
             setState(failure ? "offered" : "saved");
           }}
-          className="bg-primary-solid text-primary-solid-foreground min-h-9 rounded-full px-4 text-xs font-semibold disabled:opacity-50"
         >
           Remember
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => setState("dismissed")}
-          className="text-muted-foreground min-h-9 px-2 text-xs underline underline-offset-2"
         >
           Not now
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -167,14 +169,16 @@ export function MemoryList({
                     again.
                   </p>
                 </div>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => onRemove(item.id)}
                   aria-label={`Forget “${item.text}”`}
-                  className="text-muted-foreground hover:text-foreground grid size-8 shrink-0 place-items-center rounded-full"
+                  className="shrink-0"
                 >
                   <X aria-hidden="true" className="size-4" />
-                </button>
+                </Button>
               </li>
             ))}
           </ul>

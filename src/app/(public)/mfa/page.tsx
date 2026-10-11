@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AuthCard } from "@/components/auth/auth-card";
 import { MfaChallengeForm } from "@/components/auth/mfa-challenge-form";
+import { signOutAction } from "@/lib/auth/actions";
 import { safeRedirectPath } from "@/lib/auth/redirects";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,11 +28,19 @@ export default async function MfaPage({
 
   return (
     <AuthCard
-      eyebrow="Second step"
-      title="Verify it’s you."
-      description="Your password was accepted. Complete the authenticator step to open your private ATLAS workspace."
+      eyebrow="Step 2 of 2"
+      title="Enter your authenticator code"
+      description="Your password was accepted. This account also needs a code from your authenticator app."
     >
       <MfaChallengeForm destination={destination} />
+      <form action={signOutAction} className="mt-4 text-center">
+        <button
+          type="submit"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring min-h-8 rounded-sm text-xs focus-visible:ring-2 focus-visible:outline-none"
+        >
+          Log out
+        </button>
+      </form>
     </AuthCard>
   );
 }

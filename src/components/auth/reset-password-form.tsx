@@ -18,7 +18,7 @@ export function ResetPasswordForm({
   const [state, action, pending] = useActionState(resetPasswordAction, initial);
   return (
     <form action={action} className="space-y-4">
-      <div>
+      <div className="space-y-1.5">
         <label htmlFor="password" className="text-sm font-medium">
           New password
         </label>
@@ -30,10 +30,9 @@ export function ResetPasswordForm({
           minLength={8}
           maxLength={72}
           required
-          className="mt-1.5"
         />
       </div>
-      <div>
+      <div className="space-y-1.5">
         <label htmlFor="confirmation" className="text-sm font-medium">
           Confirm new password
         </label>
@@ -45,13 +44,12 @@ export function ResetPasswordForm({
           minLength={8}
           maxLength={72}
           required
-          className="mt-1.5"
         />
       </div>
       {state.message && (
         <p
           role="status"
-          className={`rounded-xl border p-3 text-sm ${state.success ? "border-primary/25 bg-primary/10 text-primary" : "border-destructive/25 bg-destructive/10 text-destructive"}`}
+          className={`text-sm leading-5 ${state.success ? "text-positive" : "text-destructive"}`}
         >
           {state.message}
         </p>

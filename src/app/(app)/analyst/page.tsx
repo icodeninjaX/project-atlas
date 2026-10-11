@@ -1,14 +1,13 @@
 import { FreeformWorkspace } from "@/components/analyst/freeform-workspace";
 import { IntelligenceWorkspace } from "@/components/analyst/intelligence-workspace";
 import { connection } from "next/server";
-import { ShieldCheck } from "lucide-react";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
 import { preferredRoute } from "@/lib/analyst/intelligence/policy";
 import { createClient } from "@/lib/supabase/server";
-import { PageHeading, PageHeadingNote } from "@/components/shared/page-heading";
+import { PageHeading } from "@/components/shared/page-heading";
 import { PageShell } from "@/components/shared/page-shell";
 
-export const metadata = { title: "ATLAS Analyst" };
+export const metadata = { title: "Analyst" };
 export default async function AnalystPage() {
   // The V2 flag and the signed-in user are read per request, never prerendered.
   await connection();
@@ -36,13 +35,8 @@ export default async function AnalystPage() {
   return (
     <PageShell>
       <PageHeading
-        title="ATLAS Analyst"
+        title="Analyst"
         description="Ask about your records in plain words. ATLAS calculates the facts, and every figure in an answer is checked against its sources."
-        aside={
-          <PageHeadingNote icon={ShieldCheck}>
-            Every figure checked against its sources
-          </PageHeadingNote>
-        }
       />
 
       <div className="mt-6 sm:mt-8">

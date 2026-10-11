@@ -8,11 +8,14 @@ test("public landing page explains ATLAS and reaches authentication", async ({
     page.getByRole("heading", { name: /See where you are/i }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Start your ATLAS" }),
+    page
+      .getByRole("main")
+      .getByRole("link", { name: "Create account" })
+      .first(),
   ).toHaveAttribute("href", "/signup");
   await page.getByRole("link", { name: "Log in" }).first().click();
   await expect(
-    page.getByRole("heading", { name: "Continue your route." }),
+    page.getByRole("heading", { name: "Log in to ATLAS" }),
   ).toBeVisible();
 });
 

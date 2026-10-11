@@ -2,7 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { useRef, useState, type KeyboardEvent } from "react";
-import { Check, ChevronDown, Gem, Zap } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import {
   AI_MODELS,
   ANALYST_MODEL_OPTIONS,
@@ -31,8 +31,8 @@ const QUESTION_TOKENS: Record<FreePool, number> = {
 };
 
 const groups: Array<{ pool: FreePool; title: string }> = [
-  { pool: "small", title: "Everyday" },
-  { pool: "large", title: "Flagship" },
+  { pool: "small", title: "Smaller models" },
+  { pool: "large", title: "Larger models" },
 ];
 
 const PANEL_WIDTH = 368;
@@ -194,19 +194,10 @@ export function ModelPicker({
           disabled={disabled}
           aria-label={`Model: ${selected.label}. Change model`}
           className={cn(
-            "group border-border bg-background/60 text-muted-foreground hover:text-foreground hover:border-primary/40 focus-visible:ring-ring inline-flex shrink-0 items-center gap-1.5 rounded-full border text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60",
+            "group border-border bg-background/60 text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring inline-flex shrink-0 items-center gap-1.5 rounded-xl border text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60",
             compact ? "h-10 px-3" : "h-8 px-2.5",
           )}
         >
-          <span
-            aria-hidden="true"
-            className={cn(
-              "size-2 rounded-full",
-              selected.pool === "large"
-                ? "bg-primary ring-primary/30 ring-2"
-                : "bg-primary",
-            )}
-          />
           <span className="max-w-[6.5rem] truncate">{selected.short}</span>
           <ChevronDown
             aria-hidden="true"
@@ -219,7 +210,7 @@ export function ModelPicker({
           className={cn(
             "fixed inset-0 z-[60]",
             sheet
-              ? "motion-safe:animate-analyst-fade bg-black/45 backdrop-blur-[2px]"
+              ? "motion-safe:animate-analyst-fade bg-black/60 backdrop-blur-[2px]"
               : "bg-transparent",
           )}
         />
@@ -233,10 +224,10 @@ export function ModelPicker({
           }}
           style={sheet ? undefined : { ...place, width: PANEL_WIDTH }}
           className={cn(
-            "border-border bg-card text-card-foreground fixed z-[60] border shadow-[0_28px_80px_rgb(7_10_15/0.32)] outline-none",
+            "border-border bg-card text-card-foreground fixed z-[60] border outline-none",
             sheet
-              ? "motion-safe:animate-analyst-sheet inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-2xl px-2 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
-              : "motion-safe:animate-analyst-rise overflow-y-auto overscroll-contain rounded-xl p-1.5",
+              ? "motion-safe:animate-analyst-sheet inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-2xl px-2 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-2xl"
+              : "motion-safe:animate-analyst-rise overflow-y-auto overscroll-contain rounded-xl p-1 shadow-lg",
           )}
         >
           {sheet && (
@@ -262,7 +253,6 @@ export function ModelPicker({
             onKeyDown={onKeyDown}
           >
             {groups.map((group) => {
-              const Icon = group.pool === "large" ? Gem : Zap;
               const exhausted = usedUp(group.pool);
               return (
                 <section
@@ -310,28 +300,17 @@ export function ModelPicker({
                             show(false);
                           }}
                           className={cn(
-                            "focus-visible:ring-ring flex min-h-14 w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 sm:py-1.5",
+                            "focus-visible:ring-ring flex min-h-14 w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 sm:py-1.5",
                             checked
-                              ? "bg-primary/8 ring-primary/25 ring-1"
-                              : "hover:bg-muted/70",
+                              ? "ring-primary ring-1 ring-inset"
+                              : "hover:bg-muted",
                           )}
                         >
-                          <span
-                            aria-hidden="true"
-                            className={cn(
-                              "grid size-8 shrink-0 place-items-center rounded-lg transition-colors",
-                              checked
-                                ? "bg-primary/15 text-primary"
-                                : "bg-muted text-muted-foreground",
-                            )}
-                          >
-                            <Icon className="size-4" />
-                          </span>
                           <span className="min-w-0 flex-1">
-                            <span className="flex items-center gap-1.5 text-sm font-medium">
+                            <span className="flex items-baseline gap-1.5 text-sm font-medium">
                               {option.label}
                               {option.id === AI_MODELS.analyst && (
-                                <span className="bg-muted text-muted-foreground rounded-full px-1.5 py-px text-[0.625rem] font-semibold">
+                                <span className="text-muted-foreground text-xs font-normal">
                                   Default
                                 </span>
                               )}
@@ -362,8 +341,7 @@ export function ModelPicker({
             (pools?.small.syncedAt || pools?.large.syncedAt)
               ? "Usage includes OpenAI’s own count, refreshed every few minutes. "
               : null}
-            Every figure is checked against your records whichever model
-            explains. GPT-5.4 mini always plans which records to read.
+            GPT-5.4 mini always plans which records to read.
           </p>
         </Dialog.Content>
       </Dialog.Portal>

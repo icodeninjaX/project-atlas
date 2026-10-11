@@ -20,8 +20,7 @@ export type AuthAction = (
 
 const configurationError: AuthState = {
   success: false,
-  message:
-    "Authentication is not configured yet. Add the Supabase environment variables to continue.",
+  message: "Sign-in isn't available right now. Try again later.",
 };
 
 export async function signInAction(

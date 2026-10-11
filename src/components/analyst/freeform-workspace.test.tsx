@@ -727,7 +727,7 @@ describe("Analyst conversation", () => {
     });
     expect(
       screen.getByRole("article", { name: "Analyst answer" }),
-    ).toHaveTextContent("ATLAS Analyst · GPT-6 Sol");
+    ).toHaveTextContent("Analyst · GPT-6 Sol");
   });
 
   it("marks a used-up pool and restores the saved model", async () => {

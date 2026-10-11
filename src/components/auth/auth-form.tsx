@@ -10,11 +10,14 @@ const initialState: AuthState = { message: "", success: false };
 export function AuthForm({
   action,
   submitLabel,
+  pendingLabel,
   includePassword = true,
   hiddenFields,
 }: {
   action: AuthAction;
   submitLabel: string;
+  /** What the button says while the action runs, e.g. "Logging in…". */
+  pendingLabel: string;
   includePassword?: boolean;
   hiddenFields?: Record<string, string>;
 }) {
@@ -64,10 +67,8 @@ export function AuthForm({
       {state.message && (
         <p
           role="status"
-          className={`rounded-xl border px-3 py-2.5 text-sm ${
-            state.success
-              ? "border-primary/25 bg-primary/10 text-primary"
-              : "border-destructive/25 bg-destructive/10 text-destructive"
+          className={`text-sm leading-5 ${
+            state.success ? "text-positive" : "text-destructive"
           }`}
         >
           {state.message}
@@ -77,7 +78,7 @@ export function AuthForm({
         className="w-full"
         type="submit"
         pending={pending}
-        pendingLabel={`${submitLabel}…`}
+        pendingLabel={pendingLabel}
       >
         {submitLabel}
       </Button>

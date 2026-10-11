@@ -25,7 +25,7 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 850 });
     await page.goto("/analyst");
     await expect(
-      page.getByRole("heading", { name: "ATLAS Analyst" }),
+      page.getByRole("heading", { name: "Analyst", exact: true }),
     ).toBeVisible();
     // One compact model button; the default explains unless changed.
     await expect(

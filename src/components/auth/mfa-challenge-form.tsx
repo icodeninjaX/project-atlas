@@ -1,7 +1,6 @@
 "use client";
 
 import type { Factor } from "@supabase/supabase-js";
-import { KeyRound } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -60,10 +59,6 @@ export function MfaChallengeForm({ destination }: { destination: string }) {
       }}
       className="space-y-4"
     >
-      <div className="bg-primary/10 text-primary flex items-center gap-3 rounded-xl px-3 py-3 text-xs leading-5">
-        <KeyRound className="size-4 shrink-0" />
-        Open your authenticator app and enter the code for ATLAS.
-      </div>
       <div className="space-y-1.5">
         <label htmlFor="mfa-code" className="text-sm font-medium">
           Authenticator code
@@ -79,7 +74,11 @@ export function MfaChallengeForm({ destination }: { destination: string }) {
           placeholder="123456"
           autoFocus
           required
+          aria-describedby="mfa-code-help"
         />
+        <p id="mfa-code-help" className="text-muted-foreground text-xs">
+          Open your authenticator app and enter the 6-digit code for ATLAS.
+        </p>
       </div>
       {error && (
         <p role="alert" className="text-destructive text-sm leading-5">

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, RotateCcw, ShieldCheck } from "lucide-react";
+import { ArrowUp, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ClaimText } from "@/components/analyst/evidence-display";
 import {
@@ -9,6 +9,7 @@ import {
   useMemories,
 } from "@/components/analyst/memory-panel";
 import { ModelPicker, optionFor } from "@/components/analyst/model-picker";
+import { Button } from "@/components/ui/button";
 import { AI_MODELS, type AnalystModelId } from "@/lib/ai/models";
 import { NDJSON_TYPE } from "@/lib/analyst/freeform/progress";
 import {
@@ -150,15 +151,17 @@ export function AnswerCard({
       {answer.candidates.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {answer.candidates.map((candidate, index) => (
-            <button
+            <Button
               key={candidate.handle}
               type="button"
+              variant="secondary"
+              size="sm"
               disabled={disabled}
               onClick={() => onAsk(String(index + 1))}
-              className="border-border hover:bg-muted max-w-full rounded-full border px-3 py-1.5 text-left text-xs break-words disabled:opacity-50"
+              className="h-auto max-w-full justify-start py-1.5 text-left font-medium break-words"
             >
               {candidate.label}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -180,7 +183,7 @@ export function AnswerCard({
         </section>
       )}
       {p.limitations.length > 0 && (
-        <section className="rounded-xl bg-amber-500/10 p-3">
+        <section className="bg-muted/40 rounded-xl p-3">
           <h3 className="font-semibold">{text.limits}</h3>
           <ul className="mt-1 flex flex-col gap-1">
             {p.limitations.map((item) => (
@@ -204,7 +207,7 @@ export function AnswerCard({
         </details>
       )}
       {p.unresolved.length > 0 && (
-        <section className="rounded-xl bg-amber-500/10 p-3">
+        <section className="bg-muted/40 rounded-xl p-3">
           <h3 className="font-semibold">{text.notAnswered}</h3>
           <ul className="mt-1 flex flex-col gap-1">
             {p.unresolved.map((item) => (
@@ -244,15 +247,17 @@ export function AnswerCard({
       {answer.suggestions.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {answer.suggestions.map((item) => (
-            <button
+            <Button
               key={item.text}
               type="button"
+              variant="secondary"
+              size="sm"
               disabled={disabled}
               onClick={() => onAsk(item.text)}
-              className="border-border hover:bg-muted max-w-full rounded-full border px-3 py-1.5 text-left text-xs break-words disabled:opacity-50"
+              className="h-auto max-w-full justify-start py-1.5 text-left font-medium break-words"
             >
               {item.text}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -404,8 +409,11 @@ export function IntelligenceWorkspace({
     return (
       <section className="bg-background/40 flex min-w-0 flex-col gap-3 rounded-xl p-4 text-sm">
         <p className="flex items-center gap-2 font-semibold">
-          <ShieldCheck aria-hidden="true" className="size-4" /> Choose what
-          Analyst may share
+          <ShieldCheck
+            aria-hidden="true"
+            className="text-muted-foreground size-4"
+          />{" "}
+          Choose what Analyst may share
         </p>
         <fieldset className="flex flex-wrap gap-x-4 gap-y-2">
           <legend className="sr-only">Areas Analyst may read</legend>
@@ -463,13 +471,9 @@ export function IntelligenceWorkspace({
             <li key={line}>{line}</li>
           ))}
         </ul>
-        <button
-          type="button"
-          onClick={grant}
-          className="bg-primary-solid text-primary-solid-foreground min-h-9 w-fit rounded-full px-4 text-xs font-semibold"
-        >
+        <Button type="button" size="sm" onClick={grant} className="w-fit">
           Allow these areas
-        </button>
+        </Button>
       </section>
     );
 
@@ -481,7 +485,7 @@ export function IntelligenceWorkspace({
       >
         {turns.map((turn, index) => (
           <li key={index} className="flex min-w-0 flex-col gap-2">
-            <p className="bg-muted ml-auto max-w-[85%] rounded-2xl px-3 py-2 text-sm break-words">
+            <p className="bg-muted text-foreground ml-auto max-w-[85%] rounded-xl px-4 py-2.5 text-sm leading-6 break-words">
               {turn.question}
             </p>
             {turn.progress && (
@@ -525,7 +529,7 @@ export function IntelligenceWorkspace({
       </ol>
       <form
         onSubmit={submit}
-        className="border-border flex min-w-0 flex-col gap-2 rounded-2xl border p-2"
+        className="border-border focus-within:ring-ring/50 flex min-w-0 flex-col gap-2 rounded-2xl border p-2 transition-shadow focus-within:ring-2"
       >
         <label htmlFor="analyst-v2-question" className="sr-only">
           Ask Analyst
@@ -544,7 +548,7 @@ export function IntelligenceWorkspace({
             }
           }}
           placeholder={
-            turns.length ? "Ask a follow-up" : "Ask about your records"
+            turns.length ? "Ask a follow-up…" : "Ask about your records…"
           }
           className="min-h-11 w-full min-w-0 resize-y bg-transparent px-2 py-1.5 text-sm outline-none"
         />
@@ -555,30 +559,27 @@ export function IntelligenceWorkspace({
             compact
             disabled={pending}
           />
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={restart}
             disabled={pending}
-            className="text-muted-foreground flex items-center gap-1 text-xs disabled:opacity-50"
           >
-            <RotateCcw aria-hidden="true" className="size-3.5" /> New
-            conversation
-          </button>
-          <button
-            type="button"
-            onClick={revoke}
-            className="text-muted-foreground text-xs underline underline-offset-2"
-          >
+            New conversation
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={revoke}>
             Stop sharing
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
+            size="icon"
             aria-label="Ask"
             disabled={pending || !question.trim()}
-            className="bg-primary-solid text-primary-solid-foreground ml-auto grid size-9 place-items-center rounded-full disabled:opacity-50"
+            className="ml-auto"
           >
             <ArrowUp aria-hidden="true" className="size-4" />
-          </button>
+          </Button>
         </div>
       </form>
       <MemoryList

@@ -14,13 +14,13 @@ export default async function ForgotPasswordPage({
 
   return (
     <AuthCard
-      eyebrow="Account recovery"
-      title="Find your way back."
+      title="Reset your password"
       description="Enter your email. If an ATLAS account exists, we will send a secure reset link."
     >
       <AuthForm
         action={forgotPasswordAction}
         submitLabel="Send reset link"
+        pendingLabel="Sending…"
         includePassword={false}
         hiddenFields={next ? { next } : undefined}
       />

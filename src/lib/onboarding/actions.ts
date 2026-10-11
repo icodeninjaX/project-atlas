@@ -17,7 +17,7 @@ export async function completeOnboardingAction(
   if (!supabase) {
     return {
       success: false,
-      message: "Connect Supabase before completing onboarding.",
+      message: "Setup can't be saved right now. Try again later.",
     };
   }
 
@@ -70,8 +70,7 @@ export async function completeOnboardingAction(
   if (error) {
     return {
       success: false,
-      message:
-        "Onboarding could not be saved. Check the database migration and try again.",
+      message: "Setup couldn't be saved. Try again.",
     };
   }
 

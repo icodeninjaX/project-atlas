@@ -10,7 +10,7 @@ test.describe("production-safe edge cases", () => {
       /\/login\?next=%2Ftasks%3Fview%3Dcompleted%26highlight%3Dmissing$/,
     );
     await expect(
-      page.getByRole("heading", { name: "Continue your route." }),
+      page.getByRole("heading", { name: "Log in to ATLAS" }),
     ).toBeVisible();
     await expect(page.locator('input[name="next"]')).toHaveValue(
       "/tasks?view=completed&highlight=missing",

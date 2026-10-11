@@ -3,7 +3,7 @@ import { safeRedirectPath } from "@/lib/auth/redirects";
 import { PageHeading } from "@/components/shared/page-heading";
 import { PageShell } from "@/components/shared/page-shell";
 
-export const metadata = { title: "Set up your ATLAS" };
+export const metadata = { title: "Set up ATLAS" };
 
 export default async function OnboardingPage({
   searchParams,
@@ -15,10 +15,10 @@ export default async function OnboardingPage({
   return (
     <PageShell className="max-w-3xl">
       <PageHeading
-        title="Build your starting map."
-        description="Start with what is true today. You can add detailed debts after setup and change every optional answer later."
+        title="Set up ATLAS"
+        description="Add your starting cash, income, and goals. You can add debts after setup and change any optional answer later."
       />
-      <div className="border-border bg-card mt-8 rounded-2xl border p-5 sm:p-7">
+      <div className="border-border bg-card mt-8 rounded-2xl border p-5 sm:p-6">
         <OnboardingForm next={next || null} />
       </div>
     </PageShell>

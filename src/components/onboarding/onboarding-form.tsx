@@ -25,16 +25,16 @@ export function OnboardingForm({
   );
 
   return (
-    <form action={action} className="mt-8 space-y-7">
+    <form action={action} className="space-y-7">
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <fieldset className="space-y-4">
         <legend className="text-sm font-semibold">About you</legend>
         <div className="space-y-1.5">
-          <label
-            htmlFor="displayName"
-            className="text-muted-foreground text-sm"
-          >
-            Display name <span className="text-xs">(optional)</span>
+          <label htmlFor="displayName" className="text-sm font-medium">
+            Display name{" "}
+            <span className="text-muted-foreground text-xs font-normal">
+              (optional)
+            </span>
           </label>
           <Input
             id="displayName"
@@ -49,10 +49,7 @@ export function OnboardingForm({
           Your starting position
         </legend>
         <div className="space-y-1.5">
-          <label
-            htmlFor="currentCash"
-            className="text-muted-foreground text-sm"
-          >
+          <label htmlFor="currentCash" className="text-sm font-medium">
             Current cash balance
           </label>
           <Input
@@ -67,10 +64,7 @@ export function OnboardingForm({
           </p>
         </div>
         <div className="space-y-1.5">
-          <label
-            htmlFor="monthlyNetIncome"
-            className="text-muted-foreground text-sm"
-          >
+          <label htmlFor="monthlyNetIncome" className="text-sm font-medium">
             Monthly net income
           </label>
           <Input
@@ -81,8 +75,11 @@ export function OnboardingForm({
           />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <label htmlFor="nextPayday" className="text-muted-foreground text-sm">
-            Next payday <span className="text-xs">(optional)</span>
+          <label htmlFor="nextPayday" className="text-sm font-medium">
+            Next payday{" "}
+            <span className="text-muted-foreground text-xs font-normal">
+              (optional)
+            </span>
           </label>
           <Input id="nextPayday" name="nextPayday" type="date" />
         </div>
@@ -93,19 +90,23 @@ export function OnboardingForm({
           <span className="text-muted-foreground font-normal">(optional)</span>
         </legend>
         {[1, 2, 3].map((number) => (
-          <Input
-            key={number}
-            name={`goal${number}`}
-            maxLength={160}
-            placeholder={`${number}. ${number === 1 ? "e.g. Build a stronger portfolio" : "Another outcome"}`}
-          />
+          <div key={number} className="space-y-1.5">
+            <label htmlFor={`goal${number}`} className="text-sm font-medium">
+              Goal {number}
+            </label>
+            <Input
+              id={`goal${number}`}
+              name={`goal${number}`}
+              maxLength={160}
+              placeholder={
+                number === 1 ? "Build a stronger portfolio" : undefined
+              }
+            />
+          </div>
         ))}
       </fieldset>
       {state.message && (
-        <p
-          role="alert"
-          className="border-destructive/25 bg-destructive/10 text-destructive rounded-xl border p-3 text-sm"
-        >
+        <p role="alert" className="text-destructive text-sm leading-5">
           {state.message}
         </p>
       )}

@@ -24,7 +24,7 @@ const pageTitles: Array<[prefix: string, title: string]> = [
   ["/knowledge", "Knowledge"],
   ["/search", "Search"],
   ["/settings", "Settings"],
-  ["/onboarding", "Welcome"],
+  ["/onboarding", "Set up"],
 ];
 
 export function pageTitleFor(pathname: string | null): string {
