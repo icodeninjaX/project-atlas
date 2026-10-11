@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import {
-  ArrowRight,
-  ArrowUpRight,
   BellRing,
   Download,
   EyeOff,
@@ -9,8 +7,8 @@ import {
   Fingerprint,
   GitBranch,
   LineChart,
+  ListPlus,
   ShieldCheck,
-  Split,
   WifiOff,
 } from "lucide-react";
 import Image from "next/image";
@@ -57,7 +55,7 @@ type DomainChapterProps = {
   id: string;
   index: number;
   name: string;
-  title: ReactNode;
+  title: string;
   body: string;
   points: string[];
   panel: ReactNode;
@@ -89,7 +87,7 @@ function DomainChapter({
         >
           <div className="landing-triptych-copy">
             <Eyebrow>
-              <span className="text-[#84afff]">0{index}</span>
+              <span>0{index}</span>
               <span className="landing-eyebrow-rule" />
               {name}
             </Eyebrow>
@@ -118,11 +116,11 @@ function DomainChapter({
 const intelligence = [
   {
     icon: FileSearch,
-    title: "Grounded Analyst",
+    title: "Grounded analyst",
     body: "Ask across money, tasks, goals and reviews. Every claim cites the records behind it, and it says so when the records can’t answer.",
   },
   {
-    icon: ArrowUpRight,
+    icon: ListPlus,
     title: "Next best action",
     body: "A due application follow-up becomes a proposed task on Today. Review it, then confirm or dismiss.",
   },
@@ -152,7 +150,7 @@ const trust = [
   {
     icon: EyeOff,
     title: "Privacy mode",
-    body: "One tap blurs every amount on screen for cafés, commutes and screen shares.",
+    body: "One tap masks every amount on screen for cafés, commutes and screen shares.",
     demo: true,
   },
   {
@@ -171,17 +169,6 @@ const trust = [
     body: "Opt-in daily push reminders that respect your quiet hours.",
   },
 ];
-
-const providers = [
-  ["GCash", "/icons/gcash-official.png"],
-  ["Maya", "/icons/ph-accounts/maya.png"],
-  ["BPI", "/icons/ph-accounts/bpi.png"],
-  ["BDO", "/icons/ph-accounts/bdo.png"],
-  ["UnionBank", "/icons/ph-accounts/unionbank.png"],
-  ["GoTyme", "/icons/ph-accounts/gotyme.png"],
-  ["Metrobank", "/icons/ph-accounts/metrobank.png"],
-  ["Tonik", "/icons/ph-accounts/tonik.png"],
-] as const;
 
 export default function LandingPage() {
   return (
@@ -205,7 +192,7 @@ export default function LandingPage() {
           >
             <Link
               href="/login"
-              className="landing-focus rounded-full px-3.5 py-2 text-sm font-medium text-[#c9d3e3] transition-colors hover:text-white"
+              className="landing-focus rounded-xl px-3.5 py-2 text-sm font-medium text-[#c9d3e3] transition-colors hover:text-white"
             >
               Log in
             </Link>
@@ -256,31 +243,25 @@ export default function LandingPage() {
                 style={step(4)}
               >
                 <Link href="/signup" className="landing-button">
-                  Start your ATLAS
-                  <ArrowRight className="size-4" aria-hidden="true" />
+                  Create account
                 </Link>
                 <Link
                   href="/login"
                   className="landing-button landing-button--ghost"
                 >
-                  Open your dashboard
+                  Log in
                 </Link>
               </div>
               <p
-                className="landing-intro mt-6 flex items-center gap-2 text-xs text-[#aebcd0]"
+                className="landing-intro mt-6 text-xs text-[#aebcd0]"
                 style={step(5)}
               >
-                <ShieldCheck
-                  className="size-3.5 text-[#84afff]"
-                  aria-hidden="true"
-                />
                 Private by design. Your records stay isolated by account.
               </p>
             </div>
           </div>
           <div className="landing-container landing-hero-foot">
-            <p className="landing-mono flex items-center gap-3 text-[#aebcd0]">
-              <span className="landing-scroll-cue" aria-hidden="true" />
+            <p className="landing-mono text-[#aebcd0]">
               Scroll to take it apart
             </p>
             <p className="landing-mono hidden text-[#8d99aa] sm:block">
@@ -302,8 +283,7 @@ export default function LandingPage() {
               <div className="landing-fracture-copy">
                 <Eyebrow>The problem</Eyebrow>
                 <h2 id="fracture-title" data-reveal className="landing-h2">
-                  Your life is already a system.{" "}
-                  <Serif>It just doesn’t know it.</Serif>
+                  Your life is already a system. It just doesn’t know it.
                 </h2>
                 <p data-reveal className="landing-body">
                   Your balance lives in a banking app. Deadlines live in your
@@ -320,11 +300,7 @@ export default function LandingPage() {
           id="money"
           index={1}
           name="Money & debts"
-          title={
-            <>
-              Every centavo, <Serif>accounted for.</Serif>
-            </>
-          }
+          title="Every centavo, accounted for."
           body="Accounts, transactions, transfers and monthly budgets, stored as exact integer centavos, so balances never drift. Debts get a payoff strategy, amortization estimates and an atomic payment history."
           points={[
             "GCash, Maya, banks and cash in one ledger",
@@ -338,11 +314,7 @@ export default function LandingPage() {
           index={2}
           name="Tasks"
           reverse
-          title={
-            <>
-              Know what’s next, <Serif>not just what’s due.</Serif>
-            </>
-          }
+          title="Know what’s next, not just what’s due."
           body="Capture fast, schedule to the minute, and work from Today, Upcoming, Overdue and Inbox. Time recommendations suggest when things fit, and Focus mode clears everything else away."
           points={[
             "Exact-time scheduling and reminders",
@@ -355,11 +327,7 @@ export default function LandingPage() {
           id="goals"
           index={3}
           name="Goals"
-          title={
-            <>
-              Goals that move <Serif>when you do.</Serif>
-            </>
-          }
+          title="Goals that move when you do."
           body="Progress moves when you finish a milestone, so the percentage always means something. Rich milestone notes, category colours and related tasks keep the big picture tied to this week’s work."
           points={[
             "Milestone-driven progress",
@@ -373,11 +341,7 @@ export default function LandingPage() {
           index={4}
           name="Career"
           reverse
-          title={
-            <>
-              A job search <Serif>with a memory.</Serif>
-            </>
-          }
+          title="A job search with a memory."
           body="Table or Kanban, your call. Every application keeps its stage history, notes and follow-up date, and overdue follow-ups surface on Today before an opportunity goes cold."
           points={[
             "Customizable table and Kanban views",
@@ -390,11 +354,7 @@ export default function LandingPage() {
           id="reflection"
           index={5}
           name="Reflection"
-          title={
-            <>
-              Sunday, <Serif>with receipts.</Serif>
-            </>
-          }
+          title="Sunday, with receipts."
           body="Each Monday-to-Sunday week closes with a factual summary of what actually happened. Guided prompts then help you decide what changes. Drafts save; scores trend over time."
           points={[
             "Factual weekly summaries",
@@ -417,7 +377,7 @@ export default function LandingPage() {
               <div className="landing-container landing-split">
                 <div className="landing-split-copy">
                   <Eyebrow>
-                    <span className="text-[#84afff]">06</span>
+                    <span>06</span>
                     <span className="landing-eyebrow-rule" />
                     The open center
                   </Eyebrow>
@@ -426,7 +386,7 @@ export default function LandingPage() {
                     data-reveal
                     className="landing-h2"
                   >
-                    The open center is <Serif>where it thinks.</Serif>
+                    The center answers from your records.
                   </h2>
                   <p data-reveal className="landing-body">
                     Every piece of the core faces the same empty middle. That is
@@ -441,19 +401,16 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="landing-container pb-28 lg:pb-40">
-            <ul data-reveal className="landing-capabilities">
+            <ul data-reveal className="landing-list landing-capabilities">
               {intelligence.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <li
-                    key={item.title}
-                    className="landing-card landing-capability"
-                  >
-                    <Icon
-                      className="size-5 text-[#84afff]"
-                      aria-hidden="true"
-                    />
-                    <h3 className="mt-6 text-base font-semibold text-[#f4f7fb]">
+                  <li key={item.title} className="landing-capability">
+                    <h3 className="flex items-center gap-2.5 text-base font-semibold text-[#f4f7fb]">
+                      <Icon
+                        className="size-4 shrink-0 text-[#8d99aa]"
+                        aria-hidden="true"
+                      />
                       {item.title}
                     </h3>
                     <p className="mt-2 text-sm leading-6 text-[#aebcd0]">
@@ -478,12 +435,12 @@ export default function LandingPage() {
             <div className="landing-container landing-dayline">
               <div className="landing-dayline-top">
                 <Eyebrow>
-                  <span className="text-[#84afff]">07</span>
+                  <span>07</span>
                   <span className="landing-eyebrow-rule" />
                   Alignment
                 </Eyebrow>
                 <h2 id="dayline-title" data-reveal className="landing-h2">
-                  Five systems. <Serif>One route.</Serif>
+                  Five systems. One route.
                 </h2>
               </div>
               <ol className="landing-route-list">
@@ -508,10 +465,9 @@ export default function LandingPage() {
                   what to do now, next and later. Deterministic priorities you
                   can read, not a mystery score.
                 </p>
-                <div data-reveal className="landing-dayline-legend">
-                  <Split className="size-4 text-[#84afff]" aria-hidden="true" />
-                  <span>Now → Next → Later</span>
-                </div>
+                <p data-reveal className="landing-dayline-legend">
+                  Now, next, later
+                </p>
               </div>
             </div>
           </div>
@@ -528,43 +484,39 @@ export default function LandingPage() {
           <div className="landing-container landing-trust">
             <div className="landing-trust-copy">
               <Eyebrow>
-                <span className="text-[#84afff]">08</span>
+                <span>08</span>
                 <span className="landing-eyebrow-rule" />
                 Reassembled
               </Eyebrow>
               <h2 id="trust-title" data-reveal className="landing-h2">
-                Private <Serif>by design.</Serif>
+                Private by design.
               </h2>
               <p data-reveal className="landing-body">
                 A personal operating system only works if you trust it with
                 everything. So the protections live in the foundations, not in a
                 settings page.
               </p>
-              <ul data-reveal className="landing-trust-grid">
+              <ul data-reveal className="landing-list landing-trust-grid">
                 {trust.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <li
-                      key={item.title}
-                      className="landing-card landing-trust-item"
-                    >
-                      <Icon
-                        className="size-4.5 text-[#84afff]"
-                        aria-hidden="true"
-                      />
-                      <h3 className="mt-4 text-sm font-semibold text-[#f4f7fb]">
+                    <li key={item.title} className="landing-trust-item">
+                      <h3 className="flex items-center gap-2.5 text-sm font-semibold text-[#f4f7fb]">
+                        <Icon
+                          className="size-4 shrink-0 text-[#8d99aa]"
+                          aria-hidden="true"
+                        />
                         {item.title}
                       </h3>
                       <p className="mt-1.5 text-[13px] leading-5 text-[#aebcd0]">
                         {item.body}
                       </p>
                       {item.demo && (
-                        <p className="landing-privacy-demo mt-3 font-mono text-sm text-[#f4f7fb]">
-                          <span className="landing-privacy-amount">
-                            ₱86,200.00
-                          </span>
-                          <span className="text-[11px] text-[#8d99aa]">
-                            Hover to peek
+                        <p className="landing-privacy-demo mt-3 text-sm">
+                          <span className="text-[#aebcd0]">BPI Savings</span>
+                          <span className="font-mono tracking-[0.18em] text-[#f4f7fb]">
+                            <span aria-hidden="true">••••••</span>
+                            <span className="sr-only">Balance hidden</span>
                           </span>
                         </p>
                       )}
@@ -595,7 +547,7 @@ export default function LandingPage() {
           <div className="landing-container relative py-28 lg:py-40">
             <Eyebrow>Philippines-first</Eyebrow>
             <h2 id="home-title" data-reveal className="landing-h2 max-w-3xl">
-              Built for real life <Serif>in pesos.</Serif>
+              Built for real life in pesos.
             </h2>
             <dl data-reveal className="landing-home-facts">
               <div>
@@ -615,24 +567,10 @@ export default function LandingPage() {
                 <dd>20+ local banks and e-wallets</dd>
               </div>
             </dl>
-            <ul
-              data-reveal
-              className="landing-providers"
-              aria-label="Supported providers include"
-            >
-              {providers.map(([name, icon]) => (
-                <li key={name}>
-                  <Image
-                    src={icon}
-                    alt=""
-                    width={24}
-                    height={24}
-                    className="size-6 rounded-md bg-white object-contain p-0.5"
-                  />
-                  {name}
-                </li>
-              ))}
-            </ul>
+            <p data-reveal className="landing-providers">
+              Supported providers include GCash, Maya, BPI, BDO, UnionBank,
+              GoTyme, Metrobank and Tonik.
+            </p>
           </div>
         </section>
 
@@ -665,7 +603,7 @@ export default function LandingPage() {
               data-reveal
               className="landing-h2 landing-h2--cta"
             >
-              Put your life <Serif>back together.</Serif>
+              Put your life back together.
             </h2>
             <p data-reveal className="landing-body mx-auto max-w-xl">
               Start with one account and one task. ATLAS grows into the rest of
@@ -676,14 +614,13 @@ export default function LandingPage() {
               className="mt-9 flex flex-wrap justify-center gap-3"
             >
               <Link href="/signup" className="landing-button">
-                Create your ATLAS
-                <ArrowRight className="size-4" aria-hidden="true" />
+                Create account
               </Link>
               <Link
                 href="/login"
                 className="landing-button landing-button--ghost"
               >
-                I already have an account
+                Log in
               </Link>
             </div>
           </div>

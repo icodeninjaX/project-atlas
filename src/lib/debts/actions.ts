@@ -89,7 +89,7 @@ export async function createDebtAction(
 ): Promise<DebtActionState> {
   const session = await auth();
   if (!session)
-    return { success: false, message: "Your session is unavailable." };
+    return { success: false, message: "Your session expired. Log in again." };
 
   let balanceCentavos: number;
   let minimumPaymentCentavos: number;
@@ -184,7 +184,7 @@ export async function updateDebtAction(
     return { success: false, message: "The debt could not be found." };
   const session = await auth();
   if (!session)
-    return { success: false, message: "Your session is unavailable." };
+    return { success: false, message: "Your session expired. Log in again." };
 
   const { data: existing } = await session.supabase
     .from("debts")
@@ -277,7 +277,7 @@ export async function deleteDebtAction(
     return { success: false, message: "The debt could not be found." };
   const session = await auth();
   if (!session)
-    return { success: false, message: "Your session is unavailable." };
+    return { success: false, message: "Your session expired. Log in again." };
   const { error } = await session.supabase
     .from("debts")
     .delete()
@@ -305,7 +305,7 @@ export async function reorderDebtsAction(
     return { success: false, message: "The order could not be saved." };
   const session = await auth();
   if (!session)
-    return { success: false, message: "Your session is unavailable." };
+    return { success: false, message: "Your session expired. Log in again." };
   const results = await Promise.all(
     ids.map((id, index) =>
       session.supabase
@@ -356,7 +356,7 @@ export async function recordDebtPaymentAction(
 ): Promise<DebtActionState> {
   const session = await auth();
   if (!session)
-    return { success: false, message: "Your session is unavailable." };
+    return { success: false, message: "Your session expired. Log in again." };
 
   let amountCentavos: number;
   try {
@@ -500,7 +500,7 @@ export async function deleteDebtPaymentAction(
     return { success: false, message: "The payment could not be found." };
   const session = await auth();
   if (!session)
-    return { success: false, message: "Your session is unavailable." };
+    return { success: false, message: "Your session expired. Log in again." };
   const { data: payment } = await session.supabase
     .from("debt_payments")
     .select("transaction_id")

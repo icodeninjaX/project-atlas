@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  ArrowRight,
-  FlaskConical,
-  Landmark,
-  RotateCcw,
-  Scissors,
-  Unplug,
-} from "lucide-react";
+import { ArrowRight, FlaskConical } from "lucide-react";
 import { useId, useMemo, useState, type ReactNode } from "react";
 import {
   DashboardCardHeading,
@@ -81,25 +74,16 @@ function Field({
 }
 
 function Preset({
-  icon,
   onClick,
   children,
 }: {
-  icon: ReactNode;
   onClick: () => void;
   children: ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="bg-background/60 ring-border text-foreground hover:bg-muted focus-visible:ring-ring inline-flex min-h-11 items-center gap-2 rounded-full px-3.5 text-xs font-semibold ring-1 transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
-    >
-      <span aria-hidden="true" className="text-primary">
-        {icon}
-      </span>
+    <Button type="button" variant="secondary" size="sm" onClick={onClick}>
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -183,7 +167,8 @@ function Compare({
   );
 }
 
-function DeltaChip({
+/** How the scenario moves the runway, as colored text. */
+function DeltaText({
   delta,
   hasScenario,
 }: {
@@ -194,12 +179,12 @@ function DeltaChip({
   return (
     <span
       className={cn(
-        "inline-flex max-w-full rounded-full px-2.5 py-1 text-xs font-semibold ring-1",
+        "text-xs font-semibold",
         !hasScenario || same
-          ? "bg-background/60 text-muted-foreground ring-border"
+          ? "text-muted-foreground"
           : delta > 0
-            ? "bg-positive/10 text-positive ring-positive/25"
-            : "bg-destructive/10 text-destructive ring-destructive/25",
+            ? "text-positive"
+            : "text-destructive",
       )}
     >
       {!hasScenario
@@ -311,15 +296,9 @@ export function RunwayScenarioPlanner({
       />
 
       <div className="mt-5 flex flex-wrap gap-2">
-        <Preset
-          icon={<Unplug className="size-3.5" />}
-          onClick={() => setIncome("0.00")}
-        >
-          Income stops
-        </Preset>
+        <Preset onClick={() => setIncome("0.00")}>Income stops</Preset>
         {analysis.monthlyEssentialCentavos > 0 ? (
           <Preset
-            icon={<Scissors className="size-3.5" />}
             onClick={() => {
               setDirection("less");
               setEssentials(
@@ -332,7 +311,6 @@ export function RunwayScenarioPlanner({
         ) : null}
         {firstDebt ? (
           <Preset
-            icon={<Landmark className="size-3.5" />}
             onClick={() => {
               setDebtId(firstDebt.id);
               setExtraPayment(toInput(firstDebt.minimumPaymentCentavos));
@@ -458,7 +436,7 @@ export function RunwayScenarioPlanner({
             // assistive tech reads the panel alone.
             <div
               aria-hidden="true"
-              className="bg-card/90 max-lg:animate-analyst-rise ring-border sticky bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-10 mt-3 flex items-center justify-between gap-3 rounded-xl px-4 py-3 shadow-[0_12px_32px_-12px_rgb(7_10_15/0.45)] ring-1 backdrop-blur-md group-data-[keyboard=open]/shell:bottom-2 lg:hidden"
+              className="bg-card/90 max-lg:animate-analyst-rise ring-border sticky bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-10 mt-3 flex items-center justify-between gap-3 rounded-xl px-4 py-3 shadow-lg ring-1 backdrop-blur-md group-data-[keyboard=open]/shell:bottom-2 max-lg:[animation-duration:180ms] lg:hidden"
             >
               <p className="flex min-w-0 items-baseline gap-1.5">
                 <span className="text-muted-foreground text-xs font-medium">
@@ -471,7 +449,7 @@ export function RunwayScenarioPlanner({
                   {figure.unit}
                 </span>
               </p>
-              <DeltaChip delta={delta} hasScenario />
+              <DeltaText delta={delta} hasScenario />
             </div>
           ) : null}
         </div>
@@ -479,7 +457,7 @@ export function RunwayScenarioPlanner({
         <div
           role="group"
           aria-label="Scenario result"
-          className="bg-background/55 ring-border/80 min-w-0 rounded-xl p-4 ring-1 min-[360px]:p-5 lg:sticky lg:top-24"
+          className="bg-background/55 min-w-0 rounded-xl p-4 min-[360px]:p-5 lg:sticky lg:top-24"
         >
           <div className="grid grid-cols-2 gap-4">
             <div className="min-w-0">
@@ -503,7 +481,7 @@ export function RunwayScenarioPlanner({
             </div>
           </div>
           <p role="status" className="mt-3">
-            <DeltaChip delta={delta} hasScenario={hasScenario} />
+            <DeltaText delta={delta} hasScenario={hasScenario} />
           </p>
 
           <div className="mt-5 grid gap-2.5">
@@ -605,7 +583,7 @@ export function RunwayScenarioPlanner({
           </dl>
 
           {scenario.debtProjection ? (
-            <div className="bg-primary/[0.06] ring-primary/20 mt-4 rounded-2xl p-3.5 text-xs leading-5 ring-1">
+            <div className="border-border mt-4 border-t pt-4 text-xs leading-5">
               <p className="font-semibold">
                 {scenario.debtProjection.creditorName} payoff comparison
               </p>
@@ -644,7 +622,6 @@ export function RunwayScenarioPlanner({
             disabled={!hasScenario}
             className="mt-4 w-full"
           >
-            <RotateCcw className="size-4" aria-hidden="true" />
             Reset scenario
           </Button>
         </div>

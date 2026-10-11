@@ -94,8 +94,8 @@ export default async function BudgetPage({
     <PageShell>
       <PageHeading
         eyebrow={`Money / Budget / ${formatCalendarMonth(month)}`}
-        title="Monthly plan"
-        description="What you mean to spend in each category, against what you actually record. Overspending is always named in text."
+        title="Budget"
+        description="What you plan to spend in each category, against what you record."
         compactOnMobile
       />
       <MoneyNavigation currentHref="/money/budget" />

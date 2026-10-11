@@ -1,4 +1,4 @@
-import { Archive, WalletCards } from "lucide-react";
+import { Archive } from "lucide-react";
 import Link from "next/link";
 import {
   AccountCard,
@@ -30,13 +30,10 @@ export default async function ArchivedAccountsPage() {
       <PageHeading
         eyebrow="Money / Accounts / Archived"
         title="Archived accounts"
-        description="Accounts stored outside your active totals. Restore one whenever you need to use it again."
+        description="Archived accounts stay out of your active totals until you restore them."
         actions={
-          <Button asChild>
-            <Link href="/money/accounts">
-              <WalletCards className="size-4" aria-hidden="true" />
-              Active accounts
-            </Link>
+          <Button asChild variant="secondary">
+            <Link href="/money/accounts">Active accounts</Link>
           </Button>
         }
       />

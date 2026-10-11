@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import Link from "next/link";
 import {
   startTransition,
@@ -34,7 +34,6 @@ import {
   parsePesoInput,
   relativeDayLabel,
 } from "@/lib/money/history";
-import { formatCentavos } from "@/lib/money/money";
 import { cn } from "@/lib/utils";
 
 const initial: MoneyActionState = { success: false, message: "" };
@@ -76,8 +75,8 @@ type EditableTransaction = {
 };
 
 const TYPE_OPTIONS = [
-  { value: "expense", label: "Expense", icon: ArrowUpRight },
-  { value: "income", label: "Income", icon: ArrowDownLeft },
+  { value: "expense", label: "Expense" },
+  { value: "income", label: "Income" },
 ] as const;
 
 function TypeToggle({
@@ -90,17 +89,16 @@ function TypeToggle({
   return (
     <fieldset>
       <legend className="sr-only">Transaction type</legend>
-      <div className="border-border bg-muted/70 mx-auto grid max-w-[17rem] grid-cols-2 gap-1 rounded-full border p-1">
+      <div className="border-border bg-muted/60 mx-auto grid max-w-[17rem] grid-cols-2 gap-1 rounded-xl border p-1">
         {TYPE_OPTIONS.map((option) => {
-          const Icon = option.icon;
           const selected = value === option.value;
           return (
             <label
               key={option.value}
               className={cn(
-                "has-[:focus-visible]:ring-ring relative flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full text-sm font-semibold transition-colors has-[:focus-visible]:ring-2 sm:min-h-10",
+                "has-[:focus-visible]:ring-ring relative flex min-h-11 cursor-pointer items-center justify-center rounded-lg text-sm font-semibold transition-colors has-[:focus-visible]:ring-2 sm:min-h-9",
                 selected
-                  ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
+                  ? "bg-card text-foreground shadow-[0_1px_2px_rgb(7_10_15/0.12)]"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -111,16 +109,6 @@ function TypeToggle({
                 checked={selected}
                 onChange={() => onChange(option.value)}
                 className="sr-only"
-              />
-              <Icon
-                aria-hidden="true"
-                className={cn(
-                  "size-4",
-                  selected &&
-                    (option.value === "income"
-                      ? "text-positive"
-                      : "text-primary"),
-                )}
               />
               {option.label}
             </label>
@@ -146,17 +134,14 @@ function AccountPicker({
 
   if (accounts.length === 0) {
     return (
-      <div className="border-border rounded-2xl border border-dashed p-4 text-sm">
-        <p className="font-semibold">Add an account first</p>
+      <div className="bg-muted/40 rounded-xl p-4">
+        <p className="text-sm font-medium">Add an account first</p>
         <p className="text-muted-foreground mt-1 text-xs leading-5">
           Every transaction belongs to a cash, bank, or e-wallet account.
         </p>
-        <Link
-          href="/money/accounts"
-          className="text-primary focus-visible:ring-ring mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
-        >
-          Open accounts <ArrowRight className="size-3.5" aria-hidden="true" />
-        </Link>
+        <Button asChild variant="secondary" size="sm" className="mt-3">
+          <Link href="/money/accounts">Open accounts</Link>
+        </Button>
       </div>
     );
   }
@@ -172,10 +157,8 @@ function AccountPicker({
             <label
               key={account.id}
               className={cn(
-                "has-[:focus-visible]:ring-ring relative flex min-h-14 min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border py-2.5 pr-2 pl-3 transition-[color,background-color,border-color,scale] duration-150 [-webkit-tap-highlight-color:transparent] active:scale-[0.98] has-[:focus-visible]:ring-2 motion-reduce:active:scale-100",
-                selected
-                  ? "border-primary bg-primary/10"
-                  : "border-border bg-background/60 hover:bg-muted",
+                "border-border has-[:focus-visible]:ring-ring bg-background/60 relative flex min-h-14 min-w-0 cursor-pointer items-center gap-2.5 rounded-xl border py-2.5 pr-2 pl-3 transition-[color,background-color,box-shadow,scale] duration-150 [-webkit-tap-highlight-color:transparent] active:scale-[0.98] has-[:focus-visible]:ring-2 motion-reduce:active:scale-100",
+                selected ? "ring-primary ring-2" : "hover:bg-muted",
               )}
             >
               <input
@@ -191,7 +174,7 @@ function AccountPicker({
                     ? undefined
                     : balanceId
                 }
-                className="absolute inset-0 cursor-pointer appearance-none rounded-2xl outline-none"
+                className="absolute inset-0 cursor-pointer appearance-none rounded-xl outline-none"
               />
               <span className="pointer-events-none relative shrink-0">
                 <AccountLogo
@@ -428,7 +411,7 @@ export function TransactionForm({
           <span className="text-muted-foreground font-normal">(optional)</span>
         </legend>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="text-muted-foreground min-w-0 text-xs font-medium">
+          <label className="min-w-0 text-sm font-medium">
             {type === "expense" ? "Merchant" : "Source"}
             <Input
               name="merchantOrSource"
@@ -444,7 +427,7 @@ export function TransactionForm({
               className="mt-1.5"
             />
           </label>
-          <label className="text-muted-foreground min-w-0 text-xs font-medium">
+          <label className="min-w-0 text-sm font-medium">
             Note
             <Input
               name="description"
@@ -478,77 +461,96 @@ export function TransactionForm({
     <div
       className={cn(
         "z-10 min-w-0 space-y-2",
-        docked &&
-          "sticky -mx-2 rounded-xl border p-2 shadow-[0_12px_32px_-12px_rgb(7_10_15/0.45)] backdrop-blur-md",
+        docked && "sticky -mx-2 rounded-xl border p-2",
         full
           ? cn(
               docked &&
-                "bg-card/90 max-lg:animate-analyst-rise bottom-[calc(5.25rem+env(safe-area-inset-bottom))] group-data-[keyboard=open]/shell:bottom-2",
+                "bg-card/90 max-lg:animate-analyst-rise bottom-[calc(5.25rem+env(safe-area-inset-bottom))] shadow-lg backdrop-blur-md group-data-[keyboard=open]/shell:bottom-2 max-lg:[animation-duration:180ms]",
               "lg:static lg:m-0 lg:space-y-3 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none",
             )
-          : "bg-background/90 bottom-0",
+          : "bg-background bottom-0",
       )}
     >
-      {full ? (
-        <div className="bg-background/60 hidden rounded-xl p-4 lg:block">
-          <p className="text-muted-foreground text-xs font-semibold">Preview</p>
-          <div className="mt-3 flex min-w-0 items-center gap-3">
-            <CategoryBadge
-              icon={category?.icon}
-              name={category?.name}
-              direction={direction}
-            />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">
-                {merchant.trim() || category?.name || "New transaction"}
-              </p>
-              <p className="text-muted-foreground truncate text-xs">
-                {[category?.name, account?.name].filter(Boolean).join(" · ") ||
-                  "Choose a category and account"}
-              </p>
+      {/* From lg up, the preview and the balance after it share one well;
+          below lg the balance rides in the docked bar on its own. */}
+      <div
+        className={cn(
+          "contents",
+          full && "lg:bg-background/60 lg:block lg:rounded-xl lg:p-4",
+        )}
+      >
+        {full ? (
+          <div className="hidden lg:block">
+            <p className="text-muted-foreground text-xs font-semibold">
+              Preview
+            </p>
+            <div className="mt-3 flex min-w-0 items-center gap-3">
+              <CategoryBadge
+                icon={category?.icon}
+                name={category?.name}
+                direction={direction}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">
+                  {merchant.trim() || category?.name || "New transaction"}
+                </p>
+                <p className="text-muted-foreground truncate text-xs">
+                  {[category?.name, account?.name]
+                    .filter(Boolean)
+                    .join(" · ") || "Choose a category and account"}
+                </p>
+              </div>
+            </div>
+            <div className="border-border mt-3 flex items-baseline justify-between gap-3 border-t pt-3">
+              <span className="text-muted-foreground text-xs">
+                {relativeDayLabel(date, today)}
+                {time
+                  ? ` · ${formatTaskTime(time)}`
+                  : timeIsNow
+                    ? " · Now"
+                    : ""}
+              </span>
+              <span className="font-mono text-base font-semibold">
+                {validAmount ? (
+                  <FlowAmount centavos={amountCentavos} direction={direction} />
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
+              </span>
             </div>
           </div>
-          <div className="border-border mt-3 flex items-baseline justify-between gap-3 border-t pt-3">
-            <span className="text-muted-foreground text-xs">
-              {relativeDayLabel(date, today)}
-              {time ? ` · ${formatTaskTime(time)}` : timeIsNow ? " · Now" : ""}
-            </span>
-            <span className="font-mono text-base font-semibold">
-              {validAmount ? (
-                <FlowAmount centavos={amountCentavos} direction={direction} />
-              ) : (
-                <span className="text-muted-foreground">—</span>
-              )}
-            </span>
-          </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {balanceAfter !== null && account ? (
-        <p
-          className="lg:border-border lg:bg-background/60 flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-0.5 px-2 pt-1 text-xs lg:rounded-2xl lg:border lg:px-4 lg:py-3"
-          aria-live="polite"
-        >
-          <span className="text-muted-foreground">
-            {account.name} after this
-          </span>
-          <span className="flex items-center gap-1.5 font-mono font-semibold">
-            <span className="text-muted-foreground font-medium">
+        {balanceAfter !== null && account ? (
+          <p
+            className={cn(
+              "mb-2 flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-0.5 px-2 pt-1 text-xs",
+              full &&
+                "lg:border-border lg:mt-3 lg:mb-0 lg:border-t lg:px-0 lg:pt-3",
+            )}
+            aria-live="polite"
+          >
+            <span className="text-muted-foreground">
+              {account.name} after this
+            </span>
+            <span className="flex items-center gap-1.5 font-mono font-semibold">
+              <span className="text-muted-foreground font-medium">
+                <MoneyAmount
+                  centavos={Number(account.current_balance_centavos)}
+                />
+              </span>
+              <ArrowRight
+                className="text-muted-foreground size-3"
+                aria-hidden="true"
+              />
               <MoneyAmount
-                centavos={Number(account.current_balance_centavos)}
+                centavos={balanceAfter}
+                className={cn(balanceAfter < 0 && "text-destructive")}
               />
             </span>
-            <ArrowRight
-              className="text-muted-foreground size-3"
-              aria-hidden="true"
-            />
-            <MoneyAmount
-              centavos={balanceAfter}
-              className={cn(balanceAfter < 0 && "text-destructive")}
-            />
-          </span>
-        </p>
-      ) : null}
+          </p>
+        ) : null}
+      </div>
 
       <Button
         type="submit"
@@ -558,12 +560,7 @@ export function TransactionForm({
         pendingLabel={isEdit ? "Saving…" : "Recording…"}
         className="w-full"
       >
-        {submitLabel}{" "}
-        {validAmount && !isEdit ? (
-          <span className="rounded-md bg-white/15 px-1.5 py-0.5 font-mono text-xs">
-            {formatCentavos(amountCentavos)}
-          </span>
-        ) : null}
+        {submitLabel}
       </Button>
     </div>
   );
@@ -601,15 +598,8 @@ export function TransactionForm({
       // overflow-clip, not -hidden: clipping must not create a scroll
       // container, or the docked summary would stick to the card instead
       // of the viewport.
-      className="border-border bg-card relative overflow-clip rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
+      className="border-border bg-card relative overflow-clip rounded-2xl border shadow-[0_1px_2px_rgb(7_10_15/0.04)]"
     >
-      <div
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b to-transparent transition-colors duration-300",
-          type === "income" ? "from-positive/12" : "from-primary/12",
-        )}
-      />
       <div className="relative p-5 sm:p-7">{form}</div>
     </section>
   );

@@ -1,4 +1,3 @@
-import { ArrowLeftRight, Scale } from "lucide-react";
 import type { AccountIdentity } from "@/components/money/account-visuals";
 import { TransferForm } from "@/components/money/transfer-form";
 import { TransferHistory } from "@/components/money/transfer-history";
@@ -7,7 +6,7 @@ import { MoneyNavigation } from "@/components/money/money-navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageShell } from "@/components/shared/page-shell";
 
-export const metadata = { title: "Record transfer" };
+export const metadata = { title: "Transfers" };
 
 const TRANSFER_COLUMNS =
   "id,source_account_id,destination_account_id,amount_centavos,transfer_date,description";
@@ -88,42 +87,24 @@ export default async function TransfersPage({
     <PageShell>
       <PageHeading
         eyebrow="Money / Transfers"
-        title="Move money between accounts"
-        description="Record an internal transfer without counting it as income or an expense."
+        title="Transfers"
+        description="Money moved between your own accounts, kept out of income and expenses."
         compactOnMobile
       />
       <MoneyNavigation currentHref="/money/transfers" />
 
-      <div className="mt-8 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="mt-8 max-w-3xl">
         <TransferForm accounts={activeAccounts} today={today} />
-
-        <aside className="border-border bg-card/60 rounded-2xl border p-5">
-          <span className="bg-muted/60 text-foreground/75 grid size-9 place-items-center rounded-lg">
-            <Scale className="size-5" aria-hidden="true" />
-          </span>
-          <h2 className="mt-4 text-base font-semibold">
-            Transfers stay balance-neutral
-          </h2>
-          <p className="text-muted-foreground mt-2 text-sm leading-6">
-            The amount leaves the source account and enters the destination
-            account. Your combined balance does not change, and neither income
-            nor expenses move.
-          </p>
-          <p className="text-muted-foreground border-border mt-4 flex gap-2 border-t pt-4 text-xs leading-5">
-            <ArrowLeftRight
-              className="mt-0.5 size-3.5 shrink-0"
-              aria-hidden="true"
-            />
-            Both accounts must be active, and the source and destination must be
-            different.
-          </p>
-        </aside>
+        <p className="text-muted-foreground mt-3 px-1 text-xs leading-5">
+          Your combined balance stays the same: the amount leaves one active
+          account and enters another.
+        </p>
       </div>
 
       <section className="mt-10" aria-labelledby="transfer-history-title">
         <h2
           id="transfer-history-title"
-          className="text-lg font-semibold tracking-tight"
+          className="text-[0.9375rem] font-semibold"
         >
           Transfer history
         </h2>

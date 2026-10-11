@@ -1,15 +1,13 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  CopyPlus,
-  History,
-  PencilLine,
-  Plus,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, PencilLine, Plus } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { MoneyAmount } from "@/components/money/money-amount";
+import {
+  HeroStat,
+  MoneyHeroShell,
+  TonePill,
+  type HeroTone,
+} from "@/components/money/money-hero";
 import { Button } from "@/components/ui/button";
 import {
   dailyAllowance,
@@ -56,31 +54,41 @@ function MonthSwitcher({
 }) {
   const previous = shiftMonth(month, -1);
   const next = shiftMonth(month, 1);
-  const arrow =
-    "border-border bg-background/60 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-11 shrink-0 place-items-center rounded-full border transition-colors focus-visible:ring-2 focus-visible:outline-none sm:size-9";
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-2">
-      <Link
-        href={budgetHref(previous, currentMonth)}
-        aria-label={`Previous month, ${formatMonthLong(previous)}`}
-        className={arrow}
+      <Button
+        asChild
+        variant="ghost"
+        size="icon"
+        className="shrink-0 sm:size-9"
       >
-        <ChevronLeft aria-hidden="true" className="size-4" />
-      </Link>
+        <Link
+          href={budgetHref(previous, currentMonth)}
+          aria-label={`Previous month, ${formatMonthLong(previous)}`}
+        >
+          <ChevronLeft aria-hidden="true" className="size-4" />
+        </Link>
+      </Button>
       <h2
         id="budget-month"
         className="min-w-0 px-1.5 text-base font-semibold tracking-[-0.01em]"
       >
         {formatMonthLong(month)}
       </h2>
-      <Link
-        href={budgetHref(next, currentMonth)}
-        aria-label={`Next month, ${formatMonthLong(next)}`}
-        className={arrow}
+      <Button
+        asChild
+        variant="ghost"
+        size="icon"
+        className="shrink-0 sm:size-9"
       >
-        <ChevronRight aria-hidden="true" className="size-4" />
-      </Link>
+        <Link
+          href={budgetHref(next, currentMonth)}
+          aria-label={`Next month, ${formatMonthLong(next)}`}
+        >
+          <ChevronRight aria-hidden="true" className="size-4" />
+        </Link>
+      </Button>
       {month === currentMonth ? null : (
         <Link
           href="/money/budget"
@@ -89,56 +97,6 @@ function MonthSwitcher({
           This month
         </Link>
       )}
-    </div>
-  );
-}
-
-type Tone = "neutral" | "positive" | "destructive";
-
-function StatusPill({ tone, children }: { tone: Tone; children: ReactNode }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 items-center rounded-full border px-2.5 py-1 text-[0.6875rem] leading-none font-semibold",
-        tone === "positive" &&
-          "border-positive/25 bg-positive/10 text-positive",
-        tone === "destructive" &&
-          "border-destructive/25 bg-destructive/10 text-destructive",
-        tone === "neutral" &&
-          "border-border bg-background/60 text-muted-foreground",
-      )}
-    >
-      {children}
-    </span>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  note,
-  tone,
-}: {
-  label: string;
-  value: ReactNode;
-  note?: ReactNode;
-  tone?: "destructive";
-}) {
-  return (
-    // Phones show plain figures; tiles from `sm`, where there is room.
-    <div className="sm:border-border sm:bg-background/60 min-w-0 sm:rounded-2xl sm:border sm:p-4">
-      <dt className="text-muted-foreground text-xs font-medium">{label}</dt>
-      <dd
-        className={cn(
-          "mt-1.5 font-mono text-lg leading-tight font-semibold tracking-[-0.02em] [overflow-wrap:anywhere]",
-          tone === "destructive" && "text-destructive",
-        )}
-      >
-        {value}
-      </dd>
-      {note ? (
-        <dd className="text-muted-foreground mt-1 text-xs leading-4">{note}</dd>
-      ) : null}
     </div>
   );
 }
@@ -267,7 +225,7 @@ export function BudgetHero({
   const name = formatMonthName(month);
   const previousName = formatMonthName(shiftMonth(month, -1));
 
-  const status: { tone: Tone; label: string } = !hasPlan
+  const status: { tone: HeroTone; label: string } = !hasPlan
     ? { tone: "neutral", label: "No plan yet" }
     : over
       ? { tone: "destructive", label: "Over plan" }
@@ -287,32 +245,22 @@ export function BudgetHero({
 
   const timeline = (
     <Button asChild variant="secondary">
-      <Link href="/timeline?module=money">
-        <History className="size-4" aria-hidden="true" />
-        Timeline
-      </Link>
+      <Link href="/timeline?module=money">Timeline</Link>
     </Button>
   );
 
   return (
-    <section
-      aria-labelledby="budget-month"
-      className="border-primary/20 bg-card relative mt-8 overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
+    <MoneyHeroShell
+      labelledBy="budget-month"
+      tone={over ? "destructive" : "neutral"}
     >
-      <div
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b to-transparent",
-          over ? "from-destructive/10" : "from-primary/12",
-        )}
-      />
-      <div className="relative p-5 sm:p-7">
+      <div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <MonthSwitcher month={month} currentMonth={currentMonth} />
           {/* Phones show it beside "Left to spend" so the month stays on
               one line. */}
           <span className={cn(hasPlan && "max-sm:hidden")}>
-            <StatusPill tone={status.tone}>{status.label}</StatusPill>
+            <TonePill tone={status.tone}>{status.label}</TonePill>
           </span>
         </div>
 
@@ -328,7 +276,7 @@ export function BudgetHero({
                       : "Left to spend"}
                 </p>
                 <span className="sm:hidden">
-                  <StatusPill tone={status.tone}>{status.label}</StatusPill>
+                  <TonePill tone={status.tone}>{status.label}</TonePill>
                 </span>
               </div>
               <p
@@ -390,8 +338,8 @@ export function BudgetHero({
               </div>
             </div>
             <div className="@container min-w-0">
-              <dl className="max-sm:border-border grid grid-cols-2 gap-x-6 gap-y-5 max-sm:border-t max-sm:pt-5 sm:grid-cols-4 sm:gap-3 lg:grid-cols-2 @max-[17rem]:grid-cols-1">
-                <Stat
+              <dl className="max-sm:border-border grid grid-cols-2 gap-x-6 gap-y-5 max-sm:border-t max-sm:pt-5 sm:grid-cols-4 sm:gap-2 lg:grid-cols-2 @max-[17rem]:grid-cols-1">
+                <HeroStat
                   label="Planned"
                   value={<MoneyAmount centavos={plan.plannedCentavos} />}
                   note={
@@ -400,7 +348,7 @@ export function BudgetHero({
                       : `${plan.envelopes.length} categories`
                   }
                 />
-                <Stat
+                <HeroStat
                   label="Spent"
                   value={<MoneyAmount centavos={plan.spentCentavos} />}
                   note={
@@ -417,7 +365,7 @@ export function BudgetHero({
                     )
                   }
                 />
-                <Stat
+                <HeroStat
                   label="Expected income"
                   value={
                     expectedIncomeCentavos > 0 ? (
@@ -435,7 +383,7 @@ export function BudgetHero({
                   }
                 />
                 {expectedIncomeCentavos > 0 ? (
-                  <Stat
+                  <HeroStat
                     label={
                       unassigned >= 0 ? "Not yet planned" : "Beyond income"
                     }
@@ -448,7 +396,7 @@ export function BudgetHero({
                     tone={unassigned < 0 ? "destructive" : undefined}
                   />
                 ) : (
-                  <Stat
+                  <HeroStat
                     label="Not yet planned"
                     value={
                       <span className="text-muted-foreground font-sans text-base font-medium tracking-normal">
@@ -463,7 +411,7 @@ export function BudgetHero({
           </div>
         ) : (
           <div className="mt-6 max-w-xl">
-            <p className="text-[1.75rem] leading-tight font-semibold tracking-[-0.03em]">
+            <p className="text-lg leading-tight font-semibold">
               {pace.phase === "future"
                 ? `Plan ${name} ahead`
                 : `No plan for ${name} yet`}
@@ -497,7 +445,6 @@ export function BudgetHero({
                   variant="secondary"
                   onClick={onCopyPrevious}
                 >
-                  <CopyPlus className="size-4" aria-hidden="true" />
                   Start from {previousName}
                 </Button>
               ) : null}
@@ -505,6 +452,6 @@ export function BudgetHero({
           </div>
         )}
       </div>
-    </section>
+    </MoneyHeroShell>
   );
 }

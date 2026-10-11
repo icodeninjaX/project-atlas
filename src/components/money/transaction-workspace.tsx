@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  ChevronRight,
-  History,
-  Plus,
-  ReceiptText,
-  Search,
-  Trash2,
-  X,
-} from "lucide-react";
+import { ChevronRight, Plus, ReceiptText, Search } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import {
@@ -29,6 +21,7 @@ import {
   type TransactionFormCategory,
 } from "@/components/money/transaction-form";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { Input } from "@/components/ui/input";
@@ -77,13 +70,8 @@ type TransactionWorkspaceProps = {
 };
 
 const VIEWS = [
-  {
-    value: "record",
-    label: "Record a transaction",
-    shortLabel: "Record",
-    icon: Plus,
-  },
-  { value: "history", label: "History", shortLabel: "History", icon: History },
+  { value: "record", label: "Record a transaction", shortLabel: "Record" },
+  { value: "history", label: "History", shortLabel: "History" },
 ] as const;
 
 const TYPE_FILTERS = [
@@ -144,11 +132,11 @@ export function TransactionWorkspace({
   return (
     <div id="transaction-workspace" className="mt-6 scroll-mt-20">
       <div
-        className="border-border bg-muted/60 grid grid-cols-2 gap-1 rounded-full border p-1 sm:inline-grid sm:min-w-[26rem]"
+        className="border-border bg-muted/60 grid grid-cols-2 gap-1 rounded-xl border p-1 sm:inline-grid sm:min-w-[22rem]"
         role="group"
         aria-label="Transaction view"
       >
-        {VIEWS.map(({ value, label, shortLabel, icon: Icon }) => {
+        {VIEWS.map(({ value, label, shortLabel }) => {
           const active = view === value;
           return (
             <button
@@ -158,16 +146,12 @@ export function TransactionWorkspace({
               aria-label={label}
               onClick={() => setView(value)}
               className={cn(
-                "focus-visible:ring-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                "focus-visible:ring-ring inline-flex min-h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9",
                 active
-                  ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
+                  ? "bg-card text-foreground shadow-[0_1px_2px_rgb(7_10_15/0.12)]"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Icon
-                aria-hidden="true"
-                className={cn("size-4 shrink-0", active && "text-primary")}
-              />
               <span className="sm:hidden">{shortLabel}</span>
               <span className="hidden sm:inline">{label}</span>
             </button>
@@ -234,23 +218,23 @@ function DeleteTransactionControl({
         onClick={() => setConfirming(true)}
         className="text-destructive hover:text-destructive w-full justify-start"
       >
-        <Trash2 className="size-4" aria-hidden="true" />
         Delete transaction
       </Button>
     );
   }
 
   return (
-    <div className="border-destructive/30 bg-destructive/5 rounded-2xl border p-4">
-      <p className="text-sm font-semibold">Delete this transaction?</p>
+    <div className="bg-muted/40 rounded-xl p-4">
+      <p className="text-sm font-medium">Delete this transaction?</p>
       <p className="text-muted-foreground mt-1 text-xs leading-5">
         Its account balance and monthly totals will no longer include it. This
         cannot be undone.
       </p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="mt-3 flex flex-wrap justify-end gap-2">
         <Button
           type="button"
           variant="secondary"
+          size="sm"
           onClick={() => setConfirming(false)}
         >
           Keep it
@@ -264,8 +248,8 @@ function DeleteTransactionControl({
           <input type="hidden" name="transactionId" value={transactionId} />
           <FormSubmitButton
             variant="destructive"
+            size="sm"
             pendingLabel="Deleting…"
-            className="w-full"
           >
             Delete
           </FormSubmitButton>
@@ -379,7 +363,7 @@ function TransactionHistory({
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <h2
           id="transaction-history-title"
-          className="text-lg font-semibold tracking-tight"
+          className="text-[0.9375rem] font-semibold"
         >
           History
         </h2>
@@ -392,22 +376,19 @@ function TransactionHistory({
       </div>
 
       {transactions.length === 0 && !accountFilter ? (
-        <div className="border-border bg-card/40 mt-3 grid min-h-56 place-items-center rounded-2xl border border-dashed p-6 text-center">
-          <div className="max-w-sm">
-            <span className="border-border bg-muted/60 text-foreground/75 mx-auto grid size-9 place-items-center rounded-lg border">
-              <ReceiptText className="size-5" aria-hidden="true" />
-            </span>
-            <p className="mt-4 text-base font-semibold">
-              No money movement recorded
-            </p>
-            <p className="text-muted-foreground mt-1 text-sm leading-6">
-              Record your first income or expense and it will appear here.
-            </p>
-            <Button type="button" className="mt-4" onClick={onRecord}>
-              <Plus className="size-4" aria-hidden="true" />
-              Record a transaction
-            </Button>
-          </div>
+        <div className="mt-3">
+          <EmptyState
+            icon={ReceiptText}
+            title="No transactions yet"
+            description="Income and expenses you record will show here."
+            action={
+              // Named apart from the Record view toggle above.
+              <Button type="button" onClick={onRecord}>
+                <Plus className="size-4" aria-hidden="true" />
+                Record income or expense
+              </Button>
+            }
+          />
         </div>
       ) : (
         <>
@@ -424,13 +405,13 @@ function TransactionHistory({
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search merchant, category, note"
                 aria-label="Search transactions"
-                className="bg-card rounded-full pl-10"
+                className="bg-card pl-10"
               />
             </label>
             <div
               role="group"
               aria-label="Filter by type"
-              className="border-border bg-muted/60 grid grid-cols-3 gap-1 rounded-full border p-1"
+              className="border-border bg-muted/60 grid grid-cols-3 gap-1 rounded-xl border p-1"
             >
               {TYPE_FILTERS.map((filter) => (
                 <button
@@ -439,9 +420,9 @@ function TransactionHistory({
                   aria-pressed={typeFilter === filter.value}
                   onClick={() => setTypeFilter(filter.value)}
                   className={cn(
-                    "focus-visible:ring-ring min-h-9 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                    "focus-visible:ring-ring min-h-9 rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none",
                     typeFilter === filter.value
-                      ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
+                      ? "bg-card text-foreground shadow-[0_1px_2px_rgb(7_10_15/0.12)]"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -454,7 +435,7 @@ function TransactionHistory({
                 value={selectedAccount}
                 onChange={(event) => changeAccount(event.target.value)}
                 aria-label="Filter by account"
-                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/25 min-h-11 w-full min-w-0 rounded-full border px-4 text-base outline-none focus-visible:ring-2 sm:col-span-2 sm:text-sm lg:col-span-1"
+                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/25 min-h-11 w-full min-w-0 rounded-xl border px-3 text-base outline-none focus-visible:ring-2 sm:col-span-2 sm:text-sm lg:col-span-1"
               >
                 <option value="all">All accounts</option>
                 {accountOptions.map(([id, name]) => (
@@ -467,39 +448,38 @@ function TransactionHistory({
           </div>
 
           {transactions.length === 0 ? (
-            <div className="border-border mt-4 grid place-items-center rounded-2xl border border-dashed px-6 py-10 text-center">
-              <p className="text-sm font-semibold">
-                No transactions in {accountName ?? "this account"} yet
-              </p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Income and expenses recorded against it will appear here.
-              </p>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="mt-4"
-                onClick={() => changeAccount("all")}
-              >
-                Show all accounts
-              </Button>
+            <div className="mt-4">
+              <EmptyState
+                icon={ReceiptText}
+                title={`No transactions in ${accountName ?? "this account"} yet`}
+                description="Income and expenses recorded against it will show here."
+                action={
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => changeAccount("all")}
+                  >
+                    Show all accounts
+                  </Button>
+                }
+              />
             </div>
           ) : groups.length === 0 ? (
-            <div className="border-border mt-4 grid place-items-center rounded-2xl border border-dashed px-6 py-10 text-center">
-              <p className="text-sm font-semibold">No transactions match</p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Try another search or filter.
-              </p>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="mt-4"
-                onClick={clearFilters}
-              >
-                <X className="size-4" aria-hidden="true" />
-                Clear filters
-              </Button>
+            <div className="mt-4">
+              <EmptyState
+                icon={Search}
+                title="No transactions match"
+                description="Try another search or filter."
+                action={
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={clearFilters}
+                  >
+                    Clear filters
+                  </Button>
+                }
+              />
             </div>
           ) : (
             <div

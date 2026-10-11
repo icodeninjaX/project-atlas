@@ -137,9 +137,9 @@ export function PaidOffList({ debts }: { debts: DebtRecord[] }) {
         <summary className="hover:bg-muted/40 flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 py-3 transition-colors sm:px-5 [&::-webkit-details-marker]:hidden">
           <span
             aria-hidden="true"
-            className="bg-positive/12 text-positive grid size-10 shrink-0 place-items-center rounded-xl"
+            className="bg-muted/60 text-positive grid size-9 shrink-0 place-items-center rounded-lg"
           >
-            <CircleCheckBig className="size-[1.125rem]" />
+            <CircleCheckBig className="size-4" />
           </span>
           <span className="min-w-0 flex-1">
             <h2 id="debts-paid" className="text-[0.9375rem] font-semibold">

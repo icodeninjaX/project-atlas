@@ -39,7 +39,7 @@ export function MoneySheet({
           // explicit undefined tells it the omission is deliberate.
           {...(description ? {} : { "aria-describedby": undefined })}
           onOpenAutoFocus={onOpenAutoFocus}
-          className="bg-background data-[state=open]:animate-analyst-sheet sm:data-[state=open]:animate-money-sheet-side fixed inset-x-0 bottom-0 z-[60] flex max-h-[92dvh] flex-col rounded-t-2xl border-t shadow-[0_-24px_60px_rgb(7_10_15/0.35)] outline-none sm:inset-y-3 sm:right-3 sm:left-auto sm:max-h-none sm:w-[min(30rem,calc(100vw-1.5rem))] sm:border sm:shadow-[0_24px_70px_rgb(7_10_15/0.4)]"
+          className="bg-background data-[state=open]:animate-analyst-sheet sm:data-[state=open]:animate-money-sheet-side fixed inset-x-0 bottom-0 z-[60] flex max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl border-t shadow-2xl outline-none sm:inset-y-3 sm:right-3 sm:left-auto sm:max-h-none sm:w-[min(30rem,calc(100vw-1.5rem))] sm:rounded-2xl sm:border"
         >
           <span
             aria-hidden="true"

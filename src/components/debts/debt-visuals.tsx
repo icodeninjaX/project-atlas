@@ -36,7 +36,7 @@ export function debtTypeLabel(type: string) {
   return debtTypeOption(type).label;
 }
 
-/** The kind of debt as an icon tile; decorative beside its name. */
+/** The kind of debt as a small neutral tile; decorative beside its name. */
 export function DebtTypeBadge({
   type,
   size = "md",
@@ -51,20 +51,14 @@ export function DebtTypeBadge({
     <span
       aria-hidden="true"
       className={cn(
-        "bg-primary/10 text-primary ring-primary/15 grid shrink-0 place-items-center ring-1",
-        size === "sm" && "size-8 rounded-xl",
-        size === "md" && "size-10 rounded-xl",
-        size === "lg" && "size-12 rounded-2xl",
+        "bg-muted/60 text-muted-foreground grid shrink-0 place-items-center rounded-lg",
+        size === "sm" && "size-8",
+        size === "md" && "size-9",
+        size === "lg" && "size-10",
         className,
       )}
     >
-      <Icon
-        className={cn(
-          size === "sm" && "size-4",
-          size === "md" && "size-[1.125rem]",
-          size === "lg" && "size-5",
-        )}
-      />
+      <Icon className={size === "lg" ? "size-[1.125rem]" : "size-4"} />
     </span>
   );
 }
@@ -119,10 +113,9 @@ export function RepaidBar({
     >
       {share > 0 ? (
         <div
-          className={cn("h-full rounded-full", styles.fill)}
+          className={cn("bg-primary h-full rounded-full", styles.fill)}
           style={{
             width: `${Math.max(Math.min(share, 1), 0.015) * 100}%`,
-            backgroundImage: "linear-gradient(90deg, #38bdf8, var(--primary))",
           }}
         />
       ) : null}

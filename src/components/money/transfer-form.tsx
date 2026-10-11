@@ -26,7 +26,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { MoneyActionState } from "@/lib/money/actions";
 import { parsePesoInput } from "@/lib/money/history";
-import { formatCentavos } from "@/lib/money/money";
 import { cn } from "@/lib/utils";
 
 const initialState: MoneyActionState = {
@@ -70,17 +69,11 @@ function AccountEnd({
   return (
     <label
       className={cn(
-        "focus-within:ring-ring/40 relative block min-w-0 rounded-2xl border p-3.5 transition-colors focus-within:ring-2",
-        invalid
-          ? "border-destructive"
-          : account
-            ? "border-border bg-background/60"
-            : "border-border bg-background/60 border-dashed",
+        "border-border bg-background/60 focus-within:ring-ring/40 relative block min-w-0 rounded-xl border p-3.5 transition-colors focus-within:ring-2",
+        invalid && "ring-destructive ring-1",
       )}
     >
-      <span className="text-muted-foreground text-[0.8125rem] font-semibold">
-        {label}
-      </span>
+      <span className="text-sm font-medium">{label}</span>
       <span className="mt-2 flex min-w-0 items-center gap-3">
         {account ? (
           <AccountLogo
@@ -124,7 +117,7 @@ function AccountEnd({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-label={ariaLabel}
-        className="absolute inset-0 size-full cursor-pointer rounded-2xl opacity-0"
+        className="absolute inset-0 size-full cursor-pointer rounded-xl opacity-0"
       >
         <option value="">{placeholder}</option>
         {accounts.map((item) => (
@@ -227,7 +220,7 @@ export function TransferForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-border bg-card relative min-w-0 overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
+      className="border-border bg-card relative min-w-0 overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgb(7_10_15/0.04)]"
     >
       <div className="relative grid min-w-0 gap-7 p-5 sm:p-7">
         <AmountField
@@ -256,7 +249,7 @@ export function TransferForm({
             onClick={swap}
             disabled={!sourceId && !destinationId}
             aria-label="Swap source and destination"
-            className="mx-auto rounded-full"
+            className="mx-auto"
           >
             <ArrowDownUp className="size-4 sm:rotate-90" aria-hidden="true" />
           </Button>
@@ -286,8 +279,11 @@ export function TransferForm({
             legend="When"
             ariaLabel="Transfer date"
           />
-          <label className="text-muted-foreground min-w-0 self-end text-xs font-medium">
-            Note <span className="font-normal">(optional)</span>
+          <label className="min-w-0 self-end text-sm font-medium">
+            Note{" "}
+            <span className="text-muted-foreground font-normal">
+              (optional)
+            </span>
             <Input
               name="description"
               maxLength={240}
@@ -303,7 +299,7 @@ export function TransferForm({
         {!canTransfer ? (
           <p
             role="status"
-            className="border-border bg-background text-muted-foreground rounded-2xl border px-4 py-3 text-sm"
+            className="bg-background/55 text-muted-foreground rounded-xl px-4 py-3 text-sm"
           >
             Add at least two active accounts before recording a transfer.
           </p>
@@ -311,10 +307,8 @@ export function TransferForm({
 
         {showShift && source && destination ? (
           <div aria-live="polite">
-            <p className="text-muted-foreground text-xs font-medium">
-              Balances after this transfer
-            </p>
-            <ul className="border-border bg-background/60 divide-border mt-2 divide-y rounded-2xl border">
+            <p className="text-sm font-medium">Balances after this transfer</p>
+            <ul className="bg-background/55 divide-border mt-2 divide-y rounded-xl">
               <BalanceShift account={source} deltaCentavos={-amountCentavos} />
               <BalanceShift
                 account={destination}
@@ -332,12 +326,7 @@ export function TransferForm({
           pendingLabel="Recording…"
           className="w-full"
         >
-          Record transfer{" "}
-          {validAmount ? (
-            <span className="rounded-md bg-white/15 px-1.5 py-0.5 font-mono text-xs">
-              {formatCentavos(amountCentavos)}
-            </span>
-          ) : null}
+          Record transfer
         </Button>
       </div>
     </form>

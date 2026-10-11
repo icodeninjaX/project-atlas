@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,20 +29,20 @@ export function DeleteArchivedAccountForm({
   }, [state]);
 
   return (
-    <details className="border-destructive/30 mt-4 border-t pt-3">
-      <summary className="text-destructive cursor-pointer text-xs font-semibold">
+    <details className="mt-3">
+      <summary className="text-destructive focus-visible:ring-ring inline-flex min-h-11 cursor-pointer items-center rounded-lg px-1 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none sm:min-h-9">
         Delete permanently
       </summary>
       <form
         action={action}
-        className="border-destructive/30 bg-destructive/5 mt-3 grid gap-3 rounded-xl border p-3"
+        className="bg-muted/40 mt-2 grid gap-3 rounded-xl p-4"
       >
         <input type="hidden" name="accountId" value={accountId} />
         <p className="text-muted-foreground text-xs leading-5">
           This cannot be undone. ATLAS will only delete an archived account that
           has no transactions, transfers, or balance adjustments.
         </p>
-        <label className="text-muted-foreground text-xs">
+        <label className="text-sm font-medium">
           Type {accountName} to confirm
           <Input
             name="confirmationName"
@@ -63,7 +62,6 @@ export function DeleteArchivedAccountForm({
           pendingLabel="Deleting…"
           className="w-full"
         >
-          <Trash2 className="size-4" aria-hidden="true" />
           Delete account permanently
         </Button>
       </form>

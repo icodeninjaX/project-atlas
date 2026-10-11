@@ -4,7 +4,7 @@ import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const stepButton =
-  "text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-11 shrink-0 place-items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35 sm:size-10";
+  "text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-11 shrink-0 place-items-center rounded-xl transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35 sm:size-10";
 
 /**
  * A count of months from 1 to 24, one tap at a time. With `name`, it also
@@ -30,7 +30,7 @@ export function MonthStepper({
       className={cn(
         // A pixel floor keeps it from shrinking at normal sizes; with large
         // text the count wraps instead of pushing past the edge.
-        "bg-background/60 ring-border inline-flex max-w-full min-w-[184px] items-center rounded-full ring-1",
+        "bg-background/60 ring-border inline-flex max-w-full min-w-[184px] items-center rounded-xl ring-1",
         className,
       )}
     >

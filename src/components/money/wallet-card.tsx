@@ -93,7 +93,7 @@ export function WalletCard({
   );
 }
 
-/** A frosted pill for small facts on a card, e.g. "26%". */
+/** A small fact on a card, e.g. "26%", as quiet text. */
 export function WalletCardBadge({
   children,
   className,
@@ -104,7 +104,7 @@ export function WalletCardBadge({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center rounded-full bg-white/15 px-2 py-0.5 font-mono text-[0.6875rem] font-semibold text-white ring-1 ring-white/20 backdrop-blur-sm",
+        "shrink-0 font-mono text-xs font-semibold text-white/80",
         className,
       )}
     >

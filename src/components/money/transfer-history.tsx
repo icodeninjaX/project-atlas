@@ -4,6 +4,7 @@ import {
   type AccountIdentity,
 } from "@/components/money/account-visuals";
 import { MoneyAmount } from "@/components/money/money-amount";
+import { EmptyState } from "@/components/shared/empty-state";
 import {
   formatShortDate,
   groupByDate,
@@ -39,28 +40,24 @@ export function TransferHistory({
 }) {
   if (transfers.length === 0) {
     return (
-      <div className="border-border bg-card/40 mt-3 grid min-h-48 place-items-center rounded-2xl border border-dashed p-6 text-center">
-        <div className="max-w-sm">
-          <span className="border-border bg-muted/60 text-foreground/75 mx-auto grid size-9 place-items-center rounded-lg border">
-            <ArrowLeftRight className="size-5" aria-hidden="true" />
-          </span>
-          <p className="mt-4 text-base font-semibold">No transfers yet</p>
-          <p className="text-muted-foreground mt-1 text-sm leading-6">
-            Moving money between your own accounts will show here.
-          </p>
-        </div>
+      <div className="mt-3">
+        <EmptyState
+          icon={ArrowLeftRight}
+          title="No transfers yet"
+          description="Transfers between your own accounts will show here."
+        />
       </div>
     );
   }
 
   return (
-    <div className="mt-3 space-y-5">
+    <div className="border-border bg-card divide-border mt-3 divide-y overflow-hidden rounded-2xl border">
       {groupByDate(transfers, (transfer) => transfer.transfer_date).map(
         (group) => {
           const label = relativeDayLabel(group.date, today);
           return (
             <section key={group.date} aria-label={label}>
-              <h3 className="px-1 text-sm font-semibold">
+              <h3 className="bg-muted/30 px-4 py-2 text-[0.8125rem] font-semibold sm:px-5">
                 {label}
                 {label === "Today" || label === "Yesterday" ? (
                   <span className="text-muted-foreground ml-1.5 font-normal">
@@ -68,7 +65,7 @@ export function TransferHistory({
                   </span>
                 ) : null}
               </h3>
-              <ul className="border-border bg-card divide-border mt-2 divide-y overflow-hidden rounded-2xl border">
+              <ul className="divide-border border-border divide-y border-t">
                 {group.items.map((transfer) => {
                   const source =
                     accounts.get(transfer.source_account_id) ?? unknownAccount;

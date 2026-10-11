@@ -32,7 +32,8 @@ export async function createAccountAction(
   formData: FormData,
 ): Promise<MoneyActionState> {
   const auth = await authenticatedClient();
-  if (!auth) return { success: false, message: "Your session is unavailable." };
+  if (!auth)
+    return { success: false, message: "Your session expired. Log in again." };
 
   let openingBalanceCentavos: number;
   try {
@@ -89,7 +90,8 @@ export async function updateAccountAction(
   }
 
   const auth = await authenticatedClient();
-  if (!auth) return { success: false, message: "Your session is unavailable." };
+  if (!auth)
+    return { success: false, message: "Your session expired. Log in again." };
 
   const result = accountSchema.safeParse({
     name: formData.get("name"),
@@ -153,7 +155,8 @@ export async function adjustAccountBalanceAction(
   }
 
   const auth = await authenticatedClient();
-  if (!auth) return { success: false, message: "Your session is unavailable." };
+  if (!auth)
+    return { success: false, message: "Your session expired. Log in again." };
 
   const { data, error } = await auth.supabase.rpc("adjust_account_balance", {
     p_account_id: result.data.accountId,
@@ -180,7 +183,8 @@ export async function archiveAccountAction(
   if (!/^[0-9a-f-]{36}$/i.test(id))
     return { success: false, message: "The account could not be found." };
   const auth = await authenticatedClient();
-  if (!auth) return { success: false, message: "Your session is unavailable." };
+  if (!auth)
+    return { success: false, message: "Your session expired. Log in again." };
 
   const { error } = await auth.supabase
     .from("financial_accounts")
@@ -214,7 +218,8 @@ export async function deleteArchivedAccountAction(
     return { success: false, message: "Type the account name to confirm." };
 
   const auth = await authenticatedClient();
-  if (!auth) return { success: false, message: "Your session is unavailable." };
+  if (!auth)
+    return { success: false, message: "Your session expired. Log in again." };
 
   const { data, error } = await auth.supabase.rpc(
     "delete_archived_financial_account",
@@ -263,7 +268,8 @@ export async function createTransactionAction(
   formData: FormData,
 ): Promise<MoneyActionState> {
   const auth = await authenticatedClient();
-  if (!auth) return { success: false, message: "Your session is unavailable." };
+  if (!auth)
+    return { success: false, message: "Your session expired. Log in again." };
 
   let amountCentavos: number;
   try {
@@ -338,7 +344,8 @@ export async function updateTransactionAction(
   }
 
   const auth = await authenticatedClient();
-  if (!auth) return { success: false, message: "Your session is unavailable." };
+  if (!auth)
+    return { success: false, message: "Your session expired. Log in again." };
 
   let amountCentavos: number;
   try {
@@ -396,7 +403,8 @@ export async function createTransferAction(
   formData: FormData,
 ): Promise<MoneyActionState> {
   const auth = await authenticatedClient();
-  if (!auth) return { success: false, message: "Your session is unavailable." };
+  if (!auth)
+    return { success: false, message: "Your session expired. Log in again." };
   const source = String(formData.get("sourceAccountId") ?? "");
   const destination = String(formData.get("destinationAccountId") ?? "");
   if (
@@ -440,7 +448,8 @@ export async function deleteTransactionAction(
   if (!/^[0-9a-f-]{36}$/i.test(id))
     return { success: false, message: "The transaction could not be found." };
   const auth = await authenticatedClient();
-  if (!auth) return { success: false, message: "Your session is unavailable." };
+  if (!auth)
+    return { success: false, message: "Your session expired. Log in again." };
 
   const { error } = await auth.supabase
     .from("transactions")

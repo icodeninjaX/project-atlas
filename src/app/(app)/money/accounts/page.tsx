@@ -1,4 +1,4 @@
-import { Archive, WalletCards } from "lucide-react";
+import { WalletCards } from "lucide-react";
 import Link from "next/link";
 import { AccountCreatePanel } from "@/components/money/account-create-panel";
 import { type AccountSummary } from "@/components/money/account-card";
@@ -83,19 +83,17 @@ export default async function AccountsPage() {
     <PageShell>
       <PageHeading
         eyebrow="Money / Accounts"
-        title="Where your money lives"
-        description="Every total is opening balance plus recorded movement, so it can always be explained."
+        title="Accounts"
+        description="Each balance is the opening balance plus every recorded transaction and transfer."
         // Phones get these actions in the total-balance hero instead; with
         // no accounts there is no hero, so the heading keeps them.
         compactOnMobile={accounts.length > 0}
         actions={
           <>
-            <AccountCreatePanel />
+            {/* With no accounts, the empty state carries Add account. */}
+            {accounts.length > 0 ? <AccountCreatePanel /> : null}
             <Button asChild variant="secondary">
-              <Link href="/money/accounts/archived">
-                <Archive className="size-4" aria-hidden="true" />
-                Archived
-              </Link>
+              <Link href="/money/accounts/archived">Archived</Link>
             </Button>
           </>
         }
@@ -106,7 +104,8 @@ export default async function AccountsPage() {
           <EmptyState
             icon={WalletCards}
             title="Add your first account"
-            description="Cash, GCash, Maya, bank, or savings. Each starts with one truthful balance. Use Add account above to begin."
+            description="Cash, GCash, Maya, bank, or savings. Each starts from the balance it holds today."
+            action={<AccountCreatePanel />}
           />
         </div>
       ) : (

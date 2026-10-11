@@ -75,7 +75,7 @@ export function CaptureDemo() {
   return (
     <div ref={rootRef} className="landing-card landing-capture">
       <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] px-5 py-3.5">
-        <p className="landing-mono text-[#aebcd0]">Universal Capture</p>
+        <p className="landing-mono text-[#aebcd0]">Universal capture</p>
         <p className="landing-mono text-[#84afff]">
           {done ? "3 proposals" : "Reading…"}
         </p>
@@ -100,7 +100,7 @@ export function CaptureDemo() {
               className="landing-proposal"
               data-visible={visible}
             >
-              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#84afff]/10 text-[#84afff]">
+              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white/5 text-[#84afff]">
                 <Icon className="size-4" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
@@ -125,7 +125,7 @@ export function CaptureDemo() {
         <p className="text-xs text-[#aebcd0]">
           Nothing saves until you confirm.
         </p>
-        <span className="rounded-full bg-[#84afff] px-3 py-1 text-xs font-semibold text-[#070a0f]">
+        <span className="rounded-lg bg-[#84afff] px-3 py-1 text-xs font-semibold text-[#070a0f]">
           Confirm all
         </span>
       </div>

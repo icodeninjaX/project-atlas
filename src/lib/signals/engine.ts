@@ -775,7 +775,7 @@ function careerSignals(
           type: "career.positive-momentum",
           category: "Career",
           severity: "positive",
-          title: "Applications are gaining momentum",
+          title: "Applications moved forward",
           message: `${interviewsThisMonth} applications progressed to an interview stage this month.`,
           reason: `ATLAS found ${interviewsThisMonth} distinct applications with an interview, final interview, offer, or acceptance stage event since ${dateLabel(window.monthStart)}.`,
           metric: {

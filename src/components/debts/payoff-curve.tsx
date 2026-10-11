@@ -215,7 +215,7 @@ export function PayoffCurve({
             <div
               id={`${id}-readout`}
               className={cn(
-                "bg-card/95 ring-border pointer-events-none absolute top-1 z-10 min-w-36 rounded-xl px-3 py-2 text-xs shadow-[0_12px_32px_-12px_rgb(7_10_15/0.45)] ring-1 backdrop-blur",
+                "bg-card/95 ring-border pointer-events-none absolute top-1 z-10 min-w-36 rounded-xl px-3 py-2 text-xs shadow-lg ring-1 backdrop-blur",
                 share > 0.55
                   ? "-translate-x-[calc(100%+0.75rem)]"
                   : "translate-x-3",

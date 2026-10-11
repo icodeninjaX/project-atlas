@@ -22,6 +22,19 @@ export function focusForNextEntry(input: HTMLInputElement | null) {
 }
 
 /**
+ * A one-tap choice beside a field, such as Today or a preset amount. The
+ * ring carries the selection; `aria-pressed` names it.
+ */
+export function choiceChipClass(selected: boolean) {
+  return cn(
+    "focus-visible:outline-ring inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-medium ring-1 transition-colors ring-inset focus-visible:outline-2 focus-visible:outline-offset-2 sm:min-h-10",
+    selected
+      ? "bg-background/60 text-foreground ring-primary ring-2"
+      : "bg-background/60 text-muted-foreground ring-border hover:bg-muted hover:text-foreground",
+  );
+}
+
+/**
  * The amount as the hero of a money form: large tabular figures beside a
  * peso sign, kept to digits and two decimals as it is typed.
  */
@@ -45,18 +58,15 @@ export const AmountField = forwardRef<
 
   return (
     <div className="text-center">
-      <label
-        htmlFor={id}
-        className="text-muted-foreground text-[0.8125rem] font-semibold"
-      >
+      <label htmlFor={id} className="text-muted-foreground text-sm font-medium">
         {label}
       </label>
-      <div className="focus-within:ring-ring/40 mx-auto mt-2 flex max-w-full items-baseline justify-center gap-1.5 rounded-2xl px-3 py-1 transition-shadow focus-within:ring-2">
+      <div className="focus-within:ring-ring/40 mx-auto mt-2 flex max-w-full items-baseline justify-center gap-1.5 rounded-xl px-3 py-1 transition-shadow focus-within:ring-2">
         <span
           aria-hidden="true"
           className={cn(
             "text-muted-foreground font-semibold",
-            hero ? "text-[clamp(1.75rem,8vw,2.5rem)]" : "text-2xl",
+            hero ? "text-[clamp(1.5rem,6vw,2rem)]" : "text-lg",
           )}
         >
           ₱
@@ -80,9 +90,7 @@ export const AmountField = forwardRef<
           style={{ width: `${Math.max(value.length, 4) + 0.5}ch` }}
           className={cn(
             "placeholder:text-muted-foreground/40 max-w-full min-w-0 bg-transparent text-left font-mono font-semibold tracking-[-0.025em] outline-none",
-            hero
-              ? "text-[clamp(2.5rem,12vw,3.75rem)] leading-tight"
-              : "text-4xl",
+            hero ? "text-[clamp(2.25rem,9vw,3rem)] leading-tight" : "text-2xl",
           )}
         />
       </div>
@@ -124,7 +132,7 @@ export function PesoInput({
   return (
     <div
       className={cn(
-        "border-border bg-background/60 focus-within:border-primary focus-within:ring-primary/15 flex min-w-0 items-center gap-1.5 rounded-xl border px-3 transition-[border-color,box-shadow] focus-within:ring-4",
+        "border-border bg-background/60 focus-within:border-ring focus-within:ring-ring/25 flex min-w-0 items-center gap-1.5 rounded-xl border px-3 transition-[border-color,box-shadow] focus-within:ring-2",
         large ? "h-14" : "h-11",
         disabled && "opacity-50",
       )}
@@ -194,12 +202,7 @@ export function DateField({
             type="button"
             aria-pressed={value === shortcut.date}
             onClick={() => onValueChange(shortcut.date)}
-            className={cn(
-              "focus-visible:ring-ring inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-10",
-              value === shortcut.date
-                ? "border-primary bg-primary/10 text-foreground"
-                : "border-border bg-background/60 text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
+            className={choiceChipClass(value === shortcut.date)}
           >
             {shortcut.label}
           </button>
@@ -218,8 +221,10 @@ export function DateField({
             required
             aria-label={ariaLabel}
             className={cn(
-              "rounded-full pl-9",
-              value !== today && value !== yesterday && "border-primary",
+              "pl-9",
+              value !== today &&
+                value !== yesterday &&
+                "ring-primary ring-2 ring-inset",
             )}
           />
         </label>
@@ -264,12 +269,7 @@ export function TimeField({
             type="button"
             aria-pressed={now}
             onClick={() => onValueChange("")}
-            className={cn(
-              "focus-visible:ring-ring inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-10",
-              now
-                ? "border-primary bg-primary/10 text-foreground"
-                : "border-border bg-background/60 text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
+            className={choiceChipClass(now)}
           >
             Now
           </button>
@@ -286,7 +286,7 @@ export function TimeField({
             value={value}
             onChange={(event) => onValueChange(event.target.value)}
             aria-label={ariaLabel}
-            className={cn("rounded-full pl-9", value && "border-primary")}
+            className={cn("pl-9", value && "ring-primary ring-2 ring-inset")}
           />
         </label>
       </div>

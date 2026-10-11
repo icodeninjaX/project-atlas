@@ -1,4 +1,4 @@
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { CategoryBadge } from "@/components/money/category-icon";
 import { MoneyAmount } from "@/components/money/money-amount";
 import { Button } from "@/components/ui/button";
@@ -30,13 +30,13 @@ function EnvelopeRow({
   );
 
   return (
-    <li className="group border-border bg-card hover:bg-muted/40 has-[:focus-visible]:ring-ring relative min-w-0 rounded-2xl border p-4 transition-colors has-[:focus-visible]:ring-2">
+    <li className="group hover:bg-muted/40 has-[:focus-visible]:ring-ring relative min-w-0 px-4 py-4 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset sm:px-5">
       <div className="flex items-start gap-3">
         <CategoryBadge
           icon={category.icon}
           name={category.name}
           direction="out"
-          className={cn(over && "bg-destructive/10 text-destructive")}
+          className={cn(over && "text-destructive")}
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
@@ -105,7 +105,7 @@ function EnvelopeRow({
         type="button"
         onClick={() => onEdit(category.id)}
         aria-label={`Edit ${category.name} plan`}
-        className="absolute inset-0 rounded-2xl outline-none [-webkit-tap-highlight-color:transparent]"
+        className="absolute inset-0 outline-none [-webkit-tap-highlight-color:transparent]"
       />
     </li>
   );
@@ -124,10 +124,7 @@ export function BudgetEnvelopes({
   return (
     <section aria-labelledby="budget-categories" className="mt-10">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2
-          id="budget-categories"
-          className="text-lg font-semibold tracking-[-0.02em]"
-        >
+        <h2 id="budget-categories" className="text-[0.9375rem] font-semibold">
           By category
         </h2>
         <p className="text-muted-foreground text-xs">
@@ -140,7 +137,7 @@ export function BudgetEnvelopes({
           ) : null}
         </p>
       </div>
-      <ul className="mt-4 grid gap-2.5 lg:grid-cols-2">
+      <ul className="border-border bg-card divide-border mt-4 divide-y overflow-hidden rounded-2xl border">
         {plan.envelopes.map((envelope) => (
           <EnvelopeRow
             key={envelope.category.id}
@@ -172,10 +169,7 @@ export function UnplannedSpending({
 
   return (
     <section aria-labelledby="budget-unplanned" className="mt-10">
-      <h2
-        id="budget-unplanned"
-        className="text-lg font-semibold tracking-[-0.02em]"
-      >
+      <h2 id="budget-unplanned" className="text-[0.9375rem] font-semibold">
         {hasPlan ? "Outside the plan" : "Spent this month"}
       </h2>
       <p className="text-muted-foreground mt-1 text-sm leading-6">
@@ -187,7 +181,7 @@ export function UnplannedSpending({
         {items.map((item) => (
           <li
             key={item.category.id}
-            className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3"
+            className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:px-5"
           >
             <CategoryBadge
               icon={item.category.icon}
@@ -211,7 +205,6 @@ export function UnplannedSpending({
                 aria-label={`Plan ${item.category.name}`}
                 className="text-primary -mr-2"
               >
-                <Plus className="size-3.5" aria-hidden="true" />
                 Plan
               </Button>
             ) : null}

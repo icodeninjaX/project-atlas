@@ -24,11 +24,15 @@ export async function saveRunwayPreferencesAction(
 
   const supabase = await createClient();
   if (!supabase)
-    return { success: false, message: "Supabase is not configured." };
+    return {
+      success: false,
+      message: "Saving isn't available on this server.",
+    };
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { success: false, message: "Your session has expired." };
+  if (!user)
+    return { success: false, message: "Your session expired. Log in again." };
 
   const { error } = await supabase.rpc("save_runway_preferences", {
     p_account_ids: [...new Set(parsed.data.accountIds)],

@@ -38,7 +38,7 @@ describe("TransferForm", () => {
     expect(screen.getByText("₱43,620.10")).toBeVisible();
     expect(screen.getByText("₱17,845.50")).toBeVisible();
     expect(
-      screen.getByRole("button", { name: /Record transfer ₱5,000\.00/ }),
+      screen.getByRole("button", { name: "Record transfer" }),
     ).toBeEnabled();
   });
 

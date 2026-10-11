@@ -44,11 +44,9 @@ function DateTile({
     <span
       aria-hidden="true"
       className={cn(
-        "grid shrink-0 place-items-center rounded-2xl text-center ring-1",
+        "bg-muted/60 grid shrink-0 place-items-center rounded-lg text-center",
         size === "lg" ? "w-14 py-2" : "w-11 py-1.5",
-        tone === "destructive"
-          ? "bg-destructive/10 text-destructive ring-destructive/25"
-          : "bg-background/70 ring-border/80",
+        tone === "destructive" && "text-destructive",
       )}
     >
       <span className="text-[0.625rem] leading-none font-semibold uppercase opacity-75">
@@ -86,8 +84,7 @@ function NextPayment({
       className={cn(
         debtSurfaceClass,
         "p-5 sm:p-6",
-        overdue &&
-          "bg-[linear-gradient(160deg,color-mix(in_srgb,var(--destructive)_9%,transparent),transparent_55%)]",
+        overdue && "ring-destructive/35 ring-1",
       )}
     >
       <div className="flex min-w-0 items-center gap-3.5">
@@ -96,7 +93,7 @@ function NextPayment({
           <p className={cn("text-xs font-semibold", toneText[due.tone])}>
             {due.label}
           </p>
-          <p className="mt-0.5 text-lg leading-snug font-semibold tracking-[-0.02em] break-words">
+          <p className="mt-0.5 text-base leading-snug font-semibold break-words">
             {debt.creditor_name}
           </p>
         </div>
@@ -120,9 +117,10 @@ function NextPayment({
         <Button
           type="button"
           size="lg"
-          aria-label={`Pay ${debt.creditor_name}`}
+          // Starts with the visible label, so voice control finds it.
+          aria-label={`Pay now, ${debt.creditor_name}`}
           onClick={() => onPay(debt)}
-          className="rounded-full px-6 max-sm:w-full"
+          className="max-sm:w-full"
         >
           <HandCoins aria-hidden="true" className="size-4" />
           Pay now

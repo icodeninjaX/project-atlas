@@ -1,19 +1,18 @@
 "use client";
 
-import { ArrowDown, ArrowRight, ArrowUp, X } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import Link from "next/link";
 import { Fragment, useId, type ReactNode } from "react";
 import { DebtSection, debtSurfaceClass } from "@/components/debts/debt-section";
 import { Disclosure } from "@/components/shared/disclosure";
 import { PayoffCurve, type CurveSeries } from "@/components/debts/payoff-curve";
 import { MoneyAmount } from "@/components/money/money-amount";
-import { PesoInput } from "@/components/money/money-fields";
+import { choiceChipClass, PesoInput } from "@/components/money/money-fields";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { Button } from "@/components/ui/button";
 import type { DebtRecord, DebtStrategy } from "@/lib/debts/debt";
 import {
   STRATEGIES,
-  STRATEGY_DETAILS,
   formatPayoffDuration,
   payoffMonthLabel,
   type PayoffPlan,
@@ -32,7 +31,7 @@ const CHOICES: Record<DebtStrategy, string> = {
 
 const EXPLAIN: Record<DebtStrategy, string> = {
   avalanche: "Pays the highest-interest debt first (avalanche).",
-  snowball: "Clears the smallest balance first for quick wins (snowball).",
+  snowball: "Clears the smallest balance first (snowball).",
   priority: "Pays in the order you set below.",
 };
 
@@ -263,7 +262,7 @@ export function PayoffPlanner({
               <legend className="text-sm font-semibold">
                 Which to pay first
               </legend>
-              <div className="bg-muted/60 mt-2.5 grid grid-cols-3 gap-1 rounded-full p-1">
+              <div className="bg-muted/60 mt-2.5 grid grid-cols-3 gap-1 rounded-xl p-1">
                 {STRATEGIES.map((item) => (
                   <label key={item} className="min-w-0">
                     <input
@@ -272,10 +271,9 @@ export function PayoffPlanner({
                       value={item}
                       checked={item === strategy}
                       onChange={() => onStrategyChange(item)}
-                      aria-label={STRATEGY_DETAILS[item].label}
                       className="peer sr-only"
                     />
-                    <span className="text-muted-foreground peer-checked:bg-background peer-checked:text-foreground peer-focus-visible:ring-ring flex min-h-10 cursor-pointer items-center justify-center rounded-full px-2 text-center text-xs font-semibold transition-[background-color,color,box-shadow] peer-checked:shadow-[0_1px_3px_rgb(7_10_15/0.18)] peer-focus-visible:ring-2">
+                    <span className="text-muted-foreground peer-checked:bg-background peer-checked:text-foreground peer-focus-visible:ring-ring flex min-h-10 cursor-pointer items-center justify-center rounded-lg px-2 text-center text-xs font-semibold transition-[background-color,color,box-shadow] peer-checked:shadow-[0_1px_2px_rgb(7_10_15/0.12)] peer-focus-visible:ring-2">
                       {CHOICES[item]}
                     </span>
                   </label>
@@ -316,10 +314,8 @@ export function PayoffPlanner({
                           onExtraChange(formatPesoInput(String(pesos)))
                         }
                         className={cn(
-                          "focus-visible:ring-ring inline-flex min-h-10 items-center justify-center rounded-full px-2 font-mono text-xs font-semibold tabular-nums transition-colors focus-visible:ring-2 focus-visible:outline-none",
-                          pressed
-                            ? "bg-primary-solid text-primary-solid-foreground"
-                            : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground",
+                          choiceChipClass(pressed),
+                          "rounded-lg px-2 font-mono text-xs font-semibold tabular-nums",
                         )}
                       >
                         +{peso.format(pesos)}
@@ -351,9 +347,8 @@ export function PayoffPlanner({
                     type="button"
                     onClick={() => onExtraChange("")}
                     aria-label="Clear the extra amount"
-                    className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -my-2 inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full px-2 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+                    className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -my-2 inline-flex min-h-9 shrink-0 items-center rounded-lg px-2 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
                   >
-                    <X aria-hidden="true" className="size-3.5" />
                     Clear
                   </button>
                 ) : null}
@@ -376,10 +371,8 @@ export function PayoffPlanner({
                     <span
                       aria-hidden="true"
                       className={cn(
-                        "grid size-7 shrink-0 place-items-center rounded-full font-mono text-xs font-bold tabular-nums",
-                        index === 0
-                          ? "bg-primary-solid text-primary-solid-foreground shadow-[0_0_0_4px_color-mix(in_srgb,var(--primary)_18%,transparent)]"
-                          : "bg-muted text-foreground/80",
+                        "bg-muted/60 grid size-7 shrink-0 place-items-center rounded-lg font-mono text-xs font-medium tabular-nums",
+                        index === 0 ? "text-primary" : "text-muted-foreground",
                       )}
                     >
                       {index + 1}
@@ -452,10 +445,9 @@ export function PayoffPlanner({
               This page opens with {CHOICES[savedStrategy].toLowerCase()} first.{" "}
               <Link
                 href="/settings"
-                className="text-primary focus-visible:ring-ring inline-flex items-center gap-1 rounded-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
+                className="text-primary focus-visible:ring-ring rounded-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
               >
                 Change it in Settings
-                <ArrowRight aria-hidden="true" className="size-3" />
               </Link>
             </p>
           </details>

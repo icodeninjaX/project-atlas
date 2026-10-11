@@ -161,7 +161,7 @@ describe("DebtsWorkspace", () => {
     const next = within(screen.getByRole("region", { name: "Up next" }));
     expect(next.getByText("Overdue by 2 days")).toBeInTheDocument();
     expect(
-      next.getByRole("button", { name: "Pay Big Card" }),
+      next.getByRole("button", { name: "Pay now, Big Card" }),
     ).toHaveTextContent("Pay now");
     const later = next.getAllByRole("listitem");
     expect(later).toHaveLength(1);
@@ -206,13 +206,13 @@ describe("DebtsWorkspace", () => {
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     expect(toggle).toHaveTextContent("Highest rate first");
     expect(
-      screen.queryByRole("radio", { name: "Snowball" }),
+      screen.queryByRole("radio", { name: "Smallest" }),
     ).not.toBeInTheDocument();
 
     await user.click(toggle);
 
     expect(toggle).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("radio", { name: "Snowball" })).toBeVisible();
+    expect(screen.getByRole("radio", { name: "Smallest" })).toBeVisible();
   });
 
   it("orders the plan by the chosen strategy and keeps it in the address", async () => {
@@ -222,7 +222,7 @@ describe("DebtsWorkspace", () => {
 
     expect(planOrder()).toEqual(["Big Card", "Small Loan"]);
 
-    await user.click(screen.getByRole("radio", { name: "Snowball" }));
+    await user.click(screen.getByRole("radio", { name: "Smallest" }));
 
     expect(planOrder()).toEqual(["Small Loan", "Big Card"]);
     expect(window.location.search).toContain("strategy=snowball");
@@ -258,7 +258,7 @@ describe("DebtsWorkspace", () => {
       screen.queryByRole("button", { name: /Move .* up/ }),
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Adjust plan/ }));
-    await user.click(screen.getByRole("radio", { name: "My priority" }));
+    await user.click(screen.getByRole("radio", { name: "My order" }));
     expect(planOrder()).toEqual(["Small Loan", "Big Card"]);
     expect(
       screen.getByRole("button", { name: "Move Small Loan up" }),
@@ -333,7 +333,7 @@ describe("DebtsWorkspace", () => {
   it("invites a first debt when nothing is tracked", () => {
     renderWorkspace({ debts: [] });
 
-    expect(screen.getByText("Map what you owe")).toBeInTheDocument();
+    expect(screen.getByText("No debts yet")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add debt" })).toBeVisible();
     expect(
       screen.queryByRole("region", { name: "Payoff plan" }),

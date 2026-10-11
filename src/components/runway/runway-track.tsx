@@ -9,12 +9,12 @@ const clamp = (value: number) => Math.min(Math.max(value, 0), 1);
 
 const GAP_COLOR: Record<RunwayTone, string> = {
   positive: "transparent",
-  caution: "#f59e0b",
+  caution: "var(--color-amber-500)",
   destructive: "var(--destructive)",
 };
 
 /**
- * Runway as a row of months from today: covered months fill with light,
+ * Runway as a row of months from today: covered months fill solid,
  * months still short of the reserve target are hatched, and a flag marks
  * the target. Decorative: the caller says the same in words.
  */
@@ -39,10 +39,8 @@ export function RunwayTrack({
   className?: string;
 }) {
   const targetShare = Math.min(targetMonths / months, 1);
-  const fillImage =
-    tone === "destructive"
-      ? "linear-gradient(90deg, var(--destructive), var(--destructive))"
-      : "linear-gradient(90deg, #38bdf8, var(--primary))";
+  const fillColor =
+    tone === "destructive" ? "var(--destructive)" : "var(--primary)";
   // Wide screens can label every month up to a year; phones every other
   // one, or every third past a year.
   const phoneStep = months <= 6 ? 1 : months <= 12 ? 2 : 3;
@@ -79,13 +77,8 @@ export function RunwayTrack({
               <span
                 className={cn("absolute inset-0", styles.light)}
                 style={{
-                  backgroundImage: fillImage,
-                  // One gradient runs the length of the track, so each
-                  // month shows its own stretch of it.
-                  backgroundSize: `${months * 100}% 100%`,
-                  backgroundPosition: `${months > 1 ? (index / (months - 1)) * 100 : 0}% 0`,
+                  backgroundColor: fillColor,
                   clipPath: `inset(0 ${(1 - fill) * 100}% 0 0)`,
-                  animationDelay: `${Math.min(index * 60, 900)}ms`,
                 }}
               />
             ) : null}
@@ -115,10 +108,8 @@ export function RunwayTrack({
             the target nears the end. */}
         <span
           className={cn(
-            "absolute bottom-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6875rem] leading-4 font-semibold whitespace-nowrap ring-1",
-            met
-              ? "bg-positive/10 text-positive ring-positive/25"
-              : "bg-background/70 text-foreground ring-border",
+            "absolute bottom-2 inline-flex items-center gap-1 text-[0.6875rem] leading-4 font-semibold whitespace-nowrap",
+            met ? "text-positive" : "text-muted-foreground",
           )}
           style={{
             left: `${targetShare * 100}%`,

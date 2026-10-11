@@ -1,7 +1,6 @@
 "use client";
 
-import { CopyPlus, History } from "lucide-react";
-import { useActionState, useId, useState, type ReactNode } from "react";
+import { useActionState, useId, useState } from "react";
 import { toast } from "sonner";
 import { CategoryBadge } from "@/components/money/category-icon";
 import { MoneyAmount } from "@/components/money/money-amount";
@@ -37,29 +36,6 @@ const toInput = (centavos: number) =>
 function toInputs(amounts: Record<string, number>) {
   return Object.fromEntries(
     Object.entries(amounts).map(([id, centavos]) => [id, toInput(centavos)]),
-  );
-}
-
-function QuickFill({
-  icon,
-  onClick,
-  children,
-}: {
-  icon: ReactNode;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="border-border bg-background/60 text-foreground hover:bg-muted focus-visible:ring-ring inline-flex min-h-11 items-center gap-2 rounded-full border px-3.5 text-xs font-semibold transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
-    >
-      <span aria-hidden="true" className="text-primary">
-        {icon}
-      </span>
-      {children}
-    </button>
   );
 }
 
@@ -162,7 +138,7 @@ function BudgetEditorForm({
       <input type="hidden" name="monthStart" value={monthStart} />
       <input type="hidden" name="notes" value={notes ?? ""} />
 
-      <div className="border-border bg-card rounded-2xl border p-4">
+      <div>
         <label htmlFor={incomeId} className="text-sm font-semibold">
           Expected income
         </label>
@@ -186,25 +162,26 @@ function BudgetEditorForm({
 
       {previous.hasPlan || canUseSpending ? (
         <div className="mt-5">
-          <p className="text-muted-foreground text-xs font-medium">
-            Quick start
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {previous.hasPlan ? (
-              <QuickFill
-                icon={<CopyPlus className="size-3.5" />}
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
                 onClick={copyPreviousPlan}
               >
                 Copy {previousName}&apos;s plan
-              </QuickFill>
+              </Button>
             ) : null}
             {canUseSpending ? (
-              <QuickFill
-                icon={<History className="size-3.5" />}
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
                 onClick={usePreviousSpending}
               >
                 Use {previousName}&apos;s spending
-              </QuickFill>
+              </Button>
             ) : null}
           </div>
           <p
@@ -226,7 +203,7 @@ function BudgetEditorForm({
             Add an expense category first.
           </p>
         ) : (
-          <ul className="mt-3 space-y-2">
+          <ul className="divide-border border-border mt-3 divide-y border-y">
             {categories.map((category) => {
               const value = values[category.id] ?? "";
               const inputId = budgetItemInputId(category.id);
@@ -259,12 +236,7 @@ function BudgetEditorForm({
               return (
                 <li
                   key={category.id}
-                  className={cn(
-                    "grid grid-cols-[auto_minmax(0,1fr)_8.5rem] items-center gap-x-3 gap-y-2 rounded-2xl border py-2.5 pr-2.5 pl-3 transition-colors @max-[20rem]:grid-cols-[auto_minmax(0,1fr)]",
-                    value.trim()
-                      ? "border-primary/30 bg-primary/[0.04]"
-                      : "border-border",
-                  )}
+                  className="grid grid-cols-[auto_minmax(0,1fr)_8.5rem] items-center gap-x-3 gap-y-2 py-3 @max-[20rem]:grid-cols-[auto_minmax(0,1fr)]"
                 >
                   <CategoryBadge
                     icon={category.icon}
@@ -309,7 +281,7 @@ function BudgetEditorForm({
       {/* Totals stay in view while the list scrolls. The sheet pads its
           bottom for the safe area; the bar takes that padding over so it
           meets the edge instead of floating above a strip of rows. */}
-      <div className="border-border bg-background sticky -bottom-[calc(1.5rem+env(safe-area-inset-bottom))] -mx-5 mt-6 -mb-[calc(1.5rem+env(safe-area-inset-bottom))] border-t px-5 pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:-mx-6 sm:rounded-b-[calc(1.75rem-1px)] sm:px-6">
+      <div className="border-border bg-background sticky -bottom-[calc(1.5rem+env(safe-area-inset-bottom))] -mx-5 mt-6 -mb-[calc(1.5rem+env(safe-area-inset-bottom))] border-t px-5 pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:-mx-6 sm:px-6">
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-xs">
           <p className="text-muted-foreground">
             Planned{" "}

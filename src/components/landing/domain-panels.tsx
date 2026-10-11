@@ -92,14 +92,14 @@ export function MoneyPanel() {
         </ul>
       </div>
       <div className="grid grid-cols-2 gap-px border-t border-white/[0.07] bg-white/[0.07]">
-        <div className="bg-[#0b1019] px-5 py-4">
+        <div className="bg-[var(--landing-card)] px-5 py-4">
           <p className="landing-mono text-[#8d99aa]">Debt strategy</p>
           <p className="mt-1.5 text-sm font-semibold text-[#f4f7fb]">
             Avalanche
           </p>
           <p className="mt-0.5 text-xs text-[#aebcd0]">Maya Credit first</p>
         </div>
-        <div className="bg-[#0b1019] px-5 py-4">
+        <div className="bg-[var(--landing-card)] px-5 py-4">
           <p className="landing-mono text-[#8d99aa]">Runway</p>
           <p className="mt-1.5 font-mono text-sm font-semibold text-[#f4f7fb]">
             7.4 months
@@ -298,7 +298,7 @@ export function CareerPanel() {
         {columns.map((column) => (
           <div
             key={column.stage}
-            className="min-w-0 rounded-2xl bg-white/[0.03] p-2"
+            className="min-w-0 rounded-xl bg-white/[0.03] p-2"
           >
             <p className="mb-2 flex items-center gap-1.5 px-1 text-[11px] font-semibold text-[#dfe7f5]">
               <span
@@ -311,7 +311,7 @@ export function CareerPanel() {
               {column.cards.map((card) => (
                 <li
                   key={card.company}
-                  className="rounded-xl border border-white/[0.07] bg-[#0d131e] p-2.5"
+                  className="rounded-lg border border-white/[0.07] bg-[#0d131e] p-2.5"
                 >
                   <p className="truncate text-xs font-semibold text-[#f4f7fb]">
                     {card.company}
@@ -373,7 +373,7 @@ export function ReflectionPanel() {
           ["Paid to debt", "₱3,750"],
           ["Milestones", "2"],
         ].map(([label, value]) => (
-          <div key={label} className="bg-[#0b1019] px-5 py-3.5">
+          <div key={label} className="bg-[var(--landing-card)] px-5 py-3.5">
             <dt className="landing-mono text-[#8d99aa]">{label}</dt>
             <dd className="landing-amount mt-1 font-mono text-lg font-semibold text-[#f4f7fb]">
               {value}

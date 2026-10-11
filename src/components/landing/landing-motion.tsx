@@ -21,7 +21,8 @@ const RAIL_ALIASES: Record<string, string> = {
 };
 
 /**
- * Smooth scrolling, reveal-on-view, and the chapter rail for the landing page.
+ * Smooth scrolling, reveal-on-view, the chapter rail, and the reduced-motion
+ * poster swap for the landing page.
  * Content stays fully visible without JavaScript; the `data-motion` flag on
  * the landing root opts into the entrance transitions.
  */
@@ -35,6 +36,16 @@ export function LandingMotion() {
       "(prefers-reduced-motion: reduce)",
     ).matches;
     root.dataset.motion = reducedMotion ? "reduced" : "full";
+
+    // Reduced-motion visitors see the looping film's poster instead.
+    if (reducedMotion) {
+      for (const video of root.querySelectorAll<HTMLVideoElement>(
+        "video[autoplay]",
+      )) {
+        video.autoplay = false;
+        video.load();
+      }
+    }
 
     const onScroll = () => {
       root.dataset.scrolled = window.scrollY > 24 ? "true" : "false";

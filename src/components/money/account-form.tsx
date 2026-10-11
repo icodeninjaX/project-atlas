@@ -22,25 +22,11 @@ const initial: MoneyActionState = { success: false, message: "" };
 
 type AccountCategory = AccountType;
 
-function StepLegend({
-  step,
-  children,
-}: {
-  step: number;
-  children: React.ReactNode;
-}) {
-  return (
-    <legend className="flex items-center gap-2.5 text-sm font-semibold">
-      <span
-        aria-hidden="true"
-        className="bg-primary/12 text-primary grid size-6 shrink-0 place-items-center rounded-full font-mono text-xs font-bold"
-      >
-        {step}
-      </span>
-      {children}
-    </legend>
-  );
+function GroupLegend({ children }: { children: React.ReactNode }) {
+  return <legend className="text-sm font-semibold">{children}</legend>;
 }
+
+const FIELD_LABEL = "min-w-0 text-sm font-medium";
 
 function providerMatchesSearch(
   provider: PhilippineAccountProvider,
@@ -159,7 +145,7 @@ function AccountCreateForm({
 
       <div className="min-w-0 space-y-8">
         <fieldset>
-          <StepLegend step={1}>What kind of account is it?</StepLegend>
+          <GroupLegend>What kind of account is it?</GroupLegend>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {ACCOUNT_TYPE_OPTIONS.map((item) => {
               const Icon = item.icon;
@@ -171,23 +157,22 @@ function AccountCreateForm({
                   aria-pressed={selected}
                   onClick={() => selectCategory(item.value)}
                   className={cn(
-                    "focus-visible:ring-ring focus-visible:ring-offset-background flex min-h-14 items-center gap-3 rounded-2xl border px-3 text-left text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                    "border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex min-h-14 items-center gap-3 rounded-xl border px-3 text-left text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
                     selected
-                      ? "border-primary bg-primary/10 text-foreground"
-                      : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
+                      ? "text-foreground ring-primary ring-2"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "grid size-8 shrink-0 place-items-center rounded-xl transition-colors",
-                      selected
-                        ? "bg-primary-solid text-primary-solid-foreground"
-                        : "bg-muted",
-                    )}
-                  >
+                  <span className="bg-muted/60 grid size-8 shrink-0 place-items-center rounded-lg">
                     <Icon className="size-4" aria-hidden="true" />
                   </span>
-                  {item.label}
+                  <span className="min-w-0 flex-1">{item.label}</span>
+                  {selected ? (
+                    <Check
+                      className="text-primary size-4 shrink-0"
+                      aria-hidden="true"
+                    />
+                  ) : null}
                 </button>
               );
             })}
@@ -196,9 +181,9 @@ function AccountCreateForm({
 
         {usesProvider(category) ? (
           <fieldset>
-            <StepLegend step={2}>
+            <GroupLegend>
               Choose your {category === "e_wallet" ? "wallet" : "bank"}
-            </StepLegend>
+            </GroupLegend>
             <label className="relative mt-3 block">
               <span className="sr-only">Search banks and wallets</span>
               <Search
@@ -234,10 +219,8 @@ function AccountCreateForm({
                     aria-label={`Choose ${provider.displayName}`}
                     onClick={() => selectProvider(provider)}
                     className={cn(
-                      "focus-visible:ring-ring focus-visible:ring-offset-background relative flex min-h-20 min-w-0 flex-col items-start justify-between gap-2 rounded-2xl border p-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-                      selected
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-card hover:bg-muted",
+                      "border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background relative flex min-h-20 min-w-0 flex-col items-start justify-between gap-2 rounded-xl border p-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                      selected ? "ring-primary ring-2" : "hover:bg-muted",
                     )}
                   >
                     {selected ? (
@@ -246,8 +229,9 @@ function AccountCreateForm({
                         aria-hidden="true"
                       />
                     ) : null}
-                    <span className="grid size-9 place-items-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-black/5">
-                      {provider.iconPath ? (
+                    {provider.iconPath ? (
+                      // Provider marks are drawn for a white ground.
+                      <span className="grid size-9 place-items-center overflow-hidden rounded-full bg-white ring-1 ring-black/5">
                         <Image
                           src={provider.iconPath}
                           alt=""
@@ -256,13 +240,12 @@ function AccountCreateForm({
                           className="size-full rounded-full object-cover"
                           aria-hidden="true"
                         />
-                      ) : (
-                        <Building2
-                          className="size-4 text-slate-700"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </span>
+                      </span>
+                    ) : (
+                      <span className="bg-muted/60 text-muted-foreground grid size-9 place-items-center rounded-full">
+                        <Building2 className="size-4" aria-hidden="true" />
+                      </span>
+                    )}
                     <span className="w-full truncate text-xs font-semibold">
                       {provider.displayName}
                     </span>
@@ -275,13 +258,19 @@ function AccountCreateForm({
                 aria-pressed={customProviderSelected}
                 onClick={selectCustomProvider}
                 className={cn(
-                  "focus-visible:ring-ring focus-visible:ring-offset-background flex min-h-20 min-w-0 flex-col items-start justify-between gap-2 rounded-2xl border border-dashed p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                  "border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background relative flex min-h-20 min-w-0 flex-col items-start justify-between gap-2 rounded-xl border p-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
                   customProviderSelected
-                    ? "border-primary bg-primary/10"
-                    : "border-border bg-card hover:bg-muted",
+                    ? "ring-primary ring-2"
+                    : "hover:bg-muted",
                 )}
               >
-                <span className="bg-muted grid size-9 place-items-center rounded-full">
+                {customProviderSelected ? (
+                  <Check
+                    className="text-primary absolute top-3 right-3 size-4"
+                    aria-hidden="true"
+                  />
+                ) : null}
+                <span className="bg-muted/60 text-muted-foreground grid size-9 place-items-center rounded-full">
                   <WalletCards className="size-4" aria-hidden="true" />
                 </span>
                 <span className="text-xs font-semibold">
@@ -301,10 +290,7 @@ function AccountCreateForm({
 
       <div className="min-w-0 space-y-4 md:sticky md:top-0 md:self-start">
         <section aria-labelledby="account-preview-title">
-          <p
-            id="account-preview-title"
-            className="text-muted-foreground text-[0.8125rem] font-semibold"
-          >
+          <p id="account-preview-title" className="text-sm font-semibold">
             Card preview
           </p>
           <WalletCard
@@ -315,11 +301,9 @@ function AccountCreateForm({
         </section>
 
         <fieldset className="min-w-0">
-          <StepLegend step={usesProvider(category) ? 3 : 2}>
-            Name it and set the balance
-          </StepLegend>
-          <div className="border-border bg-card mt-3 grid gap-4 rounded-2xl border p-4">
-            <label className="text-muted-foreground min-w-0 text-xs">
+          <GroupLegend>Name it and set the balance</GroupLegend>
+          <div className="mt-3 grid gap-4">
+            <label className={FIELD_LABEL}>
               Account name
               <Input
                 name="name"
@@ -332,7 +316,7 @@ function AccountCreateForm({
                 className="mt-1.5"
               />
             </label>
-            <label className="text-muted-foreground min-w-0 text-xs">
+            <label className={FIELD_LABEL}>
               Institution
               <Input
                 name="institution"
@@ -344,7 +328,7 @@ function AccountCreateForm({
                 className="mt-1.5"
               />
             </label>
-            <label className="text-muted-foreground min-w-0 text-xs">
+            <label className={FIELD_LABEL}>
               Opening balance (PHP)
               <Input
                 name="openingBalance"
@@ -412,7 +396,7 @@ export function AccountForm({
       {account.provider_id ? (
         <input type="hidden" name="providerId" value={account.provider_id} />
       ) : null}
-      <label className="text-muted-foreground min-w-0 text-xs">
+      <label className={FIELD_LABEL}>
         Account name
         <Input
           name="name"
@@ -424,7 +408,7 @@ export function AccountForm({
           className="mt-1.5"
         />
       </label>
-      <label className="text-muted-foreground min-w-0 text-xs">
+      <label className={FIELD_LABEL}>
         Account type
         <select
           name="accountType"
@@ -439,7 +423,7 @@ export function AccountForm({
           ))}
         </select>
       </label>
-      <label className="text-muted-foreground min-w-0 text-xs @[22rem]:col-span-2">
+      <label className={cn(FIELD_LABEL, "@[22rem]:col-span-2")}>
         Institution
         <Input
           name="institution"

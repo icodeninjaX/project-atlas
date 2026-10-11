@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  CalendarCheck,
   ChevronDown,
   CircleCheckBig,
   TriangleAlert,
@@ -11,7 +10,11 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AccountLogo } from "@/components/money/account-visuals";
 import { MoneyAmount } from "@/components/money/money-amount";
-import { DateField, PesoInput } from "@/components/money/money-fields";
+import {
+  choiceChipClass,
+  DateField,
+  PesoInput,
+} from "@/components/money/money-fields";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Disclosure } from "@/components/shared/disclosure";
 import { Button } from "@/components/ui/button";
@@ -132,17 +135,10 @@ function AccountPicker({
 
   return (
     <div>
-      <p id={`${id}-label`} className="text-sm font-semibold">
+      <p id={`${id}-label`} className="text-sm font-medium">
         Paid from
       </p>
-      <label
-        className={cn(
-          "focus-within:ring-ring/40 relative mt-2 flex min-w-0 items-center gap-3 rounded-2xl border p-3 transition-colors focus-within:ring-2",
-          account
-            ? "border-border bg-background/60"
-            : "border-border bg-background/60 border-dashed",
-        )}
-      >
+      <label className="border-border bg-background/60 focus-within:ring-ring/40 relative mt-2 flex min-w-0 items-center gap-3 rounded-xl border p-3 transition-colors focus-within:ring-2">
         {account ? (
           <AccountLogo account={account} size="md" />
         ) : (
@@ -182,7 +178,7 @@ function AccountPicker({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           aria-labelledby={`${id}-label`}
-          className="absolute inset-0 size-full cursor-pointer rounded-2xl opacity-0"
+          className="absolute inset-0 size-full cursor-pointer rounded-xl opacity-0"
         >
           <option value="">Not logged in Money</option>
           {accounts.map((item) => (
@@ -306,7 +302,7 @@ export function PaymentForm({
     >
       <input type="hidden" name="debtId" value={debtId} />
       <div>
-        <label htmlFor={`${id}-amount`} className="text-sm font-semibold">
+        <label htmlFor={`${id}-amount`} className="text-sm font-medium">
           Amount
         </label>
         <div className="mt-2">
@@ -330,10 +326,8 @@ export function PaymentForm({
                 aria-pressed={pressed}
                 onClick={() => setAmount(toInput(shortcut.centavos))}
                 className={cn(
-                  "focus-visible:ring-ring inline-flex min-h-11 max-w-full flex-wrap items-center gap-x-1.5 rounded-full px-3.5 text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9",
-                  pressed
-                    ? "bg-primary/10 text-foreground ring-primary"
-                    : "bg-background/60 text-muted-foreground ring-border hover:bg-muted hover:text-foreground",
+                  choiceChipClass(pressed),
+                  "max-w-full flex-wrap gap-x-1.5 rounded-lg px-3.5 text-xs font-semibold sm:min-h-9",
                 )}
               >
                 {shortcut.label}
@@ -363,7 +357,7 @@ export function PaymentForm({
         ariaLabel="Payment date"
       />
       {showSchedule && nextDueDate ? (
-        <label className="bg-background/55 ring-border/80 has-[:checked]:bg-primary/[0.06] has-[:checked]:ring-primary/40 flex cursor-pointer items-start gap-3 rounded-2xl p-3.5 ring-1 transition-colors">
+        <label className="flex cursor-pointer items-start gap-3">
           <input
             type="checkbox"
             name="settlesDue"
@@ -372,11 +366,7 @@ export function PaymentForm({
             className="accent-primary mt-0.5 size-4 shrink-0"
           />
           <span className="min-w-0">
-            <span className="flex items-center gap-1.5 text-sm font-semibold">
-              <CalendarCheck
-                aria-hidden="true"
-                className="text-primary size-4 shrink-0"
-              />
+            <span className="block text-sm font-medium">
               This pays the bill due {formatDay(nextDueDate)}
             </span>
             <span className="text-muted-foreground mt-0.5 block text-xs leading-5">
@@ -397,14 +387,17 @@ export function PaymentForm({
               amountCentavos={amountCentavos}
             />
           ) : null}
-          <label className="text-sm font-semibold">
-            Note
+          <label className="text-sm font-medium">
+            Note{" "}
+            <span className="text-muted-foreground font-normal">
+              (optional)
+            </span>
             <Input
               name="notes"
               maxLength={300}
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              placeholder="Reference number or channel (optional)"
+              placeholder="Reference number or channel"
               aria-label="Payment note"
               className="mt-2 font-normal"
             />

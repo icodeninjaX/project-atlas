@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, Percent, Trash2 } from "lucide-react";
+import { Calculator, Percent } from "lucide-react";
 import { useActionState, useId, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { DEBT_TYPE_OPTIONS } from "@/components/debts/debt-visuals";
@@ -29,32 +29,16 @@ const initial: DebtActionState = { success: false, message: "" };
 const toInput = (centavos: number) =>
   formatPesoInput(centavosToPesoInput(centavos));
 
-function Section({
-  step,
-  title,
-  children,
-}: {
-  step: number;
-  title: string;
-  children: ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="min-w-0">
-      <h3 className="flex items-center gap-2.5 text-sm font-semibold">
-        <span
-          aria-hidden="true"
-          className="bg-primary/12 text-primary grid size-6 shrink-0 place-items-center rounded-full font-mono text-xs font-bold"
-        >
-          {step}
-        </span>
-        {title}
-      </h3>
+      <h3 className="text-sm font-semibold">{title}</h3>
       <div className="mt-3 grid gap-3">{children}</div>
     </section>
   );
 }
 
-const fieldLabel = "text-muted-foreground text-xs font-medium";
+const fieldLabel = "text-sm font-medium";
 
 const STATUS_OPTIONS = [
   { value: "active", label: "Active", hint: "Paying it every month." },
@@ -124,11 +108,11 @@ function Estimate({
   return (
     <div
       role="status"
-      className="bg-primary/[0.06] ring-primary/20 flex gap-3 rounded-2xl p-3.5 text-xs leading-5 ring-1"
+      className="bg-muted/40 flex gap-3 rounded-xl p-3.5 text-xs leading-5"
     >
       <Calculator
         aria-hidden="true"
-        className="text-primary mt-0.5 size-4 shrink-0"
+        className="text-muted-foreground mt-0.5 size-4 shrink-0"
       />
       <p className="text-muted-foreground min-w-0">{body}</p>
     </div>
@@ -252,7 +236,7 @@ export function DebtForm({
     >
       {debt && <input type="hidden" name="debtId" value={debt.id} />}
 
-      <Section step={1} title="Who it is owed to">
+      <Section title="Who it is owed to">
         <label className={fieldLabel}>
           Creditor name
           <Input
@@ -282,7 +266,7 @@ export function DebtForm({
                     }
                     className="peer sr-only"
                   />
-                  <span className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-foreground peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background peer-checked:[&>svg]:text-primary flex min-h-12 cursor-pointer items-center gap-2.5 rounded-xl border px-2.5 text-xs font-semibold transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 [&>svg]:shrink-0">
+                  <span className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground peer-checked:text-foreground peer-checked:ring-primary peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background flex min-h-12 cursor-pointer items-center gap-2.5 rounded-xl border px-2.5 text-xs font-semibold transition-colors peer-checked:ring-2 peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 [&>svg]:shrink-0">
                     <Icon aria-hidden="true" className="size-4" />
                     <span className="min-w-0 break-words">{option.label}</span>
                   </span>
@@ -293,7 +277,7 @@ export function DebtForm({
         </fieldset>
       </Section>
 
-      <Section step={2} title="What you owe and when">
+      <Section title="What you owe and when">
         <div className="grid gap-3 min-[26rem]:grid-cols-2">
           <div className="min-w-0 min-[26rem]:col-span-2">
             <label htmlFor={ids.balance} className={fieldLabel}>
@@ -314,7 +298,7 @@ export function DebtForm({
             </div>
             <p
               id={`${ids.balance}-hint`}
-              className="text-muted-foreground mt-1 text-[0.6875rem] leading-4"
+              className="text-muted-foreground mt-1 text-xs leading-4"
             >
               {debt ? (
                 <>
@@ -365,7 +349,7 @@ export function DebtForm({
             />
             <span
               id={`${id}-due-hint`}
-              className="mt-1 block text-[0.6875rem] leading-4"
+              className="text-muted-foreground mt-1 block text-xs leading-4 font-normal"
             >
               {dueDay
                 ? `Repeats monthly on day ${dueDay}. Paying the bill moves it to the next month.`
@@ -427,7 +411,7 @@ export function DebtForm({
             </div>
             <p
               id={`${id}-rate-hint`}
-              className="text-muted-foreground mt-1 text-[0.6875rem] leading-4"
+              className="text-muted-foreground mt-1 text-xs leading-4"
             >
               {Number(rate) > 0 && Number.isFinite(ratePercent)
                 ? rateUnit === "month"
@@ -462,7 +446,7 @@ export function DebtForm({
                       onChange={() => setStatus(option.value)}
                       className="peer sr-only"
                     />
-                    <span className="border-border bg-card text-muted-foreground hover:bg-muted peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-foreground peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background flex h-full cursor-pointer flex-col rounded-xl border px-3 py-2.5 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2">
+                    <span className="border-border bg-card text-muted-foreground hover:bg-muted peer-checked:text-foreground peer-checked:ring-primary peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background flex h-full cursor-pointer flex-col rounded-xl border px-3 py-2.5 transition-colors peer-checked:ring-2 peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2">
                       <span className="text-xs font-semibold">
                         {option.label}
                       </span>
@@ -474,7 +458,7 @@ export function DebtForm({
                 ))}
               </div>
               {balanceCentavos === 0 ? (
-                <p className="text-positive mt-1.5 text-[0.6875rem] leading-4 font-semibold">
+                <p className="text-positive mt-1.5 text-xs leading-4 font-semibold">
                   A balance of zero saves it as paid off.
                 </p>
               ) : null}
@@ -493,11 +477,8 @@ export function DebtForm({
       />
 
       {debt && confirmingDelete ? (
-        <div
-          role="alert"
-          className="bg-destructive/[0.06] ring-destructive/25 rounded-2xl p-3.5 ring-1"
-        >
-          <p className="text-sm font-semibold">Delete {debt.creditor_name}?</p>
+        <div role="alert" className="bg-muted/40 rounded-xl p-4">
+          <p className="text-sm font-medium">Delete {debt.creditor_name}?</p>
           <p className="text-muted-foreground mt-1 text-xs leading-5">
             Its payment history goes with it. Expenses already logged in Money
             stay, since that money really left your accounts. This cannot be
@@ -506,7 +487,7 @@ export function DebtForm({
           <div className="mt-3 flex flex-wrap justify-end gap-2">
             <Button
               type="button"
-              variant="ghost"
+              variant="secondary"
               size="sm"
               onClick={() => setConfirmingDelete(false)}
             >
@@ -534,7 +515,6 @@ export function DebtForm({
             onClick={() => setConfirmingDelete(true)}
             className="text-destructive hover:bg-destructive/10 hover:text-destructive min-[26rem]:mr-auto"
           >
-            <Trash2 aria-hidden="true" className="size-4" />
             Delete
           </Button>
         ) : null}

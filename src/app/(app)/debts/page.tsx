@@ -54,7 +54,7 @@ export default async function DebtsPage({
     <PageShell>
       <PageHeading
         eyebrow="Money / Debts"
-        title="Debt payoff"
+        title="Debts"
         description="What you owe, what it costs each month, and the order that clears it soonest."
         compactOnMobile
       />

@@ -1,4 +1,4 @@
-import { ArrowDown, CircleAlert, SlidersHorizontal } from "lucide-react";
+import { CircleAlert, SlidersHorizontal } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -152,17 +152,13 @@ export function RunwayHero({
 
           <div className="mt-6 flex flex-wrap gap-2 [&>*]:grow sm:[&>*]:grow-0">
             <Button asChild>
-              <a href="#scenario">
-                <ArrowDown className="size-4" aria-hidden="true" />
-                Try a scenario
-              </a>
+              <a href="#scenario">Try a scenario</a>
             </Button>
             <Button
               type="button"
               variant="secondary"
               onClick={onEditAssumptions}
             >
-              <SlidersHorizontal className="size-4" aria-hidden="true" />
               Edit assumptions
             </Button>
           </div>
@@ -327,11 +323,11 @@ export function RunwaySetupHero({
         <RunwayPill tone="neutral">Needs setup</RunwayPill>
       </div>
       <div className="mt-6 flex max-w-xl gap-4">
-        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-[359px]:hidden">
-          <CircleAlert aria-hidden="true" className="size-5" />
+        <span className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg max-[359px]:hidden">
+          <CircleAlert aria-hidden="true" className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-[1.625rem] leading-tight font-semibold tracking-[-0.03em] text-balance sm:text-[1.875rem]">
+          <p className="text-lg leading-tight font-semibold text-balance">
             {guidance.title}
           </p>
           <p className="text-muted-foreground mt-3 text-sm leading-6">

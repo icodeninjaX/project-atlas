@@ -1,6 +1,7 @@
 "use client";
 
 import { DebtForm } from "@/components/debts/debt-form";
+import { debtTypeLabel } from "@/components/debts/debt-visuals";
 import { MoneySheet } from "@/components/money/money-sheet";
 import type { DebtRecord } from "@/lib/debts/debt";
 
@@ -29,7 +30,7 @@ export function DebtSheet({
     <MoneySheet
       open={open}
       onOpenChange={onOpenChange}
-      eyebrow="Money / Debts"
+      eyebrow={debt ? debtTypeLabel(debt.debt_type) : undefined}
       title={debt ? `Edit ${debt.creditor_name}` : "New debt"}
       description={
         debt

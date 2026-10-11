@@ -21,7 +21,7 @@ import type { PaymentAccount } from "@/components/debts/payment-form";
 import { PaymentSheet } from "@/components/debts/payment-sheet";
 import { PayoffCurve, type CurveSeries } from "@/components/debts/payoff-curve";
 import { MoneyAmount } from "@/components/money/money-amount";
-import { PesoInput } from "@/components/money/money-fields";
+import { choiceChipClass, PesoInput } from "@/components/money/money-fields";
 import { MoneyHeroShell, type HeroTone } from "@/components/money/money-hero";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
@@ -178,9 +178,10 @@ function DetailHero({
           variant="secondary"
           size="sm"
           onClick={onEdit}
-          className="shrink-0 rounded-full max-sm:size-10 max-sm:px-0"
+          className="shrink-0 max-sm:size-10 max-sm:px-0"
         >
-          <PencilLine className="size-4" aria-hidden="true" />
+          {/* Phones show the pencil alone; wider screens the word. */}
+          <PencilLine className="size-4 sm:hidden" aria-hidden="true" />
           <span className="max-sm:sr-only">Edit</span>
         </Button>
       </div>
@@ -253,19 +254,14 @@ function DetailHero({
       )}
 
       {debt.notes ? (
-        <p className="bg-background/50 text-muted-foreground mt-5 rounded-2xl px-4 py-3 text-xs leading-5 break-words">
+        <p className="bg-background/55 text-muted-foreground mt-5 rounded-xl px-4 py-3 text-xs leading-5 break-words">
           {debt.notes}
         </p>
       ) : null}
 
       {paid ? null : (
         <div className="mt-6 flex [&>*]:grow sm:[&>*]:grow-0">
-          <Button
-            type="button"
-            size="lg"
-            onClick={onPay}
-            className="rounded-full px-7"
-          >
+          <Button type="button" size="lg" onClick={onPay}>
             <HandCoins className="size-4" aria-hidden="true" />
             Record payment
           </Button>
@@ -404,7 +400,7 @@ function Outlook({
         ) : null}
 
         <Disclosure
-          label="What if you pay more each month?"
+          label="Pay more each month"
           summary={
             boosted?.status === "paid_off" && savedMonths > 0
               ? `${formatPayoffDuration(savedMonths)} sooner with ${peso.format(extraCentavos / 100)} more`
@@ -413,10 +409,7 @@ function Outlook({
           variant="row"
           className="mt-5"
         >
-          <label
-            htmlFor={id}
-            className="text-muted-foreground text-xs font-medium"
-          >
+          <label htmlFor={id} className="text-sm font-medium">
             Extra on top of the minimum
           </label>
           <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] sm:items-center">
@@ -440,10 +433,8 @@ function Outlook({
                         )
                       }
                       className={cn(
-                        "focus-visible:ring-ring inline-flex min-h-11 items-center rounded-full px-3.5 text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9",
-                        pressed
-                          ? "bg-primary/10 text-foreground ring-primary"
-                          : "bg-background/60 text-muted-foreground ring-border hover:bg-muted hover:text-foreground",
+                        choiceChipClass(pressed),
+                        "rounded-lg px-3.5 text-xs font-semibold sm:min-h-9",
                       )}
                     >
                       {preset.label}
@@ -518,7 +509,7 @@ function PaymentRow({
     >
       <span
         aria-hidden="true"
-        className="bg-background/70 ring-border/80 grid w-11 shrink-0 place-items-center rounded-xl py-1.5 text-center ring-1"
+        className="bg-muted/60 grid w-11 shrink-0 place-items-center rounded-lg py-1.5 text-center"
       >
         <span className="font-mono text-base leading-none font-semibold">
           {date.getUTCDate()}

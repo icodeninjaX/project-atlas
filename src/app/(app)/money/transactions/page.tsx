@@ -179,8 +179,8 @@ export default async function TransactionsPage({
     <PageShell>
       <PageHeading
         eyebrow="Money / Transactions"
-        title="Money movement"
-        description="Income and expenses change balances. Transfers stay separate and never inflate either total."
+        title="Transactions"
+        description="Income and expenses you record, with transfers kept out of both totals."
         compactOnMobile
       />
       <MoneyNavigation currentHref="/money/transactions" />

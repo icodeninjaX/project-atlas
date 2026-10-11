@@ -13,11 +13,15 @@ export async function saveBudgetAction(
 ): Promise<BudgetActionState> {
   const supabase = await createClient();
   if (!supabase)
-    return { success: false, message: "Supabase is not configured." };
+    return {
+      success: false,
+      message: "Saving isn't available on this server.",
+    };
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { success: false, message: "Your session expired." };
+  if (!user)
+    return { success: false, message: "Your session expired. Log in again." };
   try {
     const items = [...formData.entries()]
       .filter(([key, value]) => key.startsWith("item:") && String(value).trim())

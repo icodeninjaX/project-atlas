@@ -125,7 +125,7 @@ test.describe("authenticated ATLAS workflows", () => {
     await page.setViewportSize({ width: 320, height: 800 });
     await page.goto(`/timeline?q=${encodeURIComponent(title)}`);
     await expect(
-      page.getByRole("heading", { name: "Life timeline" }),
+      page.getByRole("heading", { name: "Timeline", level: 1 }),
     ).toBeVisible();
     const completedEvent = page
       .getByRole("article")
@@ -266,7 +266,10 @@ test.describe("authenticated ATLAS workflows", () => {
   test("dashboard loads combined information", async ({ page }) => {
     await page.goto("/dashboard");
     await expect(
-      page.getByRole("heading", { name: /route|moves|day, mapped/i, level: 1 }),
+      page.getByRole("heading", {
+        name: /^Good (morning|afternoon|evening)/,
+        level: 1,
+      }),
     ).toBeVisible();
     await expect(
       page.locator("#main-content").getByText("Available balance"),
@@ -283,15 +286,13 @@ test.describe("authenticated ATLAS workflows", () => {
     await page.goto("/money/runway");
 
     await expect(
-      page.getByRole("heading", { name: "Personal runway" }),
+      page.getByRole("heading", { name: "Runway", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Estimated runway" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", {
-        name: "How the estimate stays conservative",
-      }),
+      page.getByRole("heading", { name: "How it's calculated" }),
     ).toBeVisible();
 
     const fits = async () => {

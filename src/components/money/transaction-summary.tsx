@@ -1,5 +1,6 @@
 import { ArrowDownLeft, ArrowUpRight, type LucideIcon } from "lucide-react";
 import { MoneyAmount } from "@/components/money/money-amount";
+import { MoneyHeroShell } from "@/components/money/money-hero";
 import { cn } from "@/lib/utils";
 
 function FlowTile({
@@ -16,17 +17,11 @@ function FlowTile({
   return (
     // Phones show plain stats; a box inside the card would only add noise.
     <div className="bg-background/60 min-w-0 rounded-xl p-4 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:p-0">
-      <p className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
-        <span
-          className={cn(
-            "grid size-6 shrink-0 place-items-center rounded-full",
-            positive
-              ? "bg-positive/12 text-positive"
-              : "bg-muted text-foreground/80",
-          )}
-        >
-          <Icon className="size-3.5" aria-hidden="true" />
-        </span>
+      <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+        <Icon
+          className={cn("size-3.5 shrink-0", positive && "text-positive")}
+          aria-hidden="true"
+        />
         {label}
       </p>
       <p className="mt-2.5 font-mono text-lg leading-tight font-semibold tracking-[-0.02em] [overflow-wrap:anywhere] sm:text-xl">
@@ -117,11 +112,12 @@ export function TransactionSummary({
   const net = income - expenses;
 
   return (
-    <section
-      aria-labelledby="month-summary-title"
-      className="border-border bg-card relative overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.1)]"
+    <MoneyHeroShell
+      labelledBy="month-summary-title"
+      tone="neutral"
+      className="mt-0"
     >
-      <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:items-center lg:gap-10">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:items-center lg:gap-10">
         <div className="min-w-0">
           <h2
             id="month-summary-title"
@@ -164,6 +160,6 @@ export function TransactionSummary({
           <SpendingMeter income={income} expenses={expenses} />
         </div>
       </div>
-    </section>
+    </MoneyHeroShell>
   );
 }

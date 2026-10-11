@@ -1,4 +1,4 @@
-import { Landmark, PartyPopper, Plus } from "lucide-react";
+import { CircleCheckBig, Landmark, Plus } from "lucide-react";
 import type { ReactNode } from "react";
 import { RepaidBar, formatPercent } from "@/components/debts/debt-visuals";
 import { MoneyAmount } from "@/components/money/money-amount";
@@ -114,7 +114,7 @@ export function DebtsHero({
           variant="secondary"
           size="sm"
           onClick={onAdd}
-          className="-my-1 rounded-full"
+          className="-my-1"
         >
           <Plus className="size-3.5" aria-hidden="true" />
           Add debt
@@ -193,16 +193,16 @@ function QuietHero({
           id="debts-heading"
           className="text-muted-foreground text-[0.8125rem] font-medium"
         >
-          Debts
+          Total debt
         </h2>
         <TonePill tone={pill.tone}>{pill.label}</TonePill>
       </div>
       <div className="mt-6 flex max-w-xl gap-4">
-        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-[359px]:hidden">
+        <span className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg max-[359px]:hidden">
           {icon}
         </span>
         <div className="min-w-0">
-          <p className="text-[1.625rem] leading-tight font-semibold tracking-[-0.03em] text-balance sm:text-[1.875rem]">
+          <p className="text-lg leading-tight font-semibold text-balance">
             {title}
           </p>
           <div className="text-muted-foreground mt-3 text-sm leading-6">
@@ -228,20 +228,18 @@ export function DebtsClearHero({
   if (paidCount === 0) {
     return (
       <QuietHero
-        icon={<Landmark aria-hidden="true" className="size-5" />}
+        icon={<Landmark aria-hidden="true" className="size-4" />}
         pill={{ tone: "neutral", label: "Nothing tracked" }}
-        title="Map what you owe"
+        title="No debts yet"
         onAdd={onAdd}
       >
-        Add each balance once, with its minimum and rate. You get a debt-free
-        date, what interest costs you each month, and the order that pays it off
-        fastest.
+        Add one to see its payoff date and interest.
       </QuietHero>
     );
   }
   return (
     <QuietHero
-      icon={<PartyPopper aria-hidden="true" className="size-5" />}
+      icon={<CircleCheckBig aria-hidden="true" className="size-4" />}
       pill={{ tone: "positive", label: "Debt-free" }}
       title="Every debt is paid off"
       onAdd={onAdd}
@@ -251,8 +249,8 @@ export function DebtsClearHero({
         centavos={repaidCentavos}
         className="text-foreground font-mono font-semibold"
       />{" "}
-      across {paidCount} {paidCount === 1 ? "debt" : "debts"}. Keep it that way,
-      or add a new one to plan it from day one.
+      across {paidCount} {paidCount === 1 ? "debt" : "debts"}. A debt you add
+      gets its own payoff plan.
     </QuietHero>
   );
 }

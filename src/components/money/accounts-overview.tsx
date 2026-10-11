@@ -1,7 +1,8 @@
-import { ArrowLeftRight, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { MoneyAmount } from "@/components/money/money-amount";
+import { MoneyHeroShell } from "@/components/money/money-hero";
 import { Button } from "@/components/ui/button";
 import { TooltipHint } from "@/components/ui/tooltip";
 import {
@@ -120,11 +121,8 @@ export function AccountsOverview({
   );
 
   return (
-    <section
-      aria-labelledby="accounts-total"
-      className="border-primary/20 bg-card relative mt-8 overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgb(7_10_15/0.12)]"
-    >
-      <div className="relative grid gap-7 p-5 sm:gap-8 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center lg:gap-10">
+    <MoneyHeroShell labelledBy="accounts-total" tone="neutral">
+      <div className="grid gap-7 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center lg:gap-10">
         <div className="min-w-0">
           <div className="flex items-center justify-between gap-3">
             <h2
@@ -134,7 +132,7 @@ export function AccountsOverview({
               Total balance
             </h2>
             {mobileActions ? (
-              <span className="border-border bg-background/60 text-muted-foreground rounded-full border px-2.5 py-0.5 text-[0.6875rem] font-medium sm:hidden">
+              <span className="text-muted-foreground text-xs sm:hidden">
                 {accounts.length === 1
                   ? "1 account"
                   : `${accounts.length} accounts`}
@@ -172,15 +170,12 @@ export function AccountsOverview({
               </Link>
             </Button>
             <Button asChild variant="secondary">
-              <Link href="/money/transfers">
-                <ArrowLeftRight className="size-4" aria-hidden="true" />
-                Transfer
-              </Link>
+              <Link href="/money/transfers">Transfer</Link>
             </Button>
           </div>
         </div>
         <AllocationBar accounts={accounts} />
       </div>
-    </section>
+    </MoneyHeroShell>
   );
 }

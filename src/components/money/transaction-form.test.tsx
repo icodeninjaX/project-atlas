@@ -112,7 +112,7 @@ describe("TransactionForm", () => {
     const impact = screen.getByText("GCash after this").parentElement!;
     expect(impact).toHaveTextContent("GCash after this₱1,200.00₱949.50");
     expect(
-      screen.getByRole("button", { name: /Record expense ₱250\.50/ }),
+      screen.getByRole("button", { name: "Record expense" }),
     ).toBeEnabled();
   });
 

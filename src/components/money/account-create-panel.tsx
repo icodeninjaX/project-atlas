@@ -25,19 +25,16 @@ export function AccountCreatePanel({ trigger }: { trigger?: ReactNode }) {
         )}
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="data-[state=open]:animate-analyst-fade fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm" />
-        <Dialog.Content className="bg-background fixed inset-0 z-[60] overflow-y-auto p-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] outline-none sm:inset-y-6 sm:left-1/2 sm:w-[min(calc(100vw-3rem),58rem)] sm:-translate-x-1/2 sm:border sm:p-7 sm:shadow-[0_24px_70px_rgb(7_10_15/0.4)] lg:inset-y-10">
+        <Dialog.Overlay className="data-[state=open]:animate-analyst-fade fixed inset-0 z-[60] bg-black/60 backdrop-blur-[2px]" />
+        <Dialog.Content className="bg-background fixed inset-0 z-[60] overflow-y-auto p-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] outline-none sm:inset-y-6 sm:left-1/2 sm:w-[min(calc(100vw-3rem),58rem)] sm:-translate-x-1/2 sm:rounded-2xl sm:border sm:p-7 sm:shadow-2xl lg:inset-y-10">
           <div className="mb-7 flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-muted-foreground text-xs font-medium">
-                Money / Accounts
-              </p>
-              <Dialog.Title className="mt-1 text-2xl font-semibold tracking-[-0.03em]">
+              <Dialog.Title className="text-xl font-semibold tracking-[-0.025em]">
                 New account
               </Dialog.Title>
               <Dialog.Description className="text-muted-foreground mt-1 text-sm">
-                Start from one truthful balance. Every movement after it is
-                recorded on top.
+                Enter what it holds today. Transactions and transfers update the
+                balance from there.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>

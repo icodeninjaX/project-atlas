@@ -170,9 +170,7 @@ describe("TransactionWorkspace", () => {
     );
 
     expect(screen.getByText("No transactions in GCash yet")).toBeVisible();
-    expect(
-      screen.queryByText("No money movement recorded"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("No transactions yet")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Show all accounts" }));
     expect(replace).toHaveBeenCalledWith("/money/transactions", {
       scroll: false,

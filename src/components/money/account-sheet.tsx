@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ArrowRight, Plus } from "lucide-react";
+import { Plus, ReceiptText } from "lucide-react";
 import Link from "next/link";
 import type { Route } from "next";
 import { useId, useRef, useState, type KeyboardEvent } from "react";
@@ -14,6 +14,7 @@ import {
   type WalletCardAccount,
 } from "@/components/money/wallet-card";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { accountTypeDetails } from "@/lib/money/account-types";
@@ -110,25 +111,25 @@ function RecentActivity({
 }) {
   if (activity.length === 0) {
     return (
-      <div className="border-border grid place-items-center rounded-2xl border border-dashed px-5 py-8 text-center">
-        <p className="text-sm font-semibold">No transactions yet</p>
-        <p className="text-muted-foreground mt-1 max-w-xs text-xs leading-5">
-          Income and expenses you record against {account.name} will appear
-          here.
-        </p>
-        <Button asChild size="sm" className="mt-4">
-          <Link href="/money/transactions?create=true">
-            <Plus className="size-4" aria-hidden="true" />
-            Record transaction
-          </Link>
-        </Button>
-      </div>
+      <EmptyState
+        icon={ReceiptText}
+        title="No transactions yet"
+        description={`Income and expenses recorded against ${account.name} will show here.`}
+        action={
+          <Button asChild>
+            <Link href="/money/transactions?create=true">
+              <Plus className="size-4" aria-hidden="true" />
+              Record transaction
+            </Link>
+          </Button>
+        }
+      />
     );
   }
 
   return (
     <div>
-      <ul className="border-border bg-card divide-border divide-y overflow-hidden rounded-2xl border">
+      <ul className="bg-muted/40 divide-border divide-y overflow-hidden rounded-xl">
         {activity.map((item) => {
           const direction = item.transaction_type === "income" ? "in" : "out";
           return (
@@ -162,10 +163,9 @@ function RecentActivity({
       </ul>
       <Link
         href={`/money/transactions?account=${account.id}` as Route}
-        className="text-primary focus-visible:ring-ring mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-1 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
+        className="text-primary focus-visible:ring-ring mt-2 inline-flex min-h-11 items-center rounded-lg px-1 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
       >
         All {account.name} transactions
-        <ArrowRight className="size-3.5" aria-hidden="true" />
       </Link>
     </div>
   );
@@ -188,23 +188,23 @@ function ArchiveAccountControl({
         onClick={() => setConfirming(true)}
         className="text-destructive hover:text-destructive w-full justify-start"
       >
-        <Archive className="size-4" aria-hidden="true" />
         Archive account
       </Button>
     );
   }
 
   return (
-    <div className="border-destructive/30 bg-destructive/5 rounded-2xl border p-4">
-      <p className="text-sm font-semibold">Archive {account.name}?</p>
+    <div className="bg-muted/40 rounded-xl p-4">
+      <p className="text-sm font-medium">Archive {account.name}?</p>
       <p className="text-muted-foreground mt-1 text-xs leading-5">
         It leaves your active total and account pickers. Its history stays, and
         you can restore it from Archived at any time.
       </p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="mt-3 flex flex-wrap justify-end gap-2">
         <Button
           type="button"
           variant="secondary"
+          size="sm"
           onClick={() => setConfirming(false)}
         >
           Keep it
@@ -219,8 +219,8 @@ function ArchiveAccountControl({
           <input type="hidden" name="archived" value="true" />
           <FormSubmitButton
             variant="destructive"
+            size="sm"
             pendingLabel="Archiving…"
-            className="w-full"
           >
             Archive
           </FormSubmitButton>

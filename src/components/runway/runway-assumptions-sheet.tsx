@@ -37,18 +37,18 @@ function CheckMark({ checked }: { checked: boolean }) {
     <span
       aria-hidden="true"
       className={cn(
-        "grid size-6 shrink-0 place-items-center rounded-full ring-1 transition-colors",
+        "grid size-5 shrink-0 place-items-center rounded-md ring-1 transition-colors",
         checked
           ? "bg-primary-solid text-primary-solid-foreground ring-primary-solid"
           : "ring-border bg-background/60 text-transparent",
       )}
     >
-      <Check className="size-3.5" strokeWidth={3} />
+      <Check className="size-3" strokeWidth={3} />
     </span>
   );
 }
 
-/** A checkbox as a whole tappable row, tinted while it is on. */
+/** A checkbox as a whole tappable row; the box on the right carries it. */
 function ChoiceRow({
   name,
   value,
@@ -63,14 +63,7 @@ function ChoiceRow({
   children: ReactNode;
 }) {
   return (
-    <label
-      className={cn(
-        "has-[:focus-visible]:ring-ring flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl p-3 ring-1 transition-colors has-[:focus-visible]:ring-2",
-        checked
-          ? "bg-primary/[0.05] ring-primary/35"
-          : "ring-border hover:bg-muted/40",
-      )}
-    >
+    <label className="has-[:focus-visible]:ring-ring hover:bg-muted/40 flex min-h-14 cursor-pointer items-center gap-3 px-1 py-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset">
       <input
         type="checkbox"
         name={name}
@@ -197,7 +190,7 @@ function AssumptionsForm({
           Money you could use for essentials. Archived accounts never count.
         </p>
         {source.accounts.length ? (
-          <div className="mt-3 grid gap-2">
+          <div className="divide-border border-border mt-3 divide-y border-y">
             {source.accounts.map((account) => {
               const balance = account.currentBalanceCentavos;
               return (
@@ -237,7 +230,7 @@ function AssumptionsForm({
             })}
           </div>
         ) : (
-          <p className="text-muted-foreground mt-3 rounded-2xl border border-dashed p-3 text-xs">
+          <p className="bg-muted/40 text-muted-foreground mt-3 rounded-xl p-3 text-xs">
             Add a cash, bank, e-wallet, or savings account first.
           </p>
         )}
@@ -249,7 +242,7 @@ function AssumptionsForm({
           Costs you must keep paying, each with what it costs a month. Debt
           Payment stays out, so active minimums are never counted twice.
         </p>
-        <div className="mt-3 grid gap-2 @[26rem]:grid-cols-2">
+        <div className="divide-border border-border mt-3 divide-y border-y">
           {categories.map((category) => {
             const monthly = preview.amounts.get(category.id) ?? 0;
             return (
@@ -306,7 +299,7 @@ function AssumptionsForm({
       {/* The preview stays in view while the lists scroll. The sheet pads
           its bottom for the safe area; the bar takes that padding over so it
           meets the edge. */}
-      <div className="border-border bg-background sticky -bottom-[calc(1.5rem+env(safe-area-inset-bottom))] -mx-5 mt-6 -mb-[calc(1.5rem+env(safe-area-inset-bottom))] border-t px-5 pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:-mx-6 sm:rounded-b-[calc(1.75rem-1px)] sm:px-6">
+      <div className="border-border bg-background sticky -bottom-[calc(1.5rem+env(safe-area-inset-bottom))] -mx-5 mt-6 -mb-[calc(1.5rem+env(safe-area-inset-bottom))] border-t px-5 pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:-mx-6 sm:px-6">
         <div role="status" className="min-h-10 text-xs">
           {after.status === "ready" ? (
             <>

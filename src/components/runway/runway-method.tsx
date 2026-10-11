@@ -1,4 +1,4 @@
-import { ArrowRight, Check, ShieldCheck } from "lucide-react";
+import { Calculator } from "lucide-react";
 import Link from "next/link";
 import {
   DashboardCardHeading,
@@ -46,8 +46,8 @@ export function RunwayMethod({ analysis }: { analysis: RunwayAnalysis }) {
     >
       <DashboardCardHeading
         id="runway-method"
-        icon={ShieldCheck}
-        title="How the estimate stays conservative"
+        icon={Calculator}
+        title="How it's calculated"
         description="It counts only money you have and costs you must keep paying."
       />
       <dl className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -72,30 +72,18 @@ export function RunwayMethod({ analysis }: { analysis: RunwayAnalysis }) {
           </dd>
         </div>
       </dl>
-      <ul className="mt-5 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+      <ul className="text-muted-foreground mt-5 grid list-disc gap-x-8 gap-y-2 pl-4 text-xs leading-5 sm:grid-cols-2">
         {RULES.map((rule) => (
-          <li
-            key={rule}
-            className="text-muted-foreground flex gap-2.5 text-xs leading-5"
-          >
-            <span
-              aria-hidden="true"
-              className="bg-positive/12 text-positive mt-0.5 grid size-4 shrink-0 place-items-center rounded-full"
-            >
-              <Check className="size-2.5" strokeWidth={3} />
-            </span>
-            {rule}
-          </li>
+          <li key={rule}>{rule}</li>
         ))}
       </ul>
       <p className="text-muted-foreground mt-5 flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t pt-4 text-xs">
         Something off?
         <Link
           href="/money/transactions"
-          className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-md font-semibold focus-visible:ring-2 focus-visible:outline-none sm:min-h-0"
+          className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center rounded-md font-semibold focus-visible:ring-2 focus-visible:outline-none sm:min-h-0"
         >
           Review recorded transactions
-          <ArrowRight aria-hidden="true" className="size-3" />
         </Link>
       </p>
     </section>

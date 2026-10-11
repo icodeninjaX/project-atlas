@@ -85,8 +85,8 @@ export function CategoryIcon({
 }
 
 /**
- * A category's icon in a rounded well. Money in wears the positive tint;
- * money out stays neutral so the list reads calm.
+ * A category's icon on a small neutral square. Money in colors the glyph
+ * positive; money out stays neutral so the list reads calm.
  */
 export function CategoryBadge({
   icon,
@@ -104,18 +104,16 @@ export function CategoryBadge({
   return (
     <span
       className={cn(
-        "grid shrink-0 place-items-center rounded-xl",
-        size === "md" ? "size-10" : "size-8",
-        direction === "in"
-          ? "bg-positive/12 text-positive"
-          : "bg-muted text-foreground/80",
+        "bg-muted/60 grid shrink-0 place-items-center rounded-lg",
+        size === "md" ? "size-9" : "size-8",
+        direction === "in" ? "text-positive" : "text-foreground/80",
         className,
       )}
     >
       <CategoryIcon
         icon={icon}
         categoryName={name}
-        className={size === "md" ? "size-[1.125rem]" : "size-4"}
+        className="size-4"
         aria-hidden="true"
       />
     </span>

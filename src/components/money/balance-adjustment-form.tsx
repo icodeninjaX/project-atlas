@@ -56,7 +56,7 @@ export function BalanceAdjustmentForm({
   return (
     <form action={action} className="grid min-w-0 gap-4">
       <input type="hidden" name="accountId" value={accountId} />
-      <div className="bg-background/60 grid grid-cols-2 gap-px overflow-hidden rounded-xl">
+      <div className="bg-muted/40 grid grid-cols-2 gap-px overflow-hidden rounded-xl">
         <div className="min-w-0 p-3.5">
           <p className="text-muted-foreground text-xs">ATLAS shows</p>
           <p className="mt-1 font-mono text-base font-semibold [overflow-wrap:anywhere]">
@@ -88,7 +88,7 @@ export function BalanceAdjustmentForm({
         Enter the amount you actually have. ATLAS records only the difference as
         a correction, so income and expense reports stay accurate.
       </p>
-      <label className="text-muted-foreground min-w-0 text-xs font-medium">
+      <label className="min-w-0 text-sm font-medium">
         Actual balance now (PHP)
         <Input
           name="targetBalance"
@@ -101,7 +101,7 @@ export function BalanceAdjustmentForm({
         />
       </label>
       <div className="grid gap-4 @[22rem]:grid-cols-2">
-        <label className="text-muted-foreground min-w-0 text-xs font-medium">
+        <label className="min-w-0 text-sm font-medium">
           Adjustment date
           <Input
             name="adjustmentDate"
@@ -112,7 +112,7 @@ export function BalanceAdjustmentForm({
             className="mt-1.5"
           />
         </label>
-        <label className="text-muted-foreground min-w-0 text-xs font-medium">
+        <label className="min-w-0 text-sm font-medium">
           Note
           <Input
             name="note"

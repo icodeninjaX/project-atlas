@@ -41,7 +41,7 @@ export function AccountLedger({
         <div className="min-w-0">
           <h2
             id="active-accounts-heading"
-            className="text-lg font-semibold tracking-tight"
+            className="text-[0.9375rem] font-semibold"
           >
             Your accounts
           </h2>
