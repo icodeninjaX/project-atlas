@@ -10,18 +10,9 @@ import { DEFAULT_FONT_PREFERENCE } from "@/lib/font-preferences";
 import "./globals.css";
 import toastStyles from "./toast.module.css";
 
-function AtlasSuccessIcon() {
-  return (
-    <span aria-hidden="true" className={toastStyles.successIcon}>
-      <span className={toastStyles.successAtlasMark} />
-      <span className={toastStyles.successCheckPhase}>
-        <Check className={toastStyles.successCheck} />
-      </span>
-    </span>
-  );
-}
-
-const atlasToastIcons = { success: <AtlasSuccessIcon /> };
+const atlasToastIcons = {
+  success: <Check aria-hidden="true" className={toastStyles.successCheck} />,
+};
 
 export const metadata: Metadata = {
   applicationName: "ATLAS",
@@ -92,7 +83,6 @@ export default function RootLayout({
             <PwaRegistration />
             {children}
             <Toaster
-              richColors
               closeButton
               position="top-right"
               icons={atlasToastIcons}
@@ -103,6 +93,8 @@ export default function RootLayout({
                 classNames: {
                   toast: toastStyles.toast,
                   success: toastStyles.success,
+                  error: toastStyles.error,
+                  warning: toastStyles.warning,
                   title: toastStyles.title,
                   description: toastStyles.description,
                   content: toastStyles.content,

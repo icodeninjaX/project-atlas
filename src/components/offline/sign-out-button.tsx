@@ -24,7 +24,13 @@ export function SignOutButton({
       size={showLabel ? "default" : "icon"}
       pending={pending}
       pendingLabel={showLabel ? "Logging out…" : undefined}
-      aria-label={scope === "global" ? "Log out everywhere" : "Log out"}
+      aria-label={
+        showLabel
+          ? undefined
+          : scope === "global"
+            ? "Log out everywhere"
+            : "Log out"
+      }
       className={showLabel ? "w-full justify-start" : undefined}
     >
       <LogOut className="size-4" />

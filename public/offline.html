@@ -19,34 +19,32 @@
         display: grid;
         place-items: center;
         padding: 24px;
-        background: #09090b;
-        color: #fafafa;
+        background: #070a0f;
+        color: #f4f7fb;
       }
       main {
-        width: min(100%, 420px);
-        padding: 32px;
-        border: 1px solid #27272a;
-        border-radius: 24px;
-        background: #111113;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-      }
-      .mark {
-        width: 52px;
-        height: 52px;
-        display: grid;
-        place-items: center;
+        width: min(100%, 400px);
+        padding: 28px;
+        border: 1px solid #202a39;
         border-radius: 16px;
-        background: #2867e8;
-        font-size: 25px;
-        font-weight: 800;
+        background: #0e131c;
+      }
+      .wordmark {
+        margin: 0;
+        color: #8d99aa;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.3em;
       }
       h1 {
-        margin: 24px 0 8px;
-        font-size: 24px;
+        margin: 16px 0 8px;
+        font-size: 22px;
+        letter-spacing: -0.02em;
       }
       p {
         margin: 0;
-        color: #a1a1aa;
+        color: #8d99aa;
+        font-size: 14px;
         line-height: 1.6;
       }
       a {
@@ -56,21 +54,22 @@
         align-items: center;
         border-radius: 12px;
         padding: 0 16px;
-        background: #2867e8;
+        background: #2b66f2;
         color: white;
-        font-weight: 700;
+        font-size: 14px;
+        font-weight: 600;
         text-decoration: none;
       }
     </style>
   </head>
   <body>
     <main>
-      <div class="mark" aria-hidden="true">A</div>
+      <p class="wordmark" aria-hidden="true">ATLAS</p>
       <h1>You’re offline</h1>
       <p>
-        This screen has not been saved on this device yet. Previously visited
-        ATLAS screens are still available, and saved changes will sync when your
-        connection returns.
+        This screen has not been saved on this device yet. Screens you have
+        visited are still available, and saved changes sync when your connection
+        returns.
       </p>
       <a href="/dashboard">Try again</a>
     </main>

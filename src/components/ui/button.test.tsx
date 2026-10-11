@@ -5,7 +5,7 @@ import { Button } from "./button";
 afterEach(cleanup);
 
 describe("Button", () => {
-  it("shows the spinning ATLAS mark and pending label while an action runs", () => {
+  it("shows a spinner and the pending label while an action runs", () => {
     const { container } = render(
       <Button pending pendingLabel="Adding…">
         Add task
@@ -13,13 +13,11 @@ describe("Button", () => {
     );
 
     const button = screen.getByRole("button", { name: "Adding…" });
-    const logo = container.querySelector(
-      'img[src="/brand/atlas-system-core.png"]',
-    );
+    const spinner = container.querySelector("svg.animate-spin");
 
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute("aria-busy", "true");
     expect(screen.queryByText("Add task")).not.toBeInTheDocument();
-    expect(logo?.parentElement).toHaveClass("animate-spin");
+    expect(spinner).toBeInTheDocument();
   });
 });

@@ -6,11 +6,8 @@ export default function AppError({ reset }: { reset: () => void }) {
   return (
     <div className="grid min-h-[70dvh] place-items-center p-6 text-center">
       <div className="max-w-sm">
-        <p className="text-destructive font-mono text-[0.8125rem] font-semibold">
-          Route interrupted
-        </p>
-        <h1 className="mt-3 text-2xl font-semibold">
-          This view could not load.
+        <h1 className="text-2xl font-semibold tracking-[-0.02em]">
+          This page could not load
         </h1>
         <p className="text-muted-foreground mt-3 text-sm leading-6">
           Check your connection and try again. Your saved records were not

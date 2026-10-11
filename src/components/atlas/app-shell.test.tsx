@@ -70,7 +70,7 @@ describe("AppShell", () => {
     );
     expect(
       within(sheet).getByRole("navigation", { name: "More destinations" }),
-    ).toHaveClass("grid-cols-1", "min-[360px]:grid-cols-2");
+    ).toHaveClass("divide-y");
     expect(
       within(sheet).getByRole("link", { name: "Signals" }),
     ).toBeInTheDocument();

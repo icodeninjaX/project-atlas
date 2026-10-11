@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { BrandLaunchDialogue } from "./brand-launch-dialogue";
 
 // Runs before the splash is parsed so it only plays on the first full load of a
 // browser session instead of on every refresh or PWA reopen.
@@ -17,35 +16,20 @@ export function BrandLaunchScreen() {
 function BrandLaunchScreenContent() {
   return (
     <div aria-hidden="true" className="atlas-launch-screen">
-      <div className="atlas-launch-content">
-        <div className="atlas-launch-identity">
-          <div className="atlas-launch-core">
-            <span className="atlas-launch-pulse" />
-            <span className="atlas-launch-spinner">
-              <Image
-                src="/brand/atlas-system-core-launch.png"
-                alt=""
-                width={144}
-                height={144}
-                className="atlas-launch-logo"
-                draggable={false}
-                preload
-                unoptimized
-              />
-            </span>
-          </div>
-          <p className="atlas-launch-wordmark">
-            {[..."ATLAS"].map((letter, index) => (
-              <span
-                key={`${letter}-${index}`}
-                className="atlas-launch-wordmark-letter"
-              >
-                {letter}
-              </span>
-            ))}
-          </p>
-        </div>
-        <BrandLaunchDialogue />
+      <div className="atlas-launch-identity">
+        <span className="atlas-launch-mark">
+          <Image
+            src="/brand/atlas-system-core-launch.png"
+            alt=""
+            width={96}
+            height={96}
+            className="atlas-launch-logo"
+            draggable={false}
+            preload
+            unoptimized
+          />
+        </span>
+        <p className="atlas-launch-wordmark">ATLAS</p>
       </div>
     </div>
   );

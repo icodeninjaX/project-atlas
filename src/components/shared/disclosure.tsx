@@ -45,7 +45,7 @@ export function Disclosure({
         className={cn(
           "focus-visible:ring-ring flex w-full min-w-0 items-center gap-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none",
           variant === "tile"
-            ? "bg-muted/45 hover:bg-muted/70 min-h-12 rounded-2xl px-4 py-2.5"
+            ? "bg-muted/45 hover:bg-muted/70 min-h-12 rounded-xl px-4 py-2.5"
             : "hover:text-foreground min-h-12 rounded-lg py-2",
         )}
       >

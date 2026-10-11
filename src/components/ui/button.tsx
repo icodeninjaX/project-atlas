@@ -1,7 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { LoaderCircle } from "lucide-react";
 import * as React from "react";
-import { AtlasMark } from "@/components/atlas/atlas-mark";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -59,7 +59,10 @@ export function Button({
     >
       {pending ? (
         <>
-          <AtlasMark className="size-4 animate-spin [animation-duration:1.1s] motion-reduce:animate-none" />
+          <LoaderCircle
+            aria-hidden="true"
+            className="size-4 animate-spin opacity-80 motion-reduce:animate-none"
+          />
           {pendingLabel}
         </>
       ) : (

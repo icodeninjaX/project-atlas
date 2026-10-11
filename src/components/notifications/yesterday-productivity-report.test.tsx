@@ -21,10 +21,10 @@ describe("YesterdayProductivityReport", () => {
     render(<YesterdayProductivityReport {...reportProps} />);
 
     const report = await screen.findByRole("dialog", {
-      name: "A productive day, recorded.",
+      name: "3 tasks completed yesterday",
     });
 
-    expect(report).toHaveTextContent("03");
+    expect(report).toHaveTextContent("Monday, August 24");
     expect(report).toHaveTextContent("Three tasks were completed yesterday.");
     expect(screen.getByRole("button", { name: "Done" })).toHaveFocus();
   });
@@ -34,8 +34,9 @@ describe("YesterdayProductivityReport", () => {
       <YesterdayProductivityReport {...reportProps} completedTaskCount={1} />,
     );
 
-    const report = await screen.findByRole("dialog");
-    expect(report).toHaveTextContent("01");
+    const report = await screen.findByRole("dialog", {
+      name: "1 task completed yesterday",
+    });
     expect(report).toHaveTextContent("One task was completed yesterday.");
   });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -48,10 +48,9 @@ export function CollapsibleFilters({
           onClick={() => setOpen((value) => !value)}
           className="min-h-11 flex-1 sm:hidden"
         >
-          <SlidersHorizontal className="size-4" />
           Filters
           {activeCount > 0 ? (
-            <span className="bg-primary/15 text-primary rounded-full px-1.5 font-mono text-[0.625rem] leading-4">
+            <span className="text-muted-foreground font-mono text-xs">
               {activeCount}
             </span>
           ) : null}

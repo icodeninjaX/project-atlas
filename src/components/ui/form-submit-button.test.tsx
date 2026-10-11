@@ -11,7 +11,7 @@ import { FormSubmitButton } from "./form-submit-button";
 afterEach(cleanup);
 
 describe("FormSubmitButton", () => {
-  it("reads the parent form status and shows the branded pending state", async () => {
+  it("reads the parent form status and shows the pending state", async () => {
     let resolveAction: (() => void) | undefined;
     const action = vi.fn(
       () =>
@@ -30,12 +30,10 @@ describe("FormSubmitButton", () => {
     });
 
     const button = screen.getByRole("button", { name: "Saving…" });
-    const logo = container.querySelector(
-      'img[src="/brand/atlas-system-core.png"]',
-    );
+    const spinner = container.querySelector("svg.animate-spin");
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute("aria-busy", "true");
-    expect(logo?.parentElement).toHaveClass("animate-spin");
+    expect(spinner).toBeInTheDocument();
 
     await act(async () => resolveAction?.());
   });

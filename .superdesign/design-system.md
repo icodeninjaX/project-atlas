@@ -72,11 +72,26 @@ Preserve the existing ATLAS identity. The product is calm, precise, restrained, 
 - `Card`: one concept per surface; mobile padding can reduce from 20px to 16px where density requires it.
 - `PageHeading`: stack text and actions on mobile; actions wrap or become full-width while retaining hierarchy.
 - `EmptyState`: centered icon/copy/action inside a dashed surface; avoid excessive fixed minimum height on short mobile viewports.
-- Forms: labels above controls, error copy directly below the field, 44px minimum input height, and submit action reachable without sideways scrolling.
+- Forms: labels above controls, error copy directly below the field, 44px minimum input height, and submit action reachable without sideways scrolling. No numbered step badges, no icon on every section, no bordered box around each group: group with a plain 14px heading and a hairline. Placeholders only show a format (a URL, an amount); they never replace a label.
+- Controls are 12px (`rounded-xl`): inputs, selects, text buttons, chips, segmented tracks and selectable tiles. `rounded-full` is for icon-only round buttons, avatars, dots, switches and progress tracks only. Focus is a 2px ring, never a 4px glow.
+- Selectable tiles and checkbox rows show selection with a ring and their check or radio, not with a tinted fill or a filled icon tile.
+- Page titles name the page ("Accounts", "Transfers", "Debts", "Timeline"); descriptions are one factual sentence. Empty states say what is missing ("No applications yet") at 16px, never a slogan or a three-step "how it works" row.
+
+## Floating layers
+
+- Scrim: `bg-black/60` with a 2px blur, the same everywhere.
+- Sheets (`MoneySheet`) and dialogs: `bg-background`, hairline border, 16px radius on every floating corner, a neutral `shadow-2xl`. Sticky headers and footers inside them are solid, not frosted.
+- Dialog titles: 20px for sheets and form dialogs, 18px for confirms. An eyebrow only when it informs (the account type, the month), never the page trail. No kicker plus icon tile, no filler subtitle. Close is a ghost icon button.
+- Menus and popovers: `bg-card`, hairline border, 12px radius, `shadow-lg`, 8px-radius items with a muted hover; destructive items in red text. No hard-coded slate or white.
+- Inline destructive confirms: a muted well, one question, "Keep it" (secondary) beside the destructive action.
+- Toasts: one flat card style for every type, neutral border, the icon alone carries the color (green success, red error).
+- Full-screen modes (Focus, review session) use the page background and tokens, not a custom night sky, glow or gradient ring.
+- Interruptions stay small: a daily report is a compact dialog with one sentence and Done, not a celebration card.
+- The launch splash is a short fade of the AtlasMark and wordmark on the theme background, with no spin, pulse, glow or tagline.
 
 ## Motion and accessibility
 
-- Use restrained 150–200ms color/opacity/transform transitions only when they explain state.
+- Use restrained 150–200ms color/opacity/transform transitions only when they explain state. Sheets may slide for 250–300ms. No staggered reveals, blur-in entrances, infinite sweeps or pings except for something that is actually running.
 - Honor `prefers-reduced-motion` exactly as the current globals do.
 - Maintain visible keyboard focus, semantic landmarks, `aria-current`, named icon buttons, logical heading order, and text/background contrast.
 - Do not communicate selected, error, overdue, or sync states by color alone.

@@ -383,7 +383,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button
             type="button"
             aria-label="Dismiss more navigation"
-            className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
             onClick={() => {
               setMoreOpen(false);
               moreButtonRef.current?.focus();
@@ -399,19 +399,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <div className="bg-border mx-auto mb-3 h-1 w-10 rounded-full" />
             <div className="flex min-h-11 items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div>
-                  <p
-                    id="mobile-more-title"
-                    className="text-base font-semibold tracking-tight"
-                  >
-                    More destinations
-                  </p>
-                  <p className="text-muted-foreground mt-0.5 text-xs">
-                    Everything beyond today’s core route.
-                  </p>
-                </div>
-              </div>
+              <p id="mobile-more-title" className="text-base font-semibold">
+                More destinations
+              </p>
               <button
                 ref={closeButtonRef}
                 type="button"
@@ -427,7 +417,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <nav
               aria-label="More destinations"
-              className="border-border mt-4 grid grid-cols-1 overflow-hidden rounded-2xl border min-[360px]:grid-cols-2"
+              className="divide-border mt-2 grid divide-y"
             >
               {mobileMoreNavigation.map(({ href, label, icon: Icon }) => (
                 <Link
@@ -436,18 +426,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={() => setMoreOpen(false)}
                   aria-current={isActive(href) ? "page" : undefined}
                   className={cn(
-                    "border-border hover:bg-muted/60 focus-visible:ring-ring flex min-h-16 min-w-0 items-center gap-3 border-b px-3 text-sm font-medium transition-colors last:border-b-0 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset min-[360px]:odd:border-r min-[360px]:odd:last:col-span-2 min-[360px]:odd:last:border-r-0 min-[360px]:[&:nth-last-child(2):nth-child(odd)]:border-b-0",
-                    isActive(href) && "bg-primary/10 text-primary",
+                    "hover:bg-muted/60 focus-visible:ring-ring flex min-h-14 min-w-0 items-center gap-3 rounded-lg px-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
+                    isActive(href) && "text-primary",
                   )}
                 >
-                  <span
+                  <Icon
+                    aria-hidden="true"
                     className={cn(
-                      "bg-muted text-muted-foreground grid size-9 shrink-0 place-items-center rounded-xl",
-                      isActive(href) && "bg-primary/15 text-primary",
+                      "text-muted-foreground size-[18px] shrink-0",
+                      isActive(href) && "text-primary",
                     )}
-                  >
-                    <Icon className="size-[18px]" />
-                  </span>
+                  />
                   {label}
                 </Link>
               ))}
