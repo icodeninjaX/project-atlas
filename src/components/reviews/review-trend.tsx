@@ -45,7 +45,7 @@ function TrendTooltip({
   const point = payload?.[0]?.payload as TrendPoint | undefined;
   if (!active || !point) return null;
   return (
-    <div className="bg-card/95 ring-border min-w-36 rounded-xl px-3 py-2.5 text-xs shadow-[0_12px_32px_-12px_rgb(7_10_15/0.5)] ring-1 backdrop-blur">
+    <div className="bg-card min-w-36 rounded-xl border px-3 py-2.5 text-xs shadow-lg">
       <p className="text-muted-foreground font-medium">Week of {point.label}</p>
       <ul className="mt-2 space-y-1.5">
         {series.map(({ key, name, color, ...rest }) => (

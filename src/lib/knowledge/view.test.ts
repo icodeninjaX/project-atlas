@@ -12,7 +12,6 @@ import {
   relativeDay,
   reviewChip,
   reviewForecast,
-  reviewStreak,
   sortConcepts,
   spacingLadder,
   strengthCounts,
@@ -337,27 +336,6 @@ describe("recall stats and streak", () => {
       thisWeek: 2,
     });
     expect(recallStats([], now).rate).toBeNull();
-  });
-
-  it("keeps a streak alive until today ends", () => {
-    const yesterdayOnward = [
-      review("2026-10-01T02:00:00.000Z"),
-      review("2026-09-30T02:00:00.000Z"),
-      review("2026-09-28T02:00:00.000Z"),
-    ];
-    expect(reviewStreak(yesterdayOnward, now)).toEqual({
-      days: 2,
-      reviewedToday: false,
-    });
-    expect(
-      reviewStreak(
-        [review("2026-10-02T02:00:00.000Z"), ...yesterdayOnward],
-        now,
-      ),
-    ).toEqual({ days: 3, reviewedToday: true });
-    expect(reviewStreak([review("2026-09-29T02:00:00.000Z")], now).days).toBe(
-      0,
-    );
   });
 });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Waypoints, X } from "lucide-react";
+import { Waypoints } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -104,7 +104,7 @@ export function GoalLinkSuggestions({
   return (
     <section
       aria-labelledby="graph-suggestions"
-      className="border-primary/30 bg-primary/5 min-w-0 rounded-2xl border p-4"
+      className="bg-card min-w-0 rounded-2xl border p-4"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
@@ -112,7 +112,10 @@ export function GoalLinkSuggestions({
             id="graph-suggestions"
             className="flex items-center gap-2 text-sm font-semibold"
           >
-            <Waypoints className="text-primary size-4" aria-hidden="true" />
+            <Waypoints
+              className="text-muted-foreground size-4"
+              aria-hidden="true"
+            />
             Suggested for this goal
           </h3>
           <p className="text-muted-foreground mt-1 text-xs">
@@ -161,7 +164,6 @@ export function GoalLinkSuggestions({
                   onClick={() => void link([suggestion])}
                   aria-label={`Link ${item.title}`}
                 >
-                  <Check className="size-4" aria-hidden="true" />
                   {pending === key ? "Linking…" : "Link"}
                 </Button>
                 <Button
@@ -172,7 +174,6 @@ export function GoalLinkSuggestions({
                   onClick={() => void dismiss(suggestion)}
                   aria-label={`Not related: ${item.title}`}
                 >
-                  <X className="size-4" aria-hidden="true" />
                   Not related
                 </Button>
               </div>

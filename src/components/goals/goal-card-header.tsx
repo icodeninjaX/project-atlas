@@ -71,18 +71,17 @@ const goalStatusPills: Record<
     label: "Paused",
     icon: CirclePause,
     className:
-      "border-amber-300/60 bg-amber-50 text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/50 dark:text-amber-300",
+      "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300",
   },
   completed: {
     label: "Completed",
     icon: CircleCheck,
-    className:
-      "border-emerald-300/60 bg-emerald-50 text-emerald-800 dark:border-emerald-700/60 dark:bg-emerald-950/50 dark:text-emerald-300",
+    className: "bg-positive/10 text-positive ring-positive/25",
   },
   abandoned: {
     label: "Abandoned",
     icon: Archive,
-    className: "border-border bg-muted text-muted-foreground",
+    className: "bg-background/60 text-muted-foreground ring-border",
   },
 };
 
@@ -93,13 +92,16 @@ function GoalStatusPill({ status }: { status: string }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.625rem] font-semibold ${pill.className}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6875rem] leading-4 font-semibold ring-1 ${pill.className}`}
     >
       <Icon className="size-3" aria-hidden="true" />
       {pill.label}
     </span>
   );
 }
+
+const menuItemClass =
+  "flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm hover:bg-muted focus-visible:bg-muted focus-visible:outline-none";
 
 function deadlineLabel(daysLeft: number) {
   if (daysLeft === 0) return "Due today";
@@ -159,9 +161,7 @@ function DeleteGoalButton({ title }: { title: string }) {
     >
       {pending ? (
         <AtlasMark className="size-4 animate-spin [animation-duration:1.1s] motion-reduce:animate-none" />
-      ) : (
-        <Trash2 className="size-4" aria-hidden="true" />
-      )}
+      ) : null}
       {pending ? "Deleting…" : "Delete goal"}
     </Button>
   );
@@ -273,35 +273,36 @@ export function GoalCardHeader({
             aria-label={`Actions for goal ${goal.title}`}
             hidden={!menuOpen}
             onKeyDown={moveMenuFocus}
-            className="absolute top-11 right-0 z-30 w-48 rounded-2xl border border-slate-300 bg-white p-1.5 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/10 sm:top-9 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:shadow-[0_20px_55px_rgba(0,0,0,0.75)] dark:ring-white/10"
+            className="bg-card text-card-foreground absolute top-11 right-0 z-30 w-48 rounded-xl border p-1 shadow-lg sm:top-9"
           >
-            <Button
+            <button
               type="button"
-              variant="ghost"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
                 setEditorOpen((open) => !open);
               }}
-              className="w-full justify-start text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-white"
+              className={menuItemClass}
             >
-              <Pencil className="size-4" aria-hidden="true" />
+              <Pencil
+                className="text-muted-foreground size-4"
+                aria-hidden="true"
+              />
               {editorOpen ? "Close editor" : "Edit goal"}
-            </Button>
-            <div className="border-border my-1 border-t" />
-            <Button
+            </button>
+            <div className="my-1 border-t" />
+            <button
               type="button"
-              variant="ghost"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
                 setDeleteOpen(true);
               }}
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive w-full justify-start"
+              className={`${menuItemClass} text-destructive`}
             >
               <Trash2 className="size-4" aria-hidden="true" />
               Delete goal
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -341,20 +342,20 @@ export function GoalCardHeader({
       ) : null}
 
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]" />
         <Dialog.Content
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             menuButtonRef.current?.focus();
           }}
-          className="border-border bg-card text-card-foreground fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border p-5 shadow-2xl outline-none"
+          className="bg-background fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border p-5 shadow-2xl outline-none"
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <Dialog.Title className="text-base font-semibold">
+              <Dialog.Title className="text-lg font-semibold">
                 Delete goal?
               </Dialog.Title>
-              <Dialog.Description className="text-muted-foreground mt-1 text-xs leading-5">
+              <Dialog.Description className="text-muted-foreground mt-1 text-sm leading-5">
                 Delete “{goal.title}”? Its milestones will also be deleted.
                 Related tasks will stay but will no longer be linked. This
                 cannot be undone.
@@ -381,7 +382,7 @@ export function GoalCardHeader({
           >
             <input type="hidden" name="goalId" value={goal.id} />
             <Dialog.Close asChild>
-              <Button type="button" size="sm" variant="ghost">
+              <Button type="button" size="sm" variant="secondary">
                 Keep goal
               </Button>
             </Dialog.Close>

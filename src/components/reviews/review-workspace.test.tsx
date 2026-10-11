@@ -75,7 +75,7 @@ describe("ReviewWorkspace", () => {
       screen.getByRole("tabpanel", { name: /Past reviews/ }),
     ).toBeVisible();
     const hero = screen.getByRole("region", {
-      name: "Your weeks, remembered",
+      name: "Past reviews",
     });
     expect(within(hero).getByText("2")).toBeVisible();
     expect(within(hero).getByText("weeks reflected")).toBeVisible();
@@ -236,8 +236,6 @@ describe("ReviewWorkspace", () => {
 
     await user.click(screen.getByRole("tab", { name: /Past reviews/ }));
 
-    expect(
-      screen.getByText("Your reflection archive starts here"),
-    ).toBeVisible();
+    expect(screen.getByText("No past reviews yet")).toBeVisible();
   });
 });

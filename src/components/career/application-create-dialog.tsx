@@ -7,16 +7,16 @@ import { ApplicationForm } from "@/components/career/application-form";
 import { Button } from "@/components/ui/button";
 
 export const careerDialogOverlayClass =
-  "fixed inset-0 z-50 bg-black/70 backdrop-blur-sm motion-safe:animate-analyst-fade";
+  "fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] motion-safe:animate-analyst-fade";
 
 export const careerDialogContentClass =
-  "bg-background fixed inset-0 z-50 overflow-y-auto outline-none sm:inset-6 sm:left-1/2 sm:max-w-3xl sm:-translate-x-1/2 sm:shadow-[0_40px_120px_-40px_rgb(7_10_15/0.8)] sm:ring-1 sm:ring-border lg:inset-y-10";
+  "bg-background fixed inset-0 z-50 overflow-y-auto outline-none sm:inset-y-6 sm:left-1/2 sm:w-[min(48rem,calc(100vw-3rem))] sm:-translate-x-1/2 sm:rounded-2xl sm:border sm:shadow-2xl lg:inset-y-10";
 
 export const careerDialogHeaderClass =
-  "border-border bg-background/90 sticky top-0 z-20 flex items-start justify-between gap-4 border-b px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4 backdrop-blur-xl sm:rounded-t-2xl sm:px-6 sm:pt-5";
+  "bg-background sticky top-0 z-20 flex items-start justify-between gap-4 border-b px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4 sm:px-6 sm:pt-5";
 
 export const careerDialogFooterClass =
-  "border-border bg-background/90 sticky bottom-0 z-20 -mx-4 border-t px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl sm:-mx-6 sm:px-6 sm:pb-4";
+  "bg-background sticky bottom-0 z-20 -mx-4 border-t px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:-mx-6 sm:px-6 sm:pb-4";
 
 export function ApplicationCreateDialog() {
   const [open, setOpen] = useState(false);
@@ -35,10 +35,7 @@ export function ApplicationCreateDialog() {
         <Dialog.Content className={careerDialogContentClass}>
           <header className={careerDialogHeaderClass}>
             <div className="min-w-0">
-              <p className="text-muted-foreground text-xs font-medium">
-                New application
-              </p>
-              <Dialog.Title className="mt-1 text-xl font-semibold tracking-[-0.025em]">
+              <Dialog.Title className="text-xl font-semibold tracking-[-0.025em]">
                 Add a job application
               </Dialog.Title>
               <Dialog.Description className="text-muted-foreground mt-1 text-sm leading-5">
@@ -52,7 +49,7 @@ export function ApplicationCreateDialog() {
                 variant="ghost"
                 size="icon"
                 aria-label="Close new application form"
-                className="shrink-0 rounded-full"
+                className="-mr-2 shrink-0"
               >
                 <X className="size-4" aria-hidden="true" />
               </Button>

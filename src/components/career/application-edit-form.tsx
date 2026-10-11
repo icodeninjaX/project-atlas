@@ -1,14 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import {
-  BriefcaseBusiness,
-  CalendarClock,
-  NotebookPen,
-  Pencil,
-  WalletCards,
-  X,
-} from "lucide-react";
+import { Pencil, X } from "lucide-react";
 import { useActionState, useCallback, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -24,12 +17,11 @@ import {
   fieldSelectClass as selectClass,
   fieldTextareaClass,
 } from "@/components/career/application-fields";
-import { CompanyMark } from "@/components/career/company-mark";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { CareerActionState } from "@/lib/career/actions";
-import { careerStages, stageLabel, stageLabels } from "@/lib/career/view";
+import { careerStages, stageLabels } from "@/lib/career/view";
 import { cn } from "@/lib/utils";
 
 const initial: CareerActionState = { success: false, message: "" };
@@ -102,33 +94,21 @@ export function ApplicationEditForm({
 
       <Dialog.Portal>
         <Dialog.Overlay className={careerDialogOverlayClass} />
-        <Dialog.Content className={careerDialogContentClass}>
+        <Dialog.Content
+          aria-describedby={undefined}
+          className={careerDialogContentClass}
+        >
           <header className={careerDialogHeaderClass}>
-            <div className="flex min-w-0 items-start gap-3.5">
-              <CompanyMark
-                name={application.company_name}
-                size="lg"
-                className="max-[359px]:hidden"
-              />
-              <div className="min-w-0">
-                <p className="text-muted-foreground text-xs font-medium">
-                  {stageLabel(application.stage)} · Application details
-                </p>
-                <Dialog.Title className="mt-1 truncate text-xl font-semibold tracking-[-0.025em]">
-                  Edit {application.company_name}
-                </Dialog.Title>
-                <Dialog.Description className="text-muted-foreground mt-1 text-sm leading-5">
-                  Keep the role, progress, and next move up to date.
-                </Dialog.Description>
-              </div>
-            </div>
+            <Dialog.Title className="min-w-0 truncate text-xl font-semibold tracking-[-0.025em]">
+              Edit {application.company_name}
+            </Dialog.Title>
             <Dialog.Close asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 aria-label={`Close ${application.company_name} editor`}
-                className="shrink-0 rounded-full"
+                className="-mt-2 -mr-2 shrink-0"
               >
                 <X className="size-4" aria-hidden="true" />
               </Button>
@@ -138,12 +118,8 @@ export function ApplicationEditForm({
           <form action={action} className="px-4 pt-4 sm:px-6 sm:pt-6">
             <input type="hidden" name="applicationId" value={application.id} />
 
-            <div className="space-y-4">
-              <FormSection
-                icon={BriefcaseBusiness}
-                title="Role details"
-                description="The opportunity and where it stands today."
-              >
+            <div className="space-y-5">
+              <FormSection title="Role details">
                 <label className={labelClass}>
                   Company name
                   <Input
@@ -217,7 +193,6 @@ export function ApplicationEditForm({
                     name="location"
                     defaultValue={application.location ?? ""}
                     maxLength={120}
-                    placeholder="e.g. Makati or Remote"
                     aria-label={`Edit ${application.company_name} location`}
                     className="mt-1.5"
                   />
@@ -252,9 +227,8 @@ export function ApplicationEditForm({
               </FormSection>
 
               <FormSection
-                icon={CalendarClock}
                 title="Next move"
-                description="One concrete step and when you will take it, so the application never goes quiet."
+                description="One concrete step and its date."
               >
                 <label className={labelClass}>
                   Next action
@@ -262,7 +236,6 @@ export function ApplicationEditForm({
                     name="nextAction"
                     defaultValue={application.next_action ?? ""}
                     maxLength={200}
-                    placeholder="e.g. Follow up with recruiter"
                     aria-label={`Edit ${application.company_name} next action`}
                     className="mt-1.5"
                   />
@@ -286,9 +259,8 @@ export function ApplicationEditForm({
               </FormSection>
 
               <FormSection
-                icon={WalletCards}
                 title="Compensation"
-                description="Optional monthly salary range in Philippine pesos."
+                description="Optional. Monthly, in Philippine pesos."
               >
                 <PesoField
                   label="Minimum salary (PHP)"
@@ -314,18 +286,13 @@ export function ApplicationEditForm({
                 />
               </FormSection>
 
-              <FormSection
-                icon={NotebookPen}
-                title="Contact & notes"
-                description="Who you are talking to, and anything worth remembering."
-              >
+              <FormSection title="Contact & notes">
                 <label className={labelClass}>
                   Contact name
                   <Input
                     name="contactName"
                     defaultValue={application.contact_name ?? ""}
                     maxLength={160}
-                    placeholder="e.g. Recruiter or hiring manager"
                     aria-label={`Edit ${application.company_name} contact name`}
                     className="mt-1.5"
                   />
@@ -336,7 +303,6 @@ export function ApplicationEditForm({
                     name="contactEmail"
                     type="email"
                     defaultValue={application.contact_email ?? ""}
-                    placeholder="name@company.com"
                     aria-label={`Edit ${application.company_name} contact email`}
                     className="mt-1.5"
                   />
@@ -347,7 +313,6 @@ export function ApplicationEditForm({
                     name="resumeVersion"
                     defaultValue={application.resume_version ?? ""}
                     maxLength={80}
-                    placeholder="e.g. Frontend v2"
                     aria-label={`Edit ${application.company_name} resume version`}
                     className="mt-1.5"
                   />
@@ -358,7 +323,6 @@ export function ApplicationEditForm({
                     name="notes"
                     defaultValue={application.notes ?? ""}
                     maxLength={4000}
-                    placeholder="Add useful details about the role or company"
                     aria-label={`Edit ${application.company_name} notes`}
                     className={fieldTextareaClass}
                   />

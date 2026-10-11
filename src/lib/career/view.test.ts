@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  companyHueIndex,
   companyInitials,
   dueChip,
   joinWords,
@@ -224,14 +223,10 @@ describe("career view", () => {
     expect(salaryRangeLabel(null, null)).toBeNull();
   });
 
-  it("gives each company a stable mark", () => {
+  it("gives each company its initials", () => {
     expect(companyInitials("Northstar Labs")).toBe("NL");
     expect(companyInitials("Cloudbank")).toBe("C");
     expect(companyInitials("  (Arc) studio & co ")).toBe("AS");
     expect(companyInitials("—")).toBe("?");
-    expect(companyHueIndex("Cloudbank", 8)).toBe(
-      companyHueIndex(" cloudbank", 8),
-    );
-    expect(companyHueIndex("Cloudbank", 8)).toBeLessThan(8);
   });
 });

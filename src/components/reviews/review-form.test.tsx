@@ -28,7 +28,7 @@ describe("ReviewForm", () => {
     expect(
       screen.getByRole("progressbar", { name: "Weekly reflection progress" }),
     ).toHaveAttribute("aria-valuenow", "1");
-    expect(screen.getByText("You have unsaved thoughts")).toBeVisible();
+    expect(screen.getByText("Unsaved changes")).toBeVisible();
   });
 
   it("lets the score controls stay playful without forcing a score", async () => {
@@ -48,7 +48,7 @@ describe("ReviewForm", () => {
     );
 
     expect(energy).toHaveValue(5);
-    expect(screen.getByText("Energy came and went")).toBeVisible();
+    expect(screen.getByText("Moderate energy")).toBeVisible();
   });
 
   it("asks three prompts up front and folds the rest behind More", async () => {

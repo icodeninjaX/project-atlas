@@ -1,4 +1,3 @@
-import { ArrowDown, Compass, Flame } from "lucide-react";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import { CompassLink } from "@/components/reviews/compass-link";
 import { HeroShell, StatusPill } from "@/components/reviews/review-visuals";
@@ -24,9 +23,8 @@ export type WeekFacts = {
 /** The direction last week's review chose, as a quiet quote. */
 function CompassQuote({ compass }: { compass: WeekCompass }) {
   return (
-    <div className="bg-primary/[0.07] ring-primary/20 rounded-2xl p-4 ring-1 sm:p-5">
-      <p className="text-primary flex items-center gap-1.5 text-xs font-semibold">
-        <Compass aria-hidden="true" className="size-3.5" />
+    <div className="bg-background/55 rounded-xl p-4 sm:p-5">
+      <p className="text-muted-foreground text-xs font-medium">
         Your focus this week
       </p>
       <blockquote className="mt-2 text-lg leading-snug font-semibold tracking-[-0.02em] text-balance break-words sm:text-xl">
@@ -117,11 +115,9 @@ export function WeekHero({
         >
           This week · Week {isoWeekNumber(weekStart)}
         </h2>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           {streak ? (
-            <StatusPill tone="neutral" icon={Flame}>
-              {streak}
-            </StatusPill>
+            <span className="text-muted-foreground text-xs">{streak}</span>
           ) : null}
           <StatusPill tone={status.tone}>{status.label}</StatusPill>
         </div>
@@ -135,7 +131,7 @@ export function WeekHero({
         )}
       >
         <div className="min-w-0">
-          <p className="text-foreground text-[clamp(2.25rem,9vw,3rem)] leading-[0.98] font-semibold tracking-[-0.025em]">
+          <p className="text-foreground text-2xl leading-tight font-semibold tracking-[-0.025em] sm:text-[1.75rem]">
             <time dateTime={weekStart}>
               {compactReviewWeekLabel(weekStart)}
             </time>
@@ -143,11 +139,8 @@ export function WeekHero({
           <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-6 sm:text-[0.9375rem]">
             {status.sentence}
           </p>
-          <Button asChild className="mt-5 w-full rounded-full sm:w-auto">
-            <a href="#weekly-review">
-              {status.action}
-              <ArrowDown aria-hidden="true" className="size-4" />
-            </a>
+          <Button asChild className="mt-5 w-full sm:w-auto">
+            <a href="#weekly-review">{status.action}</a>
           </Button>
         </div>
         {compass ? <CompassQuote compass={compass} /> : null}

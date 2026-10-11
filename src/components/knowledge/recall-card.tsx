@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Brain, Check, Eye, RotateCcw } from "lucide-react";
+import { Check } from "lucide-react";
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import styles from "@/components/knowledge/knowledge.module.css";
@@ -65,20 +65,12 @@ function Recorded({
   const before = strengthLevel(confidenceBefore);
   const after = strengthLevel(review.confidence);
   return (
-    <div
-      role="status"
-      className={cn(
-        "bg-positive/[0.06] ring-positive/20 rounded-2xl p-4 ring-1 sm:p-5",
-        styles.settle,
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <span
+    <div role="status" className={styles.settle}>
+      <div className="flex items-start gap-2">
+        <Check
           aria-hidden="true"
-          className="bg-positive/12 text-positive ring-positive/20 grid size-9 shrink-0 place-items-center rounded-full ring-1"
-        >
-          <Check className="size-4" />
-        </span>
+          className="text-positive mt-1 size-4 shrink-0"
+        />
         <div className="min-w-0">
           <p className="text-[0.9375rem] leading-6 font-semibold">
             Rated {outcomeLabels[review.outcome]}. Next review{" "}
@@ -99,13 +91,11 @@ function Recorded({
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button type="button" size="sm" variant="secondary" onClick={onAgain}>
-          <RotateCcw aria-hidden="true" className="size-3.5" />
           Practice again
         </Button>
         {onNext ? (
           <Button type="button" size="sm" onClick={onNext}>
             Next due concept
-            <ArrowRight aria-hidden="true" className="size-3.5" />
           </Button>
         ) : null}
       </div>
@@ -234,10 +224,7 @@ export function RecallCard({
     <form ref={form} action={action} className="@container min-w-0">
       <input type="hidden" name="conceptId" value={concept.id} />
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <p className={cn(eyebrowClass, "text-primary flex items-center gap-2")}>
-          <Brain aria-hidden="true" className="size-3.5" />
-          Active recall
-        </p>
+        <p className={eyebrowClass}>Active recall</p>
         <p className="text-muted-foreground text-xs">
           {revealed ? "Step 2 of 2 · Rate it" : "Step 1 of 2 · Recall it"}
         </p>
@@ -248,9 +235,7 @@ export function RecallCard({
         tabIndex={-1}
         className={cn(
           "mt-3 font-semibold tracking-[-0.02em] text-balance break-words outline-none",
-          large
-            ? "text-xl leading-7 sm:text-2xl sm:leading-8"
-            : "text-lg leading-7",
+          large ? "text-xl leading-7" : "text-lg leading-7",
         )}
       >
         Explain “{concept.title}” in your own words.
@@ -263,20 +248,18 @@ export function RecallCard({
         name="recalledAnswer"
         rows={large ? 5 : 4}
         maxLength={5000}
-        className="border-border bg-background/70 placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/25 mt-4 w-full rounded-2xl border px-4 py-3 text-base leading-6 outline-none focus-visible:ring-2 sm:text-sm"
+        className="border-border bg-background/70 placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/25 mt-4 w-full rounded-xl border px-4 py-3 text-base leading-6 outline-none focus-visible:ring-2 sm:text-sm"
         placeholder="Type what you remember before you reveal the notes…"
       />
 
       {revealed ? (
         <div
           className={cn(
-            "bg-primary/[0.05] ring-primary/15 mt-3 rounded-2xl p-4 ring-1 sm:p-5",
+            "bg-muted/40 mt-3 rounded-xl p-4 sm:p-5",
             styles.settle,
           )}
         >
-          <p className={cn(eyebrowClass, "dark:text-primary text-blue-700")}>
-            Learning notes
-          </p>
+          <p className={eyebrowClass}>Learning notes</p>
           <p className="mt-2 text-sm leading-6 break-words whitespace-pre-wrap">
             {concept.notes}
           </p>
@@ -300,7 +283,6 @@ export function RecallCard({
       ) : (
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
           <Button type="button" variant="secondary" onClick={reveal}>
-            <Eye aria-hidden="true" className="size-4" />
             Reveal notes
             {shortcuts ? <Kbd>Space</Kbd> : null}
           </Button>
@@ -330,15 +312,10 @@ export function RecallCard({
                 name="outcome"
                 value={outcome}
                 className={cn(
-                  "group bg-background/60 ring-border/80 focus-visible:ring-ring relative flex min-h-16 min-w-0 flex-col items-start justify-center overflow-hidden rounded-2xl px-3 py-2.5 text-left ring-1 transition-[background-color,box-shadow,transform] focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45 motion-reduce:transition-none",
-                  "enabled:hover:bg-card enabled:hover:shadow-[0_10px_24px_-16px_rgb(7_10_15/0.6)]",
+                  "bg-secondary focus-visible:ring-ring enabled:hover:bg-muted relative flex min-h-16 min-w-0 flex-col items-start justify-center rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45 motion-reduce:transition-none",
                   large && "min-h-[4.5rem]",
                 )}
               >
-                <span
-                  aria-hidden="true"
-                  className={cn("absolute inset-x-0 top-0 h-[3px]", tone.dot)}
-                />
                 <span className="flex w-full items-center justify-between gap-2">
                   <span className={cn("text-sm font-semibold", tone.text)}>
                     {outcomeLabels[outcome]}

@@ -1,11 +1,5 @@
 "use client";
 
-import {
-  BriefcaseBusiness,
-  CalendarClock,
-  NotebookPen,
-  WalletCards,
-} from "lucide-react";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
@@ -54,19 +48,14 @@ export function ApplicationForm({
   }, [onSuccess, state]);
   return (
     <form ref={form} action={action} className={cn("min-w-0", className)}>
-      <div className="space-y-4">
-        <FormSection
-          icon={BriefcaseBusiness}
-          title="Role details"
-          description="The opportunity and where it stands today."
-        >
+      <div className="space-y-5">
+        <FormSection title="Role details">
           <label className={fieldLabelClass}>
             Company name
             <Input
               name="companyName"
               required
               maxLength={160}
-              placeholder="e.g. Globe Telecom"
               aria-label="Company name"
               className="mt-1.5"
             />
@@ -77,7 +66,6 @@ export function ApplicationForm({
               name="roleTitle"
               required
               maxLength={160}
-              placeholder="e.g. Frontend developer"
               aria-label="Role title"
               className="mt-1.5"
             />
@@ -132,7 +120,6 @@ export function ApplicationForm({
             <Input
               name="location"
               maxLength={120}
-              placeholder="e.g. Makati or Remote"
               aria-label="Location"
               className="mt-1.5"
             />
@@ -163,7 +150,7 @@ export function ApplicationForm({
             />
             <p
               id="new-application-applied-at-help"
-              className="text-muted-foreground mt-1.5 text-[0.6875rem] leading-snug"
+              className="text-muted-foreground mt-1.5 text-xs leading-5"
             >
               When you submitted the application. Leave blank if you have not
               applied yet.
@@ -172,16 +159,14 @@ export function ApplicationForm({
         </FormSection>
 
         <FormSection
-          icon={CalendarClock}
           title="Next move"
-          description="One concrete step and when you will take it, so the application never goes quiet."
+          description="One concrete step and its date."
         >
           <label className={fieldLabelClass}>
             Next action
             <Input
               name="nextAction"
               maxLength={200}
-              placeholder="e.g. Follow up with recruiter"
               aria-label="Next action"
               className="mt-1.5"
             />
@@ -202,7 +187,7 @@ export function ApplicationForm({
             />
             <p
               id="new-application-next-action-at-help"
-              className="text-muted-foreground mt-1.5 text-[0.6875rem] leading-snug"
+              className="text-muted-foreground mt-1.5 text-xs leading-5"
             >
               When you plan to complete the next action.
             </p>
@@ -210,9 +195,8 @@ export function ApplicationForm({
         </FormSection>
 
         <FormSection
-          icon={WalletCards}
           title="Compensation"
-          description="Optional monthly salary range in Philippine pesos."
+          description="Optional. Monthly, in Philippine pesos."
         >
           <PesoField
             label="Minimum salary (PHP)"
@@ -228,17 +212,12 @@ export function ApplicationForm({
           />
         </FormSection>
 
-        <FormSection
-          icon={NotebookPen}
-          title="Contact & notes"
-          description="Who you are talking to, and anything worth remembering."
-        >
+        <FormSection title="Contact & notes">
           <label className={fieldLabelClass}>
             Contact name
             <Input
               name="contactName"
               maxLength={160}
-              placeholder="e.g. Recruiter or hiring manager"
               aria-label="Contact name"
               className="mt-1.5"
             />
@@ -248,7 +227,6 @@ export function ApplicationForm({
             <Input
               name="contactEmail"
               type="email"
-              placeholder="name@company.com"
               aria-label="Contact email"
               className="mt-1.5"
             />
@@ -258,7 +236,6 @@ export function ApplicationForm({
             <Input
               name="resumeVersion"
               maxLength={80}
-              placeholder="e.g. Frontend v2"
               aria-label="Resume version"
               className="mt-1.5"
             />
@@ -268,7 +245,6 @@ export function ApplicationForm({
             <textarea
               name="notes"
               maxLength={4000}
-              placeholder="Add useful details about the role or company"
               aria-label="Application notes"
               className={fieldTextareaClass}
             />

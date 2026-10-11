@@ -1,15 +1,8 @@
 import {
   CalendarCheck,
   ClipboardCheck,
-  Footprints,
   GitCompareArrows,
   Goal,
-  Layers,
-  Lightbulb,
-  ListChecks,
-  NotebookPen,
-  Target,
-  type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -121,7 +114,7 @@ function ReviewArc({
         {reached ? null : (
           <span
             style={{ left: `${arc.share * 100}%` }}
-            className="bg-card ring-primary absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_2px_8px_rgb(7_10_15/0.25)] ring-[3px]"
+            className="bg-card ring-primary absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2"
           />
         )}
         <span
@@ -164,7 +157,7 @@ function HeroFact({
   note: ReactNode;
 }) {
   return (
-    <div className="sm:bg-background/55 min-w-0 sm:rounded-xl sm:p-4">
+    <div className="min-w-0 sm:px-5 sm:first:pl-0">
       <dt className="text-muted-foreground text-xs font-medium">{label}</dt>
       <dd className="mt-1 text-base leading-tight font-semibold tracking-[-0.01em] [overflow-wrap:anywhere]">
         {value}
@@ -202,7 +195,7 @@ function DetailHero({
           </p>
           <h1
             id="decision-heading"
-            className="mt-3 text-[1.75rem] leading-[1.1] font-semibold tracking-[-0.025em] text-balance break-words sm:text-[2.25rem]"
+            className="mt-3 text-2xl leading-tight font-semibold tracking-[-0.025em] text-balance break-words sm:text-[1.75rem]"
           >
             {decision.title}
           </h1>
@@ -216,7 +209,7 @@ function DetailHero({
 
       <ReviewArc decision={decision} todayIso={todayIso} />
 
-      <dl className="max-sm:border-border mt-6 grid grid-cols-2 gap-x-6 gap-y-5 max-sm:border-t max-sm:pt-5 sm:grid-cols-3 sm:gap-3">
+      <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t pt-5 sm:grid-cols-3 sm:gap-x-0 sm:divide-x">
         <HeroFact
           label="Observations"
           value={
@@ -254,34 +247,17 @@ function DetailHero({
 }
 
 function PlanBlock({
-  icon: Icon,
   label,
   children,
   emphasis,
 }: {
-  icon: LucideIcon;
   label: string;
   children: string;
   emphasis?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        tileClass,
-        "relative p-4",
-        emphasis && "bg-teal-500/[0.06] ring-teal-500/25",
-      )}
-    >
-      <p className="flex items-center gap-2">
-        <Icon
-          aria-hidden="true"
-          className={cn(
-            "size-3.5 shrink-0",
-            emphasis ? "text-teal-700 dark:text-teal-300" : "text-primary",
-          )}
-        />
-        <span className={eyebrowClass}>{label}</span>
-      </p>
+    <div className={cn(tileClass, "relative p-4")}>
+      <p className={eyebrowClass}>{label}</p>
       <p
         className={cn(
           "mt-2 text-sm leading-6 break-words whitespace-pre-wrap",
@@ -305,48 +281,29 @@ function PlanCard({
   actionTask: GraphEntitySummary | null;
 }) {
   const linkClass =
-    "bg-background/60 ring-border/80 hover:bg-card focus-visible:ring-ring inline-flex min-h-11 max-w-full min-w-0 items-center gap-2 rounded-full px-3.5 text-xs ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9";
+    "bg-background/60 ring-border/80 hover:bg-muted focus-visible:ring-ring inline-flex min-h-11 max-w-full min-w-0 items-center gap-2 rounded-xl px-3.5 text-xs ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9";
   return (
     <section
       aria-labelledby="decision-summary"
       className={cn(decisionCardClass, "mt-4 sm:mt-5")}
     >
-      <div className="flex min-w-0 items-center gap-3">
-        <span
-          aria-hidden="true"
-          className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg @max-[14rem]:hidden"
-        >
-          <ListChecks className="size-[1.125rem]" />
-        </span>
-        <div className="min-w-0">
-          <h2
-            id="decision-summary"
-            className="text-base font-semibold tracking-[-0.01em]"
-          >
-            What you planned
-          </h2>
-          <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-            In your own words, as you recorded them.
-          </p>
-        </div>
-      </div>
+      <h2
+        id="decision-summary"
+        className="text-base font-semibold tracking-[-0.01em]"
+      >
+        What you planned
+      </h2>
 
-      <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-3 @[34rem]:grid-cols-2">
-        <PlanBlock icon={Footprints} label="Action">
-          {decision.intent}
-        </PlanBlock>
-        <PlanBlock icon={Target} label="Expected outcome" emphasis>
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 @[34rem]:grid-cols-2">
+        <PlanBlock label="Action">{decision.intent}</PlanBlock>
+        <PlanBlock label="Expected outcome" emphasis>
           {decision.expected_outcome}
         </PlanBlock>
         {decision.rationale ? (
-          <PlanBlock icon={Lightbulb} label="Reason">
-            {decision.rationale}
-          </PlanBlock>
+          <PlanBlock label="Reason">{decision.rationale}</PlanBlock>
         ) : null}
         {decision.assumptions ? (
-          <PlanBlock icon={Layers} label="Assumptions">
-            {decision.assumptions}
-          </PlanBlock>
+          <PlanBlock label="Assumptions">{decision.assumptions}</PlanBlock>
         ) : null}
       </div>
       {!decision.rationale && !decision.assumptions ? (
@@ -365,7 +322,7 @@ function PlanCard({
             >
               <Goal
                 aria-hidden="true"
-                className="size-3.5 shrink-0 text-violet-600 dark:text-violet-300"
+                className="text-muted-foreground size-3.5 shrink-0"
               />
               <span className="min-w-0 truncate">
                 <span className="text-muted-foreground">Related goal:</span>{" "}
@@ -377,7 +334,7 @@ function PlanCard({
             <Link href={actionTask.href as never} className={linkClass}>
               <ClipboardCheck
                 aria-hidden="true"
-                className="size-3.5 shrink-0 text-sky-600 dark:text-sky-300"
+                className="text-muted-foreground size-3.5 shrink-0"
               />
               <span className="min-w-0 truncate">
                 <span className="text-muted-foreground">Action task:</span>{" "}
@@ -408,16 +365,16 @@ function ReviewStop({
       {last ? null : (
         <span
           aria-hidden="true"
-          className="from-border to-border/40 absolute top-8 bottom-0 left-[calc(1rem-0.5px)] w-px bg-gradient-to-b sm:top-9 sm:left-[calc(1.125rem-0.5px)]"
+          className="bg-border absolute top-8 bottom-0 left-[calc(1rem-0.5px)] w-px sm:top-9 sm:left-[calc(1.125rem-0.5px)]"
         />
       )}
       <span
         aria-hidden="true"
         className={cn(
-          "grid size-8 place-items-center rounded-full ring-1 sm:size-9",
+          "bg-muted/70 ring-border grid size-8 place-items-center rounded-full ring-1 sm:size-9",
           upcoming
-            ? "bg-muted/70 text-muted-foreground ring-border"
-            : "bg-amber-500/10 text-amber-700 ring-amber-500/30 dark:text-amber-300",
+            ? "text-muted-foreground"
+            : "text-amber-700 dark:text-amber-300",
         )}
       >
         <CalendarCheck className="size-4" />
@@ -448,10 +405,7 @@ function Observations({
   return (
     <section className="mt-10 sm:mt-12" aria-labelledby="observations">
       <div className="px-1">
-        <h2
-          id="observations"
-          className="text-lg font-semibold tracking-[-0.02em]"
-        >
+        <h2 id="observations" className="text-base font-semibold">
           Your observations
         </h2>
         <p className="text-muted-foreground mt-1 text-xs leading-5">
@@ -461,23 +415,13 @@ function Observations({
       </div>
 
       <div className={cn(decisionCardClass, "mt-4")}>
-        <div className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="grid size-10 shrink-0 place-items-center rounded-xl bg-teal-500/10 text-teal-700 ring-1 ring-teal-500/25 dark:text-teal-300"
-          >
-            <NotebookPen className="size-[1.125rem]" />
-          </span>
-          <div className="min-w-0">
-            <h3 className="text-base font-semibold tracking-[-0.01em]">
-              Add an observation
-            </h3>
-            <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-              Dated on or after the decision. Cite a record if one shows it.
-            </p>
-          </div>
-        </div>
-        <figure className="mt-4 border-l-2 border-teal-500/60 pl-3.5">
+        <h3 className="text-[0.9375rem] font-semibold tracking-[-0.01em]">
+          Add an observation
+        </h3>
+        <p className="text-muted-foreground mt-0.5 text-xs leading-5">
+          Dated on or after the decision. Cite a record if one shows it.
+        </p>
+        <figure className="mt-4 border-l-2 pl-3.5">
           <figcaption className={eyebrowClass}>You expected</figcaption>
           <blockquote className="mt-1 text-sm leading-6 break-words whitespace-pre-wrap">
             {decision.expected_outcome}
@@ -573,10 +517,7 @@ function PlanHistory({
   return (
     <section className="mt-10 sm:mt-12" aria-labelledby="plan-history">
       <div className="px-1">
-        <h2
-          id="plan-history"
-          className="text-lg font-semibold tracking-[-0.02em]"
-        >
+        <h2 id="plan-history" className="text-base font-semibold">
           Earlier plans
         </h2>
         <p className="text-muted-foreground mt-1 text-xs leading-5">
@@ -584,18 +525,23 @@ function PlanHistory({
           changed.
         </p>
       </div>
-      <ol className="mt-4 space-y-3">
+      <ol
+        className={cn(
+          decisionCardClass,
+          "mt-4 divide-y p-0 min-[360px]:p-0 sm:p-0",
+        )}
+      >
         {trail.map(({ revision, changes, unchanged }) => (
-          <li key={revision.id} className={decisionCardClass}>
+          <li key={revision.id} className="min-w-0 p-4 min-[360px]:p-5 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
               <p className="flex items-center gap-2 text-sm font-semibold">
                 <GitCompareArrows
                   aria-hidden="true"
-                  className="text-primary size-4 shrink-0"
+                  className="text-muted-foreground size-4 shrink-0"
                 />
                 Revised {revisedAt.format(new Date(revision.changed_at))}
               </p>
-              <span className="bg-muted/60 text-muted-foreground ring-border/70 rounded-full px-2 py-0.5 font-mono text-[0.6875rem] leading-4 font-semibold ring-1">
+              <span className="text-muted-foreground font-mono text-xs tabular-nums">
                 {changes.length === 1
                   ? "1 change"
                   : `${changes.length} changes`}
@@ -617,13 +563,8 @@ function PlanHistory({
                           {show(change.field, change.before)}
                         </p>
                       </div>
-                      <div
-                        className={cn(
-                          tileClass,
-                          "ring-primary/25 bg-primary/[0.05] p-3",
-                        )}
-                      >
-                        <p className="text-muted-foreground text-[0.6875rem] font-medium">
+                      <div className={cn(tileClass, "p-3")}>
+                        <p className="text-muted-foreground text-[0.6875rem] font-semibold">
                           After
                         </p>
                         <p className="mt-1 text-sm leading-6 break-words whitespace-pre-wrap">
@@ -681,7 +622,7 @@ export function DecisionDetail({
   );
   return (
     <PageShell>
-      <BackLink href="/decisions">Decision journal</BackLink>
+      <BackLink href="/decisions">All decisions</BackLink>
 
       <DetailHero
         decision={decision}

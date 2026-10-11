@@ -71,7 +71,7 @@ function renderNode(node: MilestoneRichTextNode, key: string): ReactNode {
     return (
       <ul
         key={key}
-        className="text-muted-foreground marker:text-primary/70 list-disc space-y-2 pl-5"
+        className="text-muted-foreground marker:text-muted-foreground list-disc space-y-2 pl-5"
       >
         {content}
       </ul>
@@ -82,7 +82,7 @@ function renderNode(node: MilestoneRichTextNode, key: string): ReactNode {
       <ol
         key={key}
         start={node.attrs?.start}
-        className="text-muted-foreground marker:text-primary/70 list-decimal space-y-2 pl-5"
+        className="text-muted-foreground marker:text-muted-foreground list-decimal space-y-2 pl-5"
       >
         {content}
       </ol>
@@ -99,7 +99,7 @@ function renderNode(node: MilestoneRichTextNode, key: string): ReactNode {
     return (
       <blockquote
         key={key}
-        className="border-primary/50 text-muted-foreground border-l-2 pl-4 italic"
+        className="text-muted-foreground border-l-2 pl-4 italic"
       >
         {content}
       </blockquote>
@@ -120,7 +120,7 @@ export function MilestoneRichTextReader({
   if (!document) return emptyFallback;
 
   return (
-    <div className="text-foreground/90 space-y-5 text-justify text-[0.9375rem] leading-7 [overflow-wrap:anywhere] whitespace-pre-wrap">
+    <div className="text-foreground/90 space-y-5 text-left text-[0.9375rem] leading-7 [overflow-wrap:anywhere] whitespace-pre-wrap">
       {document.content.map((node, index) => renderNode(node, String(index)))}
     </div>
   );

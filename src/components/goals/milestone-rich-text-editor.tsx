@@ -60,7 +60,7 @@ function ToolbarButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "hover:bg-muted focus-visible:ring-ring inline-grid size-10 shrink-0 place-items-center rounded-lg text-slate-600 transition-colors outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-35 dark:text-slate-300",
+        "hover:bg-muted focus-visible:ring-ring text-muted-foreground inline-grid size-10 shrink-0 place-items-center rounded-lg transition-colors outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-35",
         active && "bg-primary/15 text-primary hover:bg-primary/20",
       )}
     >
@@ -106,7 +106,7 @@ export function MilestoneRichTextEditor({
           "aria-multiline": "true",
           ...(describedBy ? { "aria-describedby": describedBy } : {}),
           class:
-            "min-h-40 px-3 py-3 text-sm leading-6 outline-none sm:min-h-44 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/50 [&_blockquote]:pl-3 [&_h2]:text-base [&_h2]:font-semibold [&_h3]:font-semibold [&_ol]:list-decimal [&_ol]:pl-6 [&_p+p]:mt-2 [&_ul]:list-disc [&_ul]:pl-6",
+            "min-h-40 px-3 py-3 text-sm leading-6 outline-none sm:min-h-44 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_h2]:text-base [&_h2]:font-semibold [&_h3]:font-semibold [&_ol]:list-decimal [&_ol]:pl-6 [&_p+p]:mt-2 [&_ul]:list-disc [&_ul]:pl-6",
         },
       },
       onUpdate: ({ editor: currentEditor }) => {

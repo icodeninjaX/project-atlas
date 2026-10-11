@@ -7,7 +7,7 @@ import {
   loadDecisionNoteStamps,
 } from "@/lib/decisions/server";
 
-export const metadata = { title: "Decision journal" };
+export const metadata = { title: "Decisions" };
 
 export default async function DecisionsPage({
   searchParams,

@@ -1,11 +1,4 @@
-import {
-  CalendarCheck,
-  ChevronRight,
-  Hourglass,
-  NotebookPen,
-  Scale,
-  type LucideIcon,
-} from "lucide-react";
+import { ChevronRight, Scale } from "lucide-react";
 import Link from "next/link";
 import todayStyles from "@/components/dashboard/today.module.css";
 import { DecisionCreateButton } from "@/components/decisions/decision-sheet";
@@ -101,7 +94,7 @@ function UpNext({
                   </span>
                   <ChevronRight
                     aria-hidden="true"
-                    className="text-muted-foreground group-hover:text-foreground mt-0.5 size-4 shrink-0 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+                    className="text-muted-foreground group-hover:text-foreground mt-0.5 size-4 shrink-0 transition-colors"
                   />
                 </Link>
               </li>
@@ -288,7 +281,7 @@ export function DecisionsHero({
             <span className="text-foreground font-mono text-[clamp(2.5rem,10vw,3.25rem)] leading-[0.92] font-semibold tracking-[-0.03em]">
               {summary.total}
             </span>
-            <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
+            <span className="text-muted-foreground text-base font-medium">
               {summary.total === 1 ? "decision" : "decisions"}
             </span>
           </p>
@@ -316,21 +309,18 @@ export function DecisionsHero({
   );
 }
 
-const steps: { icon: LucideIcon; title: string; body: string }[] = [
+const steps: { title: string; body: string }[] = [
   {
-    icon: NotebookPen,
     title: "Record",
-    body: "The choice, what you will do, and what you hope will happen, in your own words.",
+    body: "the choice, what you will do, and what you expect to happen.",
   },
   {
-    icon: Hourglass,
     title: "Wait",
-    body: "It stays in your journal until the review date you pick.",
+    body: "until the review date you pick.",
   },
   {
-    icon: CalendarCheck,
     title: "Review",
-    body: "Write what actually happened. With a recorded measure, see 14 days of records before and after.",
+    body: "what actually happened. With a recorded measure, compare 14 days of records before and after.",
   },
 ];
 
@@ -350,49 +340,33 @@ export function DecisionsEmptyHero({
       >
         Your journal
       </h2>
-      <div className="mt-6 flex max-w-2xl gap-4">
-        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
-          <Scale aria-hidden="true" className="size-5" />
+      <div className="mt-5 flex max-w-2xl gap-3">
+        <span className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
+          <Scale aria-hidden="true" className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-[1.625rem] leading-tight font-semibold tracking-[-0.03em] text-balance sm:text-[1.875rem]">
-            No decisions recorded yet
+          <p className="text-base leading-6 font-semibold">No decisions yet</p>
+          <p className="text-muted-foreground mt-1 text-sm leading-6">
+            Record a choice you want to revisit, then check it on a date you
+            pick.
           </p>
-          <p className="text-muted-foreground mt-3 text-sm leading-6">
-            Start with a choice you want to revisit. Write it down while the
-            reasons are fresh, then come back on the date you pick and note what
-            actually followed.
-          </p>
+          <ol
+            aria-label="How the journal works"
+            className="text-muted-foreground mt-3 space-y-1 text-sm leading-6"
+          >
+            {steps.map((step) => (
+              <li key={step.title}>
+                <span className="text-foreground font-medium">
+                  {step.title}
+                </span>{" "}
+                {step.body}
+              </li>
+            ))}
+          </ol>
+          <div className="mt-5">
+            <DecisionCreateButton goals={goals} today={today} />
+          </div>
         </div>
-      </div>
-      <ol
-        aria-label="How the journal works"
-        className="mt-8 grid gap-3 sm:grid-cols-3"
-      >
-        {steps.map((step, index) => (
-          <li key={step.title} className={cn(tileClass, "p-4")}>
-            <div className="flex items-center gap-2.5">
-              <span
-                aria-hidden="true"
-                className="bg-muted/60 text-foreground/75 grid size-8 shrink-0 place-items-center rounded-lg"
-              >
-                <step.icon className="size-4" />
-              </span>
-              <p className="text-sm font-semibold">
-                <span className="text-muted-foreground mr-1.5 font-mono text-xs">
-                  {index + 1}
-                </span>
-                {step.title}
-              </p>
-            </div>
-            <p className="text-muted-foreground mt-2.5 text-xs leading-5">
-              {step.body}
-            </p>
-          </li>
-        ))}
-      </ol>
-      <div className="mt-7">
-        <DecisionCreateButton goals={goals} today={today} />
       </div>
     </DecisionHeroShell>
   );

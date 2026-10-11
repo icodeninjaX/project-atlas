@@ -583,23 +583,6 @@ export function recallStats(
   };
 }
 
-/**
- * Consecutive Manila days with at least one review, ending today, or
- * yesterday while today is still open.
- */
-export function reviewStreak(reviews: KnowledgeReview[], nowIso: string) {
-  const days = new Set(reviews.map((review) => manilaDay(review.reviewed_at)));
-  const today = manilaDay(nowIso);
-  const reviewedToday = days.has(today);
-  let cursor = reviewedToday ? today : addDays(today, -1);
-  let streak = 0;
-  while (days.has(cursor)) {
-    streak++;
-    cursor = addDays(cursor, -1);
-  }
-  return { days: streak, reviewedToday };
-}
-
 // ---------------------------------------------------------------------------
 // Scheduling, as the reviewer sees it
 

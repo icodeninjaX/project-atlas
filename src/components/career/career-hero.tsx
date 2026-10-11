@@ -1,4 +1,4 @@
-import { ArrowRight, BriefcaseBusiness, CalendarCheck2 } from "lucide-react";
+import { BriefcaseBusiness, CalendarCheck2 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ApplicationCreateDialog } from "@/components/career/application-create-dialog";
@@ -150,8 +150,8 @@ function UpNext({
       <div className="bg-background/55 rounded-xl p-4 sm:p-5">
         <p className={eyebrowClass}>Up next</p>
         <div className="mt-3 flex items-start gap-3">
-          <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg">
-            <CalendarCheck2 aria-hidden="true" className="size-[1.125rem]" />
+          <span className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg">
+            <CalendarCheck2 aria-hidden="true" className="size-4" />
           </span>
           <div className="min-w-0">
             <p className="text-[0.9375rem] leading-6 font-semibold">
@@ -173,10 +173,8 @@ function UpNext({
   return (
     <div
       className={cn(
-        "@container relative rounded-2xl p-4 ring-1 sm:p-5",
-        overdue
-          ? "bg-destructive/[0.06] ring-destructive/25"
-          : "bg-background/55 ring-border/80",
+        "@container relative rounded-xl p-4 sm:p-5",
+        overdue ? "bg-destructive/[0.06]" : "bg-background/55",
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -199,11 +197,10 @@ function UpNext({
       </div>
       <Link
         href={`/career?highlight=${application.id}#application-${application.id}`}
-        className="text-primary hover:bg-primary/10 focus-visible:ring-ring mt-3 -mb-1.5 -ml-3 inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
+        className="text-primary focus-visible:ring-ring mt-2 -mb-2 inline-flex min-h-11 items-center rounded-md text-xs font-semibold hover:underline focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
       >
         Open in list
         <span className="sr-only">: {application.company_name}</span>
-        <ArrowRight aria-hidden="true" className="size-3" />
       </Link>
     </div>
   );
@@ -293,7 +290,7 @@ export function CareerHero({
             <span className="text-foreground font-mono text-[clamp(2.5rem,10vw,3.25rem)] leading-[0.92] font-semibold tracking-[-0.03em]">
               {summary.active}
             </span>
-            <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
+            <span className="text-muted-foreground text-base font-medium">
               {summary.active === 1
                 ? "active application"
                 : "active applications"}
@@ -345,19 +342,18 @@ export function CareerEmptyHero() {
       >
         Pipeline
       </h2>
-      <div className="mt-6 flex max-w-2xl gap-4">
-        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
-          <BriefcaseBusiness aria-hidden="true" className="size-5" />
+      <div className="mt-5 flex max-w-2xl gap-3">
+        <span className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
+          <BriefcaseBusiness aria-hidden="true" className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-[1.625rem] leading-tight font-semibold tracking-[-0.03em] text-balance sm:text-[1.875rem]">
-            Build your opportunity pipeline
+          <p className="text-base leading-6 font-semibold">
+            No applications yet
           </p>
-          <p className="text-muted-foreground mt-3 text-sm leading-6">
-            Add a role before you apply. ATLAS keeps each one tied to a stage, a
-            date, and one clear next action, so nothing goes quiet.
+          <p className="text-muted-foreground mt-1 text-sm leading-6">
+            Add a role to track its stage, dates, and next action.
           </p>
-          <div className="mt-6">
+          <div className="mt-5">
             <ApplicationCreateDialog />
           </div>
         </div>
@@ -366,7 +362,7 @@ export function CareerEmptyHero() {
         aria-label="Stages an application moves through"
         className="mt-8 grid grid-cols-[repeat(auto-fill,minmax(min(100%,7rem),1fr))] gap-3 lg:grid-cols-7"
       >
-        {pipelineStages.map((stage, index) => (
+        {pipelineStages.map((stage) => (
           <li
             key={stage}
             className="bg-background/55 flex min-w-0 items-center gap-2 rounded-xl px-3 py-2.5"
@@ -379,9 +375,6 @@ export function CareerEmptyHero() {
               )}
             />
             <span className="truncate text-xs font-medium">
-              <span className="text-muted-foreground mr-1 font-mono">
-                {index + 1}
-              </span>
               {stageLabels[stage]}
             </span>
           </li>

@@ -97,16 +97,10 @@ function ApplicationRow({
     <li
       id={`application-${application.id}`}
       className={cn(
-        "relative scroll-mt-24 first:rounded-t-[inherit] last:rounded-b-[inherit]",
-        highlighted && "bg-primary/[0.07]",
+        "relative scroll-mt-24",
+        highlighted && "ring-primary/60 ring-2 ring-inset",
       )}
     >
-      {highlighted ? (
-        <span
-          aria-hidden="true"
-          className="bg-primary absolute inset-y-3 left-0 w-1 rounded-r-full"
-        />
-      ) : null}
       <div className="@container grid gap-3 p-4 min-[360px]:px-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.3fr)_minmax(9.5rem,11rem)_7.5rem_5.5rem] lg:items-center lg:gap-5 lg:py-3.5">
         <div className="flex min-w-0 items-center gap-3">
           <CompanyMark
@@ -209,14 +203,23 @@ export function ApplicationList({
   highlightId?: string;
 }) {
   return (
-    <div className="mt-8 space-y-8 sm:mt-10">
+    <div
+      className={cn(
+        surfaceClass,
+        "bg-card/90 relative mt-8 overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] sm:mt-10",
+      )}
+    >
       {groups.map((group) => {
         const headingId = `career-group-${group.id}`;
         const { icon: Icon, tone } = groupIcons[group.id];
         const count = group.applications.length;
         return (
-          <section key={group.id} aria-labelledby={headingId}>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1">
+          <section
+            key={group.id}
+            aria-labelledby={headingId}
+            className="border-t first:border-t-0"
+          >
+            <div className="bg-muted/30 flex flex-wrap items-center gap-x-3 gap-y-0.5 border-b px-4 py-2.5 min-[360px]:px-5">
               <h2
                 id={headingId}
                 className="flex items-center gap-2 text-sm font-semibold tracking-[-0.01em]"
@@ -250,14 +253,7 @@ export function ApplicationList({
                 {group.detail}
               </p>
             </div>
-            <ul
-              className={cn(
-                surfaceClass,
-                "bg-card/90 divide-border/70 relative mt-3 divide-y rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
-                group.id === "attention" &&
-                  "ring-destructive/20 ring-1 dark:bg-[color-mix(in_srgb,var(--destructive)_4%,var(--card))]",
-              )}
-            >
+            <ul className="divide-border/70 divide-y">
               {group.applications.map((application) => (
                 <ApplicationRow
                   key={application.id}

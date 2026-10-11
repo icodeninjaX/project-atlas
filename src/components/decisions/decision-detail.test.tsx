@@ -7,6 +7,7 @@ import type {
   DecisionRevision,
 } from "@/lib/decisions/decision";
 import type { GraphEntitySummary } from "@/lib/graph/registry";
+import { deleteObservationAction } from "@/lib/decisions/actions";
 import { DecisionDetail } from "./decision-detail";
 import type { DecisionRecords } from "./decision-records";
 
@@ -201,6 +202,38 @@ describe("DecisionDetail", () => {
     );
     expect(screen.getAllByLabelText("What did you observe?")).toHaveLength(2);
     expect(screen.getByRole("button", { name: "Delete note" })).toBeVisible();
+  });
+
+  it("deletes a note only after it is confirmed", async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteObservationAction).mockResolvedValue({
+      success: true,
+      message: "Observation deleted.",
+    });
+    renderDetail();
+    await user.click(
+      screen.getByRole("button", { name: "Edit note from Sep 5, 2026" }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Delete note" }));
+    const confirm = screen.getByRole("dialog", {
+      name: "Delete this observation?",
+    });
+    await user.click(
+      within(confirm).getByRole("button", { name: "Keep note" }),
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(deleteObservationAction).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Delete note" }));
+    await user.click(
+      within(
+        screen.getByRole("dialog", { name: "Delete this observation?" }),
+      ).getByRole("button", { name: "Delete note" }),
+    );
+    expect(deleteObservationAction).toHaveBeenCalledTimes(1);
+    const data = vi.mocked(deleteObservationAction).mock.calls[0]![0];
+    expect(data.get("decisionId")).toBe(decision.id);
   });
 
   it("shows what each edit changed", () => {

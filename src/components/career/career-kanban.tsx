@@ -4,14 +4,12 @@ import {
   AlarmClock,
   ArrowUpDown,
   CalendarDays,
-  Check,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
   GripVertical,
   Inbox,
   MapPin,
-  RotateCcw,
   Search,
   SlidersHorizontal,
   X,
@@ -146,9 +144,9 @@ function sortApplications(
 }
 
 const toolbarControlClass =
-  "bg-background/70 ring-border/80 hover:bg-background focus-visible:ring-ring min-h-11 rounded-full text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-10";
+  "bg-card hover:bg-muted focus-visible:ring-ring min-h-11 rounded-xl border text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-10";
 
-const legendClass = "text-muted-foreground text-[0.6875rem] font-semibold";
+const legendClass = "text-sm font-semibold";
 
 function ApplicationCard({
   application,
@@ -194,19 +192,13 @@ function ApplicationCard({
       data-testid={`kanban-card-${application.id}`}
       aria-label={`${application.company_name}, ${application.role_title}`}
       className={cn(
-        "group bg-card relative overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] ring-1 transition-[box-shadow,opacity,transform] duration-200 lg:cursor-grab lg:active:cursor-grabbing",
+        "group bg-card relative overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] ring-1 transition-[box-shadow,opacity] duration-200 lg:cursor-grab lg:active:cursor-grabbing",
         overdue
-          ? "ring-destructive/30 dark:bg-[color-mix(in_srgb,var(--destructive)_5%,var(--card))]"
+          ? "ring-destructive/40"
           : "ring-border/80 hover:ring-primary/35",
         moving && "opacity-55",
       )}
     >
-      {overdue ? (
-        <span
-          aria-hidden="true"
-          className="bg-destructive absolute inset-y-3 left-0 w-[3px] rounded-r-full"
-        />
-      ) : null}
       <div className={cn("@container p-4", compact ? "lg:p-3" : "lg:p-4")}>
         {/* Phones show one column at a time; this keeps each card's stage
             and date in view as it is read. */}
@@ -279,10 +271,8 @@ function ApplicationCard({
 
         <div
           className={cn(
-            "mt-3 rounded-xl px-3 py-2.5 ring-1",
-            overdue
-              ? "bg-destructive/[0.06] ring-destructive/20"
-              : "bg-background/60 ring-border/70",
+            "mt-3 rounded-xl px-3 py-2.5",
+            overdue ? "bg-destructive/[0.06]" : "bg-background/60",
             compact && "lg:mt-2.5 lg:py-2",
           )}
         >
@@ -574,9 +564,9 @@ export function CareerKanban({
       <h2 id="career-board-heading" className="sr-only">
         Pipeline board
       </h2>
-      <div className="bg-card/70 ring-border/80 rounded-2xl p-2 shadow-[0_1px_2px_rgb(7_10_15/0.04)] ring-1">
+      <div>
         <div className="flex flex-col gap-2 md:flex-row md:items-center">
-          <label className="bg-background/70 ring-border/80 focus-within:ring-ring/60 relative flex min-h-11 min-w-0 flex-1 items-center rounded-full pl-10 ring-1 transition-shadow focus-within:ring-2 sm:min-h-10">
+          <label className="bg-card focus-within:border-ring focus-within:ring-ring/40 relative flex min-h-11 min-w-0 flex-1 items-center rounded-xl border pl-10 transition-shadow focus-within:ring-2 sm:min-h-10">
             <Search
               className="text-muted-foreground absolute left-3.5 size-4"
               aria-hidden="true"
@@ -594,7 +584,7 @@ export function CareerKanban({
                 type="button"
                 onClick={() => setQuery("")}
                 aria-label="Clear application search"
-                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mr-0.5 grid size-10 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none sm:size-9"
+                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mr-0.5 grid size-10 place-items-center rounded-lg focus-visible:ring-2 focus-visible:outline-none sm:size-9"
               >
                 <X className="size-4" aria-hidden="true" />
               </button>
@@ -611,7 +601,7 @@ export function CareerKanban({
                 toolbarControlClass,
                 "inline-flex shrink-0 items-center gap-2 px-3.5",
                 attentionOnly &&
-                  "bg-destructive/10 text-destructive ring-destructive/35 hover:bg-destructive/15",
+                  "bg-destructive/10 text-destructive ring-destructive/40 hover:bg-destructive/15 ring-1",
               )}
             >
               <AlarmClock
@@ -625,12 +615,7 @@ export function CareerKanban({
               {overdueCount > 0 ? (
                 <span
                   aria-hidden="true"
-                  className={cn(
-                    "grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-mono text-[0.6875rem] leading-none",
-                    attentionOnly
-                      ? "bg-destructive text-white"
-                      : "bg-destructive text-white dark:bg-red-500/20 dark:text-red-300",
-                  )}
+                  className="text-destructive font-mono tabular-nums"
                 >
                   {overdueCount}
                 </span>
@@ -654,7 +639,7 @@ export function CareerKanban({
                   setSortMode(event.currentTarget.value as SortMode)
                 }
                 aria-label="Sort applications"
-                className="h-full min-h-[inherit] w-full min-w-0 cursor-pointer appearance-none truncate rounded-full bg-transparent pr-3 pl-8 text-xs font-semibold outline-none"
+                className="h-full min-h-[inherit] w-full min-w-0 cursor-pointer appearance-none truncate rounded-xl bg-transparent pr-3 pl-8 text-xs font-semibold outline-none"
               >
                 <option value="attention" className="bg-card">
                   Urgent first
@@ -679,20 +664,19 @@ export function CareerKanban({
               className={cn(
                 toolbarControlClass,
                 "inline-flex shrink-0 items-center justify-center gap-2 max-sm:size-11 max-sm:px-0 sm:px-3.5",
-                customizationOpen &&
-                  "bg-primary/10 text-primary ring-primary/30",
+                customizationOpen && "bg-muted text-foreground",
               )}
             >
               <SlidersHorizontal className="size-4" aria-hidden="true" />
               <span className="max-sm:sr-only">Customize</span>
             </button>
 
-            <div className="ring-border/80 bg-background/70 hidden shrink-0 items-center rounded-full p-0.5 ring-1 lg:flex">
+            <div className="bg-card hidden shrink-0 items-center rounded-xl border p-0.5 lg:flex">
               <button
                 type="button"
                 aria-label="Scroll to previous stages"
                 onClick={() => scrollBoard(-1)}
-                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-9 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-9 place-items-center rounded-lg focus-visible:ring-2 focus-visible:outline-none"
               >
                 <ChevronLeft className="size-4" aria-hidden="true" />
               </button>
@@ -700,7 +684,7 @@ export function CareerKanban({
                 type="button"
                 aria-label="Scroll to next stages"
                 onClick={() => scrollBoard(1)}
-                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-9 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-9 place-items-center rounded-lg focus-visible:ring-2 focus-visible:outline-none"
               >
                 <ChevronRight className="size-4" aria-hidden="true" />
               </button>
@@ -714,7 +698,7 @@ export function CareerKanban({
               type="button"
               aria-label="Close board customization"
               onClick={() => setCustomizationOpen(false)}
-              className="bg-background/70 absolute inset-0 backdrop-blur-sm lg:hidden"
+              className="absolute inset-0 bg-black/60 backdrop-blur-[2px] lg:hidden"
             />
             <div
               ref={customizationPanel}
@@ -722,7 +706,7 @@ export function CareerKanban({
               role="dialog"
               aria-modal={isMobileViewport || undefined}
               aria-labelledby="career-board-customization-title"
-              className="bg-card ring-border motion-safe:max-lg:animate-analyst-sheet lg:bg-background/60 absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 lg:relative lg:inset-auto lg:mt-2 lg:max-h-none lg:overflow-visible lg:rounded-xl lg:p-4 lg:shadow-none"
+              className="bg-background motion-safe:max-lg:animate-analyst-sheet lg:bg-card absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto rounded-t-2xl border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl lg:relative lg:inset-auto lg:mt-2 lg:max-h-none lg:overflow-visible lg:rounded-2xl lg:border lg:p-5 lg:shadow-none"
             >
               <div
                 className="bg-muted-foreground/25 mx-auto mb-4 h-1 w-10 rounded-full lg:hidden"
@@ -732,9 +716,9 @@ export function CareerKanban({
                 <div>
                   <h3
                     id="career-board-customization-title"
-                    className="text-base font-semibold tracking-[-0.01em] lg:text-sm"
+                    className="text-xl font-semibold tracking-[-0.025em] lg:text-base lg:tracking-normal"
                   >
-                    Make the board yours
+                    Board settings
                   </h3>
                   <p className="text-muted-foreground mt-1 text-xs leading-5">
                     Your layout stays on this device.
@@ -745,10 +729,8 @@ export function CareerKanban({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="rounded-full"
                     onClick={() => updatePreferences(defaultPreferences)}
                   >
-                    <RotateCcw className="size-3.5" aria-hidden="true" />
                     Reset
                   </Button>
                   <Button
@@ -758,7 +740,7 @@ export function CareerKanban({
                     size="icon"
                     aria-label="Close customization"
                     onClick={() => setCustomizationOpen(false)}
-                    className="rounded-full lg:hidden"
+                    className="-mr-2 lg:hidden"
                   >
                     <X className="size-4" aria-hidden="true" />
                   </Button>
@@ -768,7 +750,7 @@ export function CareerKanban({
               <div className="mt-5 grid gap-5 lg:mt-4 lg:grid-cols-[0.75fr_1fr_2fr]">
                 <fieldset>
                   <legend className={legendClass}>Card density</legend>
-                  <div className="bg-muted/60 ring-border/70 mt-2 grid grid-cols-2 rounded-full p-1 ring-1">
+                  <div className="bg-muted/60 mt-2 grid grid-cols-2 rounded-xl p-1">
                     {(["comfortable", "compact"] as const).map((density) => (
                       <button
                         key={density}
@@ -778,9 +760,9 @@ export function CareerKanban({
                           updatePreferences({ ...preferences, density })
                         }
                         className={cn(
-                          "focus-visible:ring-ring min-h-9 rounded-full px-2 text-xs font-semibold capitalize transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                          "focus-visible:ring-ring min-h-9 rounded-lg px-2 text-xs font-semibold capitalize transition-colors focus-visible:ring-2 focus-visible:outline-none",
                           preferences.density === density
-                            ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
+                            ? "bg-card text-foreground shadow-[0_1px_2px_rgb(7_10_15/0.12)]"
                             : "text-muted-foreground hover:text-foreground",
                         )}
                       >
@@ -792,7 +774,7 @@ export function CareerKanban({
 
                 <fieldset>
                   <legend className={legendClass}>Card details</legend>
-                  <div className="mt-2 space-y-2">
+                  <div className="mt-1">
                     {[
                       ["showLocation", "Location & setup"],
                       ["showAppliedDate", "Applied date"],
@@ -802,9 +784,8 @@ export function CareerKanban({
                       return (
                         <label
                           key={key}
-                          className="bg-background/70 ring-border/80 flex min-h-11 cursor-pointer items-center justify-between rounded-xl px-3 text-xs font-medium ring-1 sm:min-h-10"
+                          className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm sm:min-h-10"
                         >
-                          {itemLabel}
                           <input
                             type="checkbox"
                             checked={preferences[preferenceKey]}
@@ -814,8 +795,9 @@ export function CareerKanban({
                                 [preferenceKey]: event.currentTarget.checked,
                               })
                             }
-                            className="accent-primary size-4"
+                            className="accent-primary size-4 shrink-0"
                           />
+                          {itemLabel}
                         </label>
                       );
                     })}
@@ -824,18 +806,13 @@ export function CareerKanban({
 
                 <fieldset>
                   <legend className={legendClass}>Visible columns</legend>
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="mt-1 grid grid-cols-2 gap-x-4 sm:grid-cols-3">
                     {careerStages.map((stage) => {
                       const checked = visibleStages.includes(stage);
                       return (
                         <label
                           key={stage}
-                          className={cn(
-                            "focus-within:ring-ring inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3 text-xs font-medium ring-1 transition-colors focus-within:ring-2 sm:min-h-10",
-                            checked
-                              ? "bg-primary/8 ring-primary/30"
-                              : "bg-background/70 ring-border/80 text-muted-foreground",
-                          )}
+                          className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2.5 text-sm sm:min-h-10"
                         >
                           <input
                             type="checkbox"
@@ -857,27 +834,16 @@ export function CareerKanban({
                                 visibleStages: nextStages,
                               });
                             }}
-                            className="peer sr-only"
+                            className="accent-primary size-4 shrink-0"
                           />
                           <span
                             aria-hidden="true"
                             className={cn(
-                              "grid size-4 place-items-center rounded-full ring-1",
-                              checked
-                                ? "bg-primary-solid text-primary-solid-foreground ring-primary-solid"
-                                : "ring-border",
-                            )}
-                          >
-                            {checked ? <Check className="size-3" /> : null}
-                          </span>
-                          <span
-                            aria-hidden="true"
-                            className={cn(
-                              "size-2 rounded-full",
+                              "size-2 shrink-0 rounded-full",
                               stageTones[stage].dot,
                             )}
                           />
-                          {stageLabels[stage]}
+                          <span className="truncate">{stageLabels[stage]}</span>
                         </label>
                       );
                     })}
@@ -912,7 +878,7 @@ export function CareerKanban({
         role="tablist"
         aria-label="Application stages"
         // `relative` keeps the tabs' screen-reader text inside the strip.
-        className="bg-muted/50 ring-border/80 relative mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-1 overflow-x-auto rounded-full p-1 ring-1 lg:hidden [&::-webkit-scrollbar]:hidden"
+        className="bg-muted/50 relative mt-3 flex snap-x snap-mandatory [scrollbar-width:none] gap-1 overflow-x-auto rounded-xl p-1 lg:hidden [&::-webkit-scrollbar]:hidden"
       >
         {visibleStages.map((stage) => {
           const selected = activeStage === stage;
@@ -932,9 +898,9 @@ export function CareerKanban({
               aria-controls={`career-kanban-column-${stage}`}
               onClick={() => setSelectedStage(stage)}
               className={cn(
-                "focus-visible:ring-ring inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                "focus-visible:ring-ring inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-lg px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
                 selected
-                  ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
+                  ? "bg-card text-foreground shadow-[0_1px_2px_rgb(7_10_15/0.12)]"
                   : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
               )}
             >
@@ -1010,20 +976,13 @@ export function CareerKanban({
                   if (application) moveApplication(application, stage);
                 }}
                 className={cn(
-                  "lg:bg-card/45 lg:ring-border/70 relative w-full min-w-0 flex-col transition-[background-color,box-shadow] lg:flex lg:w-[300px] lg:shrink-0 lg:rounded-2xl lg:p-2 lg:ring-1 lg:backdrop-blur",
+                  "lg:bg-card/45 lg:ring-border/70 relative w-full min-w-0 flex-col transition-[background-color,box-shadow] lg:flex lg:w-[300px] lg:shrink-0 lg:rounded-2xl lg:p-2 lg:ring-1",
                   selected ? "flex" : "hidden",
                   !selected && "lg:flex",
                   dropping &&
                     "lg:bg-primary/[0.06] ring-primary/45 lg:ring-primary/45 rounded-2xl ring-2 lg:ring-2",
                 )}
               >
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "absolute inset-x-5 top-0 hidden h-0.5 rounded-b-full opacity-80 lg:block",
-                    tone.dot,
-                  )}
-                />
                 <header className="hidden min-h-11 items-center justify-between gap-3 px-2 pt-1 pb-1.5 lg:flex">
                   <div className="flex min-w-0 items-center gap-2">
                     <span
@@ -1113,7 +1072,7 @@ export function CareerKanban({
                               setQuery("");
                               setAttentionOnly(false);
                             }}
-                            className="text-primary hover:bg-primary/10 focus-visible:ring-ring mt-2 min-h-9 rounded-full px-3 text-[0.6875rem] font-semibold focus-visible:ring-2 focus-visible:outline-none"
+                            className="text-primary focus-visible:ring-ring mt-2 min-h-9 rounded-lg px-3 text-xs font-semibold hover:underline focus-visible:ring-2 focus-visible:outline-none"
                           >
                             Clear filters
                           </button>

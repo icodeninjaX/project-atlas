@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { ChevronRight, Info, Lightbulb } from "lucide-react";
+import { ChevronRight, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SensitiveValue } from "@/components/privacy/privacy-provider";
 import {
@@ -49,13 +49,13 @@ const claimKinds: Record<
   { label: string; dot: string }
 > = {
   observation: { label: "What the records show", dot: "bg-primary" },
-  interpretation: { label: "What it may mean", dot: "bg-violet-500" },
+  interpretation: { label: "What it may mean", dot: "bg-muted-foreground" },
   suggestion: { label: "Worth a look", dot: "bg-positive" },
 };
 
 /** A consent checkbox that reads as one tappable row. */
 const consentClass =
-  "bg-background/50 ring-border/70 has-[:checked]:bg-primary/[0.05] has-[:checked]:ring-primary/30 has-[:focus-visible]:ring-ring text-muted-foreground mt-3 flex cursor-pointer items-start gap-3 rounded-xl p-3 text-xs leading-5 ring-1 transition-colors has-[:focus-visible]:ring-2";
+  "bg-background/55 has-[:focus-visible]:ring-ring text-muted-foreground mt-3 flex cursor-pointer items-start gap-3 rounded-xl p-3 text-xs leading-5 has-[:focus-visible]:ring-2";
 
 const consentInputClass =
   "mt-0.5 size-4 shrink-0 cursor-pointer accent-[var(--primary-solid)] focus-visible:outline-none";
@@ -97,7 +97,7 @@ function InsightResultView({
       ) : null}
       {result.evidence.length > 0 && (
         <details className="group mt-3">
-          <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-full text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 [&::-webkit-details-marker]:hidden">
+          <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-md text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 [&::-webkit-details-marker]:hidden">
             <ChevronRight
               aria-hidden="true"
               className="size-3.5 transition-transform group-open:rotate-90"
@@ -313,8 +313,7 @@ export function WeeklyInsightCard({
               onClick={generate}
               disabled={pending || !acknowledged}
             >
-              <Lightbulb aria-hidden="true" className="size-4" />
-              {pending ? "Checking this week…" : "Generate insight"}
+              {pending ? "Checking this week…" : "Compare with last week"}
             </Button>
             {error && (
               <p role="alert" className="text-destructive mt-3 text-sm">

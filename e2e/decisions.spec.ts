@@ -82,7 +82,7 @@ test.describe("Decision journal local browser flow", () => {
 
       await page.goto("/decisions");
       await expect(
-        page.getByRole("heading", { name: "Decision journal" }),
+        page.getByRole("heading", { level: 1, name: "Decisions" }),
       ).toBeVisible();
       // The empty journal's hero holds the only add button; it opens a sheet.
       await page.getByRole("button", { name: "Record a decision" }).click();
@@ -177,8 +177,11 @@ test.describe("Decision journal local browser flow", () => {
       await page.goto("/timeline?module=decisions");
       await expect(page.getByText("Apply weekly").first()).toBeVisible();
       await page.goto(`/decisions/${saved!.id}`);
-      page.once("dialog", (dialog) => dialog.accept());
       await page.getByRole("button", { name: "Delete decision" }).click();
+      await page
+        .getByRole("dialog", { name: "Delete this decision?" })
+        .getByRole("button", { name: "Delete decision" })
+        .click();
       await expect(page).toHaveURL(/\/decisions$/);
       const { count } = await owner
         .from("decisions")

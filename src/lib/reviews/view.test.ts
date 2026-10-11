@@ -156,7 +156,7 @@ describe("review streak", () => {
       weeks: 3,
       orMore: false,
     });
-    expect(streakLabel({ weeks: 3, orMore: false })).toBe("3-week streak");
+    expect(streakLabel({ weeks: 3, orMore: false })).toBe("3 weeks in a row");
   });
 
   it("includes this week once it is submitted", () => {
@@ -181,7 +181,7 @@ describe("review streak", () => {
       weeks: 2,
       orMore: true,
     });
-    expect(streakLabel({ weeks: 2, orMore: true })).toBe("2+-week streak");
+    expect(streakLabel({ weeks: 2, orMore: true })).toBe("2+ weeks in a row");
     expect(reviewStreak(run, weekStart, false).orMore).toBe(false);
   });
 

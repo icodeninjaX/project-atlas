@@ -111,7 +111,7 @@ describe("Goal Graph UI", () => {
     const { rerender } = render(
       <GoalRelatedDetails goalId="goal-id" items={[]} />,
     );
-    expect(screen.getByText("Nothing connected yet.")).toBeInTheDocument();
+    expect(screen.getByText("Nothing connected yet")).toBeInTheDocument();
     rerender(<GoalRelatedDetails goalId="goal-id" items={[native]} />);
     expect(screen.getByRole("link", { name: task.title })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: task.title })).toHaveClass(
@@ -264,7 +264,9 @@ describe("Goal Graph UI", () => {
       await screen.findByRole("button", { name: /Server Actions/ }),
     ).toBeDisabled();
     expect(screen.getByText("Already linked")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Close dialog" }));
+    await user.click(
+      screen.getByRole("button", { name: "Close add relationship" }),
+    );
     await user.click(
       screen.getByRole("button", { name: "Remove relationship" }),
     );

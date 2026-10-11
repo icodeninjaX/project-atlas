@@ -1,6 +1,6 @@
 "use client";
 
-import { Link2, Search } from "lucide-react";
+import { Link2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   fieldLabelClass,
@@ -74,20 +74,18 @@ export function RecordPicker({
 
   return (
     <div ref={root} className="col-span-full min-w-0">
-      <p className="text-muted-foreground text-xs font-medium">
-        {label} (optional)
-      </p>
+      <p className="text-sm font-medium">{label} (optional)</p>
       <input
         type="hidden"
         name={name}
         value={selected ? `${selected.type}:${selected.id}` : ""}
       />
       {selected ? (
-        <div className="bg-primary/[0.06] ring-primary/20 mt-1.5 flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl py-2 pr-2 pl-3 ring-1">
+        <div className="bg-muted/40 mt-1.5 flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl py-2 pr-2 pl-3">
           <span className="flex min-w-0 items-center gap-2 text-sm break-words">
             <Link2
               aria-hidden="true"
-              className="text-primary size-4 shrink-0"
+              className="text-muted-foreground size-4 shrink-0"
             />
             <span className="min-w-0">
               <span className="text-muted-foreground">
@@ -146,14 +144,13 @@ export function RecordPicker({
             disabled={loading}
             onClick={() => void search()}
           >
-            <Search aria-hidden="true" className="size-4" />
             {loading ? "Searching…" : "Find"}
           </Button>
         </div>
       )}
       {!selected && candidates.length > 0 && (
         <ul
-          className="bg-background ring-border mt-2 max-h-52 overflow-y-auto rounded-xl p-1 shadow-[0_12px_30px_-18px_rgb(7_10_15/0.45)] ring-1"
+          className="bg-muted/40 mt-2 max-h-52 overflow-y-auto rounded-xl p-1"
           aria-label="Matching records"
         >
           {candidates.map((item) => (

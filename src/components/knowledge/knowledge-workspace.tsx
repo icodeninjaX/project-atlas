@@ -7,7 +7,6 @@ import {
   Plus,
   SearchX,
   Sprout,
-  type LucideIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -25,6 +24,7 @@ import {
   type SessionMode,
 } from "@/components/knowledge/review-session";
 import { MoneySheet } from "@/components/money/money-sheet";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import {
   conceptCategories,
@@ -35,7 +35,6 @@ import {
   memorySummary,
   recallStats,
   reviewForecast,
-  reviewStreak,
   sortConcepts,
   viewCounts,
   whenPhrase,
@@ -63,49 +62,6 @@ function scrollToConcept(conceptId: string) {
   document
     .getElementById(`concept-${conceptId}`)
     ?.scrollIntoView({ block: "center" });
-}
-
-function LibraryEmpty({
-  icon: Icon,
-  title,
-  detail,
-  action,
-}: {
-  icon: LucideIcon;
-  title: string;
-  detail?: string;
-  action?: { label: string; onClick: () => void };
-}) {
-  return (
-    <div
-      className={cn(
-        surfaceClass,
-        "bg-card/80 relative grid min-h-56 place-items-center rounded-2xl p-6 text-center",
-      )}
-    >
-      <div className="max-w-sm">
-        <span className="bg-muted/60 text-foreground/75 mx-auto grid size-9 place-items-center rounded-lg">
-          <Icon aria-hidden="true" className="size-5" />
-        </span>
-        <p className="mt-4 font-semibold">{title}</p>
-        {detail ? (
-          <p className="text-muted-foreground mt-1.5 text-sm leading-6">
-            {detail}
-          </p>
-        ) : null}
-        {action ? (
-          <Button
-            type="button"
-            size="sm"
-            className="mt-4"
-            onClick={action.onClick}
-          >
-            {action.label}
-          </Button>
-        ) : null}
-      </div>
-    </div>
-  );
 }
 
 /** The Knowledge page body, from data the page has already loaded. */
@@ -190,10 +146,6 @@ export function KnowledgeWorkspace({
     [concepts, nowIso],
   );
   const recall = useMemo(() => recallStats(reviews, nowIso), [nowIso, reviews]);
-  const streak = useMemo(
-    () => reviewStreak(reviews, nowIso),
-    [nowIso, reviews],
-  );
 
   const active =
     visible.find((item) => item.id === activeId) ??
@@ -316,38 +268,44 @@ export function KnowledgeWorkspace({
     : null;
 
   const empty = filtersActive ? (
-    <LibraryEmpty
+    <EmptyState
       icon={SearchX}
-      title="No concepts match these filters."
-      detail="Clear the filters above to see more concepts."
+      title="No concepts match these filters"
+      description="Clear the filters above to see more concepts."
     />
   ) : view === "due" ? (
-    <LibraryEmpty
+    <EmptyState
       icon={CalendarCheck2}
-      title="Nothing is due for review right now."
-      detail={
+      title="Nothing due for review"
+      description={
         summary.nextScheduled
           ? `Your next review is ${whenPhrase(summary.nextScheduled.next_review_at, nowIso)}.`
-          : undefined
+          : "No reviews are scheduled."
       }
     />
   ) : view === "archived" ? (
-    <LibraryEmpty
+    <EmptyState
       icon={Archive}
-      title="Your archive is empty."
-      detail="Archive a concept to pause its reviews without losing it."
+      title="No archived concepts"
+      description="Archive a concept to pause its reviews without losing it."
     />
   ) : view === "weak" ? (
-    <LibraryEmpty
+    <EmptyState
       icon={Sprout}
-      title="No concepts need extra practice right now."
-      detail="Concepts you rate Again or Hard gather here."
+      title="No concepts need practice"
+      description="Concepts you rate Again or Hard appear here."
     />
   ) : (
-    <LibraryEmpty
+    <EmptyState
       icon={BookOpen}
-      title="Your knowledge library is empty."
-      action={{ label: "Add a concept", onClick: openCreate }}
+      title="No concepts yet"
+      description="Add a concept to start reviewing it."
+      action={
+        <Button type="button" size="sm" onClick={openCreate}>
+          <Plus aria-hidden="true" className="size-4" />
+          Add a concept
+        </Button>
+      }
     />
   );
 
@@ -355,7 +313,7 @@ export function KnowledgeWorkspace({
     <PageShell>
       <PageHeading
         title="Knowledge"
-        description="Capture what you learn, explain it in your own words, and let spaced reviews make it stick."
+        description="Concepts you are learning, reviewed from memory on a spaced schedule."
         actions={
           // Until something is saved, the hero holds the only add button.
           concepts.length ? (
@@ -375,7 +333,6 @@ export function KnowledgeWorkspace({
             summary={summary}
             forecast={forecast}
             recall={recall}
-            streak={streak}
             nowIso={nowIso}
             onStart={startSession}
             onOpen={(conceptId) => {
@@ -437,7 +394,7 @@ export function KnowledgeWorkspace({
         <MoneySheet
           open={sheetOpen}
           onOpenChange={setSheetOpen}
-          eyebrow={`Knowledge / ${panelProps.concept.category}`}
+          eyebrow={panelProps.concept.category}
           title={panelProps.concept.title}
           closeLabel="Close concept"
         >

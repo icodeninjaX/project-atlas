@@ -1,6 +1,5 @@
 "use client";
 
-import { BookOpenCheck, CalendarDays } from "lucide-react";
 import {
   createContext,
   useCallback,
@@ -31,8 +30,8 @@ export function useShowReview() {
 }
 
 const views = [
-  { name: "current", label: "This week", icon: CalendarDays },
-  { name: "archive", label: "Past reviews", icon: BookOpenCheck },
+  { name: "current", label: "This week" },
+  { name: "archive", label: "Past reviews" },
 ] as const;
 
 export function ReviewWorkspace({
@@ -47,7 +46,7 @@ export function ReviewWorkspace({
   currentContent: ReactNode;
   initialView?: ReviewView;
   highlightReviewId?: string;
-  /** "4-week streak", when there is one. */
+  /** "4 weeks in a row", when there is one. */
   streak?: string | null;
 }) {
   const [view, setView] = useState<ReviewView>(initialView);
@@ -100,9 +99,9 @@ export function ReviewWorkspace({
         <div
           role="tablist"
           aria-label="Review views"
-          className="bg-background/90 ring-border/80 sm:bg-muted/50 flex w-full rounded-full p-1 shadow-[0_12px_32px_-14px_rgb(7_10_15/0.55)] ring-1 backdrop-blur-xl sm:w-fit sm:shadow-none"
+          className="bg-background ring-border/80 sm:bg-muted/50 flex w-full rounded-xl p-1 shadow-lg ring-1 sm:w-fit sm:shadow-none sm:ring-0"
         >
-          {views.map(({ name, label, icon: Icon }) => {
+          {views.map(({ name, label }) => {
             const selected = view === name;
             return (
               <button
@@ -127,26 +126,15 @@ export function ReviewWorkspace({
                   }
                 }}
                 className={cn(
-                  "focus-visible:ring-ring inline-flex min-h-10 min-w-0 flex-1 flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full px-3 py-1 text-center text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 sm:flex-none sm:px-5",
+                  "focus-visible:ring-ring inline-flex min-h-10 min-w-0 flex-1 flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-lg px-3 py-1 text-center text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9 sm:flex-none sm:px-5",
                   selected
-                    ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
+                    ? "bg-card text-foreground shadow-[0_1px_2px_rgb(7_10_15/0.12)]"
                     : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
                 )}
               >
-                <Icon
-                  aria-hidden="true"
-                  className={cn("size-4 shrink-0", selected && "text-primary")}
-                />
                 {label}{" "}
                 {name === "archive" ? (
-                  <span
-                    className={cn(
-                      "rounded-full px-1.5 py-0.5 font-mono text-[0.625rem] leading-none tabular-nums",
-                      selected
-                        ? "bg-primary/12 text-primary"
-                        : "bg-background/70 text-muted-foreground",
-                    )}
-                  >
+                  <span className="text-muted-foreground font-mono text-xs font-medium tabular-nums">
                     {reviews.length}
                   </span>
                 ) : null}

@@ -245,7 +245,7 @@ describe("CareerKanban", () => {
 
     await user.click(screen.getByRole("button", { name: "Customize" }));
     expect(
-      screen.getByRole("dialog", { name: "Make the board yours" }),
+      screen.getByRole("dialog", { name: "Board settings" }),
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "compact" }));
     await user.click(
@@ -263,7 +263,7 @@ describe("CareerKanban", () => {
 
     await user.click(screen.getByRole("button", { name: "Done" }));
     expect(
-      screen.queryByRole("dialog", { name: "Make the board yours" }),
+      screen.queryByRole("dialog", { name: "Board settings" }),
     ).not.toBeInTheDocument();
   });
 });

@@ -61,7 +61,7 @@ export function GoalRelatedDetails({
   return (
     <div className="mt-7 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold">Related items</h2>
+        <h2 className="text-base font-semibold">Related items</h2>
         <AddGraphRelationshipDialog
           anchorType={milestoneId ? "goal_milestone" : "goal"}
           anchorId={milestoneId ?? goalId}
@@ -82,7 +82,7 @@ export function GoalRelatedDetails({
       </p>
       {items.length === 0 ? (
         <div className="border-border bg-card rounded-2xl border border-dashed p-6 text-sm">
-          <p className="font-semibold">Nothing connected yet.</p>
+          <p className="font-semibold">Nothing connected yet</p>
           <p className="text-muted-foreground mt-1">
             {milestoneId
               ? "This milestone belongs to its goal. Link a knowledge concept to show what helps complete it."

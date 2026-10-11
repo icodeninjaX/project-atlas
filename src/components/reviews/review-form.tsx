@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Minus, Plus, Save, Send } from "lucide-react";
+import { Check, Minus, Plus } from "lucide-react";
 import { useState, useTransition, type ReactNode } from "react";
 import { useForm, useWatch, type UseFormRegister } from "react-hook-form";
 import { toast } from "sonner";
@@ -54,66 +54,47 @@ const morePrompts = [
 ] as const;
 
 const scores = [
-  {
-    name: "energyScore",
-    kind: "energy",
-    hint: "How charged did you feel?",
-  },
-  {
-    name: "stressScore",
-    kind: "stress",
-    hint: "How much pressure followed you?",
-  },
-  {
-    name: "overallScore",
-    kind: "overall",
-    hint: "How did the week feel as a whole?",
-  },
+  { name: "energyScore", kind: "energy" },
+  { name: "stressScore", kind: "stress" },
+  { name: "overallScore", kind: "overall" },
 ] as const satisfies ReadonlyArray<{
   name: keyof ReviewFields;
   kind: ScoreKind;
-  hint: string;
 }>;
 
 type ScoreName = (typeof scores)[number]["name"];
 
-/** The score in words, or the question it answers while it is empty. */
-function scoreNote(name: ScoreName, value: string | undefined, hint: string) {
+/** The score's band in words, or the scale while it is empty. */
+function scoreNote(name: ScoreName, value: string | undefined) {
   const score = Number(value);
-  if (!score) return hint;
-  if (name === "stressScore") {
-    if (score <= 3) return "Pressure stayed light";
-    if (score <= 6) return "Pressure was noticeable";
-    if (score <= 8) return "A high-pressure week";
-    return "Pressure felt very heavy";
-  }
-  if (name === "energyScore") {
-    if (score <= 3) return "Your battery ran low";
-    if (score <= 6) return "Energy came and went";
-    if (score <= 8) return "You had steady energy";
-    return "You felt fully charged";
-  }
-  if (score <= 3) return "A demanding week";
-  if (score <= 6) return "Somewhere in the middle";
-  if (score <= 8) return "A good week overall";
-  return "A strong week overall";
+  if (!score) return "Not scored";
+  const band = score <= 3 ? 0 : score <= 6 ? 1 : score <= 8 ? 2 : 3;
+  if (name === "stressScore")
+    return ["Low stress", "Moderate stress", "High stress", "Very high stress"][
+      band
+    ]!;
+  if (name === "energyScore")
+    return ["Low energy", "Moderate energy", "Good energy", "High energy"][
+      band
+    ]!;
+  return ["A hard week", "An average week", "A good week", "A very good week"][
+    band
+  ]!;
 }
 
 const stepButtonClass =
-  "bg-background/60 ring-border/80 hover:bg-muted focus-visible:ring-ring grid size-11 shrink-0 place-items-center rounded-full ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:size-10";
+  "bg-background/60 hover:bg-muted focus-visible:ring-ring grid size-11 shrink-0 place-items-center rounded-xl border transition-colors focus-visible:ring-2 focus-visible:outline-none sm:size-10";
 
 const textareaClass =
   "bg-background/50 ring-border/70 placeholder:text-muted-foreground/80 focus-visible:ring-primary/45 mt-2.5 [field-sizing:content] max-h-96 min-h-24 w-full resize-y overflow-y-auto rounded-xl px-3.5 py-3 text-[0.9375rem] leading-7 ring-1 outline-none focus-visible:ring-2";
 
-/** One numbered step of the review. */
+/** One part of the review. */
 function Step({
-  number,
   title,
   note,
   children,
   className,
 }: {
-  number: number;
   title: string;
   note: string;
   children: ReactNode;
@@ -123,18 +104,11 @@ function Step({
     <div
       className={cn("border-border/70 border-t px-4 py-6 sm:px-6", className)}
     >
-      <div aria-hidden="true" className="flex items-start gap-3">
-        <span className="bg-primary/12 text-primary grid size-6 shrink-0 place-items-center rounded-full font-mono text-xs font-semibold">
-          {number}
-        </span>
-        <div className="min-w-0">
-          <p className="text-base leading-6 font-semibold tracking-[-0.01em]">
-            {title}
-          </p>
-          <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-            {note}
-          </p>
-        </div>
+      <div aria-hidden="true" className="min-w-0">
+        <p className="text-base leading-6 font-semibold tracking-[-0.01em]">
+          {title}
+        </p>
+        <p className="text-muted-foreground mt-0.5 text-xs leading-5">{note}</p>
       </div>
       <div className="mt-5 space-y-5">{children}</div>
     </div>
@@ -164,7 +138,9 @@ function Prompt({
           <Check aria-hidden="true" className="text-positive size-3.5" />
         ) : null}
       </label>
-      <p className="text-muted-foreground mt-0.5 text-xs leading-5">{hint}</p>
+      {hint ? (
+        <p className="text-muted-foreground mt-0.5 text-xs leading-5">{hint}</p>
+      ) : null}
       <textarea
         id={name}
         {...register(name)}
@@ -266,7 +242,7 @@ export function ReviewForm({
             Submitted
           </StatusPill>
         ) : savedAt ? (
-          <StatusPill tone="primary">Draft</StatusPill>
+          <StatusPill tone="neutral">Draft</StatusPill>
         ) : null}
       </div>
 
@@ -305,7 +281,6 @@ export function ReviewForm({
         </div>
 
         <Step
-          number={1}
           title="Look back on the week"
           note="A few honest lines are enough. Skip anything that doesn’t fit."
         >
@@ -343,21 +318,16 @@ export function ReviewForm({
           className="border-border/70 min-w-0 border-t px-4 py-6 sm:px-6"
         >
           <legend className="sr-only">How did the week feel?</legend>
-          <div aria-hidden="true" className="flex items-start gap-3">
-            <span className="bg-primary/12 text-primary grid size-6 shrink-0 place-items-center rounded-full font-mono text-xs font-semibold">
-              2
-            </span>
-            <div className="min-w-0">
-              <p className="text-base leading-6 font-semibold tracking-[-0.01em]">
-                How did the week feel?
-              </p>
-              <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-                Out of 10. Optional, so leave any empty.
-              </p>
-            </div>
+          <div aria-hidden="true" className="min-w-0">
+            <p className="text-base leading-6 font-semibold tracking-[-0.01em]">
+              How did the week feel?
+            </p>
+            <p className="text-muted-foreground mt-0.5 text-xs leading-5">
+              Out of 10. Optional, so leave any empty.
+            </p>
           </div>
           <div className="divide-border/60 mt-3 divide-y">
-            {scores.map(({ name, kind, hint }) => {
+            {scores.map(({ name, kind }) => {
               const tone = scoreTones[kind];
               return (
                 <div
@@ -379,7 +349,7 @@ export function ReviewForm({
                       id={`${name}-note`}
                       className="text-muted-foreground mt-0.5 text-xs leading-4"
                     >
-                      {scoreNote(name, values[name], hint)}
+                      {scoreNote(name, values[name])}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
@@ -418,9 +388,8 @@ export function ReviewForm({
         </fieldset>
 
         <Step
-          number={3}
           title="Choose next week’s focus"
-          note="Pick one thing to steer by. It greets you here next week."
+          note="Pick one thing to steer by. It appears here next week."
         >
           <Prompt
             name="nextWeekFocus"
@@ -431,7 +400,7 @@ export function ReviewForm({
         </Step>
 
         {/* Stays in reach while a long review scrolls on wide screens. */}
-        <div className="border-border/70 bg-card/85 z-10 flex flex-col gap-3 border-t px-4 py-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:sticky lg:bottom-0">
+        <div className="border-border/70 bg-card z-10 flex flex-col gap-3 border-t px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:sticky lg:bottom-0">
           <p className="text-muted-foreground flex min-w-0 items-center gap-2 text-xs leading-5 sm:flex-1">
             <span
               aria-hidden="true"
@@ -445,7 +414,7 @@ export function ReviewForm({
               )}
             />
             {isDirty
-              ? "You have unsaved thoughts"
+              ? "Unsaved changes"
               : savedAt
                 ? `Last saved ${manilaDateLabel(savedAt)}`
                 : "Nothing saved yet"}
@@ -460,7 +429,6 @@ export function ReviewForm({
               onClick={submitReview("draft")}
               className="w-full sm:w-auto"
             >
-              <Save aria-hidden="true" className="size-4" />
               Save draft
             </Button>
             <Button
@@ -470,7 +438,6 @@ export function ReviewForm({
               pendingLabel="Saving…"
               className="w-full sm:w-auto"
             >
-              <Send aria-hidden="true" className="size-4" />
               Submit review
             </Button>
           </div>

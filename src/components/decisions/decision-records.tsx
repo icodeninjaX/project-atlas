@@ -87,20 +87,19 @@ function Window({
   emphasis?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        tileClass,
-        "p-4",
-        emphasis && "ring-primary/30 bg-primary/[0.05]",
-      )}
-    >
+    <div className={cn(tileClass, "p-4")}>
       <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
         <span className={eyebrowClass}>{label}</span>
         <span className="text-muted-foreground font-mono text-[0.6875rem]">
           {span(from, through, todayIso)}
         </span>
       </p>
-      <p className="mt-2 font-mono text-[1.75rem] leading-none font-semibold tracking-[-0.025em] [overflow-wrap:anywhere]">
+      <p
+        className={cn(
+          "mt-2 font-mono text-[1.75rem] leading-none font-semibold tracking-[-0.025em] [overflow-wrap:anywhere]",
+          !emphasis && "text-foreground/80",
+        )}
+      >
         <SensitiveValue>{display(metric, value)}</SensitiveValue>
       </p>
       <p className="text-muted-foreground mt-2 text-xs">
@@ -121,8 +120,11 @@ function Change({ comparison }: { comparison: DecisionComparison }) {
   const change = comparisonChange(comparison.before, comparison.after);
   const Icon = changeIcons[change.direction];
   return (
-    <p className="bg-background/60 ring-border mt-3 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-full px-3 py-1.5 text-xs ring-1">
-      <Icon aria-hidden="true" className="text-primary size-3.5 shrink-0" />
+    <p className="mt-3 flex max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
+      <Icon
+        aria-hidden="true"
+        className="text-muted-foreground size-4 shrink-0"
+      />
       <span className="font-semibold">
         {change.direction === "same"
           ? "The same in both windows"
@@ -183,7 +185,7 @@ function DayBars({
       <div className="border-border/70 flex h-20 items-end gap-[2px] border-b pb-px sm:h-24 sm:gap-[3px]">
         {days.before.map((day) => bar(day, false))}
         <span className="relative mx-1 flex h-full w-px shrink-0 items-end justify-center sm:mx-1.5">
-          <span className="via-primary/60 to-primary h-full w-px bg-gradient-to-b from-transparent" />
+          <span className="bg-primary/60 h-full w-px" />
           <span className="bg-primary ring-card absolute -bottom-1 size-2 rounded-full ring-2" />
         </span>
         {days.after.map((day) => bar(day, true))}
@@ -283,7 +285,7 @@ function Pending({
     <div className={cn(tileClass, "mt-5 flex gap-3 p-4 sm:p-5")}>
       <span
         aria-hidden="true"
-        className="bg-muted/70 text-muted-foreground ring-border/80 grid size-9 shrink-0 place-items-center rounded-xl ring-1"
+        className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg"
       >
         <Icon className="size-4" />
       </span>
@@ -316,27 +318,17 @@ export function DecisionRecordsCard({
       aria-labelledby="observed-change"
       className={cn(decisionCardClass, "mt-4 sm:mt-5")}
     >
-      <div className="flex min-w-0 items-center gap-3">
-        <span
-          aria-hidden="true"
-          className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg @max-[14rem]:hidden"
-        >
-          <ChartColumn className="size-[1.125rem]" />
-        </span>
-        <div className="min-w-0">
-          <h2
-            id="observed-change"
-            className="text-base font-semibold tracking-[-0.01em]"
-          >
-            What the records show
-          </h2>
-          <p className="text-muted-foreground mt-0.5 text-xs leading-5 break-words">
-            {metric
-              ? `${decisionMetricLabel(metric)} in the 14 days before and after ${formatCalendarDate(decision.decision_on)}`
-              : "No recorded measure chosen for this decision"}
-          </p>
-        </div>
-      </div>
+      <h2
+        id="observed-change"
+        className="text-base font-semibold tracking-[-0.01em]"
+      >
+        What the records show
+      </h2>
+      <p className="text-muted-foreground mt-0.5 text-xs leading-5 break-words">
+        {metric
+          ? `${decisionMetricLabel(metric)} in the 14 days before and after ${formatCalendarDate(decision.decision_on)}`
+          : "No recorded measure chosen for this decision"}
+      </p>
 
       {records.kind === "comparison" ? (
         <div className="mt-5">
@@ -377,8 +369,8 @@ export function DecisionRecordsCard({
             establish that the decision caused it. Missing real-world entries
             may change the picture.
           </p>
-          <div className="mt-3 rounded-2xl bg-amber-500/[0.07] p-4 ring-1 ring-amber-500/25">
-            <h3 className="text-sm font-semibold">
+          <div className={cn(tileClass, "mt-3 p-4")}>
+            <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-300">
               Other explanations to check
             </h3>
             <p className="text-muted-foreground mt-1 text-xs leading-5">
@@ -393,7 +385,7 @@ export function DecisionRecordsCard({
             </p>
           ) : null}
           <details className={cn(tileClass, "group mt-4")}>
-            <summary className="focus-visible:ring-ring flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-0.5 rounded-2xl px-4 py-2 focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+            <summary className="focus-visible:ring-ring flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-0.5 rounded-xl px-4 py-2 focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
               <span className="text-sm font-semibold">Source records</span>
               <span className="text-muted-foreground font-mono text-xs">
                 {records.comparison.beforeCount} before ·{" "}

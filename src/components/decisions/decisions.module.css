@@ -17,12 +17,12 @@
 
 .rise {
   transform-origin: bottom;
-  animation: rise 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .reach {
   transform-origin: left;
-  animation: reach 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: reach 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* The stretch of the arc still ahead of today. */

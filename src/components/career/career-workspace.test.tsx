@@ -126,7 +126,7 @@ describe("CareerWorkspace", () => {
     ).toBeInTheDocument();
 
     const highlighted = document.getElementById(`application-${id(2)}`);
-    expect(highlighted).toHaveClass("bg-primary/[0.07]");
+    expect(highlighted).toHaveClass("ring-primary/60", "ring-inset");
     expect(screen.getByRole("link", { name: "List" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -185,9 +185,7 @@ describe("CareerWorkspace", () => {
       />,
     );
 
-    expect(
-      screen.getByText("Build your opportunity pipeline"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("No applications yet")).toBeInTheDocument();
     expect(
       screen.getAllByRole("button", { name: "Add application" }),
     ).toHaveLength(1);

@@ -54,7 +54,7 @@ export function GoalForm({
       className="border-border bg-card grid gap-3 rounded-2xl border p-4 sm:grid-cols-2 lg:grid-cols-4"
     >
       {goal && <input type="hidden" name="goalId" value={goal.id} />}
-      <label className="text-muted-foreground text-xs">
+      <label className="text-sm font-medium">
         Goal title
         <Input
           autoFocus={autoFocus}
@@ -63,15 +63,15 @@ export function GoalForm({
           maxLength={160}
           defaultValue={goal?.title}
           placeholder="e.g. Launch my portfolio"
-          className="mt-1.5"
+          className="mt-1.5 font-normal"
         />
       </label>
-      <label className="text-muted-foreground text-xs">
+      <label className="text-sm font-medium">
         Area
         <select
           name="area"
           defaultValue={goal?.area ?? "personal"}
-          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm capitalize"
+          className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm font-normal capitalize"
         >
           {[
             "finance",
@@ -89,16 +89,16 @@ export function GoalForm({
           ))}
         </select>
       </label>
-      <label className="text-muted-foreground text-xs">
+      <label className="text-sm font-medium">
         Target date
         <Input
           name="targetDate"
           type="date"
           defaultValue={goal?.target_date ?? ""}
-          className="mt-1.5"
+          className="mt-1.5 font-normal"
         />
       </label>
-      <label className="text-muted-foreground text-xs">
+      <label className="text-sm font-medium">
         Target amount (₱, optional)
         <Input
           name="targetAmount"
@@ -109,10 +109,10 @@ export function GoalForm({
               : ""
           }
           placeholder="e.g. 60000"
-          className="mt-1.5"
+          className="mt-1.5 font-normal"
         />
       </label>
-      <label className="text-muted-foreground text-xs">
+      <label className="text-sm font-medium">
         Saved so far (₱, optional)
         <Input
           name="savedAmount"
@@ -123,16 +123,16 @@ export function GoalForm({
               : ""
           }
           placeholder="Update it as you save"
-          className="mt-1.5"
+          className="mt-1.5 font-normal"
         />
       </label>
       {goal && (
-        <label className="text-muted-foreground text-xs">
+        <label className="text-sm font-medium">
           Status
           <select
             name="status"
             defaultValue={goal.status}
-            className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm capitalize"
+            className="border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-sm font-normal capitalize"
           >
             <option value="active">Active</option>
             <option value="paused">Paused</option>
@@ -141,24 +141,24 @@ export function GoalForm({
           </select>
         </label>
       )}
-      <label className="text-muted-foreground text-xs sm:col-span-2 lg:col-span-3">
+      <label className="text-sm font-medium sm:col-span-2 lg:col-span-3">
         Description
         <Input
           name="description"
           maxLength={2000}
           defaultValue={goal?.description ?? ""}
           placeholder="Context that will help you act on this goal"
-          className="mt-1.5"
+          className="mt-1.5 font-normal"
         />
       </label>
-      <label className="text-muted-foreground text-xs sm:col-span-2 lg:col-span-3">
+      <label className="text-sm font-medium sm:col-span-2 lg:col-span-3">
         Success definition
         <Input
           name="successDefinition"
           maxLength={300}
           defaultValue={goal?.success_definition ?? ""}
           placeholder="What observable result means this is done?"
-          className="mt-1.5"
+          className="mt-1.5 font-normal"
         />
       </label>
       <div className="flex items-end justify-end gap-2 max-sm:flex-col max-sm:items-stretch sm:col-span-2 lg:col-span-1">

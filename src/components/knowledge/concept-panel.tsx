@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ArchiveRestore, Pencil } from "lucide-react";
+import { ArchiveRestore } from "lucide-react";
 import { useActionState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { DueChip } from "@/components/career/due-chip";
@@ -70,7 +70,6 @@ function ArchiveForm({
           pending={pending}
           pendingLabel="Archiving…"
         >
-          <Archive aria-hidden="true" className="size-3.5" />
           Archive
         </Button>
       )}
@@ -242,15 +241,13 @@ export function ConceptPanel({
       {concept.tags.length ? (
         <ul
           aria-label="Tags"
-          className={cn("flex flex-wrap gap-1.5", showTitle && "mt-3")}
+          className={cn(
+            "text-muted-foreground flex flex-wrap gap-x-2 gap-y-0.5 text-xs",
+            showTitle && "mt-2",
+          )}
         >
           {concept.tags.map((tag) => (
-            <li
-              key={tag}
-              className="bg-muted/80 text-muted-foreground rounded-full px-2 py-0.5 text-[0.6875rem] font-medium"
-            >
-              #{tag}
-            </li>
+            <li key={tag}>#{tag}</li>
           ))}
         </ul>
       ) : null}
@@ -276,7 +273,6 @@ export function ConceptPanel({
           <div className="mt-5 flex flex-wrap gap-2">
             <ArchiveForm concept={concept} onDone={onArchived} />
             <Button type="button" variant="secondary" onClick={onEdit}>
-              <Pencil aria-hidden="true" className="size-3.5" />
               Edit
             </Button>
           </div>
@@ -288,7 +284,6 @@ export function ConceptPanel({
           </div>
           <div className="mt-2 flex flex-wrap gap-1">
             <Button type="button" size="sm" variant="ghost" onClick={onEdit}>
-              <Pencil aria-hidden="true" className="size-3.5" />
               Edit
             </Button>
             <ArchiveForm concept={concept} onDone={onArchived} />

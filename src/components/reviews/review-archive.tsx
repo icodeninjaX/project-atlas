@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpenCheck,
-  ChevronLeft,
-  ChevronRight,
-  Compass,
-  Flame,
-} from "lucide-react";
+import { BookOpenCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRef } from "react";
 import {
@@ -75,24 +67,18 @@ function ArchiveHero({
           id="archive-heading"
           className="text-muted-foreground text-[0.8125rem] font-medium"
         >
-          Your weeks, remembered
+          Past reviews
         </h2>
-        {streak ? (
-          <StatusPill tone="positive" icon={Flame}>
-            {streak}
-          </StatusPill>
-        ) : (
-          <StatusPill tone="neutral">
-            {summary.submitted} of {summary.weeks} submitted
-          </StatusPill>
-        )}
+        <p className="text-muted-foreground text-xs">
+          {streak ?? `${summary.submitted} of ${summary.weeks} submitted`}
+        </p>
       </div>
 
       <p className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-foreground text-[clamp(2.25rem,9vw,3rem)] leading-[0.95] font-semibold tracking-[-0.03em]">
           {summary.weeks}
         </span>
-        <span className="text-muted-foreground text-lg font-medium tracking-[-0.02em] sm:text-xl">
+        <span className="text-muted-foreground text-base font-medium">
           {summary.weeks === 1 ? "week reflected" : "weeks reflected"}
         </span>
       </p>
@@ -142,15 +128,11 @@ function WeekRow({
         onClick={onSelect}
         className={cn(
           "focus-visible:ring-ring relative flex min-h-16 w-full items-center gap-3 px-4 py-3.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
-          selected ? "xl:bg-primary/[0.07]" : "hover:bg-muted/40",
+          selected
+            ? "xl:ring-primary/50 xl:ring-2 xl:ring-inset"
+            : "hover:bg-muted/40",
         )}
       >
-        {selected ? (
-          <span
-            aria-hidden="true"
-            className="bg-primary absolute inset-y-3 left-0 hidden w-[3px] rounded-r-full xl:block"
-          />
-        ) : null}
         <span className="min-w-0 flex-1">
           <span className="text-muted-foreground flex items-center gap-2 text-xs">
             <time dateTime={review.weekStart}>
@@ -203,7 +185,7 @@ function JournalPage({
   );
   const blank = promptKeys.filter((key) => !review[key]?.trim());
   const pager =
-    "text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35 sm:min-h-9";
+    "text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35 sm:min-h-9";
 
   return (
     <article
@@ -224,15 +206,14 @@ function JournalPage({
           </StatusPill>
         </div>
         {focus ? (
-          <p className="text-primary mt-5 flex items-center gap-1.5 text-xs font-semibold">
-            <Compass aria-hidden="true" className="size-3.5" />
+          <p className="text-muted-foreground mt-5 text-xs font-medium">
             Chose to focus on
           </p>
         ) : null}
         <h2
           className={cn(
-            "text-2xl leading-[1.15] font-semibold tracking-[-0.03em] text-balance break-words sm:text-[1.875rem]",
-            focus ? "mt-1.5" : "mt-4",
+            "text-lg leading-snug font-semibold tracking-[-0.015em] text-balance break-words",
+            focus ? "mt-1" : "mt-4",
           )}
         >
           {reviewHeadline(review)}
@@ -285,7 +266,7 @@ function JournalPage({
           onClick={onOlder}
           className={pager}
         >
-          <ArrowLeft aria-hidden="true" className="size-4" />
+          <ChevronLeft aria-hidden="true" className="size-4" />
           Older
         </button>
         <p className="text-muted-foreground font-mono text-[0.6875rem] tabular-nums">
@@ -298,7 +279,7 @@ function JournalPage({
           className={pager}
         >
           Newer
-          <ArrowRight aria-hidden="true" className="size-4" />
+          <ChevronRight aria-hidden="true" className="size-4" />
         </button>
       </footer>
     </article>
@@ -351,21 +332,19 @@ function RhythmTable({ reviews }: { reviews: ReviewArchiveItem[] }) {
 function ArchiveEmpty() {
   return (
     <HeroShell labelledBy="archive-empty-heading">
-      <div className="flex max-w-2xl gap-4">
-        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
-          <BookOpenCheck aria-hidden="true" className="size-5" />
+      <div className="flex max-w-2xl gap-3">
+        <span className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
+          <BookOpenCheck aria-hidden="true" className="size-4" />
         </span>
         <div className="min-w-0">
           <h2
             id="archive-empty-heading"
-            className="text-[1.625rem] leading-tight font-semibold tracking-[-0.03em] text-balance sm:text-[1.875rem]"
+            className="text-base leading-6 font-semibold"
           >
-            Your reflection archive starts here
+            No past reviews yet
           </h2>
-          <p className="text-muted-foreground mt-3 text-sm leading-6">
-            Submit this week’s review and it becomes the first page here. Each
-            week keeps your notes, your scores, and the one focus you chose for
-            the week after.
+          <p className="text-muted-foreground mt-1 text-sm leading-6">
+            Submitted reviews appear here with their notes, scores, and focus.
           </p>
         </div>
       </div>
@@ -472,7 +451,7 @@ export function ReviewArchive({
           <button
             type="button"
             onClick={backToList}
-            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mb-2 -ml-2 inline-flex min-h-11 items-center gap-1 rounded-full px-2 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none xl:hidden"
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mb-2 -ml-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none xl:hidden"
           >
             <ChevronLeft aria-hidden="true" className="size-4" />
             All weeks
@@ -491,7 +470,7 @@ export function ReviewArchive({
         <ReviewSection
           id="archive-trend-heading"
           title="How your weeks felt"
-          meta="Tap a week to open it"
+          meta="Select a week"
         >
           <div className={cn(glassCardClass, "p-4 sm:p-6")}>
             <ul

@@ -108,7 +108,7 @@ test.describe("ATLAS Graph", () => {
         .click();
       await page.getByRole("button", { name: "Confirm removal" }).click();
     }
-    await expect(page.getByText("Nothing connected yet.")).toBeVisible();
+    await expect(page.getByText("Nothing connected yet")).toBeVisible();
 
     // A dismissed suggestion stays hidden after reload.
     const dismiss = page.getByRole("button", {

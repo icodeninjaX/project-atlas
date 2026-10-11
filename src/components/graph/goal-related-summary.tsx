@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { graphRegistry, type GraphEntityType } from "@/lib/graph/registry";
 
 const summaryTypes: GraphEntityType[] = [
@@ -29,10 +28,9 @@ export function GoalRelatedSummary({
         <h3 className="text-muted-foreground text-xs font-semibold">Related</h3>
         <Link
           href={`/goals/${goalId}`}
-          className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs font-semibold hover:underline focus-visible:ring-2 sm:min-h-9"
+          className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center rounded-lg px-2 text-xs font-semibold hover:underline focus-visible:ring-2 sm:min-h-9"
         >
-          View relationships{" "}
-          <ArrowRight className="size-3.5" aria-hidden="true" />
+          View relationships
         </Link>
       </div>
       {total === 0 ? (
@@ -40,18 +38,15 @@ export function GoalRelatedSummary({
           No related items yet. Connect a record to see it here.
         </p>
       ) : (
-        <div className="mt-1 flex flex-wrap gap-1.5">
+        <ul className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-xs">
           {summaryTypes
             .filter((type) => counts[type])
             .map((type) => (
-              <span
-                key={type}
-                className="border-border/70 bg-muted/50 text-foreground/85 rounded-full border px-2.5 py-1 text-[0.6875rem] font-medium"
-              >
+              <li key={type} className="tabular-nums">
                 {graphRegistry[type].label} · {counts[type]}
-              </span>
+              </li>
             ))}
-        </div>
+        </ul>
       )}
     </section>
   );

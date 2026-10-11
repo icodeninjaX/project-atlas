@@ -1,4 +1,3 @@
-import type { LucideIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -9,7 +8,7 @@ import { cn } from "@/lib/utils";
  * the label's muted one.
  */
 export const fieldLabelClass =
-  "text-muted-foreground block text-xs font-medium [&_input]:text-foreground [&_select]:text-foreground [&_textarea]:text-foreground";
+  "block text-sm font-medium [&_input]:font-normal [&_select]:font-normal [&_textarea]:font-normal";
 
 export const fieldSelectClass =
   "border-border bg-background mt-1.5 min-h-11 w-full rounded-xl border px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25 sm:text-sm";
@@ -18,37 +17,32 @@ export const fieldTextareaClass =
   "border-border bg-background placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/25 mt-1.5 min-h-28 w-full rounded-xl border px-3 py-2 text-base outline-none focus-visible:ring-2 sm:text-sm";
 
 /**
- * A titled group of fields on a quiet tile. The legend floats so it sits
- * inside the tile like a heading rather than on its edge.
+ * A titled group of fields, set off from the one above by a hairline. The
+ * legend floats so it lays out like a heading rather than on the edge.
  */
 export function FormSection({
-  icon: Icon,
   title,
   description,
   children,
 }: {
-  icon: LucideIcon;
   title: string;
-  description: string;
+  /** Only when it tells the user something the fields do not. */
+  description?: string;
   children: ReactNode;
 }) {
   return (
-    <fieldset className="bg-card/70 ring-border/80 min-w-0 rounded-2xl p-4 ring-1 sm:p-5">
-      <legend className="float-left flex w-full items-center gap-3">
-        <span
-          aria-hidden="true"
-          className="bg-muted/60 text-foreground/75 grid size-8 shrink-0 place-items-center rounded-lg"
-        >
-          <Icon className="size-4" />
-        </span>
-        <span className="text-sm font-semibold tracking-[-0.01em]">
-          {title}
-        </span>
+    <fieldset className="min-w-0 border-t pt-5 first:border-t-0 first:pt-0">
+      <legend className="float-left w-full text-sm font-semibold">
+        {title}
       </legend>
-      <p className="text-muted-foreground clear-both pt-2 text-xs leading-5 sm:pl-11">
-        {description}
-      </p>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">{children}</div>
+      {description ? (
+        <p className="text-muted-foreground clear-both pt-1 text-xs leading-5">
+          {description}
+        </p>
+      ) : null}
+      <div className="clear-both grid gap-4 pt-4 sm:grid-cols-2">
+        {children}
+      </div>
     </fieldset>
   );
 }

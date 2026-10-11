@@ -33,10 +33,9 @@ describe("MilestoneList", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "View" })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    expect(
+      screen.getByRole("button", { name: "View milestones" }),
+    ).toHaveAttribute("aria-expanded", "false");
     const actionsTrigger = screen.getByRole("button", {
       name: "Open milestone actions",
     });
@@ -44,12 +43,12 @@ describe("MilestoneList", () => {
     expect(screen.queryByText("Plan the route")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("New milestone")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "View" }));
+    fireEvent.click(screen.getByRole("button", { name: "View milestones" }));
 
     expect(screen.getByText("Plan the route")).toBeVisible();
     expect(screen.queryByText("2026-09-01")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Hide" }));
+    fireEvent.click(screen.getByRole("button", { name: "Hide milestones" }));
 
     expect(screen.queryByText("Plan the route")).not.toBeInTheDocument();
 
@@ -107,7 +106,7 @@ describe("MilestoneList", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "View" }));
+    await user.click(screen.getByRole("button", { name: "View milestones" }));
     expect(
       screen.queryByText(
         "The consequences of leaving a prospect's problem unsolved.",
@@ -170,7 +169,7 @@ describe("MilestoneList", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "View" }));
+    await user.click(screen.getByRole("button", { name: "View milestones" }));
     await user.click(
       screen.getByRole("button", { name: "Open milestone Plan the route" }),
     );
@@ -218,10 +217,9 @@ describe("MilestoneList", () => {
     expect(
       screen.queryByRole("dialog", { name: "Opportunity Cost" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Hide" })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
+    expect(
+      screen.getByRole("button", { name: "Hide milestones" }),
+    ).toHaveAttribute("aria-expanded", "true");
     expect(
       screen.getByRole("button", { name: "Open milestone Opportunity Cost" }),
     ).toHaveFocus();
@@ -273,7 +271,7 @@ describe("MilestoneList", () => {
       </OfflineContext.Provider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "View" }));
+    await user.click(screen.getByRole("button", { name: "View milestones" }));
     await user.click(
       screen.getByRole("button", {
         name: "Complete milestone Plan the route",
@@ -442,7 +440,7 @@ describe("MilestoneList", () => {
       </OfflineContext.Provider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "View" }));
+    await user.click(screen.getByRole("button", { name: "View milestones" }));
     expect(
       screen.queryByRole("button", {
         name: "Edit milestone Plan the route",
@@ -605,7 +603,7 @@ describe("MilestoneList", () => {
       </OfflineContext.Provider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "View" }));
+    await user.click(screen.getByRole("button", { name: "View milestones" }));
     await user.click(
       screen.getByRole("button", { name: "Open milestone actions" }),
     );

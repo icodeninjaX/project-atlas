@@ -56,7 +56,9 @@ describe("Weekly insight card", () => {
       </PrivacyProvider>,
     );
     await openThisWeek(user);
-    const button = screen.getByRole("button", { name: "Generate insight" });
+    const button = screen.getByRole("button", {
+      name: "Compare with last week",
+    });
     expect(button).toBeDisabled();
     await user.click(thisWeekConsent());
     await user.click(button);
@@ -87,7 +89,9 @@ describe("Weekly insight card", () => {
     render(<WeeklyInsightCard />);
     await openThisWeek(user);
     await user.click(thisWeekConsent());
-    await user.click(screen.getByRole("button", { name: "Generate insight" }));
+    await user.click(
+      screen.getByRole("button", { name: "Compare with last week" }),
+    );
     expect(
       await screen.findByText("An AI insight is unavailable."),
     ).toBeVisible();

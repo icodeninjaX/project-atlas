@@ -63,7 +63,7 @@ export function DecisionsScreen({
   return (
     <PageShell>
       <PageHeading
-        title="Decision journal"
+        title="Decisions"
         description="Record a choice in your own words, then return to what happened. ATLAS will not infer past decisions for you."
         actions={
           // Until something is recorded, the hero holds the only add button.

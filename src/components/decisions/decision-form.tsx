@@ -23,33 +23,21 @@ import { cn } from "@/lib/utils";
 
 const initial = { success: false, message: "" };
 
-/** A numbered group of fields, as in the other ATLAS sheets. */
+/** A titled group of fields, set off from the one above by a hairline. */
 function Step({
-  step,
   title,
   hint,
   children,
 }: {
-  step: number;
   title: string;
   hint?: string;
   children: ReactNode;
 }) {
   return (
-    <section className="min-w-0">
-      <h3 className="flex items-center gap-2.5 text-sm font-semibold">
-        <span
-          aria-hidden="true"
-          className="bg-primary/12 text-primary grid size-6 shrink-0 place-items-center rounded-full font-mono text-xs font-bold"
-        >
-          {step}
-        </span>
-        {title}
-      </h3>
+    <section className="min-w-0 border-t pt-5 first:border-t-0 first:pt-0">
+      <h3 className="text-sm font-semibold">{title}</h3>
       {hint ? (
-        <p className="text-muted-foreground mt-1 pl-[2.125rem] text-xs leading-5">
-          {hint}
-        </p>
+        <p className="text-muted-foreground mt-1 text-xs leading-5">{hint}</p>
       ) : null}
       <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
         {children}
@@ -99,13 +87,12 @@ export function DecisionForm({
         setDecidedOn(decision?.decision_on ?? today);
         setReviewOn(decision?.review_on ?? "");
       }}
-      className="grid grid-cols-[minmax(0,1fr)] gap-7"
+      className="grid grid-cols-[minmax(0,1fr)] gap-6"
     >
-      {decision && (
-        <input type="hidden" name="decisionId" value={decision.id} />
-      )}
-
-      <Step step={1} title="The choice">
+      <Step title="The choice">
+        {decision && (
+          <input type="hidden" name="decisionId" value={decision.id} />
+        )}
         <label className={cn(fieldLabelClass, "sm:col-span-2")}>
           Decision
           <Input
@@ -143,14 +130,13 @@ export function DecisionForm({
         </label>
         <p
           id={`${id}-outcome`}
-          className="text-muted-foreground -mt-1.5 text-[0.6875rem] leading-4 sm:col-span-2"
+          className="text-muted-foreground -mt-1.5 text-xs leading-5 sm:col-span-2"
         >
           You will read this again on the review date.
         </p>
       </Step>
 
       <Step
-        step={2}
         title="When to look back"
         hint="On the review date the decision moves to Ready to review."
       >
@@ -184,7 +170,7 @@ export function DecisionForm({
           <div className="sm:col-span-2">
             <p
               id={`${id}-presets`}
-              className="text-muted-foreground text-[0.6875rem] leading-4"
+              className="text-muted-foreground text-xs leading-5"
             >
               Or pick a review date from the decision date:
             </p>
@@ -202,10 +188,8 @@ export function DecisionForm({
                       setReviewOn(preset.on);
                     }}
                     className={cn(
-                      "focus-visible:ring-ring inline-flex min-h-11 items-center rounded-full px-3.5 text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9",
-                      pressed
-                        ? "bg-primary/10 text-foreground ring-primary"
-                        : "bg-background/60 text-muted-foreground ring-border hover:bg-muted hover:text-foreground",
+                      "bg-secondary text-secondary-foreground hover:bg-muted focus-visible:ring-ring inline-flex min-h-11 items-center rounded-lg px-3.5 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9",
+                      pressed ? "ring-primary ring-2" : "ring-border ring-1",
                     )}
                   >
                     {preset.label}
@@ -217,11 +201,7 @@ export function DecisionForm({
         ) : null}
       </Step>
 
-      <Step
-        step={3}
-        title="Your reasoning"
-        hint="Optional, and worth it: later you can check these against what happened."
-      >
+      <Step title="Your reasoning" hint="Optional. Lets you check these later.">
         <label className={cn(fieldLabelClass, "sm:col-span-2")}>
           Why this choice? (optional)
           <textarea
@@ -242,7 +222,7 @@ export function DecisionForm({
         </label>
       </Step>
 
-      <Step step={4} title="Connections">
+      <Step title="Connections">
         <label className={fieldLabelClass}>
           Related goal (optional)
           <select
@@ -290,7 +270,7 @@ export function DecisionForm({
         />
       </Step>
 
-      <div className="border-border bg-background/90 sticky bottom-0 z-20 -mx-5 -mb-[calc(1.5rem+env(safe-area-inset-bottom))] grid gap-2 border-t px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-5">
+      <div className="bg-background sticky bottom-0 z-20 -mx-5 -mb-[calc(1.5rem+env(safe-area-inset-bottom))] grid gap-2 border-t px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-5">
         <div className="flex flex-wrap justify-end gap-2 [&>*]:grow min-[26rem]:[&>*]:grow-0">
           {onCancel ? (
             <Button type="button" variant="secondary" onClick={onCancel}>

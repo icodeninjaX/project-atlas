@@ -144,11 +144,11 @@ export function AddGraphRelationshipDialog({
         </Button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
-        <Dialog.Content className="border-border bg-background fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border p-5 shadow-2xl sm:p-6">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]" />
+        <Dialog.Content className="bg-background fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border p-5 shadow-2xl sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <Dialog.Title className="text-lg font-semibold">
+              <Dialog.Title className="text-xl font-semibold tracking-[-0.025em]">
                 Add relationship
               </Dialog.Title>
               <Dialog.Description className="text-muted-foreground mt-1 text-sm">
@@ -160,9 +160,10 @@ export function AddGraphRelationshipDialog({
                 type="button"
                 size="icon"
                 variant="ghost"
-                aria-label="Close dialog"
+                aria-label="Close add relationship"
+                className="-mt-2 -mr-2 shrink-0"
               >
-                <X className="size-4" />
+                <X className="size-4" aria-hidden="true" />
               </Button>
             </Dialog.Close>
           </div>
@@ -171,7 +172,7 @@ export function AddGraphRelationshipDialog({
               <div>
                 <label
                   htmlFor="graph-type"
-                  className="mb-1 block text-sm font-semibold"
+                  className="mb-1.5 block text-sm font-medium"
                 >
                   Item type
                 </label>
@@ -207,11 +208,15 @@ export function AddGraphRelationshipDialog({
             <form onSubmit={(event) => event.preventDefault()}>
               <label
                 htmlFor="graph-search"
-                className="mb-1 block text-sm font-semibold"
+                className="mb-1.5 block text-sm font-medium"
               >
                 Search {graphRegistry[candidateType].label.toLowerCase()}
               </label>
-              <div className="flex gap-2">
+              <div className="relative">
+                <Search
+                  className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                  aria-hidden="true"
+                />
                 <Input
                   id="graph-search"
                   value={query}
@@ -220,13 +225,10 @@ export function AddGraphRelationshipDialog({
                   placeholder="Name or title"
                   maxLength={80}
                   autoComplete="off"
-                />
-                <Search
-                  className="text-muted-foreground size-4 shrink-0 self-center"
-                  aria-hidden="true"
+                  className="pl-9"
                 />
               </div>
-              <p className="text-muted-foreground mt-1 text-xs">
+              <p className="text-muted-foreground mt-1.5 text-xs">
                 {query.trim()
                   ? "Results update as you type."
                   : "Showing your most recent items."}
@@ -241,7 +243,7 @@ export function AddGraphRelationshipDialog({
             </div>
             {candidates.length > 0 ? (
               <div
-                className="border-border max-h-56 overflow-y-auto rounded-xl border"
+                className="-mx-2 max-h-56 divide-y overflow-y-auto"
                 role="group"
                 aria-label="Search results"
               >
@@ -255,11 +257,11 @@ export function AddGraphRelationshipDialog({
                       onClick={() => toggle(item)}
                       disabled={alreadyLinked}
                       aria-pressed={isSelected}
-                      className="border-border hover:bg-muted focus-visible:ring-ring aria-pressed:bg-primary/10 flex min-h-12 w-full min-w-0 items-center gap-3 border-b px-3 py-2 text-left last:border-b-0 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="hover:bg-muted focus-visible:ring-ring flex min-h-12 w-full min-w-0 items-center gap-3 rounded-lg px-2 py-2 text-left focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <span
                         aria-hidden="true"
-                        className="border-border aria-checked:border-primary aria-checked:bg-primary aria-checked:text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-md border"
+                        className="aria-checked:bg-primary-solid aria-checked:text-primary-solid-foreground flex size-5 shrink-0 items-center justify-center rounded-md border aria-checked:border-transparent"
                         aria-checked={isSelected || alreadyLinked}
                       >
                         {isSelected || alreadyLinked ? (
@@ -286,9 +288,10 @@ export function AddGraphRelationshipDialog({
                 })}
               </div>
             ) : null}
-            <div className="bg-muted/30 rounded-xl p-3 text-sm">
-              <span className="font-semibold">Relationship:</span> {pair.label}
-            </div>
+            <p className="text-muted-foreground text-sm">
+              Relationship:{" "}
+              <span className="text-foreground font-medium">{pair.label}</span>
+            </p>
           </div>
           <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Dialog.Close asChild>

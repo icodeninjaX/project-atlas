@@ -90,7 +90,7 @@ describe("DecisionsScreen", () => {
   it("leads with the review loop and what to return to first", () => {
     renderScreen();
     expect(
-      screen.getByRole("heading", { level: 1, name: "Decision journal" }),
+      screen.getByRole("heading", { level: 1, name: "Decisions" }),
     ).toBeVisible();
     const hero = screen.getByRole("region", { name: "Review loop" });
     expect(within(hero).getByText("1 ready to review")).toBeVisible();
@@ -157,7 +157,7 @@ describe("DecisionsScreen", () => {
       journal: { decisions: [], total: 0, notes: [], noteTotal: 0 },
       pageNotes: [],
     });
-    expect(screen.getByText("No decisions recorded yet")).toBeVisible();
+    expect(screen.getByText("No decisions yet")).toBeVisible();
     expect(
       screen.getByRole("list", { name: "How the journal works" }),
     ).toBeVisible();

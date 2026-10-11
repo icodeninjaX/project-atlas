@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  ArrowRight,
-  BrainCircuit,
-  CalendarCheck2,
-  Dumbbell,
-  Flame,
-  GraduationCap,
-  Play,
-  Plus,
-  Target,
-  type LucideIcon,
-} from "lucide-react";
+import { CalendarCheck2, GraduationCap, Play, Plus } from "lucide-react";
 import type { ReactNode } from "react";
 import { DueChip } from "@/components/career/due-chip";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
@@ -95,8 +84,8 @@ function UpNext({
       <div className="bg-background/55 rounded-xl p-4 sm:p-5">
         <p className={eyebrowClass}>Up next</p>
         <div className="mt-3 flex items-start gap-3">
-          <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg">
-            <CalendarCheck2 aria-hidden="true" className="size-[1.125rem]" />
+          <span className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg">
+            <CalendarCheck2 aria-hidden="true" className="size-4" />
           </span>
           <div className="min-w-0">
             <p className="text-[0.9375rem] leading-6 font-semibold">
@@ -139,11 +128,10 @@ function UpNext({
       <button
         type="button"
         onClick={() => onOpen(concept.id)}
-        className="text-primary hover:bg-primary/10 focus-visible:ring-ring mt-3 -mb-1.5 -ml-3 inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
+        className="text-primary focus-visible:ring-ring mt-2 -mb-2 inline-flex min-h-11 items-center rounded-md text-xs font-semibold hover:underline focus-visible:ring-2 focus-visible:outline-none sm:min-h-9"
       >
         Open concept
         <span className="sr-only">: {concept.title}</span>
-        <ArrowRight aria-hidden="true" className="size-3" />
       </button>
     </div>
   );
@@ -298,7 +286,7 @@ function Forecast({
             · {busiest.count} {busiest.count === 1 ? "review" : "reviews"}
           </>
         ) : (
-          "A quiet week ahead."
+          "Nothing due this week"
         )}
         {later ? ` · ${later} more after that` : ""}
       </p>
@@ -307,35 +295,23 @@ function Forecast({
 }
 
 function Habit({
-  icon: Icon,
   label,
   value,
   detail,
 }: {
-  icon: LucideIcon;
   label: string;
   value: string;
   detail: string;
 }) {
   return (
-    <li className="flex min-w-0 items-start gap-2.5">
-      <span
-        aria-hidden="true"
-        className="bg-muted/60 text-foreground/75 mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg max-[359px]:hidden"
-      >
-        <Icon className="size-4" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-muted-foreground text-[0.6875rem] leading-4 font-medium">
-          {label}
-        </p>
-        <p className="font-mono text-lg leading-6 font-semibold tracking-[-0.02em]">
-          {value}
-        </p>
-        <p className="text-muted-foreground text-[0.6875rem] leading-4">
-          {detail}
-        </p>
-      </div>
+    <li className="min-w-0 pl-4 first:pl-0">
+      <p className="text-muted-foreground text-xs leading-4">{label}</p>
+      <p className="mt-1 font-mono text-lg leading-6 font-semibold tracking-[-0.02em]">
+        {value}
+      </p>
+      <p className="text-muted-foreground text-[0.6875rem] leading-4">
+        {detail}
+      </p>
     </li>
   );
 }
@@ -345,7 +321,6 @@ export function KnowledgeHero({
   summary,
   forecast,
   recall,
-  streak,
   nowIso,
   onStart,
   onOpen,
@@ -358,7 +333,6 @@ export function KnowledgeHero({
     rate: number | null;
     thisWeek: number;
   };
-  streak: { days: number; reviewedToday: boolean };
   nowIso: string;
   onStart: (mode: "due" | "practice") => void;
   onOpen: (conceptId: string) => void;
@@ -386,7 +360,7 @@ export function KnowledgeHero({
             <span className="text-foreground font-mono text-[clamp(2.5rem,10vw,3.25rem)] leading-[0.92] font-semibold tracking-[-0.03em]">
               {summary.due}
             </span>
-            <span className="text-muted-foreground text-xl font-medium tracking-[-0.02em] sm:text-2xl">
+            <span className="text-muted-foreground text-base font-medium">
               {summary.due === 1 ? "concept due" : "concepts due"}
             </span>
           </p>
@@ -406,7 +380,6 @@ export function KnowledgeHero({
                 variant="secondary"
                 onClick={() => onStart("practice")}
               >
-                <Dumbbell aria-hidden="true" className="size-4" />
                 Practice {summary.weak} weak{" "}
                 {summary.weak === 1 ? "concept" : "concepts"}
               </Button>
@@ -414,10 +387,9 @@ export function KnowledgeHero({
           </div>
           <ul
             aria-label="Review habits"
-            className="border-border/70 mt-6 grid grid-cols-3 gap-3 border-t pt-5"
+            className="border-border/70 mt-6 grid max-w-sm grid-cols-2 divide-x border-t pt-5"
           >
             <Habit
-              icon={Target}
               label="Recall rate"
               value={
                 recall.rate == null ? "—" : `${Math.round(recall.rate * 100)}%`
@@ -429,19 +401,6 @@ export function KnowledgeHero({
               }
             />
             <Habit
-              icon={Flame}
-              label="Streak"
-              value={`${streak.days} ${streak.days === 1 ? "day" : "days"}`}
-              detail={
-                streak.reviewedToday
-                  ? "Reviewed today"
-                  : streak.days
-                    ? "Review today to keep it"
-                    : "Review to start one"
-              }
-            />
-            <Habit
-              icon={BrainCircuit}
               label="This week"
               value={String(recall.thisWeek)}
               detail={recall.thisWeek === 1 ? "review" : "reviews"}
@@ -473,15 +432,15 @@ export function KnowledgeHero({
 const steps = [
   {
     title: "Capture",
-    detail: "A concept, the notes that explain it, and an example.",
+    detail: "a concept, the notes that explain it, and an example.",
   },
   {
     title: "Recall",
-    detail: "Explain it from memory, then reveal the notes to check.",
+    detail: "it from memory, then reveal the notes to check.",
   },
   {
-    title: "Space",
-    detail: "Rate how it went. Each good recall pushes the next review out.",
+    title: "Rate",
+    detail: "how it went. Each good recall pushes the next review out.",
   },
 ];
 
@@ -496,20 +455,29 @@ export function KnowledgeEmptyHero({ onAdd }: { onAdd: () => void }) {
       >
         Review queue
       </h2>
-      <div className="mt-6 flex max-w-2xl gap-4">
-        <span className="bg-muted/60 text-foreground/75 grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
-          <GraduationCap aria-hidden="true" className="size-5" />
+      <div className="mt-5 flex max-w-2xl gap-3">
+        <span className="bg-muted/60 text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg max-sm:hidden">
+          <GraduationCap aria-hidden="true" className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-[1.625rem] leading-tight font-semibold tracking-[-0.03em] text-balance sm:text-[1.875rem]">
-            Build a library you won’t forget
+          <p className="text-base leading-6 font-semibold">No concepts yet</p>
+          <p className="text-muted-foreground mt-1 text-sm leading-6">
+            Add what you learn, then review it on a spaced schedule.
           </p>
-          <p className="text-muted-foreground mt-3 text-sm leading-6">
-            Write down what you learn once. ATLAS asks you to explain it from
-            memory, then brings it back just before it fades, a little further
-            apart each time it sticks.
-          </p>
-          <div className="mt-6">
+          <ol
+            aria-label="How Knowledge works"
+            className="text-muted-foreground mt-3 space-y-1 text-sm leading-6"
+          >
+            {steps.map((step) => (
+              <li key={step.title}>
+                <span className="text-foreground font-medium">
+                  {step.title}
+                </span>{" "}
+                {step.detail}
+              </li>
+            ))}
+          </ol>
+          <div className="mt-5">
             <Button type="button" onClick={onAdd}>
               <Plus aria-hidden="true" className="size-4" />
               Add concept
@@ -517,44 +485,20 @@ export function KnowledgeEmptyHero({ onAdd }: { onAdd: () => void }) {
           </div>
         </div>
       </div>
-      <ol
-        aria-label="How Knowledge works"
-        className="mt-8 grid gap-3 @2xl:grid-cols-3"
-      >
-        {steps.map((step, index) => (
-          <li
-            key={step.title}
-            className="bg-background/55 flex min-w-0 gap-3 rounded-xl p-4"
-          >
-            <span className="bg-primary/10 text-primary ring-primary/15 grid size-7 shrink-0 place-items-center rounded-full font-mono text-xs font-semibold ring-1">
-              {index + 1}
-            </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold">{step.title}</span>
-              <span className="text-muted-foreground mt-0.5 block text-xs leading-5">
-                {step.detail}
-              </span>
-            </span>
-          </li>
-        ))}
-      </ol>
       <div className="border-border/70 mt-6 border-t pt-5">
-        <p className={eyebrowClass}>When every review goes well</p>
+        <p className={eyebrowClass}>Days between reviews when each goes well</p>
         <ol
           aria-label="Days between reviews when every recall goes well"
-          className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-2"
+          className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-xs"
         >
           {ladder.map((days, index) => (
             <li key={days} className="flex items-center gap-1.5">
               {index > 0 ? (
-                <ArrowRight
-                  aria-hidden="true"
-                  className="text-muted-foreground/70 size-3"
-                />
+                <span aria-hidden="true" className="text-muted-foreground">
+                  ·
+                </span>
               ) : null}
-              <span className="bg-background/60 ring-border/80 rounded-full px-2.5 py-1 font-mono text-xs font-semibold ring-1">
-                {intervalLabel(days)}
-              </span>
+              {intervalLabel(days)}
             </li>
           ))}
         </ol>

@@ -17,11 +17,11 @@ const fieldClass =
   "border-border bg-background/70 text-foreground focus-visible:border-ring focus-visible:ring-ring/25 mt-1.5 min-h-11 w-full rounded-xl border px-3 text-base outline-none focus-visible:ring-2 sm:text-sm";
 
 const pillClass =
-  "focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8 sm:px-3";
+  "focus-visible:ring-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8 sm:px-3";
 
 function pillState(active: boolean) {
   return active
-    ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)] dark:bg-white/[0.11]"
+    ? "bg-card text-foreground shadow-[0_1px_2px_rgb(7_10_15/0.12)] dark:bg-muted"
     : "text-muted-foreground hover:bg-card/60 hover:text-foreground";
 }
 
@@ -40,10 +40,13 @@ function FilterChip({
         type="button"
         aria-label={name}
         onClick={onRemove}
-        className="bg-primary/10 ring-primary/20 hover:bg-primary/15 dark:text-primary focus-visible:ring-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full pr-2 pl-3 text-xs font-semibold text-blue-700 ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8"
+        className="bg-secondary text-secondary-foreground ring-border hover:bg-muted focus-visible:ring-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-lg pr-2 pl-3 text-xs font-semibold ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8"
       >
         <span className="truncate">{label}</span>
-        <X aria-hidden="true" className="size-3.5 shrink-0" />
+        <X
+          aria-hidden="true"
+          className="text-muted-foreground size-3.5 shrink-0"
+        />
       </button>
     </li>
   );
@@ -155,7 +158,7 @@ export function KnowledgeToolbar({
             ref={strip}
             role="group"
             aria-label="Views"
-            className="bg-muted/50 ring-border/80 relative flex min-w-0 [scrollbar-width:none] gap-1 overflow-x-auto rounded-full p-1 ring-1 sm:inline-flex sm:max-w-full [&::-webkit-scrollbar]:hidden"
+            className="bg-muted/50 relative flex min-w-0 [scrollbar-width:none] gap-1 overflow-x-auto rounded-xl p-1 sm:inline-flex sm:max-w-full [&::-webkit-scrollbar]:hidden"
           >
             {knowledgeViews.map(({ value, label }) => {
               const count = counts[value];
@@ -172,12 +175,7 @@ export function KnowledgeToolbar({
                   {label}
                   <span
                     aria-hidden="true"
-                    className={cn(
-                      "grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-mono text-[0.6875rem] leading-none",
-                      value === "due" && count > 0
-                        ? "bg-primary-solid text-primary-solid-foreground"
-                        : "bg-foreground/[0.07] text-muted-foreground",
-                    )}
+                    className="text-muted-foreground font-mono text-xs font-medium tabular-nums"
                   >
                     {count}
                   </span>
@@ -220,9 +218,8 @@ export function KnowledgeToolbar({
           <button
             type="button"
             onClick={onClear}
-            className="text-primary hover:bg-primary/10 focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:ml-auto sm:min-h-8"
+            className="text-primary focus-visible:ring-ring inline-flex min-h-11 items-center rounded-md text-xs font-semibold hover:underline focus-visible:ring-2 focus-visible:outline-none sm:ml-auto sm:min-h-8"
           >
-            <X aria-hidden="true" className="size-3.5" />
             Clear filters
           </button>
         </div>

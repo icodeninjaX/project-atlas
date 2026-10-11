@@ -1,6 +1,4 @@
-import type { CSSProperties } from "react";
 import { Goal } from "lucide-react";
-import { goalAreaTheme } from "@/components/goals/goal-area";
 import { GoalCardHeader } from "@/components/goals/goal-card-header";
 import { GoalCreatePanel } from "@/components/goals/goal-create-panel";
 import {
@@ -15,6 +13,7 @@ import {
   formatCalendarDate,
   manilaTodayIsoDate,
 } from "@/lib/dates/dates";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PageShell } from "@/components/shared/page-shell";
 
 export type GoalsBoardGoal = {
@@ -176,21 +175,12 @@ export function GoalsBoard({
       />
       <div className="mt-5 grid gap-4 sm:mt-6 sm:gap-5 lg:grid-cols-2">
         {goals.length === 0 ? (
-          <div className="border-border relative isolate grid min-h-72 place-items-center overflow-hidden rounded-2xl border border-dashed px-6 py-12 text-center lg:col-span-2">
-            <div>
-              <span className="bg-muted/60 text-foreground/75 mx-auto grid size-12 place-items-center rounded-lg">
-                <Goal className="size-6" aria-hidden="true" />
-              </span>
-              <p className="mt-5 text-base font-semibold tracking-tight">
-                Name the outcome you want.
-              </p>
-              <p className="text-muted-foreground mx-auto mt-1.5 max-w-sm text-sm leading-6">
-                A clear success definition makes daily tasks easier to choose.
-                Use{" "}
-                <span className="text-foreground font-medium">Create goal</span>{" "}
-                above to start.
-              </p>
-            </div>
+          <div className="lg:col-span-2">
+            <EmptyState
+              icon={Goal}
+              title="No goals yet"
+              description="Use Create goal to add one with a success definition."
+            />
           </div>
         ) : (
           orderedGoals.map((goal) => {
@@ -207,12 +197,7 @@ export function GoalsBoard({
               <Card
                 key={goal.id}
                 id={`goal-${goal.id}`}
-                style={
-                  {
-                    "--goal-accent": goalAreaTheme(goal.area).accent,
-                  } as CSSProperties
-                }
-                className={`relative rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] transition duration-200 motion-reduce:transition-none dark:shadow-none [@media(hover:hover)]:hover:border-[color-mix(in_srgb,var(--goal-accent)_35%,var(--border))] ${
+                className={`relative rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)] dark:shadow-none ${
                   highlighted ? "ring-primary/60 ring-2" : ""
                 }`}
               >
@@ -226,6 +211,7 @@ export function GoalsBoard({
                   />
                   <MilestoneList
                     goalId={goal.id}
+                    goalTitle={goal.title}
                     milestones={milestones}
                     highlightMilestoneId={
                       highlighted ? highlightMilestoneId : undefined

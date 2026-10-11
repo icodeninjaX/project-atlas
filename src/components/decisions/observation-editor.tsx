@@ -1,6 +1,7 @@
 "use client";
 
-import { Eye, Link2, PencilLine, Trash2, Unlink } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { Link2, PencilLine, Unlink, X } from "lucide-react";
 import Link from "next/link";
 import {
   useActionState,
@@ -8,6 +9,7 @@ import {
   useRef,
   useState,
   useTransition,
+  type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -37,6 +39,79 @@ function sourceLabel(type: string) {
   return type in recordTypeLabels
     ? recordTypeLabels[type as keyof typeof recordTypeLabels]
     : "Record";
+}
+
+/**
+ * A small confirm for an irreversible delete. `trigger` opens it; nothing
+ * is removed unless the destructive button is pressed.
+ */
+function ConfirmDelete({
+  trigger,
+  title,
+  description,
+  keepLabel,
+  confirmLabel,
+  closeLabel,
+  onConfirm,
+}: {
+  trigger: ReactNode;
+  title: string;
+  description: string;
+  keepLabel: string;
+  confirmLabel: string;
+  closeLabel: string;
+  onConfirm: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]" />
+        <Dialog.Content className="bg-background fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border p-5 shadow-2xl outline-none">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <Dialog.Title className="text-lg font-semibold">
+                {title}
+              </Dialog.Title>
+              <Dialog.Description className="text-muted-foreground mt-1 text-sm leading-5">
+                {description}
+              </Dialog.Description>
+            </div>
+            <Dialog.Close asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={closeLabel}
+                className="-mt-2 -mr-2 shrink-0"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </Button>
+            </Dialog.Close>
+          </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <Dialog.Close asChild>
+              <Button type="button" size="sm" variant="secondary">
+                {keepLabel}
+              </Button>
+            </Dialog.Close>
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              onClick={() => {
+                setOpen(false);
+                onConfirm();
+              }}
+            >
+              {confirmLabel}
+            </Button>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
 }
 
 export function ObservationEditor({
@@ -128,14 +203,13 @@ export function ObservationEditor({
           </Button>
         ) : null}
         {observation && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={deleting}
-            className="hover:text-destructive ml-auto"
-            onClick={() => {
-              if (!window.confirm("Delete this observation?")) return;
+          <ConfirmDelete
+            title="Delete this observation?"
+            description="The note is removed from this decision. This cannot be undone."
+            keepLabel="Keep note"
+            confirmLabel="Delete note"
+            closeLabel="Close delete note confirmation"
+            onConfirm={() => {
               const data = new FormData();
               data.set("decisionId", decisionId);
               data.set("observationId", observation.id);
@@ -144,10 +218,18 @@ export function ObservationEditor({
                 toast[result.success ? "success" : "error"](result.message);
               });
             }}
-          >
-            <Trash2 aria-hidden="true" className="size-3.5" />
-            Delete note
-          </Button>
+            trigger={
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={deleting}
+                className="hover:text-destructive ml-auto"
+              >
+                {deleting ? "Deleting…" : "Delete note"}
+              </Button>
+            }
+          />
         )}
       </div>
       {state.message && (
@@ -201,14 +283,14 @@ export function ObservationItem({
       {last ? null : (
         <span
           aria-hidden="true"
-          className="from-border to-border/40 absolute top-9 bottom-0 left-[calc(1rem-0.5px)] w-px bg-gradient-to-b sm:top-10 sm:left-[calc(1.125rem-0.5px)]"
+          className="bg-border absolute top-9 bottom-0 left-[calc(1rem-0.5px)] w-px sm:top-10 sm:left-[calc(1.125rem-0.5px)]"
         />
       )}
       <span
         aria-hidden="true"
-        className="mt-3 grid size-8 place-items-center rounded-full bg-teal-500/10 text-teal-700 ring-1 ring-teal-500/25 sm:size-9 dark:text-teal-300"
+        className="mt-3 grid size-8 place-items-center sm:size-9"
       >
-        <Eye className="size-4" />
+        <span className="bg-muted-foreground/60 ring-background size-2.5 rounded-full ring-4" />
       </span>
       <article className="bg-card/90 ring-border/80 group-target/note:ring-primary min-w-0 rounded-2xl p-4 shadow-[0_1px_2px_rgb(7_10_15/0.05)] ring-1 group-target/note:ring-2 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
@@ -234,7 +316,7 @@ export function ObservationItem({
               size="sm"
               onClick={() => setEditing(true)}
               aria-label={`Edit note from ${date}`}
-              className="-my-1.5 -mr-2 rounded-full max-sm:size-11 max-sm:px-0"
+              className="-my-1.5 -mr-2 max-sm:size-11 max-sm:px-0"
             >
               <PencilLine aria-hidden="true" className="size-3.5" />
               <span aria-hidden="true" className="max-sm:hidden">
@@ -264,17 +346,19 @@ export function ObservationItem({
               <Link
                 href={source.href as never}
                 aria-label={`Open supporting record: ${sourceLabel(source.type)} · ${source.title}`}
-                className="bg-primary/[0.06] text-foreground ring-primary/20 hover:bg-primary/10 focus-visible:ring-ring mt-3 inline-flex min-h-10 max-w-full items-center gap-2 rounded-full px-3 text-xs ring-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="group/source focus-visible:ring-ring mt-3 inline-flex min-h-10 max-w-full items-center gap-1.5 rounded-md text-xs focus-visible:ring-2 focus-visible:outline-none"
               >
                 <Link2
                   aria-hidden="true"
-                  className="text-primary size-3.5 shrink-0"
+                  className="text-muted-foreground size-3.5 shrink-0"
                 />
                 <span className="min-w-0 truncate">
                   <span className="text-muted-foreground">
                     {sourceLabel(source.type)} ·{" "}
                   </span>
-                  <span className="font-semibold">{source.title}</span>
+                  <span className="text-primary font-semibold group-hover/source:underline">
+                    {source.title}
+                  </span>
                 </span>
               </Link>
             ) : cited ? (
@@ -294,16 +378,13 @@ export function DeleteDecisionButton({ decisionId }: { decisionId: string }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   return (
-    <Button
-      type="button"
-      variant="secondary"
-      disabled={pending}
-      // The theme's filled destructive red holds white text at only 3.9:1
-      // in dark mode; red text on the quiet surface keeps 4.5:1 in both.
-      className="text-red-700 hover:bg-red-500/10 dark:text-red-300"
-      onClick={() => {
-        if (!window.confirm("Delete this decision and its observations?"))
-          return;
+    <ConfirmDelete
+      title="Delete this decision?"
+      description="The decision and its observations are removed. This cannot be undone."
+      keepLabel="Keep decision"
+      confirmLabel="Delete decision"
+      closeLabel="Close delete decision confirmation"
+      onConfirm={() => {
         const data = new FormData();
         data.set("decisionId", decisionId);
         startTransition(async () => {
@@ -312,9 +393,18 @@ export function DeleteDecisionButton({ decisionId }: { decisionId: string }) {
           else toast.error(result.message);
         });
       }}
-    >
-      <Trash2 aria-hidden="true" className="size-4" />
-      Delete decision
-    </Button>
+      trigger={
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={pending}
+          // The theme's filled destructive red holds white text at only 3.9:1
+          // in dark mode; red text on the quiet surface keeps 4.5:1 in both.
+          className="text-red-700 hover:bg-red-500/10 dark:text-red-300"
+        >
+          {pending ? "Deleting…" : "Delete decision"}
+        </Button>
+      }
+    />
   );
 }

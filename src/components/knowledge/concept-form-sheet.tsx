@@ -1,6 +1,5 @@
 "use client";
 
-import { Lightbulb, MessageSquareQuote, NotebookPen } from "lucide-react";
 import { useActionState, useId } from "react";
 import { toast } from "sonner";
 import {
@@ -53,12 +52,8 @@ function ConceptForm({
       {concept ? (
         <input type="hidden" name="conceptId" value={concept.id} />
       ) : null}
-      <div className="space-y-4">
-        <FormSection
-          icon={Lightbulb}
-          title="The concept"
-          description="A short name you will recognize, and where it belongs."
-        >
+      <div className="space-y-5">
+        <FormSection title="The concept">
           <label className={`${fieldLabelClass} sm:col-span-2`}>
             Concept title
             <Input
@@ -103,7 +98,6 @@ function ConceptForm({
         </FormSection>
 
         <FormSection
-          icon={NotebookPen}
           title="What to remember"
           description="Hidden while you recall, then shown so you can check yourself."
         >
@@ -126,14 +120,12 @@ function ConceptForm({
               maxLength={2000}
               rows={2}
               defaultValue={concept?.example ?? ""}
-              placeholder="A concrete case that makes it click"
               className={`${fieldTextareaClass} min-h-20`}
             />
           </label>
         </FormSection>
 
         <FormSection
-          icon={MessageSquareQuote}
           title="In your own words"
           description="Optional. Shown beside the notes when you check your recall."
         >
@@ -144,13 +136,12 @@ function ConceptForm({
               maxLength={2000}
               rows={3}
               defaultValue={concept?.personal_explanation ?? ""}
-              placeholder="How would you explain this to a friend?"
               className={`${fieldTextareaClass} min-h-24`}
             />
           </label>
         </FormSection>
       </div>
-      <div className="border-border bg-background/90 sticky -bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-10 -mx-5 mt-5 -mb-[calc(1.5rem+env(safe-area-inset-bottom))] flex justify-end gap-2 border-t px-5 pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:-bottom-6 sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-6">
+      <div className="bg-background sticky -bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-10 -mx-5 mt-5 -mb-[calc(1.5rem+env(safe-area-inset-bottom))] flex justify-end gap-2 border-t px-5 pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:-bottom-6 sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-6">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>
@@ -184,12 +175,11 @@ export function ConceptFormSheet({
     <MoneySheet
       open={open}
       onOpenChange={onOpenChange}
-      eyebrow={concept ? "Knowledge / Edit" : "Knowledge / New concept"}
       title={concept ? `Edit ${concept.title}` : "Add a concept"}
       description={
         concept
           ? "Changes keep the concept's review schedule and history."
-          : "Write it once. ATLAS asks you to recall it and spaces each review."
+          : "Reviews are scheduled further apart each time you recall it."
       }
       closeLabel={concept ? "Close concept editor" : "Close new concept form"}
     >

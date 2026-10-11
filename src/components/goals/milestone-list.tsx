@@ -18,6 +18,7 @@ import { MilestoneRichTextEditor } from "@/components/goals/milestone-rich-text-
 import { MilestoneRichTextReader } from "@/components/goals/milestone-rich-text-reader";
 import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { TooltipHint } from "@/components/ui/tooltip";
 import { formatCalendarDate } from "@/lib/dates/dates";
 
@@ -37,7 +38,12 @@ type MilestoneDialogState = {
 } | null;
 
 const actionMenuClassName =
-  "absolute top-10 right-0 z-30 w-52 rounded-2xl border border-slate-300 bg-white p-1.5 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/10 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:shadow-[0_20px_55px_rgba(0,0,0,0.75)] dark:ring-white/10";
+  "bg-card text-card-foreground absolute top-10 right-0 z-30 w-52 rounded-xl border p-1 shadow-lg";
+
+const menuItemClassName =
+  "flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm hover:bg-muted focus-visible:bg-muted focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50";
+
+const menuIconClassName = "text-muted-foreground size-4";
 
 function PendingAtlasMark() {
   return (
@@ -169,7 +175,7 @@ function MilestoneToggleButton({ milestone }: { milestone: Milestone }) {
         {pending ? (
           <PendingAtlasMark />
         ) : completed ? (
-          <span className="bg-primary text-primary-foreground grid size-5 place-items-center rounded-full shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_18%,transparent)]">
+          <span className="bg-primary text-primary-foreground grid size-5 place-items-center rounded-full">
             <Check className="size-3" strokeWidth={3} />
           </span>
         ) : (
@@ -236,42 +242,39 @@ function MilestoneSectionMenu({
         onKeyDown={moveMenuFocus}
         className={actionMenuClassName}
       >
-        <Button
+        <button
           type="button"
-          variant="ghost"
           role="menuitem"
           onClick={() => {
             setMenuOpen(false);
             onToggleAdd();
           }}
-          className="w-full justify-start text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-white"
+          className={menuItemClassName}
         >
-          <Plus className="size-4" aria-hidden="true" />
+          <Plus className={menuIconClassName} aria-hidden="true" />
           {addMilestoneOpen ? "Cancel adding milestone" : "Add milestone"}
-        </Button>
-        <div className="border-border my-1 border-t" />
-        <Button
+        </button>
+        <div className="my-1 border-t" />
+        <button
           type="button"
-          variant="ghost"
           role="menuitem"
           disabled={!hasMilestones}
           onClick={() => chooseMode("edit")}
-          className="w-full justify-start text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-white"
+          className={menuItemClassName}
         >
-          <Pencil className="size-4" aria-hidden="true" />
+          <Pencil className={menuIconClassName} aria-hidden="true" />
           {actionMode === "edit" ? "Finish editing" : "Edit milestones"}
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          variant="ghost"
           role="menuitem"
           disabled={!hasMilestones}
           onClick={() => chooseMode("remove")}
-          className="text-destructive hover:bg-destructive/10 hover:text-destructive w-full justify-start"
+          className={`${menuItemClassName} text-destructive`}
         >
           <Trash2 className="size-4" aria-hidden="true" />
           {actionMode === "remove" ? "Finish removing" : "Remove milestones"}
-        </Button>
+        </button>
       </div>
     </div>
   );
@@ -318,9 +321,10 @@ function MilestoneActionDialog({
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]" />
         <Dialog.Content
           ref={dialogContentRef}
+          {...(editing ? { "aria-describedby": undefined } : {})}
           onOpenAutoFocus={(event) => {
             if (!editing) return;
             event.preventDefault();
@@ -334,16 +338,16 @@ function MilestoneActionDialog({
               returnFocusRef.current.focus();
             }
           }}
-          className="border-border bg-card text-card-foreground fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border shadow-2xl outline-none"
+          className="bg-background fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border shadow-2xl outline-none"
         >
           {reading ? (
             <>
-              <header className="border-border bg-card/95 sticky top-0 z-10 flex items-start justify-between gap-4 border-b px-5 py-4 backdrop-blur-sm">
+              <header className="bg-background sticky top-0 z-10 flex items-start justify-between gap-4 border-b px-5 py-4">
                 <div className="min-w-0 flex-1">
-                  <p className="text-muted-foreground mb-1 text-[0.6875rem] font-semibold">
+                  <p className="text-muted-foreground mb-1 text-xs font-medium">
                     Milestone
                   </p>
-                  <Dialog.Title className="text-foreground text-lg leading-tight font-semibold tracking-tight">
+                  <Dialog.Title className="text-foreground text-xl leading-tight font-semibold tracking-[-0.025em]">
                     {milestone.title}
                   </Dialog.Title>
                   <Dialog.Description className="sr-only">
@@ -353,7 +357,7 @@ function MilestoneActionDialog({
                     <div className="flex items-center gap-1.5">
                       {milestone.completed_at ? (
                         <Check
-                          className="text-primary size-3.5"
+                          className="text-positive size-3.5"
                           aria-hidden="true"
                         />
                       ) : (
@@ -382,7 +386,7 @@ function MilestoneActionDialog({
                     onClick={onEdit}
                     className="shrink-0"
                   >
-                    <Pencil className="size-4.5" aria-hidden="true" />
+                    <Pencil className="size-4" aria-hidden="true" />
                   </Button>
                   <Dialog.Close asChild>
                     <Button
@@ -392,7 +396,7 @@ function MilestoneActionDialog({
                       aria-label="Close milestone details"
                       className="shrink-0"
                     >
-                      <X className="size-5" aria-hidden="true" />
+                      <X className="size-4" aria-hidden="true" />
                     </Button>
                   </Dialog.Close>
                 </div>
@@ -401,15 +405,13 @@ function MilestoneActionDialog({
                 <MilestoneRichTextReader
                   content={milestone.description}
                   emptyFallback={
-                    <div className="border-border/80 bg-muted/20 rounded-xl border border-dashed px-5 py-8 text-center">
-                      <p className="text-foreground text-sm font-medium">
+                    <p className="text-muted-foreground text-sm leading-6">
+                      <span className="text-foreground font-medium">
                         No notes yet.
-                      </p>
-                      <p className="text-muted-foreground mx-auto mt-1.5 max-w-sm text-xs leading-5">
-                        Use Edit when you are ready to capture context, lessons,
-                        or anything worth remembering.
-                      </p>
-                    </div>
+                      </span>{" "}
+                      Use Edit when you are ready to capture context, lessons,
+                      or anything worth remembering.
+                    </p>
                   }
                 />
               </article>
@@ -418,14 +420,21 @@ function MilestoneActionDialog({
             <div className="p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <Dialog.Title className="text-base font-semibold">
+                  <Dialog.Title
+                    className={
+                      editing
+                        ? "text-xl font-semibold tracking-[-0.025em]"
+                        : "text-lg font-semibold"
+                    }
+                  >
                     {dialogTitle}
                   </Dialog.Title>
-                  <Dialog.Description className="text-muted-foreground mt-1 text-xs leading-5">
-                    {editing
-                      ? "Keep what this means, what you learn, and anything you want to remember here."
-                      : `Remove “${milestone.title}”? Goal progress will be recalculated and this cannot be undone.`}
-                  </Dialog.Description>
+                  {editing ? null : (
+                    <Dialog.Description className="text-muted-foreground mt-1 text-sm leading-5">
+                      Remove “{milestone.title}”? Goal progress will be
+                      recalculated and this cannot be undone.
+                    </Dialog.Description>
+                  )}
                 </div>
                 <Dialog.Close asChild>
                   <Button
@@ -453,20 +462,20 @@ function MilestoneActionDialog({
                     name="milestoneId"
                     value={milestone.id}
                   />
-                  <label className="block text-xs font-medium">
+                  <label className="block text-sm font-medium">
                     Title
-                    <input
+                    <Input
                       name="title"
                       required
                       maxLength={160}
                       defaultValue={milestone.title}
-                      className="border-border bg-background mt-1 min-h-10 w-full rounded-lg border px-3 text-sm"
+                      className="mt-1.5 font-normal"
                     />
                   </label>
                   <div>
                     <label
                       htmlFor={descriptionId}
-                      className="block text-xs font-medium"
+                      className="block text-sm font-medium"
                     >
                       Description or learning notes
                     </label>
@@ -477,19 +486,19 @@ function MilestoneActionDialog({
                     />
                     <p
                       id={descriptionHelpId}
-                      className="text-muted-foreground mt-1 text-[0.625rem] font-normal"
+                      className="text-muted-foreground mt-1.5 text-xs"
                     >
                       You can come back and add to these notes before completing
                       the milestone.
                     </p>
                   </div>
-                  <label className="block text-xs font-medium">
+                  <label className="block text-sm font-medium">
                     Target date
-                    <input
+                    <Input
                       name="targetDate"
                       type="date"
                       defaultValue={milestone.target_date ?? ""}
-                      className="border-border bg-background mt-1 min-h-10 w-full rounded-lg border px-3 text-sm"
+                      className="mt-1.5 font-normal"
                     />
                   </label>
                   <div className="flex justify-end gap-2">
@@ -503,7 +512,6 @@ function MilestoneActionDialog({
                       pendingLabel={`Saving changes to ${milestone.title}`}
                       idleText="Save changes"
                       pendingText="Saving…"
-                      icon={<Pencil className="size-4" aria-hidden="true" />}
                     />
                   </div>
                 </OfflineMutationForm>
@@ -521,7 +529,7 @@ function MilestoneActionDialog({
                     value={milestone.id}
                   />
                   <Dialog.Close asChild>
-                    <Button type="button" size="sm" variant="ghost">
+                    <Button type="button" size="sm" variant="secondary">
                       Keep milestone
                     </Button>
                   </Dialog.Close>
@@ -531,7 +539,6 @@ function MilestoneActionDialog({
                     idleText="Remove milestone"
                     pendingText="Removing…"
                     variant="destructive"
-                    icon={<Trash2 className="size-4" aria-hidden="true" />}
                   />
                 </OfflineMutationForm>
               )}
@@ -545,10 +552,13 @@ function MilestoneActionDialog({
 
 export function MilestoneList({
   goalId,
+  goalTitle,
   milestones,
   highlightMilestoneId,
 }: {
   goalId: string;
+  /** Names the goal in the show/hide button's accessible label. */
+  goalTitle?: string;
   milestones: Milestone[];
   highlightMilestoneId?: string;
 }) {
@@ -598,7 +608,7 @@ export function MilestoneList({
             Milestones
           </p>
           <span
-            className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 font-mono text-[0.625rem]"
+            className="text-muted-foreground font-mono text-xs tabular-nums"
             aria-label={`${milestones.length} ${milestones.length === 1 ? "milestone" : "milestones"}`}
           >
             {milestones.length}
@@ -606,7 +616,7 @@ export function MilestoneList({
           {actionMode && (
             <span
               aria-live="polite"
-              className={`rounded-full px-2 py-0.5 text-[0.625rem] font-semibold ${actionMode === "remove" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
+              className={`rounded-full px-2 py-0.5 text-[0.6875rem] leading-4 font-semibold ring-1 ${actionMode === "remove" ? "bg-destructive/10 text-destructive ring-destructive/25" : "bg-background/60 text-muted-foreground ring-border"}`}
             >
               {actionMode === "edit" ? "Editing" : "Removing"}
             </span>
@@ -619,6 +629,7 @@ export function MilestoneList({
             size="sm"
             aria-expanded={milestonesOpen}
             aria-controls={milestonesId}
+            aria-label={`${milestonesOpen ? "Hide" : "View"} milestones${goalTitle ? ` for ${goalTitle}` : ""}`}
             onClick={() => setMilestonesOpen((open) => !open)}
           >
             {milestonesOpen ? "Hide" : "View"}
@@ -647,7 +658,7 @@ export function MilestoneList({
                 <div
                   key={milestone.id}
                   id={`milestone-${milestone.id}`}
-                  className={`flex items-center gap-1 rounded-xl pr-1 transition-colors ${highlightMilestoneId === milestone.id ? "bg-primary/10 ring-primary/50 ring-1" : "[@media(hover:hover)]:hover:bg-muted/50"}`}
+                  className={`flex items-center gap-1 rounded-xl pr-1 transition-colors ${highlightMilestoneId === milestone.id ? "ring-primary/50 ring-1" : "[@media(hover:hover)]:hover:bg-muted/50"}`}
                 >
                   <OfflineMutationForm mutation="milestone.toggle">
                     <input
@@ -740,26 +751,29 @@ export function MilestoneList({
           className="bg-muted/20 mt-3 space-y-3 rounded-xl p-3"
         >
           <input type="hidden" name="goalId" value={goalId} />
-          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-            <input
-              name="title"
-              required
-              maxLength={160}
-              placeholder="Add a milestone"
-              aria-label="New milestone"
-              className="border-border bg-background min-h-10 min-w-0 rounded-lg border px-3 text-xs"
-            />
-            <input
-              name="targetDate"
-              type="date"
-              aria-label="Milestone target date"
-              className="border-border bg-background min-h-10 rounded-lg border px-3 text-xs"
-            />
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <label className="block min-w-0 text-sm font-medium">
+              New milestone
+              <Input
+                name="title"
+                required
+                maxLength={160}
+                className="mt-1.5 font-normal"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              Target date
+              <Input
+                name="targetDate"
+                type="date"
+                className="mt-1.5 font-normal"
+              />
+            </label>
           </div>
           <div>
             <label
               htmlFor={`add-milestone-description-${goalId}`}
-              className="block text-xs font-medium"
+              className="block text-sm font-medium"
             >
               Description or learning notes
             </label>
@@ -769,7 +783,7 @@ export function MilestoneList({
             />
             <p
               id={`add-milestone-description-help-${goalId}`}
-              className="text-muted-foreground mt-1 text-[0.625rem]"
+              className="text-muted-foreground mt-1.5 text-xs"
             >
               Add context now or keep building these notes as you make progress.
             </p>

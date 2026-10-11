@@ -207,9 +207,10 @@ export function reviewStreak(
   };
 }
 
+/** "3 weeks in a row", once two or more submitted weeks run together. */
 export function streakLabel(streak: ReviewStreak): string | null {
   if (streak.weeks < 2) return null;
-  return `${streak.weeks}${streak.orMore ? "+" : ""}-week streak`;
+  return `${streak.weeks}${streak.orMore ? "+" : ""} weeks in a row`;
 }
 
 export type Compass = {

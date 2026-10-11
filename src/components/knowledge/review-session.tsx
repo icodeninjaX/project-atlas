@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { CheckCircle2, SkipForward, X } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import styles from "@/components/knowledge/knowledge.module.css";
 import { outcomeTones } from "@/components/knowledge/knowledge-tone";
@@ -28,8 +28,6 @@ type Result = {
   intervalDays: number | null;
 };
 
-const eyebrowClass = "text-muted-foreground text-xs font-semibold";
-
 function Summary({
   results,
   skipped,
@@ -50,20 +48,20 @@ function Summary({
   useEffect(() => heading.current?.focus(), []);
   return (
     <div className={cn("mx-auto w-full max-w-xl", styles.settle)}>
-      <span
-        aria-hidden="true"
-        className="bg-positive/12 text-positive ring-positive/20 mx-auto grid size-14 place-items-center rounded-full ring-1"
-      >
-        <CheckCircle2 className="size-7" />
-      </span>
       <h3
         ref={heading}
         tabIndex={-1}
-        className="mt-5 text-center text-2xl font-semibold tracking-[-0.03em] outline-none sm:text-3xl"
+        className="flex items-center gap-2 text-lg font-semibold outline-none"
       >
+        {results.length ? (
+          <CircleCheck
+            aria-hidden="true"
+            className="text-muted-foreground size-4 shrink-0"
+          />
+        ) : null}
         {results.length ? "Session complete" : "Nothing reviewed"}
       </h3>
-      <p className="text-muted-foreground mx-auto mt-2 max-w-md text-center text-sm leading-6">
+      <p className="text-muted-foreground mt-1 text-sm leading-6">
         {results.length
           ? `You reviewed ${results.length} ${results.length === 1 ? "concept" : "concepts"} and recalled ${recalled} well.`
           : "Every concept was skipped. They stay due until you rate them."}
@@ -73,35 +71,31 @@ function Summary({
       </p>
       {results.length ? (
         <>
-          <dl className="mt-7 grid grid-cols-4 gap-2">
+          <dl className="bg-border mt-6 grid grid-cols-4 gap-px overflow-hidden rounded-xl border">
             {outcomes.map((outcome) => {
               const tone = outcomeTones[outcome];
               return (
                 <div
                   key={outcome}
-                  className="bg-card/80 ring-border/80 relative min-w-0 overflow-hidden rounded-2xl px-2 py-3 text-center ring-1"
+                  className="bg-card min-w-0 px-2 py-3 text-center"
                 >
-                  <span
-                    aria-hidden="true"
-                    className={cn("absolute inset-x-0 top-0 h-[3px]", tone.dot)}
-                  />
                   <dt className={cn("text-xs font-semibold", tone.text)}>
                     {outcomeLabels[outcome]}
                   </dt>
-                  <dd className="mt-1 font-mono text-2xl font-semibold tracking-[-0.03em]">
+                  <dd className="mt-1 font-mono text-xl font-semibold tracking-[-0.025em]">
                     {counts[outcome]}
                   </dd>
                 </div>
               );
             })}
           </dl>
-          <ol className="bg-card/80 ring-border/80 divide-border/70 mt-4 divide-y rounded-2xl ring-1">
+          <ol className="divide-border/70 mt-4 divide-y border-y">
             {results.map((result) => {
               const tone = outcomeTones[result.outcome];
               return (
                 <li
                   key={result.conceptId}
-                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2.5 text-sm"
+                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5 text-sm"
                 >
                   <span className="min-w-0 font-medium break-words">
                     {result.title}
@@ -125,7 +119,7 @@ function Summary({
           </ol>
         </>
       ) : null}
-      <div className="mt-7 flex justify-center">
+      <div className="mt-6 flex justify-end">
         <Button type="button" onClick={onClose} className="min-w-32">
           Done
         </Button>
@@ -193,19 +187,19 @@ export function ReviewSession({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="motion-safe:animate-analyst-fade fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
+        <Dialog.Overlay className="motion-safe:animate-analyst-fade fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]" />
         <Dialog.Content
           aria-describedby={undefined}
           onOpenAutoFocus={(event) => event.preventDefault()}
-          className="bg-background sm:ring-border fixed inset-0 isolate z-50 flex flex-col overflow-hidden outline-none sm:inset-4 sm:shadow-[0_40px_120px_-40px_rgb(7_10_15/0.8)] sm:ring-1 lg:inset-y-8 lg:left-1/2 lg:w-[min(56rem,calc(100vw-4rem))] lg:-translate-x-1/2"
+          className="bg-background fixed inset-0 isolate z-50 flex flex-col overflow-hidden outline-none sm:inset-4 sm:rounded-2xl sm:border sm:shadow-2xl lg:inset-y-8 lg:left-1/2 lg:w-[min(56rem,calc(100vw-4rem))] lg:-translate-x-1/2"
         >
-          <header className="border-border/70 bg-background/70 relative z-10 shrink-0 border-b px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 backdrop-blur-xl sm:px-6 sm:pt-4">
+          <header className="bg-background relative z-10 shrink-0 border-b px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 sm:px-6 sm:pt-4">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className={cn(eyebrowClass, "text-primary")}>
+                <p className="text-muted-foreground text-xs font-medium">
                   {mode === "due" ? "Review session" : "Practice session"}
                 </p>
-                <Dialog.Title className="mt-0.5 text-base font-semibold tracking-[-0.015em]">
+                <Dialog.Title className="mt-0.5 text-lg font-semibold tracking-[-0.015em]">
                   {current ? `Concept ${reached + 1} of ${total}` : "Summary"}
                 </Dialog.Title>
               </div>
@@ -214,9 +208,8 @@ export function ReviewSession({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="shrink-0 rounded-full"
+                  className="-mr-2 shrink-0"
                 >
-                  <X aria-hidden="true" className="size-4" />
                   {current ? "End session" : "Close"}
                 </Button>
               </Dialog.Close>
@@ -230,7 +223,7 @@ export function ReviewSession({
               className="bg-muted mt-3 h-1.5 overflow-hidden rounded-full"
             >
               <span
-                className="bg-primary block h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none"
+                className="bg-primary block h-full rounded-full transition-[width] duration-200 ease-out motion-reduce:transition-none"
                 style={{
                   width: `${total ? (reached / total) * 100 : 100}%`,
                 }}
@@ -245,7 +238,7 @@ export function ReviewSession({
                 className={cn("mx-auto w-full max-w-2xl", styles.settle)}
               >
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
-                  <span className="bg-primary/10 text-primary ring-primary/20 rounded-full px-2.5 py-1 font-semibold ring-1">
+                  <span className="text-foreground/80 font-medium">
                     {current.category}
                   </span>
                   <StrengthPips confidence={current.confidence} />
@@ -255,7 +248,7 @@ export function ReviewSession({
                       : `Reviewed ${current.review_count} ${current.review_count === 1 ? "time" : "times"}${current.last_reviewed_at ? `, last ${relativeDay(current.last_reviewed_at, nowIso).toLowerCase()}` : ""}`}
                   </span>
                 </div>
-                <div className="bg-card/85 ring-border/80 mt-4 rounded-2xl p-4 shadow-[0_1px_2px_rgb(7_10_15/0.04)] ring-1 min-[360px]:p-5 sm:p-7">
+                <div className="mt-5">
                   <RecallCard
                     concept={current}
                     nowIso={nowIso}
@@ -279,7 +272,6 @@ export function ReviewSession({
                     }}
                     className="ml-auto"
                   >
-                    <SkipForward aria-hidden="true" className="size-3.5" />
                     Skip for now
                   </Button>
                 </div>

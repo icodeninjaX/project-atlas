@@ -1,13 +1,4 @@
-import {
-  BriefcaseBusiness,
-  CloudRain,
-  Compass,
-  Hourglass,
-  Lightbulb,
-  ThumbsUp,
-  WalletCards,
-  type LucideIcon,
-} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import type { PromptKey, StatusTone } from "@/lib/reviews/view";
@@ -15,66 +6,52 @@ import { cn } from "@/lib/utils";
 
 export const eyebrowClass = "text-muted-foreground text-xs font-semibold";
 
-/** Every prompt's icon, question, and its title when read back. */
+/** Every prompt's question, its title when read back, and its example. */
 export const promptMeta: Record<
   PromptKey,
   {
-    icon: LucideIcon;
     question: string;
     title: string;
-    hint: string;
+    /** Only where the question needs a note on how to answer. */
+    hint?: string;
     placeholder: string;
   }
 > = {
   wins: {
-    icon: ThumbsUp,
     question: "What went well?",
     title: "What went well",
-    hint: "Notice a moment worth keeping.",
-    placeholder: "A small win, a kind moment, or progress you nearly missed…",
+    placeholder: "A win, a good moment, or progress you nearly missed…",
   },
   challenges: {
-    icon: CloudRain,
     question: "What was difficult?",
     title: "What felt hard",
-    hint: "Name it without judging yourself.",
-    placeholder: "What felt heavy, frustrating, or harder than expected?…",
+    placeholder: "What was frustrating or harder than expected…",
   },
   lessons: {
-    icon: Lightbulb,
     question: "What did you learn?",
     title: "What I learned",
-    hint: "Turn the week into something useful.",
-    placeholder: "A lesson, realization, or reminder you want to carry…",
+    placeholder: "A lesson, realization, or reminder to keep…",
   },
   timeWasters: {
-    icon: Hourglass,
     question: "Where did time slip away?",
     title: "Where time went",
-    hint: "Spot the pattern, then let it go.",
     placeholder: "A distraction, detour, or habit that took more than it gave…",
   },
   moneyReflection: {
-    icon: WalletCards,
     question: "What happened financially?",
     title: "Money reflection",
-    hint: "Keep the story behind the numbers.",
-    placeholder: "A choice, expense, saving win, or money feeling you noticed…",
+    placeholder: "A choice, expense, or saving you noticed…",
   },
   careerReflection: {
-    icon: BriefcaseBusiness,
     question: "What moved your career forward?",
     title: "Career reflection",
-    hint: "Quiet progress still counts.",
-    placeholder: "Something you built, practiced, learned, or reached for…",
+    placeholder: "Something you built, practiced, learned, or applied for…",
   },
   nextWeekFocus: {
-    icon: Compass,
     question: "What matters most next week?",
-    title: "Next week’s compass",
-    hint: "Name one thing, in a few words.",
-    placeholder:
-      "If one thing deserves your best attention next week, what is it?…",
+    title: "Next week’s focus",
+    hint: "One thing, in a few words.",
+    placeholder: "The one thing that most deserves your attention…",
   },
 };
 

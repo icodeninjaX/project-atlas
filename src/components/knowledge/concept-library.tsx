@@ -52,32 +52,20 @@ function ConceptRow({
   const level = strengthLevel(concept.confidence);
   const archived = Boolean(concept.archived_at);
   return (
-    <li
-      id={`concept-${concept.id}`}
-      className="relative scroll-mt-24 first:rounded-t-[inherit] last:rounded-b-[inherit]"
-    >
+    <li id={`concept-${concept.id}`} className="relative scroll-mt-24">
       {/* The selection only shows where its concept sits beside the list;
           a concept opened from a link is marked at every width. */}
-      {active || highlighted ? (
-        <span
-          aria-hidden="true"
-          className={cn(
-            "bg-primary absolute inset-y-3 left-0 z-10 w-1 rounded-r-full",
-            !highlighted && "max-xl:hidden",
-          )}
-        />
-      ) : null}
       <button
         type="button"
         aria-current={active ? "true" : undefined}
         onClick={() => onSelect(concept.id)}
         className={cn(
           "focus-visible:ring-ring @container relative grid w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3.5 gap-y-2 p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset min-[360px]:px-5 sm:items-center",
-          "hover:bg-foreground/[0.025] rounded-[inherit] @lg:grid-cols-[auto_minmax(0,1fr)_auto]",
-          highlighted && "bg-primary/[0.06] hover:bg-primary/[0.08]",
+          "hover:bg-foreground/[0.025] @lg:grid-cols-[auto_minmax(0,1fr)_auto]",
+          highlighted && "ring-primary/60 ring-2 ring-inset",
           active &&
             !highlighted &&
-            "xl:bg-primary/[0.06] xl:hover:bg-primary/[0.08]",
+            "xl:ring-primary/50 xl:ring-2 xl:ring-inset",
         )}
       >
         <StrengthRing
@@ -94,17 +82,12 @@ function ConceptRow({
               {concept.category}
             </span>
             {concept.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                className="bg-muted/80 max-w-full truncate rounded-full px-1.5 text-[0.6875rem]"
-              >
+              <span key={tag} className="max-w-full truncate">
                 #{tag}
               </span>
             ))}
             {concept.tags.length > 3 ? (
-              <span className="text-[0.6875rem]">
-                +{concept.tags.length - 3}
-              </span>
+              <span>+{concept.tags.length - 3}</span>
             ) : null}
           </span>
         </span>
@@ -137,8 +120,9 @@ function ConceptRow({
 }
 
 /**
- * The library in sections, each one glass card of rows. A row opens its
- * concept beside the list on wide screens and in a sheet on smaller ones.
+ * The library as one card of rows, in sections under sub-headers. A row
+ * opens its concept beside the list on wide screens and in a sheet on
+ * smaller ones.
  */
 export function ConceptLibrary({
   groups,
@@ -157,66 +141,89 @@ export function ConceptLibrary({
   empty: ReactNode;
 }) {
   return (
-    <section aria-label="Knowledge library" className="min-w-0 space-y-8">
-      {groups.length === 0 ? empty : null}
-      {groups.map((group) => {
-        const headingId = `knowledge-group-${group.id}`;
-        const { icon: Icon, tone } = groupIcons[group.id];
-        const count = group.concepts.length;
-        return (
-          <section key={group.id} aria-labelledby={headingId}>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1">
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "grid size-7 shrink-0 place-items-center rounded-lg ring-1",
-                  tone === "attention" &&
-                    "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300",
-                  tone === "default" &&
-                    "bg-primary/10 text-primary ring-primary/15",
-                  tone === "muted" &&
-                    "bg-muted/70 text-muted-foreground ring-border/80",
-                )}
-              >
-                <Icon className="size-3.5" />
-              </span>
-              <h2
-                id={headingId}
-                className="flex items-center gap-2 text-sm font-semibold tracking-[-0.01em]"
-              >
-                {group.label}
-                <span className="bg-foreground/[0.07] text-muted-foreground grid h-5 min-w-5 place-items-center rounded-full px-1.5 font-mono text-[0.6875rem] leading-none font-semibold">
-                  <span className="sr-only">, </span>
-                  {count}
-                  <span className="sr-only">
-                    {count === 1 ? " concept" : " concepts"}
-                  </span>
-                </span>
-              </h2>
-              <p className="text-muted-foreground text-xs max-sm:basis-full max-sm:pl-10 sm:ml-auto">
-                {group.detail}
-              </p>
-            </div>
-            <ul
-              className={cn(
-                surfaceClass,
-                "bg-card/90 divide-border/70 relative mt-3 divide-y rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
-              )}
-            >
-              {group.concepts.map((concept) => (
-                <ConceptRow
-                  key={concept.id}
-                  concept={concept}
-                  nowIso={nowIso}
-                  active={concept.id === activeId}
-                  highlighted={concept.id === highlightId}
-                  onSelect={onSelect}
-                />
-              ))}
-            </ul>
-          </section>
-        );
-      })}
+    <section aria-label="Knowledge library" className="min-w-0">
+      {groups.length === 0 ? (
+        empty
+      ) : (
+        <div
+          className={cn(
+            surfaceClass,
+            "bg-card/90 relative overflow-hidden rounded-2xl shadow-[0_1px_2px_rgb(7_10_15/0.04)]",
+          )}
+        >
+          {groups.map((group) => (
+            <LibrarySection
+              key={group.id}
+              group={group}
+              activeId={activeId}
+              highlightId={highlightId}
+              nowIso={nowIso}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function LibrarySection({
+  group,
+  activeId,
+  highlightId,
+  nowIso,
+  onSelect,
+}: {
+  group: LibraryGroup;
+  activeId?: string;
+  highlightId?: string;
+  nowIso: string;
+  onSelect: (conceptId: string) => void;
+}) {
+  const headingId = `knowledge-group-${group.id}`;
+  const { icon: Icon, tone } = groupIcons[group.id];
+  const count = group.concepts.length;
+  return (
+    <section aria-labelledby={headingId} className="border-t first:border-t-0">
+      <div className="bg-muted/30 flex flex-wrap items-center gap-x-3 gap-y-0.5 border-b px-4 py-2.5 min-[360px]:px-5">
+        <h2
+          id={headingId}
+          className="flex items-center gap-2 text-sm font-semibold tracking-[-0.01em]"
+        >
+          <Icon
+            aria-hidden="true"
+            className={cn(
+              "size-4 shrink-0",
+              tone === "attention"
+                ? "text-amber-700 dark:text-amber-300"
+                : "text-muted-foreground",
+            )}
+          />
+          {group.label}
+          <span className="text-muted-foreground font-mono text-xs font-medium tabular-nums">
+            <span className="sr-only">, </span>
+            {count}
+            <span className="sr-only">
+              {count === 1 ? " concept" : " concepts"}
+            </span>
+          </span>
+        </h2>
+        <p className="text-muted-foreground text-xs max-sm:basis-full sm:ml-auto">
+          {group.detail}
+        </p>
+      </div>
+      <ul className="divide-border/70 divide-y">
+        {group.concepts.map((concept) => (
+          <ConceptRow
+            key={concept.id}
+            concept={concept}
+            nowIso={nowIso}
+            active={concept.id === activeId}
+            highlighted={concept.id === highlightId}
+            onSelect={onSelect}
+          />
+        ))}
+      </ul>
     </section>
   );
 }

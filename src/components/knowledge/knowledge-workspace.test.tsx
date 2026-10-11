@@ -144,9 +144,7 @@ describe("KnowledgeWorkspace", () => {
         initialView: "due",
       },
     );
-    expect(
-      screen.getByText("Nothing is due for review right now."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Nothing due for review")).toBeInTheDocument();
     expect(
       screen.getByText("Your next review is tomorrow."),
     ).toBeInTheDocument();
@@ -214,7 +212,7 @@ describe("KnowledgeWorkspace", () => {
       target: { value: "Career" },
     });
     expect(
-      screen.getByText("No concepts match these filters."),
+      screen.getByText("No concepts match these filters"),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));

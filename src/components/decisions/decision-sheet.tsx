@@ -7,7 +7,6 @@ import { MoneySheet } from "@/components/money/money-sheet";
 import { Button } from "@/components/ui/button";
 import type { Decision } from "@/lib/decisions/decision";
 import type { GraphEntitySummary } from "@/lib/graph/registry";
-import { cn } from "@/lib/utils";
 
 type Goal = { id: string; title: string };
 
@@ -37,7 +36,6 @@ function DecisionSheet({
     <MoneySheet
       open={open}
       onOpenChange={onOpenChange}
-      eyebrow="Decision journal"
       title={decision ? "Edit decision" : "Record a decision"}
       description={
         decision
@@ -82,7 +80,7 @@ export function DecisionCreateButton({
         type="button"
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
-        className={cn("rounded-full px-5", className)}
+        className={className}
       >
         <Plus aria-hidden="true" className="size-4" />
         {label}
@@ -118,7 +116,7 @@ export function DecisionEditButton({
         size="sm"
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
-        className="shrink-0 rounded-full max-sm:size-11 max-sm:px-0"
+        className="shrink-0 max-sm:size-11 max-sm:px-0"
       >
         <PencilLine aria-hidden="true" className="size-4" />
         <span className="max-sm:sr-only">Edit decision</span>

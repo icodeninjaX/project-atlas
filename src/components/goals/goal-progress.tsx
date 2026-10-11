@@ -1,5 +1,3 @@
-import { useId } from "react";
-
 export function calculateGoalProgress(
   completedMilestones: number,
   totalMilestones: number,
@@ -22,7 +20,6 @@ export function GoalProgress({
   totalMilestones: number;
   nextMilestoneTitle?: string;
 }) {
-  const gradientId = `progress-ring-${useId()}`;
   const progressPercent = calculateGoalProgress(
     completedMilestones,
     totalMilestones,
@@ -51,18 +48,6 @@ export function GoalProgress({
           aria-hidden="true"
           className="size-full -rotate-90"
         >
-          <defs>
-            <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-              <stop
-                offset="0%"
-                stopColor={complete ? "#10b981" : "var(--primary)"}
-              />
-              <stop
-                offset="100%"
-                stopColor={complete ? "#34d399" : "#22d3ee"}
-              />
-            </linearGradient>
-          </defs>
           <circle
             cx="18"
             cy="18"
@@ -81,8 +66,7 @@ export function GoalProgress({
               strokeLinecap="round"
               pathLength={100}
               strokeDasharray={`${progressPercent} 100`}
-              stroke={`url(#${gradientId})`}
-              className="transition-[stroke-dasharray] duration-500 ease-out motion-reduce:transition-none"
+              className={`${complete ? "stroke-positive" : "stroke-primary"} transition-[stroke-dasharray] duration-200 ease-out motion-reduce:transition-none`}
             />
           ) : null}
         </svg>
@@ -105,7 +89,7 @@ export function GoalProgress({
                 className={`h-1 flex-1 rounded-full ${
                   index < completedMilestones
                     ? complete
-                      ? "bg-emerald-500"
+                      ? "bg-positive"
                       : "bg-primary"
                     : "bg-border"
                 }`}
@@ -115,7 +99,9 @@ export function GoalProgress({
         ) : null}
         {nextMilestoneTitle ? (
           <p className="text-muted-foreground mt-2 flex min-w-0 gap-1.5 text-xs leading-5">
-            <span className="text-primary shrink-0 font-semibold">Up next</span>
+            <span className="text-muted-foreground shrink-0 font-medium">
+              Up next
+            </span>
             <span className="sr-only">:</span>
             <span className="text-foreground/85 line-clamp-2">
               {nextMilestoneTitle}

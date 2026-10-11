@@ -432,12 +432,3 @@ export function companyInitials(name: string) {
   if (words.length === 1) return [...words[0]!][0]!.toLocaleUpperCase();
   return (words[0]![0]! + words[1]![0]!).toLocaleUpperCase();
 }
-
-/** A stable index into a palette of `size`, from the company's name. */
-export function companyHueIndex(name: string, size: number) {
-  let hash = 0;
-  for (const character of name.trim().toLocaleLowerCase()) {
-    hash = (hash * 31 + character.codePointAt(0)!) >>> 0;
-  }
-  return hash % size;
-}
