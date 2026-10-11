@@ -237,7 +237,7 @@ describe("capacity-aware Dayline", () => {
     expect(result.items.map((item) => item.href)).toEqual([
       "/debts?highlight=debt-1",
       "/career?highlight=career-1",
-      "/goals?highlight=goal-1",
+      "/goals?highlight=goal-1&milestone=milestone-1",
     ]);
   });
 });
