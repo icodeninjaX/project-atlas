@@ -23,7 +23,9 @@ import {
   useState,
   useSyncExternalStore,
   useTransition,
+  type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { ApplicationEditForm } from "@/components/career/application-edit-form";
 import { CompanyMark } from "@/components/career/company-mark";
@@ -143,6 +145,21 @@ function sortApplications(
       Date.parse(a.applied_at ?? "1970-01-01");
     return sortMode === "oldest" ? -dateDifference : dateDifference;
   });
+}
+
+/**
+ * On phones the customization panel is a full-screen sheet. The page frame
+ * is its own stacking context, so left in place the sheet would sit under
+ * the app's bottom navigation; rendering it on `body` puts it on top.
+ */
+function PortalOnMobile({
+  enabled,
+  children,
+}: {
+  enabled: boolean;
+  children: ReactNode;
+}) {
+  return enabled ? createPortal(children, document.body) : children;
 }
 
 const toolbarControlClass =
@@ -709,193 +726,195 @@ export function CareerKanban({
         </div>
 
         {customizationOpen ? (
-          <div className="fixed inset-0 z-50 lg:static lg:z-auto">
-            <button
-              type="button"
-              aria-label="Close board customization"
-              onClick={() => setCustomizationOpen(false)}
-              className="bg-background/70 absolute inset-0 backdrop-blur-sm lg:hidden"
-            />
-            <div
-              ref={customizationPanel}
-              id="career-board-customization"
-              role="dialog"
-              aria-modal={isMobileViewport || undefined}
-              aria-labelledby="career-board-customization-title"
-              className="bg-card ring-border motion-safe:max-lg:animate-analyst-sheet lg:bg-background/60 absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 lg:relative lg:inset-auto lg:mt-2 lg:max-h-none lg:overflow-visible lg:rounded-xl lg:p-4 lg:shadow-none"
-            >
-              <div
-                className="bg-muted-foreground/25 mx-auto mb-4 h-1 w-10 rounded-full lg:hidden"
-                aria-hidden="true"
+          <PortalOnMobile enabled={isMobileViewport}>
+            <div className="fixed inset-0 z-50 lg:static lg:z-auto">
+              <button
+                type="button"
+                aria-label="Close board customization"
+                onClick={() => setCustomizationOpen(false)}
+                className="bg-background/70 absolute inset-0 backdrop-blur-sm lg:hidden"
               />
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3
-                    id="career-board-customization-title"
-                    className="text-base font-semibold tracking-[-0.01em] lg:text-sm"
-                  >
-                    Make the board yours
-                  </h3>
-                  <p className="text-muted-foreground mt-1 text-xs leading-5">
-                    Your layout stays on this device.
-                  </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-full"
-                    onClick={() => updatePreferences(defaultPreferences)}
-                  >
-                    <RotateCcw className="size-3.5" aria-hidden="true" />
-                    Reset
-                  </Button>
-                  <Button
-                    ref={customizationClose}
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Close customization"
-                    onClick={() => setCustomizationOpen(false)}
-                    className="rounded-full lg:hidden"
-                  >
-                    <X className="size-4" aria-hidden="true" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-5 lg:mt-4 lg:grid-cols-[0.75fr_1fr_2fr]">
-                <fieldset>
-                  <legend className={legendClass}>Card density</legend>
-                  <div className="bg-muted/60 ring-border/70 mt-2 grid grid-cols-2 rounded-full p-1 ring-1">
-                    {(["comfortable", "compact"] as const).map((density) => (
-                      <button
-                        key={density}
-                        type="button"
-                        aria-pressed={preferences.density === density}
-                        onClick={() =>
-                          updatePreferences({ ...preferences, density })
-                        }
-                        className={cn(
-                          "focus-visible:ring-ring min-h-9 rounded-full px-2 text-xs font-semibold capitalize transition-colors focus-visible:ring-2 focus-visible:outline-none",
-                          preferences.density === density
-                            ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
-                            : "text-muted-foreground hover:text-foreground",
-                        )}
-                      >
-                        {density}
-                      </button>
-                    ))}
+              <div
+                ref={customizationPanel}
+                id="career-board-customization"
+                role="dialog"
+                aria-modal={isMobileViewport || undefined}
+                aria-labelledby="career-board-customization-title"
+                className="bg-card ring-border motion-safe:max-lg:animate-analyst-sheet lg:bg-background/60 absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 lg:relative lg:inset-auto lg:mt-2 lg:max-h-none lg:overflow-visible lg:rounded-xl lg:p-4 lg:shadow-none"
+              >
+                <div
+                  className="bg-muted-foreground/25 mx-auto mb-4 h-1 w-10 rounded-full lg:hidden"
+                  aria-hidden="true"
+                />
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3
+                      id="career-board-customization-title"
+                      className="text-base font-semibold tracking-[-0.01em] lg:text-sm"
+                    >
+                      Make the board yours
+                    </h3>
+                    <p className="text-muted-foreground mt-1 text-xs leading-5">
+                      Your layout stays on this device.
+                    </p>
                   </div>
-                </fieldset>
-
-                <fieldset>
-                  <legend className={legendClass}>Card details</legend>
-                  <div className="mt-2 space-y-2">
-                    {[
-                      ["showLocation", "Location & setup"],
-                      ["showAppliedDate", "Applied date"],
-                    ].map(([key, itemLabel]) => {
-                      const preferenceKey = key as
-                        "showLocation" | "showAppliedDate";
-                      return (
-                        <label
-                          key={key}
-                          className="bg-background/70 ring-border/80 flex min-h-11 cursor-pointer items-center justify-between rounded-xl px-3 text-xs font-medium ring-1 sm:min-h-10"
-                        >
-                          {itemLabel}
-                          <input
-                            type="checkbox"
-                            checked={preferences[preferenceKey]}
-                            onChange={(event) =>
-                              updatePreferences({
-                                ...preferences,
-                                [preferenceKey]: event.currentTarget.checked,
-                              })
-                            }
-                            className="accent-primary size-4"
-                          />
-                        </label>
-                      );
-                    })}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => updatePreferences(defaultPreferences)}
+                    >
+                      <RotateCcw className="size-3.5" aria-hidden="true" />
+                      Reset
+                    </Button>
+                    <Button
+                      ref={customizationClose}
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Close customization"
+                      onClick={() => setCustomizationOpen(false)}
+                      className="rounded-full lg:hidden"
+                    >
+                      <X className="size-4" aria-hidden="true" />
+                    </Button>
                   </div>
-                </fieldset>
+                </div>
 
-                <fieldset>
-                  <legend className={legendClass}>Visible columns</legend>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {careerStages.map((stage) => {
-                      const checked = visibleStages.includes(stage);
-                      return (
-                        <label
-                          key={stage}
+                <div className="mt-5 grid gap-5 lg:mt-4 lg:grid-cols-[0.75fr_1fr_2fr]">
+                  <fieldset>
+                    <legend className={legendClass}>Card density</legend>
+                    <div className="bg-muted/60 ring-border/70 mt-2 grid grid-cols-2 rounded-full p-1 ring-1">
+                      {(["comfortable", "compact"] as const).map((density) => (
+                        <button
+                          key={density}
+                          type="button"
+                          aria-pressed={preferences.density === density}
+                          onClick={() =>
+                            updatePreferences({ ...preferences, density })
+                          }
                           className={cn(
-                            "focus-within:ring-ring inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3 text-xs font-medium ring-1 transition-colors focus-within:ring-2 sm:min-h-10",
-                            checked
-                              ? "bg-primary/8 ring-primary/30"
-                              : "bg-background/70 ring-border/80 text-muted-foreground",
+                            "focus-visible:ring-ring min-h-9 rounded-full px-2 text-xs font-semibold capitalize transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                            preferences.density === density
+                              ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
+                              : "text-muted-foreground hover:text-foreground",
                           )}
                         >
-                          <input
-                            type="checkbox"
-                            aria-label={`${stageLabels[stage]} column`}
-                            checked={checked}
-                            disabled={checked && visibleStages.length === 1}
-                            onChange={(event) => {
-                              const nextStages = event.currentTarget.checked
-                                ? careerStages.filter(
-                                    (item) =>
-                                      visibleStages.includes(item) ||
-                                      item === stage,
-                                  )
-                                : visibleStages.filter(
-                                    (item) => item !== stage,
-                                  );
-                              updatePreferences({
-                                ...preferences,
-                                visibleStages: nextStages,
-                              });
-                            }}
-                            className="peer sr-only"
-                          />
-                          <span
-                            aria-hidden="true"
+                          {density}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  <fieldset>
+                    <legend className={legendClass}>Card details</legend>
+                    <div className="mt-2 space-y-2">
+                      {[
+                        ["showLocation", "Location & setup"],
+                        ["showAppliedDate", "Applied date"],
+                      ].map(([key, itemLabel]) => {
+                        const preferenceKey = key as
+                          "showLocation" | "showAppliedDate";
+                        return (
+                          <label
+                            key={key}
+                            className="bg-background/70 ring-border/80 flex min-h-11 cursor-pointer items-center justify-between rounded-xl px-3 text-xs font-medium ring-1 sm:min-h-10"
+                          >
+                            {itemLabel}
+                            <input
+                              type="checkbox"
+                              checked={preferences[preferenceKey]}
+                              onChange={(event) =>
+                                updatePreferences({
+                                  ...preferences,
+                                  [preferenceKey]: event.currentTarget.checked,
+                                })
+                              }
+                              className="accent-primary size-4"
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+
+                  <fieldset>
+                    <legend className={legendClass}>Visible columns</legend>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {careerStages.map((stage) => {
+                        const checked = visibleStages.includes(stage);
+                        return (
+                          <label
+                            key={stage}
                             className={cn(
-                              "grid size-4 place-items-center rounded-full ring-1",
+                              "focus-within:ring-ring inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3 text-xs font-medium ring-1 transition-colors focus-within:ring-2 sm:min-h-10",
                               checked
-                                ? "bg-primary-solid text-primary-solid-foreground ring-primary-solid"
-                                : "ring-border",
+                                ? "bg-primary/8 ring-primary/30"
+                                : "bg-background/70 ring-border/80 text-muted-foreground",
                             )}
                           >
-                            {checked ? <Check className="size-3" /> : null}
-                          </span>
-                          <span
-                            aria-hidden="true"
-                            className={cn(
-                              "size-2 rounded-full",
-                              stageTones[stage].dot,
-                            )}
-                          />
-                          {stageLabels[stage]}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-              </div>
+                            <input
+                              type="checkbox"
+                              aria-label={`${stageLabels[stage]} column`}
+                              checked={checked}
+                              disabled={checked && visibleStages.length === 1}
+                              onChange={(event) => {
+                                const nextStages = event.currentTarget.checked
+                                  ? careerStages.filter(
+                                      (item) =>
+                                        visibleStages.includes(item) ||
+                                        item === stage,
+                                    )
+                                  : visibleStages.filter(
+                                      (item) => item !== stage,
+                                    );
+                                updatePreferences({
+                                  ...preferences,
+                                  visibleStages: nextStages,
+                                });
+                              }}
+                              className="peer sr-only"
+                            />
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                "grid size-4 place-items-center rounded-full ring-1",
+                                checked
+                                  ? "bg-primary-solid text-primary-solid-foreground ring-primary-solid"
+                                  : "ring-border",
+                              )}
+                            >
+                              {checked ? <Check className="size-3" /> : null}
+                            </span>
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                "size-2 rounded-full",
+                                stageTones[stage].dot,
+                              )}
+                            />
+                            {stageLabels[stage]}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                </div>
 
-              <div className="bg-card sticky bottom-0 -mx-4 mt-5 border-t px-4 pt-3 pb-[max(0rem,env(safe-area-inset-bottom))] lg:hidden">
-                <Button
-                  type="button"
-                  onClick={() => setCustomizationOpen(false)}
-                  className="w-full"
-                >
-                  Done
-                </Button>
+                <div className="bg-card sticky bottom-0 -mx-4 mt-5 border-t px-4 pt-3 pb-[max(0rem,env(safe-area-inset-bottom))] lg:hidden">
+                  <Button
+                    type="button"
+                    onClick={() => setCustomizationOpen(false)}
+                    className="w-full"
+                  >
+                    Done
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          </PortalOnMobile>
         ) : null}
       </div>
 
