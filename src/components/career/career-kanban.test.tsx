@@ -266,4 +266,36 @@ describe("CareerKanban", () => {
       screen.queryByRole("dialog", { name: "Make the board yours" }),
     ).not.toBeInTheDocument();
   });
+
+  it("opens the phone customization sheet above the app's bottom navigation", async () => {
+    const matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query === "(max-width: 1023px)",
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    vi.stubGlobal("matchMedia", matchMedia);
+    const user = userEvent.setup();
+    const { container } = render(
+      <CareerKanban
+        applications={[baseApplication]}
+        nowIso="2026-08-14T12:00:00+08:00"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Customize" }));
+
+    // The page frame is its own stacking context, so the sheet has to live
+    // on <body> to stack over the fixed bottom nav.
+    const sheet = screen.getByRole("dialog", { name: "Make the board yours" });
+    expect(sheet).toHaveAttribute("aria-modal", "true");
+    expect(container).not.toContainElement(sheet);
+    expect(document.body).toContainElement(sheet);
+
+    await user.click(screen.getByRole("button", { name: "Done" }));
+    expect(
+      screen.queryByRole("dialog", { name: "Make the board yours" }),
+    ).not.toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
 });
