@@ -207,3 +207,39 @@ export async function updateApplicationStageAction(
   revalidatePath("/dashboard");
   return { success: true, message: "Application stage updated." };
 }
+
+export async function deleteApplicationAction(
+  id: string,
+): Promise<CareerActionState> {
+  if (!/^[0-9a-f-]{36}$/i.test(id))
+    return { success: false, message: "The application could not be found." };
+
+  const supabase = await createClient();
+  if (!supabase)
+    return { success: false, message: "Supabase is not configured." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, message: "Your session expired." };
+
+  // Its stage history and next-action rows cascade, and goal links are
+  // cleared by trigger. Selecting the row back keeps a foreign or missing
+  // id from reading as a success.
+  const { data: deleted, error } = await supabase
+    .from("job_applications")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("id")
+    .maybeSingle();
+  if (error || !deleted)
+    return {
+      success: false,
+      message: "The application could not be deleted.",
+    };
+
+  revalidatePath("/career");
+  revalidatePath("/dashboard");
+  revalidatePath("/goals");
+  return { success: true, message: "Application deleted." };
+}

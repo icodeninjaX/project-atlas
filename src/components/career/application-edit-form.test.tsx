@@ -4,6 +4,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { OfflineContext } from "@/components/offline/offline-provider";
 import { ApplicationEditForm } from "./application-edit-form";
 
+const mocks = vi.hoisted(() => ({ deleteApplication: vi.fn() }));
+vi.mock("@/lib/career/actions", () => ({
+  deleteApplicationAction: mocks.deleteApplication,
+}));
+
 const application = {
   id: "60000000-0000-4000-8000-000000000001",
   company_name: "Northstar Labs",
@@ -24,7 +29,11 @@ const application = {
   salary_max_centavos: 7_000_000,
 };
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  mocks.deleteApplication.mockReset();
+});
 
 describe("ApplicationEditForm", () => {
   it("opens a labelled full-screen editor and closes without submitting", async () => {
@@ -118,5 +127,74 @@ describe("ApplicationEditForm", () => {
     });
     const submittedForm = submit.mock.calls[0]?.[1] as FormData;
     expect(submittedForm.get("roleTitle")).toBe("Staff Frontend Engineer");
+  });
+
+  it("deletes the application after confirmation and closes", async () => {
+    const user = userEvent.setup();
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    mocks.deleteApplication.mockResolvedValue({
+      success: true,
+      message: "Application deleted.",
+    });
+    render(<ApplicationEditForm application={application} />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Edit Northstar Labs" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Delete Northstar Labs application" }),
+    );
+
+    expect(confirm).toHaveBeenCalledWith(
+      expect.stringContaining("Northstar Labs"),
+    );
+    await waitFor(() => {
+      expect(mocks.deleteApplication).toHaveBeenCalledWith(application.id);
+      expect(
+        screen.queryByRole("dialog", { name: "Edit Northstar Labs" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("keeps the application when deletion is not confirmed", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<ApplicationEditForm application={application} />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Edit Northstar Labs" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Delete Northstar Labs application" }),
+    );
+
+    expect(mocks.deleteApplication).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("dialog", { name: "Edit Northstar Labs" }),
+    ).toBeInTheDocument();
+  });
+
+  it("stays open and keeps the application when deletion fails", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    mocks.deleteApplication.mockResolvedValue({
+      success: false,
+      message: "The application could not be deleted.",
+    });
+    render(<ApplicationEditForm application={application} />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Edit Northstar Labs" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Delete Northstar Labs application" }),
+    );
+
+    await waitFor(() =>
+      expect(mocks.deleteApplication).toHaveBeenCalledTimes(1),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Edit Northstar Labs" }),
+    ).toBeInTheDocument();
   });
 });
