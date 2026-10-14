@@ -199,12 +199,11 @@ describe("CareerKanban", () => {
     );
 
     const card = screen.getByTestId(`kanban-card-${application.id}`);
-    const mobileStatus = within(card).getByTestId(
-      `kanban-card-mobile-status-${application.id}`,
-    );
 
-    expect(within(mobileStatus).getByText("Applied")).toBeInTheDocument();
-    expect(within(mobileStatus).getByText("Aug 10, 2026")).toBeInTheDocument();
+    // The stage is named once, by its picker; the applied date rides with
+    // the location rather than repeating the stage in a status line.
+    expect(within(card).getAllByText("Applied")).toHaveLength(1);
+    expect(within(card).getByText("Aug 10, 2026")).toBeVisible();
     expect(within(card).getByText("Follow up with recruiter")).toBeVisible();
     expect(
       within(card).getByRole("combobox", { name: "Stage for Northstar Labs" }),

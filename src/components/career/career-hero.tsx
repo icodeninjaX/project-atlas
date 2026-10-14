@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { ApplicationCreateDialog } from "@/components/career/application-create-dialog";
 import { CompanyMark } from "@/components/career/company-mark";
 import { DueChip } from "@/components/career/due-chip";
+import { PipelineDetails } from "@/components/career/pipeline-details";
 import { stageTones } from "@/components/career/stage-tone";
 import { surfaceClass } from "@/components/dashboard/dashboard-card";
 import todayStyles from "@/components/dashboard/today.module.css";
@@ -318,18 +319,20 @@ export function CareerHero({
           />
         </div>
 
-        <div className="min-w-0 lg:col-start-1 lg:row-start-2">
-          <PipelineTrack counts={summary.counts} />
-          {closed ? (
-            <p className="text-muted-foreground border-border/70 mt-5 border-t pt-4 text-xs">
-              {closed}
-            </p>
-          ) : null}
-        </div>
+        <PipelineDetails>
+          <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+            <PipelineTrack counts={summary.counts} />
+            {closed ? (
+              <p className="text-muted-foreground border-border/70 mt-5 border-t pt-4 text-xs">
+                {closed}
+              </p>
+            ) : null}
+          </div>
 
-        <div className="min-w-0 lg:col-start-2 lg:row-start-2">
-          <Conversions conversions={conversions} />
-        </div>
+          <div className="min-w-0 lg:col-start-2 lg:row-start-2">
+            <Conversions conversions={conversions} />
+          </div>
+        </PipelineDetails>
       </div>
     </HeroShell>
   );

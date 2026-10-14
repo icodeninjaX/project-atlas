@@ -32,7 +32,7 @@ import { CompanyMark } from "@/components/career/company-mark";
 import { DeleteApplicationButton } from "@/components/career/delete-application-button";
 import { DueChip } from "@/components/career/due-chip";
 import { StageSelect } from "@/components/career/stage-select";
-import { stageTone, stageTones } from "@/components/career/stage-tone";
+import { stageTones } from "@/components/career/stage-tone";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { updateApplicationStageAction } from "@/lib/career/actions";
@@ -43,7 +43,6 @@ import {
   isCareerStage,
   pipelineStages,
   placeLabel,
-  stageLabel,
   stageLabels,
   type CareerApplication,
   type CareerStage,
@@ -226,32 +225,6 @@ function ApplicationCard({
         />
       ) : null}
       <div className={cn("@container p-4", compact ? "lg:p-3" : "lg:p-4")}>
-        {/* Phones show one column at a time; this keeps each card's stage
-            and date in view as it is read. */}
-        <div
-          data-testid={`kanban-card-mobile-status-${application.id}`}
-          className="text-muted-foreground mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs lg:hidden"
-        >
-          <span className="flex min-w-0 items-center gap-2 font-semibold">
-            <span
-              aria-hidden="true"
-              className={cn(
-                "size-2 shrink-0 rounded-full",
-                stageTone(application.stage).dot,
-              )}
-            />
-            <span className="text-foreground truncate">
-              {stageLabel(application.stage)}
-            </span>
-          </span>
-          {applied ? (
-            <span className="inline-flex shrink-0 items-center gap-1.5 font-medium">
-              <CalendarDays className="size-3.5" aria-hidden="true" />
-              <time dateTime={applied}>{formatCareerDate(applied)}</time>
-            </span>
-          ) : null}
-        </div>
-
         <div className="flex items-start gap-3">
           <CompanyMark
             name={application.company_name}
@@ -277,7 +250,6 @@ function ApplicationCard({
           <p
             className={cn(
               "text-muted-foreground mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs lg:text-[0.6875rem]",
-              !place && "max-lg:hidden",
             )}
           >
             {place ? (
@@ -287,7 +259,7 @@ function ApplicationCard({
               </span>
             ) : null}
             {applied ? (
-              <span className="hidden items-center gap-1.5 lg:inline-flex">
+              <span className="inline-flex items-center gap-1.5">
                 <CalendarDays className="size-3.5" aria-hidden="true" />
                 <time dateTime={applied}>{formatCareerDate(applied)}</time>
               </span>
@@ -297,21 +269,12 @@ function ApplicationCard({
 
         <div
           className={cn(
-            "mt-3 rounded-xl px-3 py-2.5 ring-1",
-            overdue
-              ? "bg-destructive/[0.06] ring-destructive/20"
-              : "bg-background/60 ring-border/70",
+            // The card's red edge and the due chip already say overdue.
+            "bg-background/60 ring-border/70 mt-3 rounded-xl px-3 py-2.5 ring-1",
             compact && "lg:mt-2.5 lg:py-2",
           )}
         >
-          <p
-            className={cn(
-              "text-[0.6875rem] font-semibold",
-              overdue
-                ? "text-red-700 dark:text-red-300"
-                : "text-muted-foreground",
-            )}
-          >
+          <p className="text-muted-foreground text-[0.6875rem] font-semibold">
             Next action
           </p>
           <p
@@ -336,7 +299,7 @@ function ApplicationCard({
             companyName={application.company_name}
             stage={application.stage}
             onStageChange={onStageChange}
-            className="grow basis-28"
+            className="mr-auto max-w-full lg:mr-0 lg:grow lg:basis-28"
           />
           {/* The card's tools stay together; on a narrow card the stage
               chip takes its own line above them. */}
@@ -804,7 +767,7 @@ export function CareerKanban({
                           className={cn(
                             "focus-visible:ring-ring min-h-9 rounded-full px-2 text-xs font-semibold capitalize transition-colors focus-visible:ring-2 focus-visible:outline-none",
                             preferences.density === density
-                              ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
+                              ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)] dark:bg-white/[0.09] dark:ring-1 dark:ring-white/[0.08]"
                               : "text-muted-foreground hover:text-foreground",
                           )}
                         >
@@ -959,7 +922,7 @@ export function CareerKanban({
               className={cn(
                 "focus-visible:ring-ring inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full px-3.5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
                 selected
-                  ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
+                  ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)] dark:bg-white/[0.09] dark:ring-1 dark:ring-white/[0.08]"
                   : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
               )}
             >

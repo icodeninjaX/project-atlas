@@ -207,6 +207,35 @@ describe("CareerWorkspace", () => {
     expect(mocks.deleteApplication).not.toHaveBeenCalled();
   });
 
+  it("folds the stage breakdown behind a toggle on phones", async () => {
+    const user = userEvent.setup();
+    render(
+      <CareerWorkspace
+        applications={applications}
+        events={[]}
+        view="list"
+        nowIso={now}
+      />,
+    );
+
+    const toggle = screen.getByRole("button", {
+      name: "Show stage breakdown",
+    });
+    const details = document.getElementById(
+      toggle.getAttribute("aria-controls") ?? "",
+    );
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(details).toHaveClass("hidden", "lg:contents");
+
+    await user.click(toggle);
+
+    expect(
+      screen.getByRole("button", { name: "Hide stage breakdown" }),
+    ).toHaveAttribute("aria-expanded", "true");
+    expect(details).toHaveClass("contents");
+    expect(details).not.toHaveClass("hidden");
+  });
+
   it("shows the board with the same hero", () => {
     render(
       <CareerWorkspace

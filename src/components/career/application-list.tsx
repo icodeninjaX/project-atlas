@@ -115,7 +115,7 @@ function ApplicationRow({
             muted={closed}
             className="@max-[15rem]:hidden"
           />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3">
               <p className="truncate text-[0.9375rem] leading-6 font-semibold tracking-[-0.01em]">
                 {application.company_name}
@@ -153,7 +153,7 @@ function ApplicationRow({
             applicationId={application.id}
             companyName={application.company_name}
             stage={application.stage}
-            className="grow basis-40 sm:max-w-[13rem] lg:max-w-none"
+            className="max-w-full lg:grow"
           />
           <div className="min-w-0 max-lg:hidden">
             {salary ? (
