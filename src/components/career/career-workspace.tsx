@@ -49,7 +49,7 @@ function ViewSwitch({ view }: { view: CareerView }) {
             className={cn(
               "focus-visible:ring-ring inline-flex min-h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:min-h-8 sm:px-4",
               active
-                ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)]"
+                ? "bg-card text-foreground shadow-[0_1px_3px_rgb(7_10_15/0.18)] dark:bg-white/[0.09] dark:ring-1 dark:ring-white/[0.08]"
                 : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
             )}
           >
