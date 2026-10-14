@@ -29,6 +29,7 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { ApplicationEditForm } from "@/components/career/application-edit-form";
 import { CompanyMark } from "@/components/career/company-mark";
+import { DeleteApplicationButton } from "@/components/career/delete-application-button";
 import { DueChip } from "@/components/career/due-chip";
 import { StageSelect } from "@/components/career/stage-select";
 import { stageTone, stageTones } from "@/components/career/stage-tone";
@@ -335,21 +336,26 @@ function ApplicationCard({
             companyName={application.company_name}
             stage={application.stage}
             onStageChange={onStageChange}
-            className="grow basis-40"
+            className="grow basis-28"
           />
-          {jobHref ? (
-            <a
-              href={jobHref}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={`Open job post for ${application.company_name}`}
-              title="Open job post"
-              className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-11 shrink-0 place-items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none sm:size-9"
-            >
-              <ExternalLink className="size-4" aria-hidden="true" />
-            </a>
-          ) : null}
-          <ApplicationEditForm application={application} />
+          {/* The card's tools stay together; on a narrow card the stage
+              chip takes its own line above them. */}
+          <div className="flex shrink-0 items-center gap-1">
+            {jobHref ? (
+              <a
+                href={jobHref}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`Open job post for ${application.company_name}`}
+                title="Open job post"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid size-11 shrink-0 place-items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none sm:size-9"
+              >
+                <ExternalLink className="size-4" aria-hidden="true" />
+              </a>
+            ) : null}
+            <ApplicationEditForm application={application} />
+            <DeleteApplicationButton application={application} />
+          </div>
         </div>
       </div>
     </article>

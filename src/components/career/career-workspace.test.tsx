@@ -5,11 +5,17 @@ import type { CareerApplication } from "@/lib/career/view";
 import { CareerWorkspace, parseCareerView } from "./career-workspace";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+const mocks = vi.hoisted(() => ({ deleteApplication: vi.fn() }));
 vi.mock("@/lib/career/actions", () => ({
   updateApplicationStageAction: vi.fn(),
+  deleteApplicationAction: mocks.deleteApplication,
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  mocks.deleteApplication.mockReset();
+});
 
 const now = "2026-10-02T11:00:00Z"; // 7:00 PM, October 2 in Manila
 
@@ -151,6 +157,54 @@ describe("CareerWorkspace", () => {
     expect(screen.getByLabelText("Edit Cloudbank role title")).toHaveValue(
       "Frontend Engineer",
     );
+  });
+
+  it.each(["list", "board"] as const)(
+    "deletes an application from its %s row after confirmation",
+    async (view) => {
+      const user = userEvent.setup();
+      const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+      mocks.deleteApplication.mockResolvedValue({
+        success: true,
+        message: "Application deleted.",
+      });
+      render(
+        <CareerWorkspace
+          applications={applications}
+          events={[]}
+          view={view}
+          nowIso={now}
+        />,
+      );
+
+      await user.click(
+        screen.getByRole("button", { name: "Delete Cloudbank application" }),
+      );
+
+      expect(confirm).toHaveBeenCalledWith(
+        expect.stringContaining("Cloudbank"),
+      );
+      expect(mocks.deleteApplication).toHaveBeenCalledWith(id(2));
+    },
+  );
+
+  it("keeps an application when the delete is not confirmed", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(
+      <CareerWorkspace
+        applications={applications}
+        events={[]}
+        view="list"
+        nowIso={now}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Delete Cloudbank application" }),
+    );
+
+    expect(mocks.deleteApplication).not.toHaveBeenCalled();
   });
 
   it("shows the board with the same hero", () => {

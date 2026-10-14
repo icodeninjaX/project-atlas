@@ -10,7 +10,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
-import { useActionState, useCallback, useState, useTransition } from "react";
+import { useActionState, useCallback, useState } from "react";
 import { toast } from "sonner";
 import {
   careerDialogContentClass,
@@ -26,13 +26,11 @@ import {
   fieldTextareaClass,
 } from "@/components/career/application-fields";
 import { CompanyMark } from "@/components/career/company-mark";
+import { useDeleteApplication } from "@/components/career/delete-application-button";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  deleteApplicationAction,
-  type CareerActionState,
-} from "@/lib/career/actions";
+import type { CareerActionState } from "@/lib/career/actions";
 import { careerStages, stageLabel, stageLabels } from "@/lib/career/view";
 import { cn } from "@/lib/utils";
 
@@ -88,28 +86,10 @@ export function ApplicationEditForm({
     [submit],
   );
   const [, action, pending] = useActionState(updateApplication, initial);
-  const [deleting, startDelete] = useTransition();
-  const deleteApplication = () => {
-    if (
-      !window.confirm(
-        `Delete ${application.company_name} – ${application.role_title}? Its stage history goes with it. This cannot be undone.`,
-      )
-    )
-      return;
-    startDelete(async () => {
-      try {
-        const result = await deleteApplicationAction(application.id);
-        if (result.success) {
-          toast.success(result.message);
-          setOpen(false);
-        } else {
-          toast.error(result.message);
-        }
-      } catch {
-        toast.error("The application could not be deleted.");
-      }
-    });
-  };
+  const { deleting, deleteApplication } = useDeleteApplication(
+    application,
+    () => setOpen(false),
+  );
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
