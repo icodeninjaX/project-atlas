@@ -8,6 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { ApplicationEditForm } from "@/components/career/application-edit-form";
+import { DeleteApplicationButton } from "@/components/career/delete-application-button";
 import { CompanyMark } from "@/components/career/company-mark";
 import { DueChip } from "@/components/career/due-chip";
 import { StageSelect } from "@/components/career/stage-select";
@@ -107,7 +108,7 @@ function ApplicationRow({
           className="bg-primary absolute inset-y-3 left-0 w-1 rounded-r-full"
         />
       ) : null}
-      <div className="@container grid gap-3 p-4 min-[360px]:px-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.3fr)_minmax(9.5rem,11rem)_7.5rem_5.5rem] lg:items-center lg:gap-5 lg:py-3.5">
+      <div className="@container grid gap-3 p-4 min-[360px]:px-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.3fr)_minmax(9.5rem,11rem)_7.5rem_7rem] lg:items-center lg:gap-5 lg:py-3.5">
         <div className="flex min-w-0 items-center gap-3">
           <CompanyMark
             name={application.company_name}
@@ -188,6 +189,7 @@ function ApplicationRow({
               <span aria-hidden="true" className="size-11 sm:size-9" />
             )}
             <ApplicationEditForm application={application} />
+            <DeleteApplicationButton application={application} />
           </div>
         </div>
       </div>

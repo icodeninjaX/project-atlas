@@ -6,6 +6,7 @@ import {
   CalendarClock,
   NotebookPen,
   Pencil,
+  Trash2,
   WalletCards,
   X,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import {
   fieldTextareaClass,
 } from "@/components/career/application-fields";
 import { CompanyMark } from "@/components/career/company-mark";
+import { useDeleteApplication } from "@/components/career/delete-application-button";
 import { useOfflineSync } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +86,10 @@ export function ApplicationEditForm({
     [submit],
   );
   const [, action, pending] = useActionState(updateApplication, initial);
+  const { deleting, deleteApplication } = useDeleteApplication(
+    application,
+    () => setOpen(false),
+  );
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -367,11 +373,27 @@ export function ApplicationEditForm({
             </div>
 
             <footer className={cn(careerDialogFooterClass, "mt-5 flex gap-2")}>
+              <Button
+                type="button"
+                variant="secondary"
+                pending={deleting}
+                pendingLabel="Deleting…"
+                disabled={pending}
+                onClick={deleteApplication}
+                aria-label={`Delete ${application.company_name} application`}
+                title="Delete application"
+                // The theme's filled destructive red holds white text at only
+                // 3.9:1 in dark mode; red text on the quiet surface keeps 4.5:1.
+                className="shrink-0 text-red-700 hover:bg-red-500/10 max-sm:w-11 max-sm:px-0 dark:text-red-300"
+              >
+                <Trash2 aria-hidden="true" className="size-4" />
+                <span className="max-sm:sr-only">Delete</span>
+              </Button>
               <Dialog.Close asChild>
                 <Button
                   type="button"
                   variant="secondary"
-                  className="flex-1 sm:flex-none"
+                  className="flex-auto sm:ml-auto sm:flex-none"
                 >
                   Cancel
                 </Button>
@@ -379,8 +401,9 @@ export function ApplicationEditForm({
               <Button
                 type="submit"
                 pending={pending}
+                disabled={deleting}
                 pendingLabel="Saving…"
-                className="flex-1 sm:ml-auto sm:flex-none"
+                className="flex-auto whitespace-nowrap sm:flex-none"
               >
                 Save changes
               </Button>
