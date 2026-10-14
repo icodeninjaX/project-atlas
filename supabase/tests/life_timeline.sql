@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(8);
+select plan(12);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
@@ -71,6 +71,36 @@ select ok(
   not (select source_available from public.life_timeline(p_module := 'money') where event_type = 'expense_recorded')
   and (select source_href from public.life_timeline(p_module := 'money') where event_type = 'expense_recorded') is null,
   'a deleted source is unavailable and no longer exposes a source link'
+);
+
+insert into public.goals (id, user_id, title, area)
+values ('95400000-0000-4000-8000-000000000001', '95000000-0000-4000-8000-000000000001', 'Timeline goal', 'personal');
+
+select lives_ok(
+  $$update public.goals set title = 'Timeline goal, renamed', status = 'active'
+    where id = '95400000-0000-4000-8000-000000000001'$$,
+  'editing a goal with its unchanged status is accepted'
+);
+
+select lives_ok(
+  $$update public.goals set status = 'paused'
+    where id = '95400000-0000-4000-8000-000000000001'$$,
+  'pausing a goal is accepted'
+);
+
+select is(
+  (select count(*) from public.life_timeline(p_module := 'goals') where event_type = 'goal_completed'),
+  0::bigint,
+  'a goal that is edited or paused records no completion event'
+);
+
+update public.goals set status = 'completed'
+where id = '95400000-0000-4000-8000-000000000001';
+
+select is(
+  (select count(*) from public.life_timeline(p_module := 'goals') where event_type = 'goal_completed'),
+  1::bigint,
+  'completing a goal records one completion event'
 );
 
 select set_config('request.jwt.claims', '{"sub":"95000000-0000-4000-8000-000000000002","role":"authenticated"}', true);

@@ -12,6 +12,7 @@ import type {
   OfflineActionState,
   OfflineMutationType,
 } from "@/lib/offline/types";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { renderWithProviders as render } from "@/test/render";
 import { MilestoneList } from "./milestone-list";
 
@@ -662,5 +663,39 @@ describe("MilestoneList", () => {
         screen.queryByRole("dialog", { name: "Remove milestone?" }),
       ).not.toBeInTheDocument();
     });
+  });
+
+  it("leaves remove mode once the last milestone is gone", async () => {
+    const user = userEvent.setup();
+    const goalId = "1d334d84-4e32-46fa-bbdb-05ce7dc0dfbb";
+    const { rerender } = render(
+      <MilestoneList
+        goalId={goalId}
+        milestones={[
+          {
+            id: "53f3368c-d188-4aef-82b3-2846ba974169",
+            title: "Plan the route",
+            target_date: null,
+            completed_at: null,
+          },
+        ]}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Open milestone actions" }),
+    );
+    await user.click(
+      screen.getByRole("menuitem", { name: "Remove milestones" }),
+    );
+    expect(screen.getByText("Removing")).toBeVisible();
+
+    rerender(
+      <TooltipProvider delayDuration={0} skipDelayDuration={0}>
+        <MilestoneList goalId={goalId} milestones={[]} />
+      </TooltipProvider>,
+    );
+
+    expect(screen.queryByText("Removing")).not.toBeInTheDocument();
   });
 });
