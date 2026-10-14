@@ -37,7 +37,7 @@ type MilestoneDialogState = {
 } | null;
 
 const actionMenuClassName =
-  "absolute top-10 right-0 z-30 w-52 rounded-2xl border border-slate-300 bg-white p-1.5 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/10 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:shadow-[0_20px_55px_rgba(0,0,0,0.75)] dark:ring-white/10";
+  "absolute top-10 right-0 z-30 w-52 scroll-mt-20 scroll-mb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:scroll-mb-4 rounded-2xl border border-slate-300 bg-white p-1.5 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/10 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:shadow-[0_20px_55px_rgba(0,0,0,0.75)] dark:ring-white/10";
 
 function PendingAtlasMark() {
   return (
@@ -56,7 +56,12 @@ function useActionMenu() {
 
     menuRef.current
       ?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
-      ?.focus();
+      ?.focus({ preventScroll: true });
+    // A card near the bottom of a phone screen would open its menu under the
+    // tab bar, and scrolling to it would close it again.
+    menuRef.current
+      ?.querySelector('[role="menu"]')
+      ?.scrollIntoView?.({ block: "nearest" });
 
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -559,9 +564,11 @@ export function MilestoneList({
     ),
   );
   const [addMilestoneOpen, setAddMilestoneOpen] = useState(false);
-  const [actionMode, setActionMode] = useState<MilestoneActionMode | null>(
-    null,
-  );
+  const [selectedActionMode, setActionMode] =
+    useState<MilestoneActionMode | null>(null);
+  // Removing the last milestone ends edit or remove mode; otherwise the badge
+  // would stay on with every menu option to leave it disabled.
+  const actionMode = milestones.length ? selectedActionMode : null;
   // Arriving from a link to one milestone (the Dayline's "Open this next")
   // opens it straight away.
   const [dialogState, setDialogState] = useState<MilestoneDialogState>(() => {

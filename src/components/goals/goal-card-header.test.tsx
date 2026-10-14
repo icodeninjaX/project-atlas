@@ -193,4 +193,59 @@ describe("GoalCardHeader", () => {
       ).toBeEnabled();
     });
   });
+
+  it("shows the goal's description under its title", () => {
+    render(<GoalCardHeader goal={goal} />);
+
+    expect(screen.getByText("Publish three case studies")).toBeVisible();
+  });
+
+  it("closes the editor on Cancel or a successful save and refocuses the menu", async () => {
+    const user = userEvent.setup();
+    const submit = vi
+      .fn<
+        (
+          type: OfflineMutationType,
+          formData: FormData,
+        ) => Promise<OfflineActionState>
+      >()
+      .mockResolvedValue({ success: true, message: "Goal updated." });
+
+    render(
+      <OfflineContext.Provider
+        value={{
+          userId: "10000000-0000-4000-8000-000000000001",
+          online: true,
+          pending: 0,
+          blocked: 0,
+          lastSyncedAt: null,
+          submit,
+          retry: vi.fn(),
+          syncNow: vi.fn(),
+          clearPrivateCache: vi.fn(),
+        }}
+      >
+        <GoalCardHeader goal={goal} />
+      </OfflineContext.Provider>,
+    );
+    const trigger = screen.getByRole("button", {
+      name: "Open actions for goal Launch portfolio",
+    });
+
+    await user.click(trigger);
+    await user.click(screen.getByRole("menuitem", { name: "Edit goal" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByLabelText("Goal title")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+
+    await user.click(trigger);
+    await user.click(screen.getByRole("menuitem", { name: "Edit goal" }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(submit).toHaveBeenCalledWith("goal.update", expect.any(FormData));
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Goal title")).not.toBeInTheDocument(),
+    );
+    expect(trigger).toHaveFocus();
+  });
 });

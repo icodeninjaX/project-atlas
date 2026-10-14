@@ -96,12 +96,15 @@ export function GoalsBoard({
     ...goals.filter((goal) => !openStatuses.has(goal.status)),
   ];
 
-  const activeGoals = goals.filter((goal) => goal.status === "active").length;
+  const activeGoalList = goals.filter((goal) => goal.status === "active");
+  const activeGoals = activeGoalList.length;
   const totalMilestones = milestoneData.length;
   const doneMilestones = milestoneData.filter((m) => m.completed_at).length;
-  const averageProgress = goals.length
+  // Only goals still being worked on: a finished goal would inflate the
+  // average and an abandoned one would drag it down.
+  const averageProgress = activeGoals
     ? Math.round(
-        goals.reduce((sum, goal) => {
+        activeGoalList.reduce((sum, goal) => {
           const items = milestonesByGoal.get(goal.id) ?? [];
           return (
             sum +
@@ -110,9 +113,9 @@ export function GoalsBoard({
               items.length,
             )
           );
-        }, 0) / goals.length,
+        }, 0) / activeGoals,
       )
-    : 0;
+    : undefined;
   const nextDeadline = goals
     .filter(
       (goal) =>
@@ -149,8 +152,14 @@ export function GoalsBoard({
               />
               <SummaryStat
                 label="Avg. progress"
-                value={`${averageProgress}%`}
-                detail="Across all goals"
+                value={
+                  averageProgress === undefined ? "—" : `${averageProgress}%`
+                }
+                detail={
+                  averageProgress === undefined
+                    ? "No active goals"
+                    : "Across active goals"
+                }
               />
               <SummaryStat
                 label="Next deadline"

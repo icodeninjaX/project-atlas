@@ -12,7 +12,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { AtlasMark } from "@/components/atlas/atlas-mark";
 import { GoalForm } from "@/components/goals/goal-form";
@@ -182,13 +182,22 @@ export function GoalCardHeader({
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const editorId = `edit-goal-${goal.id}`;
+  const closeEditor = useCallback(() => {
+    setEditorOpen(false);
+    menuButtonRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
 
     menuRef.current
       ?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
-      ?.focus();
+      ?.focus({ preventScroll: true });
+    // A card near the bottom of a phone screen would open its menu under the
+    // tab bar, and scrolling to it would close it again.
+    menuRef.current
+      ?.querySelector('[role="menu"]')
+      ?.scrollIntoView?.({ block: "nearest" });
 
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -249,6 +258,11 @@ export function GoalCardHeader({
           <h2 className="mt-1.5 text-[1.0625rem] leading-snug font-semibold tracking-[-0.02em] text-balance sm:text-lg">
             {goal.title}
           </h2>
+          {goal.description ? (
+            <p className="text-muted-foreground mt-1 line-clamp-3 text-[0.8125rem] leading-5 whitespace-pre-line">
+              {goal.description}
+            </p>
+          ) : null}
         </div>
         <div ref={menuRef} className="relative shrink-0">
           <TooltipHint label="Goal actions" side="left">
@@ -273,7 +287,7 @@ export function GoalCardHeader({
             aria-label={`Actions for goal ${goal.title}`}
             hidden={!menuOpen}
             onKeyDown={moveMenuFocus}
-            className="absolute top-11 right-0 z-30 w-48 rounded-2xl border border-slate-300 bg-white p-1.5 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/10 sm:top-9 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:shadow-[0_20px_55px_rgba(0,0,0,0.75)] dark:ring-white/10"
+            className="absolute top-11 right-0 z-30 w-48 scroll-mt-20 scroll-mb-[calc(6.5rem+env(safe-area-inset-bottom))] rounded-2xl border border-slate-300 bg-white p-1.5 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/10 sm:top-9 lg:scroll-mb-4 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:shadow-[0_20px_55px_rgba(0,0,0,0.75)] dark:ring-white/10"
           >
             <Button
               type="button"
@@ -336,7 +350,12 @@ export function GoalCardHeader({
       ) : null}
       {editorOpen ? (
         <div id={editorId} className="mt-4">
-          <GoalForm goal={goal} />
+          <GoalForm
+            goal={goal}
+            autoFocus
+            onCancel={closeEditor}
+            onSaved={closeEditor}
+          />
         </div>
       ) : null}
 
