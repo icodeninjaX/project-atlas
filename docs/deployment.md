@@ -4,7 +4,11 @@ Current status (2026-08-26): the public production origin, health endpoint, and 
 
 ## Supabase
 
-1. Create a dedicated Supabase project in the intended region.
+1. Create a dedicated Supabase project in the intended region, and run the
+   Vercel functions in the matching Vercel region (`regions` in
+   `vercel.json`). Each page makes several sequential Supabase requests, so
+   every request pays the server-to-database distance several times. The
+   production project is in `ap-south-1` (Mumbai), paired with `bom1`.
 2. Link the CLI with `npx supabase link --project-ref <project-ref>`.
 3. Preview with `npx supabase db push --linked --dry-run`, then apply with
    `npx supabase db push --linked`.
