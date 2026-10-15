@@ -32,6 +32,12 @@ export type AccountActivityItem = {
   category_icon: string | null;
 };
 
+/**
+ * How many of an account's transactions its sheet lists. Callers pass up to
+ * one more than this so the sheet knows when older ones exist.
+ */
+export const ACCOUNT_ACTIVITY_LIMIT = 200;
+
 const TABS = [
   { value: "activity", label: "Activity" },
   { value: "reconcile", label: "Reconcile" },
@@ -99,7 +105,7 @@ function SheetTabs({
   );
 }
 
-function RecentActivity({
+function AccountActivity({
   account,
   activity,
   today,
@@ -126,10 +132,13 @@ function RecentActivity({
     );
   }
 
+  const hasOlder = activity.length > ACCOUNT_ACTIVITY_LIMIT;
+  const shown = hasOlder ? activity.slice(0, ACCOUNT_ACTIVITY_LIMIT) : activity;
+
   return (
     <div>
       <ul className="border-border bg-card divide-border divide-y overflow-hidden rounded-2xl border">
-        {activity.map((item) => {
+        {shown.map((item) => {
           const direction = item.transaction_type === "income" ? "in" : "out";
           return (
             <li key={item.id} className="flex min-w-0 items-center gap-3 p-3">
@@ -160,13 +169,15 @@ function RecentActivity({
           );
         })}
       </ul>
-      <Link
-        href={`/money/transactions?account=${account.id}` as Route}
-        className="text-primary focus-visible:ring-ring mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-1 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
-      >
-        All {account.name} transactions
-        <ArrowRight className="size-3.5" aria-hidden="true" />
-      </Link>
+      {hasOlder ? (
+        <Link
+          href={`/money/transactions?account=${account.id}` as Route}
+          className="text-primary focus-visible:ring-ring mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-1 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
+        >
+          Older {account.name} transactions
+          <ArrowRight className="size-3.5" aria-hidden="true" />
+        </Link>
+      ) : null}
     </div>
   );
 }
@@ -265,7 +276,11 @@ function AccountSheetBody({
         className="@container min-w-0"
       >
         {tab === "activity" ? (
-          <RecentActivity account={account} activity={activity} today={today} />
+          <AccountActivity
+            account={account}
+            activity={activity}
+            today={today}
+          />
         ) : tab === "reconcile" ? (
           <BalanceAdjustmentForm
             key={balance}

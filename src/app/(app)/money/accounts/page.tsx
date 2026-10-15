@@ -3,7 +3,10 @@ import Link from "next/link";
 import { AccountCreatePanel } from "@/components/money/account-create-panel";
 import { type AccountSummary } from "@/components/money/account-card";
 import { AccountLedger } from "@/components/money/account-ledger";
-import type { AccountActivityItem } from "@/components/money/account-sheet";
+import {
+  ACCOUNT_ACTIVITY_LIMIT,
+  type AccountActivityItem,
+} from "@/components/money/account-sheet";
 import { AccountsOverview } from "@/components/money/accounts-overview";
 import { AccountsQuickActions } from "@/components/money/accounts-quick-actions";
 import { PageHeading } from "@/components/shared/page-heading";
@@ -14,8 +17,6 @@ import { createClient } from "@/lib/supabase/server";
 import { PageShell } from "@/components/shared/page-shell";
 
 export const metadata = { title: "Accounts" };
-
-const ACTIVITY_PER_ACCOUNT = 5;
 
 function todayInManila() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -39,8 +40,9 @@ export default async function AccountsPage() {
     : { data: [] };
   const accounts = (data ?? []) as AccountSummary[];
 
-  // One small query per account: a shared row cap would let busy accounts
-  // crowd quieter ones out of their own recent activity.
+  // One query per account: a shared row cap would let busy accounts crowd
+  // quieter ones out of their own history. The extra row tells the sheet
+  // whether older transactions exist beyond what it shows.
   const activityResults = supabase
     ? await Promise.all(
         accounts.map((account) =>
@@ -53,7 +55,7 @@ export default async function AccountsPage() {
             .order("transaction_date", { ascending: false })
             .order("transaction_time", { ascending: false, nullsFirst: false })
             .order("created_at", { ascending: false })
-            .limit(ACTIVITY_PER_ACCOUNT),
+            .limit(ACCOUNT_ACTIVITY_LIMIT + 1),
         ),
       )
     : [];
