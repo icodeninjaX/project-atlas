@@ -1,4 +1,4 @@
-import { hasRequiredAssurance } from "@/lib/auth/assurance";
+import { getAssuredUser } from "@/lib/auth/assurance";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getPublicSupabaseConfig } from "@/lib/env";
@@ -76,9 +76,7 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, assured } = await getAssuredUser(supabase);
 
   if (!user && isProtectedApi) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -94,7 +92,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && (isProtectedPage || isProtectedApi)) {
-    if (!(await hasRequiredAssurance(supabase))) {
+    if (!assured) {
       if (isProtectedApi) {
         return NextResponse.json({ error: "MFA required" }, { status: 403 });
       }

@@ -1,4 +1,4 @@
-import { hasRequiredAssurance } from "@/lib/auth/assurance";
+import { getAssuredUser } from "@/lib/auth/assurance";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/atlas/app-header";
 import { AppShell } from "@/components/atlas/app-shell";
@@ -16,14 +16,9 @@ export default async function AuthenticatedLayout({
   const supabase = await createClient();
   if (!supabase) redirect("/login?setup=required");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, assured } = await getAssuredUser(supabase);
   if (!user) redirect("/login");
-
-  if (!(await hasRequiredAssurance(supabase))) {
-    redirect("/mfa");
-  }
+  if (!assured) redirect("/mfa");
 
   const yesterday = previousManilaDayWindow(new Date());
   const [{ data: profile }, { count: completedTaskCount }] = await Promise.all([
