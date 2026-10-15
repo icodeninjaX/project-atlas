@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders as render } from "@/test/render";
 import { AccountLedger } from "./account-ledger";
+import { ACCOUNT_ACTIVITY_LIMIT } from "./account-sheet";
 
 vi.mock("@/lib/money/actions", () => ({
   updateAccountAction: vi.fn(),
@@ -80,8 +81,8 @@ describe("AccountLedger", () => {
     ).toHaveAttribute("aria-selected", "true");
     expect(within(sheet).getByText("Canteen")).toBeVisible();
     expect(
-      within(sheet).getByRole("link", { name: /All Liquid Cash transactions/ }),
-    ).toHaveAttribute("href", `/money/transactions?account=${accounts[1]!.id}`);
+      within(sheet).queryByRole("link", { name: /Liquid Cash transactions/ }),
+    ).not.toBeInTheDocument();
 
     await user.click(within(sheet).getByRole("tab", { name: "Reconcile" }));
     const balance = within(sheet).getByLabelText(
@@ -96,6 +97,41 @@ describe("AccountLedger", () => {
     expect(within(sheet).getByLabelText("Account name")).toHaveValue(
       "Liquid Cash",
     );
+  });
+
+  it("lists every transaction and links out only past the cap", async () => {
+    const user = userEvent.setup();
+    const many = Array.from(
+      { length: ACCOUNT_ACTIVITY_LIMIT + 1 },
+      (_, index) => ({
+        id: `transaction-${index}`,
+        transaction_type: "expense" as const,
+        amount_centavos: 100,
+        transaction_date: "2026-09-06",
+        merchant_or_source: `Shop ${index}`,
+        category_name: null,
+        category_icon: null,
+      }),
+    );
+    render(
+      <AccountLedger
+        accounts={accounts}
+        today="2026-09-06"
+        activityByAccount={{ [accounts[0]!.id]: many }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Manage GCash/ }));
+    const sheet = screen.getByRole("dialog", { name: "GCash" });
+    expect(within(sheet).getAllByRole("listitem")).toHaveLength(
+      ACCOUNT_ACTIVITY_LIMIT,
+    );
+    expect(
+      within(sheet).queryByText(`Shop ${ACCOUNT_ACTIVITY_LIMIT}`),
+    ).not.toBeInTheDocument();
+    expect(
+      within(sheet).getByRole("link", { name: /Older GCash transactions/ }),
+    ).toHaveAttribute("href", `/money/transactions?account=${accounts[0]!.id}`);
   });
 
   it("moves between sections with the arrow keys", async () => {
