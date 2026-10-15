@@ -7,7 +7,7 @@ import { useId, useRef, useState, type KeyboardEvent } from "react";
 import { AccountForm } from "@/components/money/account-form";
 import { BalanceAdjustmentForm } from "@/components/money/balance-adjustment-form";
 import { CategoryBadge } from "@/components/money/category-icon";
-import { FlowAmount } from "@/components/money/money-amount";
+import { FlowAmount, MoneyAmount } from "@/components/money/money-amount";
 import { MoneySheet } from "@/components/money/money-sheet";
 import {
   WalletCard,
@@ -17,7 +17,11 @@ import { OfflineMutationForm } from "@/components/offline/offline-mutation";
 import { Button } from "@/components/ui/button";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { accountTypeDetails } from "@/lib/money/account-types";
-import { relativeDayLabel } from "@/lib/money/history";
+import {
+  formatShortDate,
+  groupByDate,
+  relativeDayLabel,
+} from "@/lib/money/history";
 import { cn } from "@/lib/utils";
 
 export type SheetAccount = WalletCardAccount & { id: string };
@@ -137,38 +141,80 @@ function AccountActivity({
 
   return (
     <div>
-      <ul className="border-border bg-card divide-border divide-y overflow-hidden rounded-2xl border">
-        {shown.map((item) => {
-          const direction = item.transaction_type === "income" ? "in" : "out";
+      <div className="border-border bg-card divide-border divide-y overflow-hidden rounded-2xl border">
+        {groupByDate(shown, (item) => item.transaction_date).map((group) => {
+          const dayNet = group.items.reduce(
+            (sum, item) =>
+              sum +
+              (item.transaction_type === "income"
+                ? item.amount_centavos
+                : -item.amount_centavos),
+            0,
+          );
+          const label = relativeDayLabel(group.date, today);
           return (
-            <li key={item.id} className="flex min-w-0 items-center gap-3 p-3">
-              <CategoryBadge
-                icon={item.category_icon}
-                name={item.category_name}
-                direction={direction}
-                size="sm"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">
-                  {item.merchant_or_source ||
-                    item.category_name ||
-                    "Transaction"}
-                </p>
-                <p className="text-muted-foreground truncate text-xs">
-                  {relativeDayLabel(item.transaction_date, today)}
-                  {item.category_name ? ` · ${item.category_name}` : ""}
+            <section
+              key={group.date}
+              aria-label={`${label}, ${group.items.length} ${group.items.length === 1 ? "transaction" : "transactions"}`}
+            >
+              <div className="bg-muted/30 flex flex-wrap items-baseline justify-between gap-x-3 px-4 py-2">
+                <h3 className="text-[0.8125rem] font-semibold">
+                  {label}
+                  {label === "Today" || label === "Yesterday" ? (
+                    <span className="text-muted-foreground ml-1.5 font-normal">
+                      {formatShortDate(group.date)}
+                    </span>
+                  ) : null}
+                </h3>
+                <p className="text-muted-foreground font-mono text-xs">
+                  <span className="sr-only">Day net </span>
+                  <MoneyAmount
+                    centavos={dayNet}
+                    sign={dayNet === 0 ? "negative" : "always"}
+                  />
                 </p>
               </div>
-              <p className="shrink-0 font-mono text-sm font-semibold">
-                <FlowAmount
-                  centavos={item.amount_centavos}
-                  direction={direction}
-                />
-              </p>
-            </li>
+              <ul className="divide-border border-border divide-y border-t">
+                {group.items.map((item) => {
+                  const direction =
+                    item.transaction_type === "income" ? "in" : "out";
+                  return (
+                    <li
+                      key={item.id}
+                      className="flex min-w-0 items-center gap-3 px-4 py-3"
+                    >
+                      <CategoryBadge
+                        icon={item.category_icon}
+                        name={item.category_name}
+                        direction={direction}
+                        size="sm"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">
+                          {item.merchant_or_source ||
+                            item.category_name ||
+                            "Transaction"}
+                        </p>
+                        {item.category_name ? (
+                          <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                            {item.category_name}
+                          </p>
+                        ) : null}
+                      </div>
+                      <p className="shrink-0 font-mono text-sm font-semibold">
+                        <FlowAmount
+                          centavos={item.amount_centavos}
+                          direction={direction}
+                        />
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
           );
         })}
-      </ul>
+      </div>
       {hasOlder ? (
         <Link
           href={`/money/transactions?account=${account.id}` as Route}
