@@ -99,6 +99,50 @@ describe("AccountLedger", () => {
     );
   });
 
+  it("groups the account's transactions under a heading per day", async () => {
+    const user = userEvent.setup();
+    const row = (
+      id: string,
+      date: string,
+      type: "expense" | "income",
+      amount: number,
+    ) => ({
+      id,
+      transaction_type: type,
+      amount_centavos: amount,
+      transaction_date: date,
+      merchant_or_source: id,
+      category_name: "Food",
+      category_icon: "utensils",
+    });
+    render(
+      <AccountLedger
+        accounts={accounts}
+        today="2026-09-06"
+        activityByAccount={{
+          [accounts[0]!.id]: [
+            row("Lunch", "2026-09-05", "expense", 18_000),
+            row("Refund", "2026-09-05", "income", 40_000),
+            row("Coffee", "2026-09-02", "expense", 10_000),
+          ],
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Manage GCash/ }));
+    const sheet = screen.getByRole("dialog", { name: "GCash" });
+    const yesterday = within(sheet).getByRole("region", {
+      name: "Yesterday, 2 transactions",
+    });
+    expect(within(yesterday).getByText("Sep 5")).toBeVisible();
+    expect(within(yesterday).getByText("+₱220.00")).toBeVisible();
+    expect(within(yesterday).getAllByRole("listitem")).toHaveLength(2);
+    const earlier = within(sheet).getByRole("region", {
+      name: "Wed, Sep 2, 1 transaction",
+    });
+    expect(within(earlier).getByText("Coffee")).toBeVisible();
+  });
+
   it("lists every transaction and links out only past the cap", async () => {
     const user = userEvent.setup();
     const many = Array.from(
