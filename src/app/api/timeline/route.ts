@@ -1,4 +1,4 @@
-import { hasRequiredAssurance } from "@/lib/auth/assurance";
+import { getAssuredUser } from "@/lib/auth/assurance";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -17,13 +17,11 @@ export async function GET(request: NextRequest) {
       { status: 503 },
     );
   }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, assured } = await getAssuredUser(supabase);
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (!(await hasRequiredAssurance(supabase)))
+  if (!assured)
     return NextResponse.json({ error: "MFA required" }, { status: 403 });
 
   const query = request.nextUrl.searchParams;

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
+import { testAccessToken, verifiedTotpFactor } from "@/test/auth";
 import { MAX_CAPTURE_FILE_BYTES } from "@/lib/capture/media";
 
 // The daily pool meter has its own tests; here it passes requests through.
@@ -46,7 +47,7 @@ beforeEach(() => {
     auth: {
       getUser: mocks.getUser,
       getSession: vi.fn().mockResolvedValue({
-        data: { session: { access_token: "verified-test-token" } },
+        data: { session: { access_token: testAccessToken() } },
         error: null,
       }),
       mfa: { getAuthenticatorAssuranceLevel: mocks.assurance },
@@ -183,6 +184,10 @@ describe("Capture media extraction", () => {
 it("blocks enrolled MFA AAL1 before private work", async () => {
   mocks.assurance.mockResolvedValue({
     data: { currentLevel: "aal1", nextLevel: "aal2" },
+    error: null,
+  });
+  mocks.getUser.mockResolvedValue({
+    data: { user: { id: "owner-a", factors: [verifiedTotpFactor] } },
     error: null,
   });
   expect(

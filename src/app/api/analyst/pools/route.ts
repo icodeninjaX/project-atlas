@@ -1,4 +1,4 @@
-import { hasRequiredAssurance } from "@/lib/auth/assurance";
+import { getAssuredUser } from "@/lib/auth/assurance";
 import { NextResponse } from "next/server";
 import { readPoolStatus } from "@/lib/ai/pool-meter";
 import { nextPoolReset } from "@/lib/ai/pools";
@@ -15,12 +15,10 @@ export async function GET() {
       { error: "Unavailable." },
       { status: 503, headers },
     );
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, assured } = await getAssuredUser(supabase);
   if (!user)
     return NextResponse.json({ error: "Sign in." }, { status: 401, headers });
-  if (!(await hasRequiredAssurance(supabase)))
+  if (!assured)
     return NextResponse.json(
       { error: "MFA required" },
       { status: 403, headers },

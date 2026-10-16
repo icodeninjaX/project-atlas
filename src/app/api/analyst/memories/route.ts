@@ -1,4 +1,4 @@
-import { hasRequiredAssurance } from "@/lib/auth/assurance";
+import { getAssuredUser } from "@/lib/auth/assurance";
 import { NextResponse } from "next/server";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
 import { MEMORY_LIMITS, daysLeft } from "@/lib/analyst/intelligence/memory";
@@ -22,12 +22,8 @@ async function owner() {
   if (!analystIntelligenceV2Enabled()) return null;
   const supabase = await createClient();
   if (!supabase) return null;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user
-    ? { supabase, id: user.id, assured: await hasRequiredAssurance(supabase) }
-    : null;
+  const { user, assured } = await getAssuredUser(supabase);
+  return user ? { supabase, id: user.id, assured } : null;
 }
 
 export async function GET() {

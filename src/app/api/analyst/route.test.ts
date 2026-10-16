@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
+import { testAccessToken, verifiedTotpFactor } from "@/test/auth";
 import { ANALYST_MODEL_OPTIONS, CAPTURE_MODEL_OPTIONS } from "@/lib/ai/models";
 import { freePoolFor } from "@/lib/ai/pools";
 
@@ -87,7 +88,7 @@ beforeEach(() => {
     auth: {
       getUser: mocks.getUser,
       getSession: vi.fn().mockResolvedValue({
-        data: { session: { access_token: "verified-test-token" } },
+        data: { session: { access_token: testAccessToken() } },
         error: null,
       }),
       mfa: { getAuthenticatorAssuranceLevel: mocks.assurance },
@@ -412,6 +413,10 @@ describe("Analyst request", () => {
 it("blocks enrolled MFA AAL1 before private work", async () => {
   mocks.assurance.mockResolvedValue({
     data: { currentLevel: "aal1", nextLevel: "aal2" },
+    error: null,
+  });
+  mocks.getUser.mockResolvedValue({
+    data: { user: { id: "owner-a", factors: [verifiedTotpFactor] } },
     error: null,
   });
   expect((await POST(ask(valid))).status).toBe(403);
