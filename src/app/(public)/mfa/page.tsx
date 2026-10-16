@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AuthCard } from "@/components/auth/auth-card";
 import { MfaChallengeForm } from "@/components/auth/mfa-challenge-form";
+import { hasRequiredAssurance } from "@/lib/auth/assurance";
 import { safeRedirectPath } from "@/lib/auth/redirects";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,9 +20,8 @@ export default async function MfaPage({
   } = await supabase.auth.getUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(destination)}`);
 
-  const { data: assurance } =
-    await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (assurance?.currentLevel === "aal2" || assurance?.nextLevel !== "aal2") {
+  // Match the proxy's Auth-verified factors even when session.user is stale.
+  if (await hasRequiredAssurance(supabase)) {
     redirect(destination as never);
   }
 
