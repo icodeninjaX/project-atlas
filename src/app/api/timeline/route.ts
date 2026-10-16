@@ -52,7 +52,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const page = await loadTimelinePage(filters, cursor);
+    const page = await loadTimelinePage(filters, cursor, supabase, {
+      userVerified: true,
+    });
     if (!page)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     return NextResponse.json(page, {
