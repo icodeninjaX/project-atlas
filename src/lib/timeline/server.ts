@@ -91,13 +91,18 @@ export async function loadTimelinePage(
   filters: TimelineFilters,
   cursor: TimelineCursor | null,
   client?: SupabaseClient,
+  // Set only by a caller that has just verified this client's user with
+  // Auth, so the page does not repeat that request.
+  options: { userVerified?: boolean } = {},
 ): Promise<TimelinePage | null> {
   const supabase = client ?? (await createClient());
   if (!supabase) return null;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!(client && options.userVerified)) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
+  }
 
   const { data, error } = await supabase.rpc("life_timeline", {
     p_query: filters.query || null,
