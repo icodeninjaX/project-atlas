@@ -1,13 +1,15 @@
 "use client";
 
 import { Ellipsis } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   AccountSheet,
   type AccountActivityItem,
   type SheetAccount,
 } from "@/components/money/account-sheet";
 import { MoneyAmount } from "@/components/money/money-amount";
+import { merchantMemoryOf } from "@/components/money/transaction-edit-sheet";
+import type { TransactionFormCategory } from "@/components/money/transaction-form";
 import { WalletCard, WalletCardBadge } from "@/components/money/wallet-card";
 import { formatShare } from "@/lib/money/account-types";
 
@@ -15,12 +17,20 @@ export function AccountLedger({
   accounts,
   today,
   activityByAccount = {},
+  categories = [],
+  defaultAccountId,
 }: {
   accounts: SheetAccount[];
   today: string;
   activityByAccount?: Record<string, AccountActivityItem[]>;
+  categories?: TransactionFormCategory[];
+  defaultAccountId?: string | null;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const merchantMemory = useMemo(
+    () => merchantMemoryOf(Object.values(activityByAccount).flat()),
+    [activityByAccount],
+  );
   const selected =
     accounts.find((account) => account.id === selectedId) ?? null;
   const positiveTotal = accounts.reduce(
@@ -117,6 +127,7 @@ export function AccountLedger({
         activity={selected ? (activityByAccount[selected.id] ?? []) : []}
         share={selected ? shareOf(selected) : null}
         today={today}
+        editor={{ accounts, categories, defaultAccountId, merchantMemory }}
         onClose={() => setSelectedId(null)}
       />
     </section>

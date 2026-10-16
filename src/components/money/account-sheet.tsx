@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ArrowRight, Plus } from "lucide-react";
+import { Archive, ArrowRight, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import type { Route } from "next";
 import { useId, useRef, useState, type KeyboardEvent } from "react";
@@ -9,6 +9,16 @@ import { BalanceAdjustmentForm } from "@/components/money/balance-adjustment-for
 import { CategoryBadge } from "@/components/money/category-icon";
 import { FlowAmount, MoneyAmount } from "@/components/money/money-amount";
 import { MoneySheet } from "@/components/money/money-sheet";
+import {
+  TransactionEditSheet,
+  transactionTitle,
+  type EditableTransactionItem,
+} from "@/components/money/transaction-edit-sheet";
+import type {
+  MerchantMemory,
+  TransactionFormAccount,
+  TransactionFormCategory,
+} from "@/components/money/transaction-form";
 import {
   WalletCard,
   type WalletCardAccount,
@@ -22,18 +32,21 @@ import {
   groupByDate,
   relativeDayLabel,
 } from "@/lib/money/history";
+import { formatTaskTime } from "@/lib/tasks/task-time";
 import { cn } from "@/lib/utils";
 
 export type SheetAccount = WalletCardAccount & { id: string };
 
-export type AccountActivityItem = {
-  id: string;
-  transaction_type: "expense" | "income";
-  amount_centavos: number;
-  transaction_date: string;
-  merchant_or_source: string | null;
-  category_name: string | null;
+export type AccountActivityItem = EditableTransactionItem & {
   category_icon: string | null;
+};
+
+/** What the transaction editor needs, opened from an activity row. */
+export type AccountSheetEditor = {
+  accounts: TransactionFormAccount[];
+  categories: TransactionFormCategory[];
+  defaultAccountId?: string | null;
+  merchantMemory?: MerchantMemory[];
 };
 
 /**
@@ -113,10 +126,12 @@ function AccountActivity({
   account,
   activity,
   today,
+  onEdit,
 }: {
   account: SheetAccount;
   activity: AccountActivityItem[];
   today: string;
+  onEdit: (id: string) => void;
 }) {
   if (activity.length === 0) {
     return (
@@ -179,34 +194,42 @@ function AccountActivity({
                   const direction =
                     item.transaction_type === "income" ? "in" : "out";
                   return (
-                    <li
-                      key={item.id}
-                      className="flex min-w-0 items-center gap-3 px-4 py-3"
-                    >
-                      <CategoryBadge
-                        icon={item.category_icon}
-                        name={item.category_name}
-                        direction={direction}
-                        size="sm"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">
-                          {item.merchant_or_source ||
-                            item.category_name ||
-                            "Transaction"}
-                        </p>
-                        {item.category_name ? (
-                          <p className="text-muted-foreground mt-0.5 truncate text-xs">
-                            {item.category_name}
-                          </p>
-                        ) : null}
-                      </div>
-                      <p className="shrink-0 font-mono text-sm font-semibold">
-                        <FlowAmount
-                          centavos={item.amount_centavos}
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        aria-haspopup="dialog"
+                        onClick={() => onEdit(item.id)}
+                        className="group hover:bg-muted/50 active:bg-muted/70 focus-visible:ring-ring flex w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+                      >
+                        <span className="sr-only">Edit</span>{" "}
+                        <CategoryBadge
+                          icon={item.category_icon}
+                          name={item.category_name}
                           direction={direction}
+                          size="sm"
                         />
-                      </p>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold">
+                            {transactionTitle(item)}
+                          </span>{" "}
+                          <span className="text-muted-foreground mt-0.5 block truncate text-xs">
+                            {item.transaction_time
+                              ? `${formatTaskTime(item.transaction_time)} · `
+                              : null}
+                            {item.category_name ?? "Category"}
+                          </span>
+                        </span>{" "}
+                        <span className="shrink-0 font-mono text-sm font-semibold">
+                          <FlowAmount
+                            centavos={item.amount_centavos}
+                            direction={direction}
+                          />
+                        </span>
+                        <ChevronRight
+                          aria-hidden="true"
+                          className="text-muted-foreground/60 group-hover:text-foreground hidden size-4 shrink-0 transition-colors sm:block"
+                        />
+                      </button>
                     </li>
                   );
                 })}
@@ -292,15 +315,19 @@ function AccountSheetBody({
   activity,
   share,
   today,
+  editor,
   onArchived,
 }: {
   account: SheetAccount;
   activity: AccountActivityItem[];
   share: string | null;
   today: string;
+  editor: AccountSheetEditor;
   onArchived: () => void;
 }) {
   const [tab, setTab] = useState<Tab>("activity");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const editing = activity.find((item) => item.id === editingId) ?? null;
   const idBase = useId();
   const balance = Number(account.current_balance_centavos);
 
@@ -326,6 +353,7 @@ function AccountSheetBody({
             account={account}
             activity={activity}
             today={today}
+            onEdit={setEditingId}
           />
         ) : tab === "reconcile" ? (
           <BalanceAdjustmentForm
@@ -343,6 +371,18 @@ function AccountSheetBody({
       <div className="border-border border-t pt-3">
         <ArchiveAccountControl account={account} onArchived={onArchived} />
       </div>
+
+      {/* Rendered inside the account sheet so it stacks over it, and Escape
+          or a tap outside closes only the transaction. */}
+      <TransactionEditSheet
+        transaction={editing}
+        accounts={editor.accounts}
+        categories={editor.categories}
+        today={today}
+        defaultAccountId={editor.defaultAccountId}
+        merchantMemory={editor.merchantMemory}
+        onClose={() => setEditingId(null)}
+      />
     </div>
   );
 }
@@ -353,12 +393,14 @@ export function AccountSheet({
   activity,
   share,
   today,
+  editor,
   onClose,
 }: {
   account: SheetAccount | null;
   activity: AccountActivityItem[];
   share: string | null;
   today: string;
+  editor: AccountSheetEditor;
   onClose: () => void;
 }) {
   return (
@@ -378,6 +420,7 @@ export function AccountSheet({
           activity={activity}
           share={share}
           today={today}
+          editor={editor}
           onArchived={onClose}
         />
       ) : null}

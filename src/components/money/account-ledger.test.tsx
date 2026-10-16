@@ -3,7 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders as render } from "@/test/render";
 import { AccountLedger } from "./account-ledger";
-import { ACCOUNT_ACTIVITY_LIMIT } from "./account-sheet";
+import {
+  ACCOUNT_ACTIVITY_LIMIT,
+  type AccountActivityItem,
+} from "./account-sheet";
 
 vi.mock("@/lib/money/actions", () => ({
   updateAccountAction: vi.fn(),
@@ -34,17 +37,40 @@ const accounts = [
   },
 ];
 
+const categories = [
+  { id: "category-food", name: "Food", category_type: "expense" },
+  { id: "category-salary", name: "Salary", category_type: "income" },
+];
+
+function activityItem(
+  overrides: Partial<AccountActivityItem> &
+    Pick<AccountActivityItem, "id" | "transaction_date">,
+): AccountActivityItem {
+  return {
+    account_id: accounts[0]!.id,
+    category_id: "category-food",
+    transaction_type: "expense",
+    amount_centavos: 100,
+    transaction_time: null,
+    merchant_or_source: overrides.id,
+    description: null,
+    account_name: accounts[0]!.name,
+    category_name: "Food",
+    category_icon: "utensils",
+    ...overrides,
+  };
+}
+
 const activity = {
   [accounts[1]!.id]: [
-    {
+    activityItem({
       id: "transaction-1",
-      transaction_type: "expense" as const,
+      account_id: accounts[1]!.id,
+      account_name: accounts[1]!.name,
       amount_centavos: 12_550,
       transaction_date: "2026-09-06",
       merchant_or_source: "Canteen",
-      category_name: "Food",
-      category_icon: "utensils",
-    },
+    }),
   ],
 };
 
@@ -106,15 +132,13 @@ describe("AccountLedger", () => {
       date: string,
       type: "expense" | "income",
       amount: number,
-    ) => ({
-      id,
-      transaction_type: type,
-      amount_centavos: amount,
-      transaction_date: date,
-      merchant_or_source: id,
-      category_name: "Food",
-      category_icon: "utensils",
-    });
+    ) =>
+      activityItem({
+        id,
+        transaction_type: type,
+        amount_centavos: amount,
+        transaction_date: date,
+      });
     render(
       <AccountLedger
         accounts={accounts}
@@ -147,15 +171,12 @@ describe("AccountLedger", () => {
     const user = userEvent.setup();
     const many = Array.from(
       { length: ACCOUNT_ACTIVITY_LIMIT + 1 },
-      (_, index) => ({
-        id: `transaction-${index}`,
-        transaction_type: "expense" as const,
-        amount_centavos: 100,
-        transaction_date: "2026-09-06",
-        merchant_or_source: `Shop ${index}`,
-        category_name: null,
-        category_icon: null,
-      }),
+      (_, index) =>
+        activityItem({
+          id: `transaction-${index}`,
+          transaction_date: "2026-09-06",
+          merchant_or_source: `Shop ${index}`,
+        }),
     );
     render(
       <AccountLedger
@@ -176,6 +197,38 @@ describe("AccountLedger", () => {
     expect(
       within(sheet).getByRole("link", { name: /Older GCash transactions/ }),
     ).toHaveAttribute("href", `/money/transactions?account=${accounts[0]!.id}`);
+  });
+
+  it("opens a transaction's editor over the sheet, and closes only it", async () => {
+    const user = userEvent.setup();
+    render(
+      <AccountLedger
+        accounts={accounts}
+        today="2026-09-06"
+        activityByAccount={activity}
+        categories={categories}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /Manage Liquid Cash/ }),
+    );
+    await user.click(screen.getByRole("button", { name: /Edit Canteen/ }));
+
+    const editor = screen.getByRole("dialog", { name: "Canteen" });
+    expect(editor).toHaveAccessibleDescription("Today · Liquid Cash");
+    expect(within(editor).getByDisplayValue("125.50")).toBeVisible();
+    expect(
+      within(editor).getByRole("button", { name: "Delete transaction" }),
+    ).toBeVisible();
+
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByRole("dialog", { name: "Canteen" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "Liquid Cash" }),
+    ).toBeInTheDocument();
   });
 
   it("moves between sections with the arrow keys", async () => {

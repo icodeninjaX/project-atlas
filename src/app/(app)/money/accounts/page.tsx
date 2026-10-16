@@ -43,22 +43,36 @@ export default async function AccountsPage() {
   // One query per account: a shared row cap would let busy accounts crowd
   // quieter ones out of their own history. The extra row tells the sheet
   // whether older transactions exist beyond what it shows.
-  const activityResults = supabase
-    ? await Promise.all(
-        accounts.map((account) =>
-          supabase
-            .from("transactions")
-            .select(
-              "id,transaction_type,amount_centavos,transaction_date,merchant_or_source,transaction_categories(name,icon)",
-            )
-            .eq("account_id", account.id)
-            .order("transaction_date", { ascending: false })
-            .order("transaction_time", { ascending: false, nullsFirst: false })
-            .order("created_at", { ascending: false })
-            .limit(ACCOUNT_ACTIVITY_LIMIT + 1),
+  const [activityResults, categoriesResult, preferencesResult] = supabase
+    ? await Promise.all([
+        Promise.all(
+          accounts.map((account) =>
+            supabase
+              .from("transactions")
+              .select(
+                "id,account_id,category_id,transaction_type,amount_centavos,transaction_date,transaction_time,merchant_or_source,description,transaction_categories(name,icon)",
+              )
+              .eq("account_id", account.id)
+              .order("transaction_date", { ascending: false })
+              .order("transaction_time", {
+                ascending: false,
+                nullsFirst: false,
+              })
+              .order("created_at", { ascending: false })
+              .limit(ACCOUNT_ACTIVITY_LIMIT + 1),
+          ),
         ),
-      )
-    : [];
+        // The sheet's rows open the transaction editor, which needs these.
+        supabase
+          .from("transaction_categories")
+          .select("id,name,category_type,icon")
+          .order("name"),
+        supabase
+          .from("user_preferences")
+          .select("default_account_id")
+          .maybeSingle(),
+      ])
+    : [[], { data: [] }, { data: null }];
   const activityByAccount: Record<string, AccountActivityItem[]> =
     Object.fromEntries(
       accounts.map((account, index) => [
@@ -70,10 +84,15 @@ export default async function AccountsPage() {
           } | null;
           return {
             id: row.id,
+            account_id: row.account_id,
+            category_id: row.category_id,
             transaction_type: row.transaction_type as "expense" | "income",
             amount_centavos: Number(row.amount_centavos),
             transaction_date: row.transaction_date,
+            transaction_time: row.transaction_time,
             merchant_or_source: row.merchant_or_source,
+            description: row.description,
+            account_name: account.name,
             category_name: category?.name ?? null,
             category_icon: category?.icon ?? null,
           };
@@ -121,6 +140,8 @@ export default async function AccountsPage() {
             accounts={accounts}
             today={todayInManila()}
             activityByAccount={activityByAccount}
+            categories={categoriesResult.data ?? []}
+            defaultAccountId={preferencesResult.data?.default_account_id}
           />
         </>
       )}
