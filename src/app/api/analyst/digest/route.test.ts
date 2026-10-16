@@ -3,7 +3,9 @@ import { DIGEST_QUESTION } from "@/lib/analyst/intelligence/digest";
 
 vi.mock("server-only", () => ({}));
 const assurance = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/auth/assurance", () => ({ hasRequiredAssurance: assurance }));
+vi.mock("@/lib/auth/assurance", async () =>
+  (await import("@/test/auth")).assuranceModuleMock(assurance),
+);
 const state = vi.hoisted(() => ({
   user: { id: "00000000-0000-4000-8000-00000000000a" } as { id: string } | null,
   reservation: { status: "reserved", request_id: 7 } as Record<string, unknown>,

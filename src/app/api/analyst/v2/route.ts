@@ -1,4 +1,4 @@
-import { hasRequiredAssurance } from "@/lib/auth/assurance";
+import { getAssuredUser } from "@/lib/auth/assurance";
 import { after, NextResponse } from "next/server";
 import { resolveAnalystModel } from "@/lib/ai/models";
 import { NDJSON_TYPE } from "@/lib/analyst/freeform/progress";
@@ -38,14 +38,9 @@ export async function POST(request: Request) {
     return json({ error: "Not found." }, 404);
   const supabase = await createClient();
   if (!supabase) return json({ error: "Analyst is unavailable." }, 503);
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-  if (authError || !user)
-    return json({ error: "Sign in to use Analyst." }, 401);
-  if (!(await hasRequiredAssurance(supabase)))
-    return json({ error: "MFA required" }, 403);
+  const { user, assured } = await getAssuredUser(supabase);
+  if (!user) return json({ error: "Sign in to use Analyst." }, 401);
+  if (!assured) return json({ error: "MFA required" }, 403);
   const parsed = parseV2Request(await request.text());
   if (!parsed.ok)
     return json(

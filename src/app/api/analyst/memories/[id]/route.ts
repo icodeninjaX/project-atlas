@@ -1,4 +1,4 @@
-import { hasRequiredAssurance } from "@/lib/auth/assurance";
+import { getAssuredUser } from "@/lib/auth/assurance";
 import { NextResponse } from "next/server";
 import { analystIntelligenceV2Enabled } from "@/lib/analyst/intelligence/flags";
 import { deleteMemory } from "@/lib/analyst/intelligence/memory-store";
@@ -15,13 +15,15 @@ export async function DELETE(
 ) {
   const { id } = await params;
   const supabase = analystIntelligenceV2Enabled() ? await createClient() : null;
-  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
+  const { user, assured } = supabase
+    ? await getAssuredUser(supabase)
+    : { user: null, assured: false };
   if (!supabase || !user)
     return NextResponse.json(
       { error: "Sign in to use Analyst." },
       { status: 401, headers },
     );
-  if (!(await hasRequiredAssurance(supabase)))
+  if (!assured)
     return NextResponse.json(
       { error: "MFA required" },
       { status: 403, headers },

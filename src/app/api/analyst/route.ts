@@ -1,4 +1,4 @@
-import { hasRequiredAssurance } from "@/lib/auth/assurance";
+import { getAssuredUser } from "@/lib/auth/assurance";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { reasoningEffortFor, resolveAnalystModel } from "@/lib/ai/models";
@@ -189,15 +189,10 @@ async function readProviderError(response: Response) {
 export async function POST(request: Request) {
   const supabase = await createClient();
   if (!supabase) return json({ error: "Service unavailable." }, 503);
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-  if (authError || !user)
-    return json({ error: "Sign in to use Analyst." }, 401);
+  const { user, assured } = await getAssuredUser(supabase);
+  if (!user) return json({ error: "Sign in to use Analyst." }, 401);
 
-  if (!(await hasRequiredAssurance(supabase)))
-    return json({ error: "MFA required" }, 403);
+  if (!assured) return json({ error: "MFA required" }, 403);
 
   let input: unknown;
   try {

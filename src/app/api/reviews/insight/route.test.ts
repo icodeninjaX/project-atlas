@@ -19,7 +19,9 @@ const rows: {
 } = { stored: [], preference: null };
 vi.mock("server-only", () => ({}));
 const assurance = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/auth/assurance", () => ({ hasRequiredAssurance: assurance }));
+vi.mock("@/lib/auth/assurance", async () =>
+  (await import("@/test/auth")).assuranceModuleMock(assurance),
+);
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 vi.mock("@/lib/reviews/insight", () => ({
   WEEKLY_INSIGHT_QUESTIONS: {

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
+import { testAccessToken, verifiedTotpFactor } from "@/test/auth";
 
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
@@ -97,7 +98,7 @@ beforeEach(() => {
     auth: {
       getUser: mocks.getUser,
       getSession: vi.fn().mockResolvedValue({
-        data: { session: { access_token: "verified-test-token" } },
+        data: { session: { access_token: testAccessToken() } },
         error: null,
       }),
       mfa: { getAuthenticatorAssuranceLevel: mocks.assurance },
@@ -849,6 +850,10 @@ describe("freeform Analyst progress stream", () => {
 it("blocks enrolled MFA AAL1 before private work", async () => {
   mocks.assurance.mockResolvedValue({
     data: { currentLevel: "aal1", nextLevel: "aal2" },
+    error: null,
+  });
+  mocks.getUser.mockResolvedValue({
+    data: { user: { id: "owner-a", factors: [verifiedTotpFactor] } },
     error: null,
   });
   expect((await POST(request(valid))).status).toBe(403);

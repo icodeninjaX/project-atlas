@@ -1,4 +1,4 @@
-import { hasRequiredAssurance } from "@/lib/auth/assurance";
+import { getAssuredUser } from "@/lib/auth/assurance";
 import { createClient } from "@/lib/supabase/server";
 import { meteredOpenAIFetch, PoolExhaustedError } from "@/lib/ai/pool-meter";
 import {
@@ -64,12 +64,9 @@ export async function POST(request: Request) {
     return reply("The file is too large. Choose one under 4 MB.", 413);
   const supabase = await createClient();
   if (!supabase) return reply("ATLAS is not configured.", 503);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, assured } = await getAssuredUser(supabase);
   if (!user) return reply("Sign in to use Capture.", 401);
-  if (!(await hasRequiredAssurance(supabase)))
-    return reply("MFA required", 403);
+  if (!assured) return reply("MFA required", 403);
 
   const key = process.env.OPENAI_API_KEY;
   if (!key) return reply("AI capture is not configured yet.", 503);
